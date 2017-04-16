@@ -21,30 +21,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * Convention: (protected) methods that end in D can only be called on
- * dereferenced FSs, i.e. on FSs with this == dereference().
+ * A feature structure.
  *
  * @author koller
  */
 public abstract class FeatureStructure {
     private String index = null;
-
-    // These fields are only visible to subclasses so implementations of appendRawToString can
-    // access them for pretty-printing. Don't use them directly from your code;
-    // use dereference(), setForwardD(), and setCopyD() instead.
-    private FeatureStructure forward = null; // called "pointer" in Jurafsky & Martin
-    private long forwardTimestamp = -1;      // unify timestamp at which "forward" was set (for Tomabechi; there called "forward-mark")
-
-    private FeatureStructure copy = null;    // for Tomabechi
-    private long copyTimestamp = -1;         // for Tomabechi; there called "copy-mark"
-
-    protected static long globalCopyTimestamp = 0; // global unification operation ID, will be counted up for each call to unify()
-    
-    // for pretty-printing
-    private static Map<FeatureStructure, Integer> previouslyPrinted = new IdentityHashMap<>();
-    private static MutableInteger nextPpId = new MutableInteger(1);
-    
 
     public static FeatureStructure parse(String s) throws FsParsingException {
         try {
@@ -55,108 +37,88 @@ public abstract class FeatureStructure {
             return null;
         }
     }
-
+    
     public String getIndex() {
-//        return dereference().index;
-        return getIndexD();
-    }
-
-    protected String getIndexD() {
         return index;
     }
 
     public void setIndex(String index) {
         this.index = index;
     }
-
-    /**
-     * Follows the "forward" links and returns the FS at the endpoint of the
-     * non-null forward links.
-     *
-     * @return
-     */
-    @Deprecated
-    protected FeatureStructure dereference() {
-        if (forward == null) {
-            return this;
-        } else {
-            return forward.dereference();
-        }
-    }
-
-    /**
-     * Tomabechi-style dereferencing: follow only forward links as long as they
-     * are from the current timestamp.
-     *
-     * @param timestamp
-     * @return
-     */
-    protected FeatureStructure dereference(long timestamp) {
-        if (forward == null) {
-            return this;
-        } else if (forwardTimestamp < timestamp) {
-            return this;
-        } else {
-            return forward.dereference(timestamp);
-        }
-    }
-
-    @Override
-    public String toString() {
-        Set<FeatureStructure> visitedIndexedFs = new IdentityHashSet<>();
-        StringBuilder buf = new StringBuilder();
-        
-        appendWithIndexD(visitedIndexedFs, buf);
-//        dereference().appendWithIndexD(visitedIndexedFs, buf);
-        return buf.toString();
-    }
-
+    
     protected String getIndexMarker() {
         return "#" + getIndex();
     }
-
-    protected void appendWithIndexD(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-        // prepend index if needed
-        if (getIndex() != null) {
-            buf.append(getIndexMarker());
-        }
-
-        if (!visitedIndexedFs.contains(this)) {
-            // mark as visited
-            if (getIndex() != null) {
-                visitedIndexedFs.add(this);
-                buf.append(" ");
-            }
-
-            // print actual value
-            appendValue(visitedIndexedFs, buf);
-        }
-    }
-
-    protected abstract void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf);
+    
+    
+    
 
     /**
-     * Unifies this FS destructively with another FS, using the Pereira (1985)
-     * algorithm. Returns the unification of the two FSs if it exists, null
-     * otherwise.
-     *
-     * @param other
-     * @return
+     * Returns all feature paths that are defined in this FS.
+     * This method is pretty inefficient.
+     * 
+     * @return 
      */
-    /*
-    public FeatureStructure destructiveUnify(FeatureStructure other) {
-        FeatureStructure d1 = dereference();
-        FeatureStructure d2 = other.dereference();
+    abstract public List<List<String>> getAllPaths();
+    
 
-        if (d1 == d2) {
-            return d1;
-        } else {
-            return d1.destructiveUnifyLocalD(d2);
-        }
+    /**
+     * Returns the FS at the endpoint of a given path.
+     * Returns null if no such path exists.
+     * 
+     * @param path
+     * @return 
+     */
+    public FeatureStructure get(List<String> path) {
+        return get(path, 0); // dereference().getD(path, 0);
     }
 
-    protected abstract FeatureStructure destructiveUnifyLocalD(FeatureStructure other);
-    */
+    /**
+     * Returns the FS at the endpoint of a given path.
+     * Returns null if no such path exists.
+     * 
+     * @param path
+     * @return 
+     */
+    public FeatureStructure get(String... path) {
+        return FeatureStructure.this.get(Arrays.asList(path));
+    }
+    
+    abstract protected FeatureStructure get(List<String> path, int pos);
+    
+    
+
+    /**
+     * Returns the value stored in this feature structure.
+     * This returns the primitive value if the FS is primitive,
+     * and null otherwise.
+     * 
+     * @return 
+     */
+    abstract public Object getValue();
+
+    
+    
+    
+    
+    /***************************************************************************
+     * Fields and methods for the unification algorithm of Tomabechi (1991).
+     * This algorithm performs non-destructive unification of feature
+     * structures. It proceeds in two passes: First, the method unify1
+     * traverses the two FSs, checking whether the two can be unified
+     * and setting temporary pointers to the other FS. If this succeeds,
+     * the method copyWithCompArcs traverses the FSs again and copies
+     * FSs as needed, creating the FS for the result of the unification.
+     * 
+     **************************************************************************/
+    
+    private FeatureStructure forward = null; // called "pointer" in Jurafsky & Martin
+    private long forwardTimestamp = -1;      // unify timestamp at which "forward" was set (for Tomabechi; there called "forward-mark")
+
+    private FeatureStructure copy = null;    // for Tomabechi
+    private long copyTimestamp = -1;         // for Tomabechi; there called "copy-mark"
+
+    protected static long globalCopyTimestamp = 0; // global unification operation ID, will be counted up for each call to unify()
 
     /**
      * Unifies this FS with another FS, using the Tomabechi (1991) algorithm.
@@ -170,18 +132,17 @@ public abstract class FeatureStructure {
     public FeatureStructure unify(FeatureStructure other) {
         return unify0(other, globalCopyTimestamp++);
     }
-
+    
     protected FeatureStructure unify0(FeatureStructure other, long currentTimestamp) {
         boolean unifiable = unify1(other, currentTimestamp);
 
         if (unifiable) {
-//            System.err.println("before copying:\n" + rawToString());
             return copyWithCompArcs(currentTimestamp);
         } else {
             return null;
         }
     }
-
+    
     /**
      * Traverses an FS and sets temporary forwarding pointers, without making
      * copies of any FS. Returns true iff the two FSs are unifiable. This is
@@ -198,17 +159,17 @@ public abstract class FeatureStructure {
         if (dg1 == dg2) {
             return true;
         } else if (dg1 instanceof PlaceholderFeatureStructure) {
-            dg1.setForwardD(dg2, currentTimestamp);
+            dg1.setForward(dg2, currentTimestamp);
             return true;
         } else if (dg2 instanceof PlaceholderFeatureStructure) {
-            dg2.setForwardD(dg1, currentTimestamp);
+            dg2.setForward(dg1, currentTimestamp);
             return true;
         } else if (dg1 instanceof PrimitiveFeatureStructure && dg2 instanceof PrimitiveFeatureStructure) {
             PrimitiveFeatureStructure pdg1 = (PrimitiveFeatureStructure) dg1;
             PrimitiveFeatureStructure pdg2 = (PrimitiveFeatureStructure) dg2;
 
-            if (pdg1.getValueD().equals(pdg2.getValueD())) {
-                dg2.setForwardD(dg1, currentTimestamp);
+            if (pdg1.getValue().equals(pdg2.getValue())) {
+                dg2.setForward(dg1, currentTimestamp);
                 return true;
             } else {
                 return false;
@@ -224,32 +185,77 @@ public abstract class FeatureStructure {
 
     /**
      * Makes a copy of an FS that was previously processed by {@link #unify1(de.saar.coli.featstruct.FeatureStructure, long)
-     * }. This is Tomabechi's function "copy-dg-with-comp-arcs".
+     * }. If a copy was made previously, this copy is returned.
+     * This is Tomabechi's function "copy-dg-with-comp-arcs".
      *
      * @param currentTimestamp
      * @return
      */
     protected FeatureStructure copyWithCompArcs(long currentTimestamp) {
         FeatureStructure dg = dereference(copyTimestamp);
-        
-//        System.err.printf("copyWithCompArcs #%d, deref -> #%d\n", findOrMakeId(), dg.findOrMakeId());
 
         if (dg.copy != null && dg.copyTimestamp == currentTimestamp) {
-//            System.err.printf("- has copy #%d, return that\n", dg.copy.findOrMakeId());
             return dg.copy;
         } else {
-//            System.err.println("- need to make new copy");
-            return dg.copyWithCompArcsD(currentTimestamp);
+            return dg.makeCopyWithCompArcs(currentTimestamp);
         }
     }
 
-    abstract protected FeatureStructure copyWithCompArcsD(long currentTimestamp);
-
-    protected void setForwardD(FeatureStructure other, long currentTimestamp) {
+    /**
+     * Implementation of Tomabechi's function "copy-dg-with-comp-arcs"
+     * for the different types of feature structures.
+     * 
+     * @param currentTimestamp
+     * @return 
+     */
+    abstract protected FeatureStructure makeCopyWithCompArcs(long currentTimestamp);
+    
+    /**
+     * Follows forward pointers that are still valid for the current timestamp.
+     * 
+     * @param timestamp
+     * @return 
+     */
+    protected FeatureStructure dereference(long timestamp) {
+        if (forward == null) {
+            return this;
+        } else if (forwardTimestamp < timestamp) {
+            return this;
+        } else {
+            return forward.dereference(timestamp);
+        }
+    }
+    
+    /**
+     * Sets a forward pointer.
+     * 
+     * @param other
+     * @param currentTimestamp 
+     */
+    protected void setForward(FeatureStructure other, long currentTimestamp) {
         forward = other;
         forwardTimestamp = currentTimestamp;
     }
+    
+    /**
+     * Stores a copy.
+     * 
+     * @param fs
+     * @param timestamp 
+     */
+    protected void setCopy(FeatureStructure fs, long timestamp) {
+        copy = fs;
+        copyTimestamp = timestamp;
+    }
 
+    
+    
+    
+    
+    /***************************************************************************
+     * Equality checking
+     **************************************************************************/
+    
     /**
      * Checks two FSs for equality. Note that this method is pretty slow, it
      * should only be used in testing and debugging.
@@ -262,8 +268,8 @@ public abstract class FeatureStructure {
         if (obj instanceof FeatureStructure) {
             FeatureStructure other = (FeatureStructure) obj; //((FeatureStructure) obj).dereference();
 
-            List<List<String>> paths = getAllPathsD(); //dereference().getAllPathsD();
-            Set<List<String>> otherPaths = new HashSet<>(other.getAllPathsD());
+            List<List<String>> paths = getAllPaths(); //dereference().getAllPathsD();
+            Set<List<String>> otherPaths = new HashSet<>(other.getAllPaths());
 
             // FSs must have same set of paths
             if (!new HashSet(paths).equals(otherPaths)) {
@@ -275,13 +281,13 @@ public abstract class FeatureStructure {
 
             // values must be the same
             for (List<String> path : paths) {
-                FeatureStructure fs1 = get(path); //.dereference();
+                FeatureStructure fs1 = FeatureStructure.this.get(path); //.dereference();
                 FeatureStructure fs2 = other.get(path); //.dereference();
 
                 fsUnderPath.add(fs1);
                 fsUnderPathInOther.add(fs2);
 
-                if (!fs1.localEqualsD(fs2)) {
+                if (!fs1.localEquals(fs2)) {
                     return false;
                 }
             }
@@ -304,44 +310,27 @@ public abstract class FeatureStructure {
         }
     }
 
-    abstract protected List<List<String>> getAllPathsD();
-
-    public List<List<String>> getAllPaths() {
-        return getAllPathsD(); //dereference().getAllPathsD();
-    }
-
-    public FeatureStructure get(List<String> path) {
-        return getD(path, 0); // dereference().getD(path, 0);
-    }
-
-    public FeatureStructure get(String... path) {
-        return get(Arrays.asList(path));
-    }
-
-    public Object getValue() {
-        return getValueD(); //dereference().getValueD();
-    }
-
-    abstract protected Object getValueD();
-
-    abstract protected FeatureStructure getD(List<String> path, int pos);
-
-    abstract protected boolean localEqualsD(FeatureStructure other);
-
-    public static void main(String[] args) throws FsParsingException {
-        FeatureStructure fs1 = FeatureStructure.parse("[a: [b: c], d: [e: f]]");
-        FeatureStructure fs2 = FeatureStructure.parse("[a: #1 [b: c], d: #1, g: [h: j]]");
-        FeatureStructure ret = fs1.unify(fs2);
-
-        System.err.println(ret);
-        System.err.println(ret.rawToString());
-    }
-
-    protected void setCopyD(FeatureStructure fs, long timestamp) {
-        copy = fs;
-        copyTimestamp = timestamp;
-    }
-
+    /**
+     * Checks whether the two feature structures are locally equal.
+     * This should return true if both FSs are AVMs or both placeholders.
+     * If both FSs are primitives, returns true iff the values are equal.
+     * In all other cases (in particular, if the two FSs have different types),
+     * returns false.
+     * 
+     * @param other
+     * @return 
+     */
+    abstract protected boolean localEquals(FeatureStructure other);
+    
+    
+    
+    
+    
+    
+    /***************************************************************************
+     * Printing
+     **************************************************************************/
+    
     public String rawToString() {
         StringBuilder buf = new StringBuilder();
         Map<FeatureStructure, Integer> previouslyPrinted = new IdentityHashMap<>();
@@ -354,10 +343,10 @@ public abstract class FeatureStructure {
     }
 
     abstract protected void appendRawToString(StringBuilder buf, int indent);
-
+    
     protected void appendForwardAndCopy(StringBuilder buf, int indent) {
         String prefix = Util.repeat(" ", indent);
-        
+
         if (forward != null) {
             buf.append(String.format("%s-- forward pointer (timestamp %d) to:\n", prefix, forwardTimestamp));
             forward.appendRawToString(buf, indent + 3);
@@ -369,10 +358,60 @@ public abstract class FeatureStructure {
         }
     }
     
+    protected static String n(Object e) {
+        if (e == null) {
+            return "<null>";
+        } else {
+            return e.toString();
+        }
+    }
+    
+    @Override
+    public String toString() {
+        Set<FeatureStructure> visitedIndexedFs = new IdentityHashSet<>();
+        StringBuilder buf = new StringBuilder();
+
+        appendWithIndex(visitedIndexedFs, buf);
+        return buf.toString();
+    }
+
+    protected void appendWithIndex(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+        // prepend index if needed
+        if (getIndex() != null) {
+            buf.append(getIndexMarker());
+        }
+
+        if (!visitedIndexedFs.contains(this)) {
+            // mark as visited
+            if (getIndex() != null) {
+                visitedIndexedFs.add(this);
+                buf.append(" ");
+            }
+
+            // print actual value
+            appendValue(visitedIndexedFs, buf);
+        }
+    }
+
+    protected abstract void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf);
+    
+    
+    
+    
+    
+    /***************************************************************************
+     * Management of global FS IDs for pretty-printing. It is often useful
+     * to abbreviate the identity of an FS by just a numeric identifier. These
+     * identifiers are managed here.
+     **************************************************************************/
+    
+    private static Map<FeatureStructure, Integer> previouslyPrinted = new IdentityHashMap<>();
+    private static MutableInteger nextPpId = new MutableInteger(1);
+    
     protected int findPreviousId() {
         Integer id = previouslyPrinted.get(this);
-        
-        if( id == null ) {
+
+        if (id == null) {
             return -1;
         } else {
             return id;
@@ -384,22 +423,31 @@ public abstract class FeatureStructure {
         previouslyPrinted.put(this, id);
         return id;
     }
-    
+
     protected int findOrMakeId() {
         int id = findPreviousId();
-        if( id > -1 ) {
+        if (id > -1) {
             return id;
         } else {
             return makeId();
         }
     }
+    
+    
+    
+    
+    
+    
+    
+    
+/*
+    public static void main(String[] args) throws FsParsingException {
+        FeatureStructure fs1 = FeatureStructure.parse("[a: [b: c], d: [e: f]]");
+        FeatureStructure fs2 = FeatureStructure.parse("[a: #1 [b: c], d: #1, g: [h: j]]");
+        FeatureStructure ret = fs1.unify(fs2);
 
-    protected static String n(Object e) {
-        if (e == null) {
-            return "<null>";
-        } else {
-            return e.toString();
-        }
+        System.err.println(ret);
+        System.err.println(ret.rawToString());
     }
-
+*/
 }

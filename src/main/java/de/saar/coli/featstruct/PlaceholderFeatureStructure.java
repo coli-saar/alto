@@ -12,46 +12,34 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * An empty feature structure that has no data in it.
+ * Placeholder feature structures are useful when multiple
+ * placeholders with the same index are used in different places,
+ * enforcing reentrancy.
+ * 
  * @author koller
  */
 public class PlaceholderFeatureStructure extends FeatureStructure {
     public PlaceholderFeatureStructure(String index) {
         setIndex(index);
-    }    
-
-    @Override
-    protected void appendWithIndexD(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-        buf.append(getIndexMarker());
     }
-
-    @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    /*
-    @Override
-    protected FeatureStructure destructiveUnifyLocalD(FeatureStructure other) {
-        setForwardD(other, -1);
-        return other;
-    }
-*/
-
+    
+    
+    
     private static final List<String> EMPTY_PATH = new ArrayList<>();
     
     @Override
-    protected List<List<String>> getAllPathsD() {
+    public List<List<String>> getAllPaths() {
         return Arrays.asList(EMPTY_PATH);
     }
 
     @Override
-    protected Object getValueD() {
+    public Object getValue() {
         return null;
     }
 
     @Override
-    protected FeatureStructure getD(List<String> path, int pos) {
+    protected FeatureStructure get(List<String> path, int pos) {
         if (pos == path.size()) {
             return this;
         } else {
@@ -59,17 +47,44 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
         }
     }
 
+    
+    /***************************************************************************
+     * Tomabechi unification
+     **************************************************************************/
+    
     @Override
-    protected boolean localEqualsD(FeatureStructure other) {
+    protected FeatureStructure makeCopyWithCompArcs(long currentTimestamp) {
+        FeatureStructure ret = new PlaceholderFeatureStructure(getIndex());
+        setCopy(ret, currentTimestamp);
+        return ret;
+    }
+    
+    
+    
+    /***************************************************************************
+     * Equality checking
+     **************************************************************************/
+    
+    @Override
+    protected boolean localEquals(FeatureStructure other) {
         FeatureStructure d = other; //.dereference();
         return other instanceof PlaceholderFeatureStructure;
     }
+    
+    
+    /***************************************************************************
+     * Printing
+     **************************************************************************/
+    
 
     @Override
-    protected FeatureStructure copyWithCompArcsD(long currentTimestamp) {
-        FeatureStructure ret = new PlaceholderFeatureStructure(getIndexD());
-        setCopyD(ret, currentTimestamp);
-        return ret;
+    protected void appendWithIndex(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+        buf.append(getIndexMarker());
+    }
+
+    @Override
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+        buf.append("PH" + getIndexMarker());
     }
 
     @Override
@@ -81,7 +96,7 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
             buf.append(String.format("%splaceholder #%d\n", prefix, id));
         } else {
             id = makeId();
-            buf.append(String.format("%splaceholder #%d, index=%s\n", prefix, id, getIndexD()));
+            buf.append(String.format("%splaceholder #%d, index=%s\n", prefix, id, getIndex()));
             appendForwardAndCopy(buf, indent);
         }
     }

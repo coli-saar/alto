@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * A feature structure representing a primitive value,
+ * such as "sg" or 3.
+ * 
  * @author koller
  */
 public class PrimitiveFeatureStructure<E> extends FeatureStructure {
@@ -22,66 +24,54 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
         this.value = value;
     }
 
-    @Deprecated
-    private PrimitiveFeatureStructure<E> pdereference() {
-        return (PrimitiveFeatureStructure<E>) dereference();
-    }
-
     @Override
-    protected E getValueD() {
+    public E getValue() {
         return value;
     }
 
     public void setValue(E value) {
         this.value = value;
-//        pdereference().value = value;
     }
-
-    @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-        buf.append(value.toString());
-    }
-
-    /*
-    @Override
-    protected FeatureStructure destructiveUnifyLocalD(FeatureStructure d2) {
-        // unification with non-AVM FSs
-        if (d2 instanceof PlaceholderFeatureStructure) {
-            d2.setForwardD(this, -1);
-            return this;
-        } else if (d2 instanceof AvmFeatureStructure) {
-            return null;
-        }
-
-        // check that value is the same
-        PrimitiveFeatureStructure pd2 = (PrimitiveFeatureStructure) d2;
-        if (value.equals(pd2.value)) {
-            setForwardD(d2, -1);
-            return d2;
-        } else {
-            return null;
-        }
-    }
-*/
-
+    
+    
     private static final List<String> EMPTY_PATH = new ArrayList<>();
 
     @Override
-    protected List<List<String>> getAllPathsD() {
+    public List<List<String>> getAllPaths() {
         return Arrays.asList(EMPTY_PATH);
     }
 
     @Override
-    protected FeatureStructure getD(List<String> path, int pos) {
+    protected FeatureStructure get(List<String> path, int pos) {
         if (pos == path.size()) {
             return this;
         } else {
             return null;
         }
     }
-
+    
+    
+    
+    /***************************************************************************
+     * Tomabechi unification
+     **************************************************************************/
+    
     @Override
-    protected boolean localEqualsD(FeatureStructure other) {
+    protected FeatureStructure makeCopyWithCompArcs(long currentTimestamp) {
+        FeatureStructure ret = new PrimitiveFeatureStructure(value);
+        setCopy(ret, currentTimestamp);
+        return ret;
+    }
+    
+    
+    
+    
+    /***************************************************************************
+     * Equality checking
+     **************************************************************************/
+    
+    @Override
+    protected boolean localEquals(FeatureStructure other) {
         FeatureStructure d = other; //.dereference();
 
         if (other instanceof PrimitiveFeatureStructure) {
@@ -91,13 +81,18 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
             return false;
         }
     }
+    
+    
+    
+    /***************************************************************************
+     * Printing
+     **************************************************************************/
 
     @Override
-    protected FeatureStructure copyWithCompArcsD(long currentTimestamp) {
-        FeatureStructure ret = new PrimitiveFeatureStructure(value);
-        setCopyD(ret, currentTimestamp);
-        return ret;
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+        buf.append(value.toString());
     }
+    
 
     @Override
     protected void appendRawToString(StringBuilder buf, int indent) {
