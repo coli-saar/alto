@@ -31,6 +31,12 @@ import static org.hamcrest.CoreMatchers.*;
  */
 class FeatureStructureTest {
     
+    @Test
+    public void testGet() {
+        FeatureStructure fs1 = FeatureStructure.parse("[root: [num: sg]]")
+        assertThat(fs1.get("root"), is(FeatureStructure.parse("[num: sg]")))
+    }
+    
     // Equality checking
     
     @Test

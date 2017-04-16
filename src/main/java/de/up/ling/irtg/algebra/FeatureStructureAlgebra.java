@@ -51,7 +51,13 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
             return childrenValues.get(0).unify(childrenValues.get(1));
         } else if (label.startsWith(PROJ)) {
             assert childrenValues.size() == 1;
-            return childrenValues.get(0).get(withoutPrefix(label, PROJ));
+            
+            String attr = withoutPrefix(label, PROJ);
+            FeatureStructure arg = childrenValues.get(0);
+//            System.err.println(arg.rawToString());
+//            System.err.printf("%s -> proj(%s) / of %s / is %s\n", label, attr, arg, arg.get(attr));
+            
+            return arg.get(attr);
         } else if (label.startsWith(EMBED)) {
             assert childrenValues.size() == 1;
             AvmFeatureStructure ret = new AvmFeatureStructure();

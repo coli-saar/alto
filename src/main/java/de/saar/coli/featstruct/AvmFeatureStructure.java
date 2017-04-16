@@ -84,7 +84,7 @@ public class AvmFeatureStructure extends FeatureStructure {
                 return ch.get(path, pos + 1);
             }
         } else {
-            return null;
+            return this;
         }
     }
     
