@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A feature structure representing an attribute-value matrix.
- * Each value is another feature structure.
- * 
+ * A feature structure representing an attribute-value matrix. Each value is
+ * another feature structure.
+ *
  * @author koller
  */
 public class AvmFeatureStructure extends FeatureStructure {
@@ -23,9 +23,9 @@ public class AvmFeatureStructure extends FeatureStructure {
 
     /**
      * Adds an attribute-value pair to this AVM.
-     * 
+     *
      * @param attribute
-     * @param value 
+     * @param value
      */
     public void put(String attribute, FeatureStructure value) {
         avm.put(attribute, value);
@@ -33,7 +33,8 @@ public class AvmFeatureStructure extends FeatureStructure {
 
     /**
      * Returns the set of attributes defined in this AVM.
-     * @return 
+     *
+     * @return
      */
     public Set<String> getAttributes() {
         return avm.keySet();
@@ -41,13 +42,14 @@ public class AvmFeatureStructure extends FeatureStructure {
 
     /**
      * Returns the value stored under the given attribute.
+     *
      * @param attribute
-     * @return 
+     * @return
      */
     public FeatureStructure get(String attribute) {
         return avm.get(attribute);
     }
-    
+
     @Override
     public List<List<String>> getAllPaths() {
         List<List<String>> ret = new ArrayList<>();
@@ -84,15 +86,12 @@ public class AvmFeatureStructure extends FeatureStructure {
             return null;
         }
     }
-    
-    
-    
-    
-    
-    /***************************************************************************
+
+    /**
+     * *************************************************************************
      * Tomabechi unification
-     **************************************************************************/
-    
+     *************************************************************************
+     */
     private List<Map.Entry<String, FeatureStructure>> compArcList; // for Tomabechi
     private long compArcListTimestamp;                             // for Tomabechi; called comp-arc-mark there
 
@@ -157,26 +156,54 @@ public class AvmFeatureStructure extends FeatureStructure {
         return ret;
     }
 
-    
-    
-    
-    
-    /***************************************************************************
-     * Equality checking
-     **************************************************************************/
-    
+    /**
+     * *************************************************************************
+     * Subsumption checking
+     *************************************************************************
+     */
     @Override
-    protected boolean localEquals(FeatureStructure other) {
-        return true;
+    protected int checkSubsumptionValues(FeatureStructure other, long timestamp, int resultSoFar) {
+        AvmFeatureStructure aOther = (AvmFeatureStructure) other;
+
+        for (Map.Entry<String, FeatureStructure> arc : avm.entrySet()) {
+            if (aOther.avm.containsKey(arc.getKey())) { // iteration over intersect arcs
+                FeatureStructure childInThis = arc.getValue();
+                FeatureStructure childInOther = aOther.avm.get(arc.getKey());
+                resultSoFar = childInThis.checkSubsumptionBothWays(childInOther, timestamp, resultSoFar);
+
+                if (resultSoFar == 0) {
+                    return 0;
+                }
+            } else {
+                // "this" has attribute that is not present in "other"
+                // => "this" does not subsume "other"
+                resultSoFar &= ~SUBSUMES_FORWARD;
+            }
+        }
+
+        if ((resultSoFar | SUBSUMES_BACKWARD) > 0) {
+            for (String key : aOther.avm.keySet()) {
+                if (!avm.containsKey(key)) {
+                    // "other" has attribute that is not present in "this"
+                    // => "other" does not subsume "this"
+                    resultSoFar &= ~SUBSUMES_BACKWARD;
+                    
+                    if( resultSoFar == 0 ) {
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        return resultSoFar;
     }
     
-    
-    
-    
-    /***************************************************************************
-     * Printing
-     **************************************************************************/
 
+    /**
+     * *************************************************************************
+     * Printing
+     *************************************************************************
+     */
     @Override
     protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
         boolean first = true;
@@ -198,7 +225,7 @@ public class AvmFeatureStructure extends FeatureStructure {
 
         buf.append("]");
     }
-    
+
     @Override
     protected void appendRawToString(StringBuilder buf, int indent) {
         String prefix = Util.repeat(" ", indent);
@@ -226,4 +253,5 @@ public class AvmFeatureStructure extends FeatureStructure {
             }
         }
     }
+
 }

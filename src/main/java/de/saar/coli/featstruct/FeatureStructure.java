@@ -118,7 +118,7 @@ public abstract class FeatureStructure {
     private FeatureStructure copy = null;    // for Tomabechi
     private long copyTimestamp = -1;         // for Tomabechi; there called "copy-mark"
 
-    protected static long globalCopyTimestamp = 0; // global unification operation ID, will be counted up for each call to unify()
+    protected static long globalCopyTimestamp = 1; // global unification operation ID, will be counted up for each call to unify() and checkSubsumption()
 
     /**
      * Unifies this FS with another FS, using the Tomabechi (1991) algorithm.
@@ -135,8 +135,10 @@ public abstract class FeatureStructure {
     
     protected FeatureStructure unify0(FeatureStructure other, long currentTimestamp) {
         boolean unifiable = unify1(other, currentTimestamp);
+        
 
         if (unifiable) {
+//            System.err.println("before copying:\n" + rawToString());
             return copyWithCompArcs(currentTimestamp);
         } else {
             return null;
@@ -192,10 +194,11 @@ public abstract class FeatureStructure {
      * @return
      */
     protected FeatureStructure copyWithCompArcs(long currentTimestamp) {
-        FeatureStructure dg = dereference(copyTimestamp);
+        FeatureStructure dg = dereference(currentTimestamp);
+        FeatureStructure cp = dg.getCopy(currentTimestamp);
 
-        if (dg.copy != null && dg.copyTimestamp == currentTimestamp) {
-            return dg.copy;
+        if (cp != null) {
+            return cp;
         } else {
             return dg.makeCopyWithCompArcs(currentTimestamp);
         }
@@ -247,7 +250,88 @@ public abstract class FeatureStructure {
         copy = fs;
         copyTimestamp = timestamp;
     }
+    
+    protected FeatureStructure getCopy(long timestamp) {
+        if( copy == null ) {
+            return null;
+        } else if( copyTimestamp < timestamp ) {
+            return null;
+        } else {
+            return copy;
+        }
+    }
 
+    
+    
+    
+    /***************************************************************************
+     * Subsumption checking
+     **************************************************************************/
+    
+    public static int SUBSUMES_FORWARD = 2;
+    public static int SUBSUMES_BACKWARD = 1;
+    
+    /**
+     * Checks whether this FS subsumes another, i.e. whether all information
+     * in this FS is also present in the other.
+     * 
+     * @param other
+     * @return 
+     */
+    public boolean subsumes(FeatureStructure other) {
+        return (checkSubsumptionBothWays(other) & SUBSUMES_FORWARD) != 0;
+    }
+    
+    /**
+     * Checks whether this FS subsumes another and vice versa. If this
+     * FS subsumes the other, the resulting int will have the bit {@link #SUBSUMES_FORWARD}
+     * set. If the other FS subsumes this one, the bit {@link #SUBSUMES_BACKWARD} will
+     * be set. If the two FSs are equal, then both bits will be set.<p>
+     * 
+     * Subsumption checking is performed in linear time in the size of the
+     * two FSs, using the algorithm from Malouf/Carroll/Copestake, "Efficient
+     * feature structure operations without compilation", JNLE 2000.
+     * 
+     * @param other
+     * @return 
+     */
+    public int checkSubsumptionBothWays(FeatureStructure other) {
+        return checkSubsumptionBothWays(other, globalCopyTimestamp++, SUBSUMES_FORWARD | SUBSUMES_BACKWARD);
+    }
+    
+    protected int checkSubsumptionBothWays(FeatureStructure other, long timestamp, int resultSoFar) {
+        FeatureStructure cp1 = getCopy(timestamp);
+        FeatureStructure cp2 = other.getCopy(timestamp);
+        
+        // check reentrancies
+        if( cp1 == null ) {
+            setCopy(other, timestamp);
+        } else if( cp1 != other ) {
+            resultSoFar &= ~SUBSUMES_FORWARD;
+        }
+        
+        if( cp2 == null ) {
+            other.setCopy(this, timestamp);
+        } else if( cp2 != this ) {
+            resultSoFar &= ~SUBSUMES_BACKWARD;
+        }
+        
+        if( resultSoFar == 0 ) {
+            return 0;
+        }
+        
+        // check same node types
+        if( getClass() != other.getClass() ) {
+            return 0;
+        }
+        
+        // check contents
+        return checkSubsumptionValues(other, timestamp, resultSoFar);
+    }
+    
+    abstract protected int checkSubsumptionValues(FeatureStructure other, long timestamp, int resultSoFar);
+
+    
     
     
     
@@ -257,8 +341,9 @@ public abstract class FeatureStructure {
      **************************************************************************/
     
     /**
-     * Checks two FSs for equality. Note that this method is pretty slow, it
-     * should only be used in testing and debugging.
+     * Checks two FSs for equality. This method is implemented in terms of
+     * {@link #checkSubsumptionBothWays(de.saar.coli.featstruct.FeatureStructure) },
+     * and runs in linear time in the size of the two FSs.
      *
      * @param obj
      * @return
@@ -267,62 +352,11 @@ public abstract class FeatureStructure {
     public boolean equals(Object obj) {
         if (obj instanceof FeatureStructure) {
             FeatureStructure other = (FeatureStructure) obj; //((FeatureStructure) obj).dereference();
-
-            List<List<String>> paths = getAllPaths(); //dereference().getAllPathsD();
-            Set<List<String>> otherPaths = new HashSet<>(other.getAllPaths());
-
-            // FSs must have same set of paths
-            if (!new HashSet(paths).equals(otherPaths)) {
-                return false;
-            }
-
-            List<FeatureStructure> fsUnderPath = new ArrayList<>();         // dereferenced FSs in this, sorted as in "paths"
-            List<FeatureStructure> fsUnderPathInOther = new ArrayList<>();  // dereferenced FSs in other, sorted as in "paths"
-
-            // values must be the same
-            for (List<String> path : paths) {
-                FeatureStructure fs1 = FeatureStructure.this.get(path); //.dereference();
-                FeatureStructure fs2 = other.get(path); //.dereference();
-
-                fsUnderPath.add(fs1);
-                fsUnderPathInOther.add(fs2);
-
-                if (!fs1.localEquals(fs2)) {
-                    return false;
-                }
-            }
-
-            // coindexations must match
-            for (int i = 0; i < paths.size(); i++) {
-                for (int j = i + 1; j < paths.size(); j++) {
-                    boolean coindexed = (fsUnderPath.get(i) == fsUnderPath.get(j));
-                    boolean coindexedOther = (fsUnderPathInOther.get(i) == fsUnderPathInOther.get(j));
-
-                    if (coindexed != coindexedOther) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            return checkSubsumptionBothWays(other) == (SUBSUMES_BACKWARD | SUBSUMES_FORWARD);
         } else {
             return false;
         }
     }
-
-    /**
-     * Checks whether the two feature structures are locally equal.
-     * This should return true if both FSs are AVMs or both placeholders.
-     * If both FSs are primitives, returns true iff the values are equal.
-     * In all other cases (in particular, if the two FSs have different types),
-     * returns false.
-     * 
-     * @param other
-     * @return 
-     */
-    abstract protected boolean localEquals(FeatureStructure other);
-    
-    
     
     
     
@@ -439,15 +473,18 @@ public abstract class FeatureStructure {
     
     
     
-    
-/*
     public static void main(String[] args) throws FsParsingException {
-        FeatureStructure fs1 = FeatureStructure.parse("[a: [b: c], d: [e: f]]");
-        FeatureStructure fs2 = FeatureStructure.parse("[a: #1 [b: c], d: #1, g: [h: j]]");
-        FeatureStructure ret = fs1.unify(fs2);
+//        FeatureStructure fs1 = FeatureStructure.parse("[a: [b: c], d: [e: f]]");
+//        FeatureStructure fs2 = FeatureStructure.parse("[a: #1 [b: c], d: #1, g: [h: j]]");
+//        FeatureStructure ret = fs1.unify(fs2);
 
-        System.err.println(ret);
-        System.err.println(ret.rawToString());
+        FeatureStructure fs1 = FeatureStructure.parse("[a: s, b: #1]");
+        FeatureStructure fs2 = FeatureStructure.parse("[a: #2, b: #2, c: t]");
+        FeatureStructure expected = FeatureStructure.parse("[a: #3 s, b: #3, c: t]");
+        FeatureStructure unif = fs1.unify(fs2);
+        
+        System.err.println(unif.rawToString());
+        System.err.println(unif.checkSubsumptionBothWays(expected));
+        System.err.println(unif.rawToString());
     }
-*/
 }

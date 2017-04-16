@@ -65,23 +65,18 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
     
     
     
-    
     /***************************************************************************
-     * Equality checking
+     * Subsumption checking
      **************************************************************************/
     
     @Override
-    protected boolean localEquals(FeatureStructure other) {
-        FeatureStructure d = other; //.dereference();
-
-        if (other instanceof PrimitiveFeatureStructure) {
-            PrimitiveFeatureStructure pOther = (PrimitiveFeatureStructure) other;
-            return value.equals(pOther.value);
+    protected int checkSubsumptionValues(FeatureStructure other, long timestamp, int resultSoFar) {
+        if( value.equals(((PrimitiveFeatureStructure) other).value)) {
+            return resultSoFar;
         } else {
-            return false;
+            return 0;
         }
     }
-    
     
     
     /***************************************************************************
@@ -107,4 +102,6 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
             appendForwardAndCopy(buf, indent);
         }
     }
+
+    
 }

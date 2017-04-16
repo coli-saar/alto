@@ -60,15 +60,13 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
     }
     
     
-    
     /***************************************************************************
-     * Equality checking
+     * Subsumption checking
      **************************************************************************/
     
     @Override
-    protected boolean localEquals(FeatureStructure other) {
-        FeatureStructure d = other; //.dereference();
-        return other instanceof PlaceholderFeatureStructure;
+    protected int checkSubsumptionValues(FeatureStructure other, long timestamp, int resultSoFar) {
+        return resultSoFar;
     }
     
     
@@ -100,4 +98,6 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
             appendForwardAndCopy(buf, indent);
         }
     }
+
+    
 }
