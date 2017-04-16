@@ -48,6 +48,11 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
     }
 
     
+    @Override
+    protected int calculateHashCode() {
+        return getIndexMarker().hashCode();
+    }
+    
     /***************************************************************************
      * Tomabechi unification
      **************************************************************************/
@@ -98,6 +103,7 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
             appendForwardAndCopy(buf, indent);
         }
     }
+
 
     
 }

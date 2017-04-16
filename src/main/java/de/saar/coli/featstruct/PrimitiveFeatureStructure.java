@@ -52,6 +52,13 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
     
     
     
+    @Override
+    protected int calculateHashCode() {
+        return 19 * value.hashCode();
+    }
+
+    
+    
     /***************************************************************************
      * Tomabechi unification
      **************************************************************************/

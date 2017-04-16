@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -86,6 +87,21 @@ public class AvmFeatureStructure extends FeatureStructure {
             return null;
         }
     }
+    
+    
+
+    @Override
+    protected int calculateHashCode() {
+        int ret = 17;
+        
+        for( Map.Entry<String,FeatureStructure> arc : avm.entrySet() ) {
+            ret = 19*ret + 23*Objects.hashCode(arc.getKey()) + 31*Objects.hashCode(arc.getValue());
+        }
+        
+        return ret;
+    }
+    
+    
 
     /**
      * *************************************************************************

@@ -10,9 +10,7 @@ import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +25,7 @@ import java.util.logging.Logger;
  */
 public abstract class FeatureStructure {
     private String index = null;
+    private int cachedHashCode = -1;
 
     public static FeatureStructure parse(String s) throws FsParsingException {
         try {
@@ -351,13 +350,38 @@ public abstract class FeatureStructure {
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof FeatureStructure) {
-            FeatureStructure other = (FeatureStructure) obj; //((FeatureStructure) obj).dereference();
+            FeatureStructure other = (FeatureStructure) obj;
             return checkSubsumptionBothWays(other) == (SUBSUMES_BACKWARD | SUBSUMES_FORWARD);
         } else {
             return false;
         }
     }
+
+    /**
+     * A simple implementation of hashCode that is guaranteed to assign
+     * two FSs the same hash code if they have the same feature paths and
+     * the same values under these feature paths. Reentrancies are ignored.
+     * This may lead to slightly more hash collisions, but is easier
+     * to implement.<p>
+     * 
+     * The hash code is cached after it is calculated, for efficiency
+     * reasons. If you make destructive changes to the FS (beyond the
+     * temporary changes to forward and copy), the hash code
+     * may become invalid. If you need this, you will need to change
+     * the caching mechanism.
+     * 
+     * @return 
+     */
+    @Override
+    public int hashCode() {
+        if( cachedHashCode == -1 ) {
+            cachedHashCode = calculateHashCode();
+        }
+        
+        return cachedHashCode;
+    }
     
+    abstract protected int calculateHashCode();
     
     
     
@@ -487,4 +511,5 @@ public abstract class FeatureStructure {
         System.err.println(unif.checkSubsumptionBothWays(expected));
         System.err.println(unif.rawToString());
     }
+
 }
