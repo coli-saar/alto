@@ -1,0 +1,25 @@
+interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+interpretation ft: de.up.ling.irtg.algebra.FeatureStructureAlgebra 
+
+
+
+S! -> r1(NP, VP)
+[string] *(?1, ?2)
+[ft] unify(unify("[num: #1, c1: [num: #1], c2: [num: #1]]", emb_c1(?1)), emb_c2(?2))
+
+NP -> r2
+[string] john
+[ft] "[num: sg]"
+
+NP -> r3
+[string] children
+[ft] "[num: pl]"
+
+VP -> r4
+[string] sleeps
+[ft] "[num: sg]"
+
+VP -> r5
+[string] sleep
+[ft] "[num: pl]"
+
