@@ -17,6 +17,7 @@ import de.up.ling.gui.datadialog.entries.ConcreteBooleanDataPanelEntry;
 import de.up.ling.gui.datadialog.entries.ConcreteListDataPanelEntry;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.NullFilterAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.Rule;
@@ -33,6 +34,7 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.InterpretationPrintingPolicy;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.util.GuiUtils;
@@ -86,17 +88,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 //        }
         if (!GuiMain.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar2);
-//            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-//            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-//            miSaveAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
-//            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-//            miShowLanguage.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
-//            miParse.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
-//            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-//            miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_MASK));
         }
 
-//        new WindowMenu(this).get
         this.automaton = automaton;
 
         // We used to check the automaton for emptiness here and 
@@ -261,6 +254,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miParse = new javax.swing.JMenuItem();
         miBulkParse = new javax.swing.JMenuItem();
         miBinarize = new javax.swing.JMenuItem();
+        miFilterNull = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         miTrainML = new javax.swing.JMenuItem();
         miTrainEM = new javax.swing.JMenuItem();
@@ -413,6 +407,14 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu4.add(miBinarize);
+
+        miFilterNull.setText("Filter null values on interpretation ...");
+        miFilterNull.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miFilterNullActionPerformed(evt);
+            }
+        });
+        jMenu4.add(miFilterNull);
         jMenu4.add(jSeparator3);
 
         miTrainML.setText("Maximum Likelihood Training ...");
@@ -957,6 +959,32 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                       });
     }//GEN-LAST:event_miBulkParseActionPerformed
 
+    private void miFilterNullActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFilterNullActionPerformed
+        JOneStringInputForm.withString("Filter null values on interpretation", "Interpretation", this, true, intrp -> {
+            GuiUtils.withProgressBar(this, "Null filtering progress", "Filtering ...",
+                                         listener -> {
+                                             // TODO - better selection of null-filter interpretation
+                                             // TODO - error handling
+                                             // TODO - progress bar
+                                             
+                                             NullFilterAlgebra alg = (NullFilterAlgebra) irtg.getInterpretation(intrp).getAlgebra();
+                                             Homomorphism hom = irtg.getInterpretation(intrp).getHomomorphism();
+                                             return automaton.intersect(alg.nullFilter().inverseHomomorphism(hom));
+                                         },
+                                         (chart, time) -> {
+                                             if (chart != null) {
+                                                 GuiMain.log("Finished null filtering on '" + intrp + "', " + Util.formatTime(time));
+                                                 
+                                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+                                                jta.setIrtg(irtg);
+                                                jta.setTitle(getTitle() + " (null-filtered)");
+                                                jta.pack();
+                                                jta.setVisible(true);
+                                            }
+                                         });
+        });
+    }//GEN-LAST:event_miFilterNullActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -976,6 +1004,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenuItem miBulkParse;
     private javax.swing.JMenuItem miCloseAllWindows;
     private javax.swing.JMenuItem miCloseWindow;
+    private javax.swing.JMenuItem miFilterNull;
     private javax.swing.JMenuItem miLoadMaxentWeights;
     private javax.swing.JMenu miMaxent;
     private javax.swing.JMenuItem miOpenAutomaton;

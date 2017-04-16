@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  *
  * @author koller
  */
-public class FeatureStructureAlgebra extends Algebra<FeatureStructure> {
+public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implements NullFilterAlgebra {
     public static final String UNIFY = "unify";
     public static final String PROJ = "proj_";
     public static final String EMBED = "emb_";
@@ -63,14 +63,12 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> {
             try {
                 FeatureStructure cached = parsedAtoms.get(label);
 
-                if (cached != null) {
+                if (cached == null) {
                     cached = FeatureStructure.parse(label);
                     parsedAtoms.put(label, cached);
                 }
 
                 return cached;
-
-//                return FeatureStructure.parse(label);
             } catch (FsParsingException ex) {
                 Logger.getLogger(FeatureStructureAlgebra.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
@@ -91,6 +89,7 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> {
         }
     }
 
+    @Override
     public TreeAutomaton nullFilter() {
         return new TreeAutomaton<FeatureStructure>(signature) {
             @Override
@@ -135,12 +134,13 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/fcfg.irtg"));
         FeatureStructureAlgebra fsa = (FeatureStructureAlgebra) irtg.getInterpretation("ft").getAlgebra();
 
-        // one iteration takes 0.025 ms after warmup
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
         sw.record();
 
         TreeAutomaton<?> chart = irtg.parse(ImmutableMap.of("string", "john sleeps"));
         sw.record();
+        
+        System.err.println(chart);
 
         TreeAutomaton<?> filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(irtg.getInterpretation("ft").getHomomorphism()));
         sw.record();
