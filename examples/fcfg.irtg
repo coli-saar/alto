@@ -1,25 +1,31 @@
 interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+interpretation tree: de.up.ling.irtg.algebra.TreeWithAritiesAlgebra
 interpretation ft: de.up.ling.irtg.algebra.FeatureStructureAlgebra 
 
 
 
 S! -> r1(NP, VP)
 [string] *(?1, ?2)
+[tree] S_2(?1, ?2)
 [ft] unify(unify("[num: #1, c1: [num: #1], c2: [num: #1]]", emb_c1(?1)), emb_c2(?2))
 
 NP -> r2
 [string] john
+[tree] NP_1(john_0)
 [ft] "[num: sg]"
 
 NP -> r3
 [string] children
+[tree] NP_1(children_0)
 [ft] "[num: pl]"
 
 VP -> r4
 [string] sleeps
+[tree] VP_1(sleeps_0)
 [ft] "[num: sg]"
 
 VP -> r5
 [string] sleep
+[tree] VP_1(sleep_0)
 [ft] "[num: pl]"
 

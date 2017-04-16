@@ -5,9 +5,16 @@
  */
 package de.up.ling.irtg.algebra;
 
+import com.google.common.collect.ImmutableMap;
 import de.saar.coli.featstruct.AvmFeatureStructure;
 import de.saar.coli.featstruct.FeatureStructure;
 import de.saar.coli.featstruct.FsParsingException;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.tree.Tree;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,6 +67,21 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> {
             return FeatureStructure.parse(representation);
         } catch (FsParsingException ex) {
             throw new ParserException(ex);
+        }
+    }
+    
+    public static void main(String[] args) throws FileNotFoundException, IOException, ParserException {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/fcfg.irtg"));
+        TreeAutomaton<?> chart = irtg.parse(ImmutableMap.of("string", "john sleeps"));
+        int count = 0;
+        
+        for( Tree<String> dt : chart.languageIterable() ) {
+            Object fs = irtg.interpret(dt, "ft");
+            Object t = irtg.interpret(dt, "tree");
+            
+            if( fs != null ) {
+                System.err.printf("[%3d] %s\n      %s\n      %s\n", ++count, dt, t, fs);
+            }
         }
     }
 }
