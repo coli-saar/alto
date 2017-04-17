@@ -152,9 +152,9 @@ public class TagGrammar {
         final List<String> childStates = new ArrayList<>();
 
         etree.getTree().dfs((node, children) -> {
-            String label = node.getLabel().getLeft(); // use these as states
+            String label = node.getLabel().getLabel(); // use these as states
 
-            switch (node.getLabel().getRight()) {
+            switch (node.getLabel().getType()) {
                 case HEAD:
                 case SECONDARY_LEX:
                     childStates.add(makeA(label));
@@ -198,14 +198,14 @@ public class TagGrammar {
      */
     Tree<Integer> makeDfsNodePositions(ElementaryTree tree, MutableInteger nextPosition) {
             return tree.getTree().dfs((node, children) -> {
-                switch (node.getLabel().getRight()) {
+                switch (node.getLabel().getType()) {
                     case HEAD:
                     case SECONDARY_LEX:
                     case SUBSTITUTION:
                         return Tree.create(nextPosition.incValue(), children);
                         
                     case DEFAULT:
-                        if (isTrace(node.getLabel().getLeft())) {
+                        if (isTrace(node.getLabel().getLabel())) {
                             // do not allow adjunction around traces
                             return Tree.create(-1);
                         } else {
@@ -242,11 +242,11 @@ public class TagGrammar {
         // PTB-TAG. We ignore these lexicon entries.
         if (etree != null) {
             Tree<HomomorphismSymbol> treeHomTerm = etree.getTree().dfs((node, children) -> {
-                String label = node.getLabel().getLeft(); // use these as states
+                String label = node.getLabel().getLabel(); // use these as states
 //                String labelWithArity = label + "_" + children.size();     // use these as labels in the homomorphism terms // suitable for interpretation by new TagTreeAlgebra
                 Tree<HomomorphismSymbol> ret = null;
 
-                switch (node.getLabel().getRight()) {
+                switch (node.getLabel().getType()) {
                     case HEAD:
                         childStates.add(makeA(label));
                         adjunctionNonterminals.add(makeA(label));

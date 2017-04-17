@@ -183,8 +183,8 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         try {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split("\\s+");
-                Tree<Pair<String, NodeType>> t = decodeElementaryTree(parts, new MutableInteger(1));
-                boolean isAuxiliary = t.some(p -> p.getRight().equals(NodeType.FOOT));
+                Tree<Node> t = decodeElementaryTree(parts, new MutableInteger(1));
+                boolean isAuxiliary = t.some(p -> p.getType().equals(NodeType.FOOT));
                 tagg.addElementaryTree(parts[0], new ElementaryTree(t, isAuxiliary ? ElementaryTreeType.AUXILIARY : ElementaryTreeType.INITIAL));
             }
 
@@ -214,12 +214,12 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
-    private Tree<Pair<String, NodeType>> decodeElementaryTree(String[] parts, MutableInteger pos) {
+    private Tree<Node> decodeElementaryTree(String[] parts, MutableInteger pos) {
         String[] pparts = splitNodeDescriptor(parts[pos.incValue()]);
         String nt = pparts[0];
         NodeType nodeType = decodeNodetype(pparts[4]);
         String nodename = pparts[2];
-        List<Tree<Pair<String, NodeType>>> children = new ArrayList<>();
+        List<Tree<Node>> children = new ArrayList<>();
 
         assert "l".equals(pparts[3]);
 
@@ -233,7 +233,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             children.add(decodeElementaryTree(parts, pos));
         }
 
-        return Tree.create(new Pair(nt, nodeType), children);
+        return Tree.create(new Node(nt, nodeType), children);
     }
 
     private NodeType decodeNodetype(String marker) {
