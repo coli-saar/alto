@@ -6,7 +6,6 @@
 
 package de.up.ling.irtg.codec.tag;
 
-import de.saar.basic.Pair;
 import de.up.ling.tree.Tree;
 
 /**
@@ -20,6 +19,12 @@ public class ElementaryTree {
     public ElementaryTree(Tree<Node> tree, ElementaryTreeType type) {
         this.tree = tree;
         this.type = type;
+    }
+    
+    public ElementaryTree(Tree<Node> tree) {
+        boolean isAuxiliary = tree.some(node -> node.getType() == NodeType.FOOT);
+        this.tree = tree;
+        this.type = isAuxiliary ? ElementaryTreeType.AUXILIARY : ElementaryTreeType.INITIAL;
     }
 
     public Tree<Node> getTree() {
@@ -58,5 +63,9 @@ public class ElementaryTree {
     public String toString() {
         String ty = (type == ElementaryTreeType.INITIAL) ? "I:" : "A:";
         return ty + tree.map( Node::toString).toString();
+    }
+    
+    public boolean hasFeatureStructures() {
+        return tree.some(Node::hasFeatureStructures);
     }
 }

@@ -34,6 +34,7 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
     public static final String UNIFY = "unify";
     public static final String PROJ = "proj_";
     public static final String EMBED = "emb_";
+    public static final String EMBED_AUX = "emba_";
 
     private Map<String, FeatureStructure> parsedAtoms = new HashMap<>();
 
@@ -62,6 +63,13 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
             assert childrenValues.size() == 1;
             AvmFeatureStructure ret = new AvmFeatureStructure();
             ret.put(withoutPrefix(label, EMBED), childrenValues.get(0));
+            return ret;
+        } else if( label.startsWith(EMBED_AUX)) {
+            assert childrenValues.size() == 1;
+            String[] parts = label.split("_");
+            AvmFeatureStructure ret = new AvmFeatureStructure();            
+            ret.put(parts[1], childrenValues.get(0).get("root"));
+            ret.put(parts[2], childrenValues.get(0).get("foot"));
             return ret;
         } else {
             assert childrenValues.isEmpty();

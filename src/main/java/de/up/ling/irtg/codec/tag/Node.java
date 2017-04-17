@@ -56,6 +56,15 @@ public class Node {
     public String toString() {
         return type.mark(label);
     }
+
+    public void setTop(FeatureStructure top) {
+        this.top = top;
+    }
+
+    public void setBottom(FeatureStructure bottom) {
+        this.bottom = bottom;
+    }
+    
     
     
 }
