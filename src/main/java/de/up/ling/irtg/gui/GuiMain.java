@@ -302,7 +302,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public static void showDecompositionDialog(java.awt.Frame parent) {
         new DecompositionDialog(parent, true).setVisible(true);
     }
-    
+
     public static void showVisualizationDialog(java.awt.Frame parent) {
         new VisualizeDialog(parent, true).setVisible(true);
     }
@@ -683,6 +683,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
+        // enable anti-aliasing
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
+
         // set uncaught exception handler
         Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> {
             GuiUtils.showError(exception);
@@ -784,7 +788,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
     public void handleReOpenApplication(ApplicationEvent ae) {
     }
-    
+
     public static String getGrammarServer() {
         return GRAMMAR_SERVER_URL;
     }

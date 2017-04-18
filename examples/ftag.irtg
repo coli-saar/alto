@@ -1,0 +1,36 @@
+interpretation tree: de.up.ling.irtg.algebra.TagTreeAlgebra
+interpretation string: de.up.ling.irtg.algebra.TagStringAlgebra
+interpretation ft: de.up.ling.irtg.algebra.FeatureStructureAlgebra 
+
+
+
+S_S! -> loves(NP_S, NP_S, VP_A)
+[string] *CONC11*(?1, *WRAP21*(?3, *CONC11*(loves, ?2)))
+[tree]   S2(?1, @(?3, VP2(V0(loves), ?2)))
+[ft]     unify(unify(unify(unify("[root: [], c1: [num: #1], anch: [num: #1 sg], c22: [num: #2], t2: #3, b2: #3]",
+	 			 emb_c1(proj_root(?1))),
+		           emb_c22(proj_root(?2))),
+	             emb_t2(proj_root(?3))),
+	       emb_b2(proj_foot(?3)))
+
+VP_A -> nop
+[string] *EE*
+[tree]   *
+[ft]     "[root: #1, foot: #1]"
+
+NP_S -> john
+[string] john
+[tree]   NP0(john)
+[ft]     "[root: [num: sg]]"
+
+NP_S -> john_pl
+[string] john
+[tree]   NP0(johnnn)
+[ft]     "[root: [num: pl]]"
+
+
+NP_S -> mary
+[string] mary
+[tree]   NP0(mary)
+[ft]     "[root: [num: sg]]"
+

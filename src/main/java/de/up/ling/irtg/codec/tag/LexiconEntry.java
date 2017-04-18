@@ -6,7 +6,8 @@
 
 package de.up.ling.irtg.codec.tag;
 
-import java.util.HashMap;
+import de.saar.coli.featstruct.AvmFeatureStructure;
+import de.saar.coli.featstruct.FeatureStructure;
 import java.util.Map;
 import java.util.Objects;
 
@@ -17,13 +18,17 @@ import java.util.Objects;
 public class LexiconEntry {
     private String word;
     private String elementaryTreeName;
-    private Map<String,String> features;
+    private FeatureStructure features;
     private String secondaryLex;
-
-    public LexiconEntry(String word, String elementaryTreeName) {
+    
+    public LexiconEntry(String word, String elementaryTreeName, FeatureStructure fs) {
         this.word = word;
         this.elementaryTreeName = elementaryTreeName;
-        features = new HashMap<>();
+        this.features = fs;
+    }
+
+    public LexiconEntry(String word, String elementaryTreeName) {
+        this(word, elementaryTreeName, new AvmFeatureStructure());
     }
 
     public String getWord() {
@@ -33,17 +38,13 @@ public class LexiconEntry {
     public String getElementaryTreeName() {
         return elementaryTreeName;
     }
-
-    public Map<String, String> getFeatures() {
+    
+    public void setFeatureStructure(FeatureStructure fs) {
+        this.features = fs;
+    }
+    
+    public FeatureStructure getFeatureStructure() {
         return features;
-    }
-    
-    public String getFeature(String ft) {
-        return features.get(ft);
-    }
-    
-    public void addFeature(String key, String value) {
-        features.put(key, value);
     }
 
     public String getSecondaryLex() {

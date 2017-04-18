@@ -6,7 +6,6 @@
 
 package de.up.ling.irtg.codec.tag;
 
-import de.saar.basic.Pair;
 import de.up.ling.tree.Tree;
 
 /**
@@ -14,15 +13,21 @@ import de.up.ling.tree.Tree;
  * @author koller
  */
 public class ElementaryTree {
-    private Tree<Pair<String,NodeType>> tree;
+    private Tree<Node> tree;
     private ElementaryTreeType type;
 
-    public ElementaryTree(Tree<Pair<String,NodeType>> tree, ElementaryTreeType type) {
+    public ElementaryTree(Tree<Node> tree, ElementaryTreeType type) {
         this.tree = tree;
         this.type = type;
     }
+    
+    public ElementaryTree(Tree<Node> tree) {
+        boolean isAuxiliary = tree.some(node -> node.getType() == NodeType.FOOT);
+        this.tree = tree;
+        this.type = isAuxiliary ? ElementaryTreeType.AUXILIARY : ElementaryTreeType.INITIAL;
+    }
 
-    public Tree<Pair<String,NodeType>> getTree() {
+    public Tree<Node> getTree() {
         return tree;
     }
 
@@ -31,20 +36,20 @@ public class ElementaryTree {
     }
     
     public String getRootLabel() {
-        return tree.getLabel().getLeft();
+        return tree.getLabel().getLabel();
     }
     
     public ElementaryTree lexicalize(String headWord, String headPos, String secondary) {
-        Tree<Pair<String,NodeType>> lex = tree.substitute(subtree -> {
-            if( subtree.getLabel().getRight() == NodeType.HEAD ) {
-                Pair topNode = new Pair(subtree.getLabel().getLeft(), NodeType.DEFAULT);
-                Pair posNode = new Pair(headPos, NodeType.DEFAULT);
-                Pair headNode = new Pair(headWord, NodeType.HEAD);
+        Tree<Node> lex = tree.substitute((Tree<Node> subtree) -> {
+            if( subtree.getLabel().getType() == NodeType.HEAD ) {
+                Node topNode = subtree.getLabel().withDifferentType(NodeType.DEFAULT);
+                Node posNode = new Node(headPos, NodeType.DEFAULT);
+                Node headNode = new Node(headWord, NodeType.HEAD);
                 
                 return Tree.create(topNode, Tree.create(posNode, Tree.create(headNode)));
-            } else if( subtree.getLabel().getRight() == NodeType.SECONDARY_LEX ) {
-                Pair topNode = new Pair(subtree.getLabel().getLeft(), NodeType.DEFAULT);
-                Pair leafNode = new Pair(secondary, NodeType.SECONDARY_LEX);
+            } else if( subtree.getLabel().getType() == NodeType.SECONDARY_LEX ) {
+                Node topNode = subtree.getLabel().withDifferentType(NodeType.DEFAULT);
+                Node leafNode = new Node(secondary, NodeType.SECONDARY_LEX);
                 return Tree.create(topNode, Tree.create(leafNode));
             } else {
                 return null;
@@ -57,6 +62,10 @@ public class ElementaryTree {
     @Override
     public String toString() {
         String ty = (type == ElementaryTreeType.INITIAL) ? "I:" : "A:";
-        return ty + tree.map( p -> p.getRight().mark(p.getLeft()) ).toString();
+        return ty + tree.map( Node::toString).toString();
+    }
+    
+    public boolean hasFeatureStructures() {
+        return tree.some(Node::hasFeatureStructures);
     }
 }
