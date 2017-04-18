@@ -396,13 +396,51 @@ public class TagGrammar {
                 });
 
                 // make sure root attribute points to correct value
-                FeatureStructure ret = fsForEtree.unify(rootMaker);
+                // and enforce coindexation across different nodes in same etree
+                final FeatureStructure coreFs = mergeSameIndices.unify(fsForEtree.unify(rootMaker));
 
-                // enforce coindexation across different nodes in same etree
-                ret = mergeSameIndices.unify(ret);
+                // construct homomorphism term, ensuring that it has the same
+                // structure as the other terms so the rule can be binarized
+                Tree<String> h = treeHomTerm.dfs((nodeInTree, children) -> {
+                    if (children.isEmpty()) {
+                        // leaf
+                        if (nodeInTree.getLabel().isVariable()) {
+                            // variable
+                            int index = nodeInTree.getLabel().getValue();
+                            String nodeId = nodeIdsForChildren.get(index);
+                            boolean isAuxChild = !isSubstitutionVariable(childStates.get(index));
 
+                            if (isAuxChild) {
+                                return Tree.create("emba_" + nodeId + "t_" + nodeId + "b", Tree.create("?" + (index + 1)));
+                            } else {
+                                return Tree.create("emb_" + nodeId, Tree.create("proj_root", Tree.create("?" + (index + 1))));
+                            }
+                        } else {
+                            // non-variable => constant for the lexical anchor
+                            // NB this may not be entirely accurate if the TAG grammar is not
+                            // strongly lexicalized, i.e. can have multiple words per e-tree
+                            
+                            System.err.println(coreFs);
+                            return Tree.create(coreFs.toString());
+                        }
+                    } else {
+                        // Unification is commutative, so the order of children
+                        // should not matter. We'll try to push the coreFs as far
+                        // to the left as we can, to make the string representation
+                        // more readable.                        
+                        Tree<String> ret = children.get(children.size()-1);
+                        
+                        for( int i = children.size()-2; i >= 0; i-- ) {
+                            ret = Tree.create("unify", ret, children.get(i));
+                        }
+                        
+                        return ret;
+                    }
+                });
+
+                /*
                 // construct homomorphism
-                Tree<String> h = Tree.create(ret.toString());
+                Tree<String> h = Tree.create(coreFs.toString());
                 int posInNodeIdsForChildren = 0;
 
                 System.err.printf("convert for %s:\n", lex);
@@ -422,6 +460,7 @@ public class TagGrammar {
                         h = Tree.create("unify", h, root_arg);
                     }
                 }
+                */
 
                 fh.add(terminalSym, h);
             }

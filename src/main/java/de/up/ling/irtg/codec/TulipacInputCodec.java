@@ -48,18 +48,6 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         TulipacParser p = new TulipacParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
-
-        /*
-        automaton = new ConcreteTreeAutomaton<>();
-        
-        Algebra at = new TagTreeAlgebra();
-        Algebra as = new TagStringAlgebra();
-        Algebra af = new FeatureStructureAlgebra();
-        
-        ht = new Homomorphism(automaton.getSignature(), at.getSignature());
-        hs = new Homomorphism(automaton.getSignature(), as.getSignature());
-        hf = new Homomorphism(automaton.getSignature(), af.getSignature());
-         */
         
         tagg = new TagGrammar();
         
@@ -67,14 +55,6 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         buildGrmr(parse);
 
         return tagg.toIrtg();
-
-//        
-//        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(automaton);
-//        ret.addInterpretation("string", new Interpretation(as, hs));
-//        ret.addInterpretation("tree", new Interpretation(at, ht));
-//        ret.addInterpretation("ft", new Interpretation(af, hf));
-//        
-//        return ret;
     }
 
     private void buildGrmr(GrmrContext parse) {
