@@ -87,15 +87,10 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
      * Printing
      **************************************************************************/
     
-
-//    @Override
-//    protected void appendWithIndex(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-//        buf.append(getIndexMarker());
-//    }
-
     @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
-        buf.append("PH" + getIndexMarker());
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, boolean printedIndexMarker, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
+        // don't print anything -- we just printed the #index before calling this method
+//        buf.append("PH" + getIndexMarker());
     }
 
     @Override

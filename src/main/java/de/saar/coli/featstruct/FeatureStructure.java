@@ -435,8 +435,16 @@ public abstract class FeatureStructure {
     
     private void computeReentrancies(Map<FeatureStructure,String> reentrantFsToIndex, MutableInteger nextIndex) {
         if( ! reentrantFsToIndex.containsKey(this) ) {
-            // first time we're visiting this FS -> just mark as visited and move on to children
-            reentrantFsToIndex.put(this, FIRST_VISIT);
+            // first time we're visiting this FS
+            if( this instanceof PlaceholderFeatureStructure ) {
+                // placeholder FS => always mark with index
+                reentrantFsToIndex.put(this, "#" + nextIndex.incValue());
+            } else {
+                // otherwise, only mark as a visited for the first time
+                reentrantFsToIndex.put(this, FIRST_VISIT);
+            }
+            
+            // do the same for all my children
             forAllChildren(ch -> ch.computeReentrancies(reentrantFsToIndex, nextIndex));
         } else {
             if( reentrantFsToIndex.get(this) == FIRST_VISIT ) {
@@ -464,20 +472,21 @@ public abstract class FeatureStructure {
     }
 
     protected void appendWithIndex(Set<FeatureStructure> previouslyVisitedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
+        boolean printedIndexMarker = false;
         // reentrant node => print reentrancy marker
         if( reentrantFsToIndex.containsKey(this)) {
             buf.append(reentrantFsToIndex.get(this));
-            buf.append(" ");
+            printedIndexMarker = true;
         }
         
         // print value only for nodes that were not previously visited
         if( ! previouslyVisitedFs.contains(this) ) {
             previouslyVisitedFs.add(this);
-            appendValue(previouslyVisitedFs, reentrantFsToIndex, buf);            
+            appendValue(previouslyVisitedFs, printedIndexMarker, reentrantFsToIndex, buf);
         }
     }
 
-    protected abstract void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf);
+    protected abstract void appendValue(Set<FeatureStructure> visitedIndexedFs, boolean printedIndexMarker, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf);
     
     
     

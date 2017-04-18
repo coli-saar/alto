@@ -222,8 +222,12 @@ public class AvmFeatureStructure extends FeatureStructure {
      * ************************************************************************
      */
     @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure, String> reentrantFsToIndex, StringBuilder buf) {
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, boolean printedIndexMarker, Map<FeatureStructure, String> reentrantFsToIndex, StringBuilder buf) {
         boolean first = true;
+        
+        if( printedIndexMarker ) {
+            buf.append(" ");
+        }
 
         buf.append("[");
 

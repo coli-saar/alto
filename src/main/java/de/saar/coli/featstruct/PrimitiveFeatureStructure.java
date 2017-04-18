@@ -96,7 +96,11 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
      **************************************************************************/
 
     @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, boolean printedIndexMarker, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
+        if( printedIndexMarker ) {
+            buf.append(" ");
+        }
+        
         buf.append(value.toString());
     }
     
