@@ -69,6 +69,7 @@ public class TagGrammar {
         return lexicon.keySet();
     }
 
+    // makes Chen-specific assumptions
     public Collection<ElementaryTree> lexicalizeElementaryTrees(String word) {
         List<ElementaryTree> ret = new ArrayList<>();
 
@@ -77,13 +78,9 @@ public class TagGrammar {
                 ElementaryTree et = trees.get(lex.getElementaryTreeName());
 
                 if (et == null) {
-                    /* && ! "tCO".equals(lex.getElementaryTreeName())) { 
-                        adding the above to the if clause leads to NullPointerExceptions whenever
-                        (et==null && "tCO".equals(lex.getElementaryTreeName())
-                     */
                     System.err.println("*** UNK ET: " + lex + " for word " + word + "***");
                 } else {
-                    ret.add(et.lexicalize(word, (String) lex.getFeatureStructure().get("pos").getValue(), lex.getSecondaryLex()));  // getFeature("pos")
+                    ret.add(et.lexicalize(word, (String) lex.getFeatureStructure().get("pos").getValue(), lex.getSecondaryLex()));
                 }
             }
         }
@@ -358,7 +355,7 @@ public class TagGrammar {
 
                     // if root, coindex with root attribute
                     if (nodeInTree == etree.getTree()) {
-                        rootMaker.put(nodeId + "_t", rootMakerPlaceholder);
+                        rootMaker.put(nodeId + "t", rootMakerPlaceholder);
                     }
 
                     switch (node.getType()) {
@@ -370,7 +367,7 @@ public class TagGrammar {
                                 nodeIdsForChildren.add(nodeId);
 
                                 fsForEtree.put(nodeId + "t", fsn(node.getTop()));
-                                fsForEtree.put(nodeId + "b", fsn(node.getBottom()));
+                                fsForEtree.put(nodeId + "b", fsn(node.getBottom()).unify(lex.getFeatureStructure())); // put lexical feature structure here
 
                                 mergeSameIndices.collect(nodeId + "t", node.getTop());
                                 mergeSameIndices.collect(nodeId + "b", node.getBottom());

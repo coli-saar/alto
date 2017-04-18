@@ -101,10 +101,8 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         NodeType type = NodeType.DEFAULT;
 
         // TODO - annotations
-        
-        
         if (!node.marker().isEmpty()) {
-            type = buildNodeType(node.marker(0));
+            type = nodeType(node.marker(0));
         }
 
         Node n = new Node(label, type);
@@ -130,8 +128,10 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private FeatureStructure buildFs(FsContext fs) {
         AvmFeatureStructure ret = new AvmFeatureStructure();
 
-        for (FtContext ft : fs.ft()) {
-            addToFs(ft, ret);
+        if (fs != null) {
+            for (FtContext ft : fs.ft()) {
+                addToFs(ft, ret);
+            }
         }
 
         return ret;
@@ -160,27 +160,25 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private void buildWordByItself(WordByItselfContext wordC) {
         String word = identifier(wordC.identifier(0));
+        FeatureStructure lexFs = buildFs(wordC.fs());
 
-        // TODO - feature structure that came with word declaration
-        
         if (wordC.familyIdentifier() != null) {
             // declared with tree family
             for (String etreeName : treeFamilies.get(familyIdentifier(wordC.familyIdentifier()))) {
-                tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName));
+                tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName, lexFs));
             }
         } else {
             // declared with elementary tree name
             String etreeName = identifier(wordC.identifier(1));
-            tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName));
+            tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName, lexFs));
         }
     }
 
     private void buildLemma(LemmaContext lemmaC) {
         String lemma = identifier(lemmaC.identifier(0));
         List<String> etrees = null;
-        
-        // TODO - feature structure that came with word declaration
-        
+        FeatureStructure lemmaFs = buildFs(lemmaC.fs());
+
         if (lemmaC.familyIdentifier() != null) {
             // declared with tree family
             etrees = treeFamilies.get(familyIdentifier(lemmaC.familyIdentifier()));
@@ -188,13 +186,17 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             // declared with elementary tree name
             etrees = Collections.singletonList(identifier(lemmaC.identifier(1)));
         }
-        
-        for( WordInLemmaContext wc : lemmaC.wordInLemma() ) {
+
+        for (WordInLemmaContext wc : lemmaC.wordInLemma()) {
             String word = identifier(wc.identifier());
-            // TODO - feature structure
-            
-            for( String etree : etrees ) {
-                tagg.addLexiconEntry(word, new LexiconEntry(word, etree));
+            FeatureStructure wordFs = lemmaFs;
+
+            if (wc.fs() != null) {
+                wordFs = wordFs.unify(buildFs(wc.fs()));
+            }
+
+            for (String etree : etrees) {
+                tagg.addLexiconEntry(word, new LexiconEntry(word, etree, wordFs));
             }
         }
     }
@@ -208,7 +210,7 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return vc.getText().substring(1); // strip "?"
     }
 
-    private NodeType buildNodeType(MarkerContext marker) {
+    private NodeType nodeType(MarkerContext marker) {
         if (marker instanceof SUBSTContext) {
             return NodeType.SUBSTITUTION;
         } else if (marker instanceof FOOTContext) {
@@ -220,16 +222,16 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
+    private static String familyIdentifier(FamilyIdentifierContext identifier) {
+        String s = identifier.getText();
+        String stripped = s.substring(1, s.length() - 1); // strip off first and last character
+        return stripped;
+    }
+
     public static void main(String[] args) throws FileNotFoundException, CodecParseException, IOException {
         TulipacInputCodec tic = new TulipacInputCodec();
         InterpretedTreeAutomaton irtg = tic.read(new FileInputStream("/Users/koller/Dropbox/Documents/Lehre/alt/gramf-11/tag/new-shieber.tag"));
         Files.write(irtg.toString().getBytes(), new File("shieber.irtg"));
-    }
-
-    private static String familyIdentifier(FamilyIdentifierContext identifier) {
-        String s = identifier.getText();
-        String stripped = s.substring(1, s.length()-1); // strip off first and last character
-        return stripped;
     }
 
 }

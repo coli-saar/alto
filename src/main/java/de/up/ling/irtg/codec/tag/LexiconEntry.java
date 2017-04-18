@@ -20,11 +20,15 @@ public class LexiconEntry {
     private String elementaryTreeName;
     private FeatureStructure features;
     private String secondaryLex;
-
-    public LexiconEntry(String word, String elementaryTreeName) {
+    
+    public LexiconEntry(String word, String elementaryTreeName, FeatureStructure fs) {
         this.word = word;
         this.elementaryTreeName = elementaryTreeName;
-        features = new AvmFeatureStructure();
+        this.features = fs;
+    }
+
+    public LexiconEntry(String word, String elementaryTreeName) {
+        this(word, elementaryTreeName, new AvmFeatureStructure());
     }
 
     public String getWord() {
