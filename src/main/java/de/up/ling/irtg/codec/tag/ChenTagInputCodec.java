@@ -6,6 +6,8 @@
 package de.up.ling.irtg.codec.tag;
 
 import de.saar.basic.Pair;
+import de.saar.coli.featstruct.AvmFeatureStructure;
+import de.saar.coli.featstruct.PrimitiveFeatureStructure;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecParseException;
@@ -46,14 +48,18 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return tagg.toIrtg();
     }
 
-    private static String findSecondary(Map<String, String> features) {
-        if (features.containsKey("sgp1")) {
-            return features.get("sgp1");
+    private static String findSecondary(AvmFeatureStructure features) {
+        if (features.getAttributes().contains("sgp1")) {
+            return (String) features.get("sgp1").getValue();
+        } else if( features.get("prt1") == null ) {
+            return null;
         } else {
-            return features.get("prt1"); // could be null
+            return (String) features.get("prt1").getValue();
         }
     }
 
+    // makes some assumptions that are specific to the Chen input
+    // codec => maybe move there
     public List<Tree<String>> lexicalizeFromCorpus(TagGrammar tagg, Reader r) throws IOException {
         BufferedReader br = new BufferedReader(r);
         String line = null;
@@ -74,14 +80,17 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 String word = parts[1];
                 String treename = parts[7];
                 LexiconEntry lex = new LexiconEntry(word, treename);
+                AvmFeatureStructure fs = new AvmFeatureStructure();
 
                 for (int i = 10; i < parts.length; i++) {
                     assert parts[i].contains("=");
                     String[] split = parts[i].split("=");
-                    lex.addFeature(split[0], split[1]);
+                    fs.put(split[0], new PrimitiveFeatureStructure(split[1]));
+//                    lex.addFeature(split[0], split[1]);
                 }
 
-                lex.setSecondaryLex(findSecondary(lex.getFeatures()));
+                lex.setFeatureStructure(fs);
+                lex.setSecondaryLex(findSecondary(fs));
 
                 tagg.addLexiconEntry(word, lex);
 

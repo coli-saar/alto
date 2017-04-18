@@ -83,7 +83,7 @@ public class TagGrammar {
                      */
                     System.err.println("*** UNK ET: " + lex + " for word " + word + "***");
                 } else {
-                    ret.add(et.lexicalize(word, lex.getFeature("pos"), lex.getSecondaryLex()));
+                    ret.add(et.lexicalize(word, (String) lex.getFeatureStructure().get("pos").getValue(), lex.getSecondaryLex()));  // getFeature("pos")
                 }
             }
         }
