@@ -30,7 +30,11 @@ import de.up.ling.tree.Tree;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -39,25 +43,26 @@ import java.util.List;
 @CodecMetadata(name = "tulipac", description = "TAG grammar (tulipac format)", extension = "tag", type = InterpretedTreeAutomaton.class)
 public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private TagGrammar tagg;
-//    private ConcreteTreeAutomaton<String> automaton;
-//    private Homomorphism ht, hs, hf;
+    private Map<String, List<String>> treeFamilies = new HashMap<>(); // family name -> list(tree name)
 
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
+        tagg = new TagGrammar();
+        parseFile(is);
+        return tagg.toIrtg();
+    }
+
+    private void parseFile(InputStream is) throws CodecParseException, IOException {
         TulipacLexer l = new TulipacLexer(new ANTLRInputStream(is));
         TulipacParser p = new TulipacParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
-        
-        tagg = new TagGrammar();
-        
+
         GrmrContext parse = p.grmr();
         buildGrmr(parse);
-
-        return tagg.toIrtg();
     }
 
-    private void buildGrmr(GrmrContext parse) {
+    private void buildGrmr(GrmrContext parse) throws CodecParseException, IOException {
         for (IncludeContext incl : parse.include()) {
             buildInclude(incl);
         }
@@ -79,8 +84,9 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
-    private void buildInclude(IncludeContext incl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private void buildInclude(IncludeContext incl) throws CodecParseException, IOException {
+        String filename = identifier(incl.identifier());
+        parseFile(new FileInputStream(filename));
     }
 
     private void buildTree(TrContext tr) {
@@ -96,44 +102,45 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         // TODO - annotations
         
-        if( ! node.marker().isEmpty() ) {
+        
+        if (!node.marker().isEmpty()) {
             type = buildNodeType(node.marker(0));
         }
-        
+
         Node n = new Node(label, type);
-        
-        switch(node.fs().size()) {
+
+        switch (node.fs().size()) {
             case 2: // top, then bottom
                 n.setTop(buildFs(node.fs(0)));
                 n.setBottom(buildFs(node.fs(1)));
                 break;
-                
+
             case 1: // only top
                 n.setTop(buildFs(node.fs(0)));
                 break;
-                
+
             default:
                 break;
         }
-        
+
         List<Tree<Node>> children = Util.mapToList(node.node(), this::buildNode);
         return Tree.create(n, children);
     }
-    
+
     private FeatureStructure buildFs(FsContext fs) {
         AvmFeatureStructure ret = new AvmFeatureStructure();
-        
-        for( FtContext ft : fs.ft() ) {
+
+        for (FtContext ft : fs.ft()) {
             addToFs(ft, ret);
         }
-        
+
         return ret;
     }
 
     private void addToFs(FtContext ft, AvmFeatureStructure ret) {
         String attr = identifier(ft.identifier(0));
-        
-        if( ft.variable() != null ) {
+
+        if (ft.variable() != null) {
             ret.put(attr, new PlaceholderFeatureStructure(variable(ft.variable())));
         } else {
             ret.put(attr, new PrimitiveFeatureStructure(identifier(ft.identifier(1))));
@@ -141,54 +148,88 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     private void buildFamily(FamilyContext family) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String familyName = identifier(family.identifier(0));
+
+        List<String> treeNames = new ArrayList<>();
+        for (int i = 1; i < family.identifier().size(); i++) {
+            treeNames.add(identifier(family.identifier(i)));
+        }
+
+        treeFamilies.put(familyName, treeNames);
     }
 
     private void buildWordByItself(WordByItselfContext wordC) {
         String word = identifier(wordC.identifier(0));
-        
+
         // TODO - feature structure that came with word declaration
         
-        if( wordC.familyIdentifier() != null ) {
+        if (wordC.familyIdentifier() != null) {
             // declared with tree family
-            // TODO
+            for (String etreeName : treeFamilies.get(familyIdentifier(wordC.familyIdentifier()))) {
+                tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName));
+            }
         } else {
-            // declared with tree
+            // declared with elementary tree name
             String etreeName = identifier(wordC.identifier(1));
             tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName));
         }
     }
 
-    private void buildLemma(LemmaContext lemma) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private void buildLemma(LemmaContext lemmaC) {
+        String lemma = identifier(lemmaC.identifier(0));
+        List<String> etrees = null;
+        
+        // TODO - feature structure that came with word declaration
+        
+        if (lemmaC.familyIdentifier() != null) {
+            // declared with tree family
+            etrees = treeFamilies.get(familyIdentifier(lemmaC.familyIdentifier()));
+        } else {
+            // declared with elementary tree name
+            etrees = Collections.singletonList(identifier(lemmaC.identifier(1)));
+        }
+        
+        for( WordInLemmaContext wc : lemmaC.wordInLemma() ) {
+            String word = identifier(wc.identifier());
+            // TODO - feature structure
+            
+            for( String etree : etrees ) {
+                tagg.addLexiconEntry(word, new LexiconEntry(word, etree));
+            }
+        }
     }
 
     private String identifier(IdentifierContext nc) {
         boolean isQuoted = (nc instanceof QUOTEDContext) || (nc instanceof DQUOTEDContext);
         return CodecUtilities.extractName(nc, isQuoted);
     }
-    
+
     private String variable(VariableContext vc) {
         return vc.getText().substring(1); // strip "?"
     }
 
     private NodeType buildNodeType(MarkerContext marker) {
-        if( marker instanceof SUBSTContext ) {
+        if (marker instanceof SUBSTContext) {
             return NodeType.SUBSTITUTION;
-        } else if( marker instanceof FOOTContext ) {
+        } else if (marker instanceof FOOTContext) {
             return NodeType.FOOT;
-        } else if( marker instanceof ANCHORContext ) {
+        } else if (marker instanceof ANCHORContext) {
             return NodeType.HEAD;
         } else {
             throw new RuntimeException("Invalid marker: " + marker.getText());
         }
     }
-    
-    
+
     public static void main(String[] args) throws FileNotFoundException, CodecParseException, IOException {
         TulipacInputCodec tic = new TulipacInputCodec();
-        InterpretedTreeAutomaton irtg = tic.read(new FileInputStream("test.tag"));
-        Files.write(irtg.toString().getBytes(), new File("test.irtg"));
+        InterpretedTreeAutomaton irtg = tic.read(new FileInputStream("/Users/koller/Dropbox/Documents/Lehre/alt/gramf-11/tag/new-shieber.tag"));
+        Files.write(irtg.toString().getBytes(), new File("shieber.irtg"));
+    }
+
+    private static String familyIdentifier(FamilyIdentifierContext identifier) {
+        String s = identifier.getText();
+        String stripped = s.substring(1, s.length()-1); // strip off first and last character
+        return stripped;
     }
 
 }
