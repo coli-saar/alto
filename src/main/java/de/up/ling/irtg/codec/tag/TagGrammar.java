@@ -280,16 +280,16 @@ public class TagGrammar {
                         childStates.add(makeA(label));
                         adjunctionNonterminals.add(makeA(label));
                         ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getWord()))));
+                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getWord()))));
                         break;
 
                     case SECONDARY_LEX:
                         childStates.add(makeA(label));
                         adjunctionNonterminals.add(makeA(label));
                         ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getSecondaryLex()))));
+                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getSecondaryLex()))));
                         break;
                     // TODO - maybe XTAG allows multiple secondary lexes, one per POS-tag
 
@@ -312,8 +312,8 @@ public class TagGrammar {
                             int numChildren = children.size();
 
                             ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                              Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                              Tree.create(lwa(label, numChildren, th), children));
+                                    Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                    Tree.create(lwa(label, numChildren, th), children));
                         }
                         break;
 
@@ -398,6 +398,8 @@ public class TagGrammar {
 
                 // construct homomorphism term, ensuring that it has the same
                 // structure as the other terms so the rule can be binarized
+                int footNodeId = th.getTargetSignature().getIdForSymbol(TagTreeAlgebra.P1);
+
                 Tree<String> h = treeHomTerm.dfs((nodeInTree, children) -> {
                     if (children.isEmpty()) {
                         // leaf
@@ -413,23 +415,30 @@ public class TagGrammar {
                                 return Tree.create("emb_" + nodeId, Tree.create("proj_root", Tree.create("?" + (index + 1))));
                             }
                         } else {
-                            // non-variable => constant for the lexical anchor
-                            // NB this may not be entirely accurate if the TAG grammar is not
-                            // strongly lexicalized, i.e. can have multiple words per e-tree
-                            
-                            return Tree.create(coreFs.toString());
+                            HomomorphismSymbol label = nodeInTree.getLabel();
+
+                            if (label.getValue() == footNodeId) {
+                                // foot node => return dummy FS
+                                return Tree.create("[]");
+                            } else {
+                                // constant for the lexical anchor
+                                // NB this may not be entirely accurate if the TAG grammar is not
+                                // strongly lexicalized, i.e. can have multiple words per e-tree
+
+                                return Tree.create(coreFs.toString());
+                            }
                         }
                     } else {
                         // Unification is commutative, so the order of children
                         // should not matter. We'll try to push the coreFs as far
                         // to the left as we can, to make the string representation
                         // more readable.                        
-                        Tree<String> ret = children.get(children.size()-1);
-                        
-                        for( int i = children.size()-2; i >= 0; i-- ) {
+                        Tree<String> ret = children.get(children.size() - 1);
+
+                        for (int i = children.size() - 2; i >= 0; i--) {
                             ret = Tree.create("unify", ret, children.get(i));
                         }
-                        
+
                         return ret;
                     }
                 });
@@ -440,6 +449,7 @@ public class TagGrammar {
     }
 
     private static class SameIndexMerger {
+
         private Map<String, FeatureStructure> placeholderForIndex = new HashMap<>();  // a unique placeholder for each index
 
         // This is successively built up to contain [n27_b: [foo: [bar: ... <PH #ix>]]],

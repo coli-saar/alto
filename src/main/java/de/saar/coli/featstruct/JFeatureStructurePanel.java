@@ -26,21 +26,28 @@ import javax.swing.JPanel;
  * @author koller
  */
 public class JFeatureStructurePanel extends JPanel {
+
     private FeatureStructure fs;
     private Layout layout;
     private Graphics2D currentGraphics;
 
-    private static final int CHARACTER_HEIGHT = 20;
+    private static final int CHARACTER_HEIGHT = 14;
+    
+    private static final int PADX = 10;
+    private static final int INDEX_PADX = 5;
+    
+    private static final int PADY = 8;
+    private static final int LINE_DIST = 3;
 
     public JFeatureStructurePanel(FeatureStructure fs) {
         this.fs = fs;
     }
-    
+
     public static void main(String[] args) throws FsParsingException {
         FeatureStructure fs = FeatureStructure.parse("[num: #1 sg, subj: [num: #1]]");
         draw(fs);
     }
-    
+
     public static <E> JFrame draw(FeatureStructure fs) {
         JFrame f = new JFrame("fs: " + fs.toString());
         JFeatureStructurePanel panel = new JFeatureStructurePanel(fs);
@@ -74,13 +81,13 @@ public class JFeatureStructurePanel extends JPanel {
         Set<FeatureStructure> visitedIndexedFs = new IdentityHashSet<>();
         paint(fs, layout, 0, new MutableInteger(0), visitedIndexedFs, reentrantFsToIndex);
     }
-    
+
     @Override
     public Dimension getPreferredSize() {
-        if (layout== null) {
+        if (layout == null) {
             return new Dimension(100, 100);
         } else {
-            return new Dimension(layout.getWidth() , layout.getHeight());
+            return new Dimension(layout.getWidth(), layout.getHeight());
         }
     }
 
@@ -94,41 +101,72 @@ public class JFeatureStructurePanel extends JPanel {
         return ret;
     }
 
-    private void paint(FeatureStructure fs, Layout layout, int depth, MutableInteger row, Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure, String> reentrantFsToIndex) {
-        int x = layout.getX(depth);
-        int y = 20 + row.getValue() * CHARACTER_HEIGHT;
-//        int height = 0;
+    // returns max width of children
+    private int paint(FeatureStructure fs, Layout layout, int depth, MutableInteger row, Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure, String> reentrantFsToIndex) {
+        int x = layout.getX(depth) + 20;
+        int y = y(row.getValue());
 
         if (visitedIndexedFs.contains(fs)) {
-            currentGraphics.drawString(reentrantFsToIndex.get(fs), x, y);
+            String s = reentrantFsToIndex.get(fs);
             row.incValue();
+            return x + drawIndex(x, y, s) + INDEX_PADX;
         } else {
             visitedIndexedFs.add(fs);
-            
-            if( reentrantFsToIndex.containsKey(fs)) {
-                currentGraphics.drawString(reentrantFsToIndex.get(fs), x, y);
-                x += getLabelWidth(reentrantFsToIndex.get(fs));
+
+            if (reentrantFsToIndex.containsKey(fs)) {
+                x += drawIndex(x, y, reentrantFsToIndex.get(fs)) + INDEX_PADX;
             }
 
             if (fs instanceof AvmFeatureStructure) {
                 AvmFeatureStructure avmFeatureStructure = (AvmFeatureStructure) fs;
+                int childMaxX = 0;
                 
-                for( String attr : avmFeatureStructure.getAttributes() ) {
+                int topY = y(row.getValue()) - CHARACTER_HEIGHT;
+//                System.err.printf("%s: %d, top %d\n", fs, x, topY);
+
+                for (String attr : avmFeatureStructure.getAttributes()) {
                     currentGraphics.drawString(attr, x, y(row.getValue()));
-                    paint(avmFeatureStructure.get(attr), layout, depth+1, row, visitedIndexedFs, reentrantFsToIndex);
+                    int thisChildWidth = paint(avmFeatureStructure.get(attr), layout, depth + 1, row, visitedIndexedFs, reentrantFsToIndex);
+                    childMaxX = Math.max(childMaxX, thisChildWidth);
                 }
+                
+                int bottomY = y(row.getValue()) - CHARACTER_HEIGHT;
+//                System.err.printf("%s: bottom %d\n", fs, bottomY);
+                
+                currentGraphics.drawLine(x-LINE_DIST, topY, x-LINE_DIST, bottomY);
+                currentGraphics.drawLine(x-LINE_DIST, topY, x+LINE_DIST, topY);
+                currentGraphics.drawLine(x-LINE_DIST, bottomY, x+LINE_DIST, bottomY);
+                
+                x = childMaxX;
+                currentGraphics.drawLine(x+LINE_DIST, topY, x+LINE_DIST, bottomY);
+                currentGraphics.drawLine(x-LINE_DIST, topY, x+LINE_DIST, topY);
+                currentGraphics.drawLine(x-LINE_DIST, bottomY, x+LINE_DIST, bottomY);
+                
+                return childMaxX + LINE_DIST;
             } else {
-                currentGraphics.drawString(fs.toString(), x, y);
+                String s = fs.toString();
+                currentGraphics.drawString(s, x, y);
                 row.incValue();
+                return x + getLabelWidth(s);
             }
         }
     }
     
+    private static final int BOX_DIST = 2;
+    
+    // returns width
+    private int drawIndex(int x, int y, String index) {
+        currentGraphics.drawString(index.substring(1), x, y);        
+        currentGraphics.drawRect(x-2*BOX_DIST, y-CHARACTER_HEIGHT+2, getLabelWidth(index), BOX_DIST + CHARACTER_HEIGHT);
+        return BOX_DIST + CHARACTER_HEIGHT;
+    }
+
     private int y(int row) {
-        return 20 + row * CHARACTER_HEIGHT;
+        return 2*PADY + row * (CHARACTER_HEIGHT+PADY);
     }
 
     private class Layout {
+
         private IntList maxWidthPerDepth;
         private Map<FeatureStructure, String> reentrantFsToIndex;
         private int height;
@@ -153,7 +191,12 @@ public class JFeatureStructurePanel extends JPanel {
             for (int i = 0; i < maxWidthPerDepth.size(); i++) {
                 width += maxWidthPerDepth.get(i);
             }
-            return width;
+            
+            return width + PADX;
+        }
+        
+        public int getMaxWidth(int depth) {
+            return maxWidthPerDepth.get(depth);
         }
 
         public int getHeight() {
@@ -171,13 +214,13 @@ public class JFeatureStructurePanel extends JPanel {
         private void compute(FeatureStructure fs, int depth, Set<FeatureStructure> visitedIndexedFs) {
             if (visitedIndexedFs.contains(fs)) {
                 updateDepth(depth, getLabelWidth(reentrantFsToIndex.get(fs)));
-                height += CHARACTER_HEIGHT;
+                height += CHARACTER_HEIGHT + PADY;
             } else {
                 visitedIndexedFs.add(fs);
                 int localWidth = 0;
 
                 if (reentrantFsToIndex.containsKey(fs)) {
-                    localWidth += getLabelWidth(reentrantFsToIndex.get(fs));
+                    localWidth += getLabelWidth(reentrantFsToIndex.get(fs)) + PADX;
                 }
 
                 if (fs instanceof AvmFeatureStructure) {
@@ -190,20 +233,18 @@ public class JFeatureStructurePanel extends JPanel {
 
                     if (avmFeatureStructure.getAttributes().isEmpty()) {
                         // only for empty AVM, count one line
-                        height += CHARACTER_HEIGHT;
+                        height += CHARACTER_HEIGHT + PADY;
                     }
                 } else {
                     updateDepth(depth, localWidth + getLabelWidth(fs.toString())); // TODO this is not entirely precise
-                    height = CHARACTER_HEIGHT;
+                    height = CHARACTER_HEIGHT + PADY;
                 }
             }
         }
-        
-        private static final int PADX = 10;
 
         private void updateDepth(int depth, int componentWidth) {
             componentWidth += PADX;
-            
+
             if (maxWidthPerDepth.size() <= depth) {
                 maxWidthPerDepth.add(0);
             }
