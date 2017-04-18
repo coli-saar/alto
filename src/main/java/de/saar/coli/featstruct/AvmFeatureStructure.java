@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * A feature structure representing an attribute-value matrix. Each value is
@@ -87,26 +88,27 @@ public class AvmFeatureStructure extends FeatureStructure {
             return this;
         }
     }
-    
-    
 
     @Override
     protected int calculateHashCode() {
         int ret = 17;
-        
-        for( Map.Entry<String,FeatureStructure> arc : avm.entrySet() ) {
-            ret = 19*ret + 23*Objects.hashCode(arc.getKey()) + 31*Objects.hashCode(arc.getValue());
+
+        for (Map.Entry<String, FeatureStructure> arc : avm.entrySet()) {
+            ret = 19 * ret + 23 * Objects.hashCode(arc.getKey()) + 31 * Objects.hashCode(arc.getValue());
         }
-        
+
         return ret;
     }
-    
-    
+
+    @Override
+    protected void forAllChildren(Consumer<FeatureStructure> fn) {
+        avm.values().forEach(fn);
+    }
 
     /**
      * *************************************************************************
      * Tomabechi unification
-     *************************************************************************
+     * ************************************************************************
      */
     private List<Map.Entry<String, FeatureStructure>> compArcList; // for Tomabechi
     private long compArcListTimestamp;                             // for Tomabechi; called comp-arc-mark there
@@ -175,7 +177,7 @@ public class AvmFeatureStructure extends FeatureStructure {
     /**
      * *************************************************************************
      * Subsumption checking
-     *************************************************************************
+     * ************************************************************************
      */
     @Override
     protected int checkSubsumptionValues(FeatureStructure other, long timestamp, int resultSoFar) {
@@ -203,8 +205,8 @@ public class AvmFeatureStructure extends FeatureStructure {
                     // "other" has attribute that is not present in "this"
                     // => "other" does not subsume "this"
                     resultSoFar &= ~SUBSUMES_BACKWARD;
-                    
-                    if( resultSoFar == 0 ) {
+
+                    if (resultSoFar == 0) {
                         return 0;
                     }
                 }
@@ -213,15 +215,14 @@ public class AvmFeatureStructure extends FeatureStructure {
 
         return resultSoFar;
     }
-    
 
     /**
      * *************************************************************************
      * Printing
-     *************************************************************************
+     * ************************************************************************
      */
     @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure, String> reentrantFsToIndex, StringBuilder buf) {
         boolean first = true;
 
         buf.append("[");
@@ -236,7 +237,7 @@ public class AvmFeatureStructure extends FeatureStructure {
             buf.append(key);
             buf.append(": ");
 
-            avm.get(key).appendWithIndex(visitedIndexedFs, buf);
+            avm.get(key).appendWithIndex(visitedIndexedFs, reentrantFsToIndex, buf);
         }
 
         buf.append("]");

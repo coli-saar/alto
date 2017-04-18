@@ -9,7 +9,9 @@ import de.up.ling.irtg.util.Util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * A feature structure representing a primitive value,
@@ -57,7 +59,10 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
         return 19 * value.hashCode();
     }
 
-    
+    @Override
+    protected void forAllChildren(Consumer<FeatureStructure> fn) {
+    }
+   
     
     /***************************************************************************
      * Tomabechi unification
@@ -91,7 +96,7 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
      **************************************************************************/
 
     @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
         buf.append(value.toString());
     }
     
@@ -109,6 +114,7 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
             appendForwardAndCopy(buf, indent);
         }
     }
+
 
     
 }

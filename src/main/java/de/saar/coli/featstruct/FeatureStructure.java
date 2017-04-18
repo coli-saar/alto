@@ -11,10 +11,12 @@ import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -424,34 +426,58 @@ public abstract class FeatureStructure {
         }
     }
     
+    
+    abstract protected void forAllChildren(Consumer<FeatureStructure> fn);
+    
+    
+    
+    private static final String FIRST_VISIT = "";
+    
+    private void computeReentrancies(Map<FeatureStructure,String> reentrantFsToIndex, MutableInteger nextIndex) {
+        if( ! reentrantFsToIndex.containsKey(this) ) {
+            // first time we're visiting this FS -> just mark as visited and move on to children
+            reentrantFsToIndex.put(this, FIRST_VISIT);
+            forAllChildren(ch -> ch.computeReentrancies(reentrantFsToIndex, nextIndex));
+        } else {
+            if( reentrantFsToIndex.get(this) == FIRST_VISIT ) {
+                // second visit to this FS => generate new index for it
+                reentrantFsToIndex.put(this, "#" + nextIndex.incValue());
+            }
+            
+            // all further visits ignored, nothing else to do
+        }
+    }
+    
+    
+    
     @Override
     public String toString() {
+        Map<FeatureStructure,String> reentrantFsToIndex = new IdentityHashMap<>();
+        computeReentrancies(reentrantFsToIndex, new MutableInteger(1));
+        reentrantFsToIndex.values().removeAll(Collections.singleton(FIRST_VISIT)); // remove all non-reentrant nodes
+        
         Set<FeatureStructure> visitedIndexedFs = new IdentityHashSet<>();
         StringBuilder buf = new StringBuilder();
 
-        appendWithIndex(visitedIndexedFs, buf);
+        appendWithIndex(visitedIndexedFs, reentrantFsToIndex, buf);
         return buf.toString();
     }
 
-    protected void appendWithIndex(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-        // prepend index if needed
-        if (getIndex() != null) {
-            buf.append(getIndexMarker());
+    protected void appendWithIndex(Set<FeatureStructure> previouslyVisitedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
+        // reentrant node => print reentrancy marker
+        if( reentrantFsToIndex.containsKey(this)) {
+            buf.append(reentrantFsToIndex.get(this));
+            buf.append(" ");
         }
-
-        if (!visitedIndexedFs.contains(this)) {
-            // mark as visited
-            if (getIndex() != null) {
-                visitedIndexedFs.add(this);
-                buf.append(" ");
-            }
-
-            // print actual value
-            appendValue(visitedIndexedFs, buf);
+        
+        // print value only for nodes that were not previously visited
+        if( ! previouslyVisitedFs.contains(this) ) {
+            previouslyVisitedFs.add(this);
+            appendValue(previouslyVisitedFs, reentrantFsToIndex, buf);            
         }
     }
 
-    protected abstract void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf);
+    protected abstract void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf);
     
     
     
@@ -507,9 +533,9 @@ public abstract class FeatureStructure {
         FeatureStructure expected = FeatureStructure.parse("[a: #3 s, b: #3, c: t]");
         FeatureStructure unif = fs1.unify(fs2);
         
-        System.err.println(unif.rawToString());
-        System.err.println(unif.checkSubsumptionBothWays(expected));
-        System.err.println(unif.rawToString());
+        System.err.println(fs1);
+        System.err.println(fs2);
+        System.err.println(expected);
     }
 
 }

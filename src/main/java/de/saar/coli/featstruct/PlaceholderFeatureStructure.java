@@ -9,7 +9,9 @@ import de.up.ling.irtg.util.Util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * An empty feature structure that has no data in it.
@@ -53,6 +55,12 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
         return getIndexMarker().hashCode();
     }
     
+    @Override
+    protected void forAllChildren(Consumer<FeatureStructure> fn) {
+    }
+
+
+    
     /***************************************************************************
      * Tomabechi unification
      **************************************************************************/
@@ -80,13 +88,13 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
      **************************************************************************/
     
 
-    @Override
-    protected void appendWithIndex(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-        buf.append(getIndexMarker());
-    }
+//    @Override
+//    protected void appendWithIndex(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+//        buf.append(getIndexMarker());
+//    }
 
     @Override
-    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf) {
         buf.append("PH" + getIndexMarker());
     }
 
