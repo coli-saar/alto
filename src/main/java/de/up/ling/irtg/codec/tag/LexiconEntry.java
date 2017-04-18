@@ -8,7 +8,6 @@ package de.up.ling.irtg.codec.tag;
 
 import de.saar.coli.featstruct.AvmFeatureStructure;
 import de.saar.coli.featstruct.FeatureStructure;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -64,10 +63,11 @@ public class LexiconEntry {
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 47 * hash + Objects.hashCode(this.word);
-        hash = 47 * hash + Objects.hashCode(this.elementaryTreeName);
-        hash = 47 * hash + Objects.hashCode(getSecondaryLex());
+        int hash = 3;
+        hash = 29 * hash + Objects.hashCode(this.word);
+        hash = 29 * hash + Objects.hashCode(this.elementaryTreeName);
+        hash = 29 * hash + Objects.hashCode(this.features);
+        hash = 29 * hash + Objects.hashCode(this.getSecondaryLex());
         return hash;
     }
 
@@ -86,13 +86,17 @@ public class LexiconEntry {
         if (!Objects.equals(this.elementaryTreeName, other.elementaryTreeName)) {
             return false;
         }
-        
-        if( ! Objects.equals(getSecondaryLex(), other.getSecondaryLex()) ) {
+        if (!Objects.equals(this.features, other.features)) {
             return false;
         }
-        
+        if (!Objects.equals(this.getSecondaryLex(), other.getSecondaryLex())) {
+            return false;
+        }
         return true;
     }
+
+    
+    
     
     
     

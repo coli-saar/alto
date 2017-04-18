@@ -170,7 +170,8 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } else {
             // declared with elementary tree name
             String etreeName = identifier(wordC.identifier(1));
-            tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName, lexFs));
+            LexiconEntry lex = new LexiconEntry(word, etreeName, lexFs);
+            tagg.addLexiconEntry(word, lex);
         }
     }
 
