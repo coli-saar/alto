@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import de.saar.coli.featstruct.AvmFeatureStructure;
 import de.saar.coli.featstruct.FeatureStructure;
 import de.saar.coli.featstruct.FsParsingException;
+import de.saar.coli.featstruct.JFeatureStructurePanel;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JComponent;
 
 /**
  *
@@ -102,6 +104,13 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
             throw new ParserException(ex);
         }
     }
+
+    @Override
+    public JComponent visualize(FeatureStructure object) {
+        return new JFeatureStructurePanel(object);
+    }
+    
+    
 
     @Override
     public TreeAutomaton nullFilter() {

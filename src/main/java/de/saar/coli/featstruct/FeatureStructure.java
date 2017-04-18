@@ -431,9 +431,9 @@ public abstract class FeatureStructure {
     
     
     
-    private static final String FIRST_VISIT = "";
+    static final String FIRST_VISIT = "";
     
-    private void computeReentrancies(Map<FeatureStructure,String> reentrantFsToIndex, MutableInteger nextIndex) {
+    void computeReentrancies(Map<FeatureStructure,String> reentrantFsToIndex, MutableInteger nextIndex) {
         if( ! reentrantFsToIndex.containsKey(this) ) {
             // first time we're visiting this FS
             if( this instanceof PlaceholderFeatureStructure ) {
@@ -487,8 +487,6 @@ public abstract class FeatureStructure {
     }
 
     protected abstract void appendValue(Set<FeatureStructure> visitedIndexedFs, boolean printedIndexMarker, Map<FeatureStructure,String> reentrantFsToIndex, StringBuilder buf);
-    
-    
     
     
     
