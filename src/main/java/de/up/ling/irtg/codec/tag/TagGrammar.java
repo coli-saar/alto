@@ -154,7 +154,18 @@ public class TagGrammar {
     }
 
     private static String makeTerminalSymbol(LexiconEntry lex) {
-        return lex.getElementaryTreeName() + "-" + lex.getWord();
+        FeatureStructure fs = lex.getFeatureStructure();
+        String ret = lex.getElementaryTreeName() + "-" + lex.getWord();
+
+        if (fs == null) {
+            return ret;
+        } else {
+            return ret + safe(fs.toString());
+        }
+    }
+    
+    private static String safe(String s) {
+        return s.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
     private static String makeA(String nonterminal) {
@@ -266,8 +277,6 @@ public class TagGrammar {
         String adjPrefix = "?" + ADJ_VARTYPE;
         String substPrefix = "?" + SUBST_VARTYPE;
         String terminalSym = makeTerminalSymbol(lex);
-
-//        System.err.printf("\n%s: %s\n", lex, etree);
 
         // null etree means that no elementary tree of that name was defined
         // in the grammar. An example is the dummy "tCO" tree from the Chen
@@ -406,7 +415,6 @@ public class TagGrammar {
 //                System.err.printf("   fsForEtree: %s\n", fsForEtree);
 //                System.err.printf("   root maker: %s\n", rootMaker);
 //                System.err.printf("   msi: %s\n\n", mergeSameIndices.merger);
-
                 final FeatureStructure coreFs = mergeSameIndices.unify(fsForEtree.unify(rootMaker));
 
                 // construct homomorphism term, ensuring that it has the same
