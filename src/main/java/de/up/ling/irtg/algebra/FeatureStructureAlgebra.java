@@ -130,7 +130,7 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
                     Rule rule = createRule(parentState, labelId, childStates, 1);
                     return Collections.singletonList(rule);
                 } else {
-                    System.err.printf("unif failure: %s\n  with %s\n\n", children.get(0), children.get(1));
+//                    System.err.printf("unif failure: %s\n  with %s\n\n", children.get(0), children.get(1));
                     return Collections.EMPTY_LIST;
                 }
             }

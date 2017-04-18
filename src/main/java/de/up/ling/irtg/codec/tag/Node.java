@@ -54,7 +54,21 @@ public class Node {
 
     @Override
     public String toString() {
-        return type.mark(label);
+        String x = type.mark(label);
+        
+        if( top != null ) {
+            x += top.toString();
+        } else {
+            x += "[]";
+        }
+        
+        if( bottom != null ) {
+            x += bottom.toString();
+        } else {
+            x += "[]";
+        }
+        
+        return x;
     }
 
     public void setTop(FeatureStructure top) {

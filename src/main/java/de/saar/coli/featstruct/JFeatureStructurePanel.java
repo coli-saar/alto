@@ -14,8 +14,10 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.JFrame;
@@ -124,7 +126,10 @@ public class JFeatureStructurePanel extends JPanel {
                 int topY = y(row.getValue()) - CHARACTER_HEIGHT;
 //                System.err.printf("%s: %d, top %d\n", fs, x, topY);
 
-                for (String attr : avmFeatureStructure.getAttributes()) {
+                List<String> attributes = new ArrayList<>(avmFeatureStructure.getAttributes());
+                Collections.sort(attributes);
+                
+                for (String attr : attributes) {
                     currentGraphics.drawString(attr, x, y(row.getValue()));
                     int thisChildWidth = paint(avmFeatureStructure.get(attr), layout, depth + 1, row, visitedIndexedFs, reentrantFsToIndex);
                     childMaxX = Math.max(childMaxX, thisChildWidth);

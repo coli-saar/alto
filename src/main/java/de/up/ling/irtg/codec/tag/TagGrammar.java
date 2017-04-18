@@ -267,6 +267,8 @@ public class TagGrammar {
         String substPrefix = "?" + SUBST_VARTYPE;
         String terminalSym = makeTerminalSymbol(lex);
 
+//        System.err.printf("\n%s: %s\n", lex, etree);
+
         // null etree means that no elementary tree of that name was defined
         // in the grammar. An example is the dummy "tCO" tree from the Chen
         // PTB-TAG. We ignore these lexicon entries.
@@ -366,8 +368,14 @@ public class TagGrammar {
                             if (node.getType() != NodeType.DEFAULT || !isTrace(node.getLabel())) {
                                 nodeIdsForChildren.add(nodeId);
 
+                                FeatureStructure bottom = fsn(node.getBottom());
+                                if (node.getType() == NodeType.HEAD) {
+                                    // put lexical feature structure here
+                                    bottom = bottom.unify(lex.getFeatureStructure());
+                                }
+
                                 fsForEtree.put(nodeId + "t", fsn(node.getTop()));
-                                fsForEtree.put(nodeId + "b", fsn(node.getBottom()).unify(lex.getFeatureStructure())); // put lexical feature structure here
+                                fsForEtree.put(nodeId + "b", bottom);
 
                                 mergeSameIndices.collect(nodeId + "t", node.getTop());
                                 mergeSameIndices.collect(nodeId + "b", node.getBottom());
@@ -394,6 +402,11 @@ public class TagGrammar {
 
                 // make sure root attribute points to correct value
                 // and enforce coindexation across different nodes in same etree
+//                System.err.printf("Make core fs for %s:\n", lex);
+//                System.err.printf("   fsForEtree: %s\n", fsForEtree);
+//                System.err.printf("   root maker: %s\n", rootMaker);
+//                System.err.printf("   msi: %s\n\n", mergeSameIndices.merger);
+
                 final FeatureStructure coreFs = mergeSameIndices.unify(fsForEtree.unify(rootMaker));
 
                 // construct homomorphism term, ensuring that it has the same
@@ -456,7 +469,7 @@ public class TagGrammar {
         // where <PH #ix> is a placeholder FS for the index #ix which is unique
         // across the different nodes of the etree. In this way, uses of the same index
         // in different nodes in the etree will be unified.
-        private AvmFeatureStructure merger = new AvmFeatureStructure();
+        AvmFeatureStructure merger = new AvmFeatureStructure();
 
         public void collect(String attribute, FeatureStructure fs) {
             if (fs != null) {
