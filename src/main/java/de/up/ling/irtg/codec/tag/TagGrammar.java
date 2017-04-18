@@ -420,7 +420,6 @@ public class TagGrammar {
                             // NB this may not be entirely accurate if the TAG grammar is not
                             // strongly lexicalized, i.e. can have multiple words per e-tree
                             
-                            System.err.println(coreFs);
                             return Tree.create(coreFs.toString());
                         }
                     } else {
@@ -437,30 +436,6 @@ public class TagGrammar {
                         return ret;
                     }
                 });
-
-                /*
-                // construct homomorphism
-                Tree<String> h = Tree.create(coreFs.toString());
-                int posInNodeIdsForChildren = 0;
-
-                System.err.printf("convert for %s:\n", lex);
-                System.err.printf("childStates: %s\n", childStates);
-                System.err.printf("nodeIdsForChildren: %s\n", nodeIdsForChildren);
-
-                for (int i = 0; i < childStates.size(); i++) {
-                    boolean isAuxChild = !isSubstitutionVariable(childStates.get(i));
-                    String nodeId = nodeIdsForChildren.get(i);
-
-                    if (isAuxChild) {
-                        Tree<String> arg = Tree.create("emba_" + nodeId + "t_" + nodeId + "b", Tree.create("?" + (i + 1)));
-                        h = Tree.create("unify", h, arg);
-                    } else {
-                        Tree<String> root_arg = Tree.create("emb_" + nodeId,
-                                                            Tree.create("proj_root", Tree.create("?" + (i + 1))));
-                        h = Tree.create("unify", h, root_arg);
-                    }
-                }
-                */
 
                 fh.add(terminalSym, h);
             }

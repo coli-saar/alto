@@ -5,16 +5,17 @@
  */
 package de.up.ling.irtg.gui;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.NullFilterAlgebra;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
 /**
  *
@@ -71,7 +72,7 @@ public class JParsingDialog extends javax.swing.JDialog {
     /**
      * Creates new form JParsingDialog
      */
-    public JParsingDialog(java.awt.Frame parent, boolean modal) {
+    private JParsingDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
 
@@ -85,6 +86,9 @@ public class JParsingDialog extends javax.swing.JDialog {
         for (Filtering it : Filtering.values()) {
             cbFiltering.addItem(it);
         }
+        
+        cbNullFiltering.removeAllItems();
+        // will be filled in #create
 
         // disable pruning controls initially
         lbThreshold.setEnabled(false);
@@ -96,6 +100,7 @@ public class JParsingDialog extends javax.swing.JDialog {
 
         // disable filtering choices
         cbFiltering.setEnabled(false);
+        cbNullFiltering.setEnabled(false);
 
         // initialize FTC name
         if (previousPruningFtcMap != null) {
@@ -103,8 +108,15 @@ public class JParsingDialog extends javax.swing.JDialog {
         }
     }
 
-    public static JParsingDialog create(List<String> interpretations, Frame parent, boolean modal) {
+    public static JParsingDialog create(List<String> interpretations, InterpretedTreeAutomaton irtg, Frame parent, boolean modal) {
         JParsingDialog ret = new JParsingDialog(parent, modal);
+        
+        for( String interpName : interpretations ) {
+            Algebra alg = irtg.getInterpretation(interpName).getAlgebra();
+            if( alg instanceof NullFilterAlgebra ) {
+                ret.cbNullFiltering.addItem(interpName);
+            }
+        }
 
         ret.pInterpretationsContainer.removeAll();
         ret.pInterpretationsContainer.setLayout(new BorderLayout());
@@ -137,6 +149,9 @@ public class JParsingDialog extends javax.swing.JDialog {
         jLabel2 = new javax.swing.JLabel();
         chFiltering = new javax.swing.JCheckBox();
         cbFiltering = new javax.swing.JComboBox<>();
+        jLabel4 = new javax.swing.JLabel();
+        chNullFiltering = new javax.swing.JCheckBox();
+        cbNullFiltering = new javax.swing.JComboBox<>();
         jPanel2 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         rbNone = new javax.swing.JRadioButton();
@@ -164,7 +179,7 @@ public class JParsingDialog extends javax.swing.JDialog {
             }
         });
 
-        jLabel2.setText("Filtering");
+        jLabel2.setText("Lexical filtering");
 
         chFiltering.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -178,6 +193,14 @@ public class JParsingDialog extends javax.swing.JDialog {
             }
         });
 
+        jLabel4.setText("Non-null filtering");
+
+        chNullFiltering.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chNullFilteringActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -186,13 +209,18 @@ public class JParsingDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1)
-                    .addComponent(jLabel2))
-                .addGap(93, 93, 93)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel4))
+                .addGap(79, 79, 79)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(chNullFiltering)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbNullFiltering, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(chFiltering)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cbFiltering, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(cbFiltering, 0, 608, Short.MAX_VALUE))
                     .addComponent(cbAlgorithm, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -208,6 +236,11 @@ public class JParsingDialog extends javax.swing.JDialog {
                     .addComponent(jLabel2)
                     .addComponent(chFiltering)
                     .addComponent(cbFiltering, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel4)
+                    .addComponent(chNullFiltering)
+                    .addComponent(cbNullFiltering, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -271,7 +304,7 @@ public class JParsingDialog extends javax.swing.JDialog {
                             .addComponent(rbCoarseToFine)
                             .addComponent(rbBeamSearch)
                             .addComponent(rbNone))
-                        .addGap(0, 547, Short.MAX_VALUE))
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(tfFtcMap)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -294,10 +327,11 @@ public class JParsingDialog extends javax.swing.JDialog {
                     .addComponent(lbThreshold)
                     .addComponent(tfThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lbFtcMap)
-                    .addComponent(tfFtcMap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(bFtcMapFileChooser))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(bFtcMapFileChooser, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(lbFtcMap)
+                        .addComponent(tfFtcMap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -325,7 +359,7 @@ public class JParsingDialog extends javax.swing.JDialog {
         );
         pDummyLayout.setVerticalGroup(
             pDummyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 66, Short.MAX_VALUE)
+            .addGap(0, 68, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout pInterpretationsContainerLayout = new javax.swing.GroupLayout(pInterpretationsContainer);
@@ -353,16 +387,16 @@ public class JParsingDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(pInterpretationsContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(bOk)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(18, 18, 18)
                         .addComponent(bCancel)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(pInterpretationsContainer, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addContainerGap())))
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -377,7 +411,7 @@ public class JParsingDialog extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(bOk)
                     .addComponent(bCancel))
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addContainerGap(9, Short.MAX_VALUE))
         );
 
         pack();
@@ -468,6 +502,14 @@ public class JParsingDialog extends javax.swing.JDialog {
     public File getPruningFtcMap() {
         return pruningFtcMap;
     }
+    
+    public String getSelectedNullFiltering() {
+        if( chNullFiltering.isSelected()) {
+            return (String) cbNullFiltering.getSelectedItem();
+        } else {
+            return null;
+        }
+    }
 
 
     private void cbAlgorithmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbAlgorithmActionPerformed
@@ -523,6 +565,10 @@ public class JParsingDialog extends javax.swing.JDialog {
         // TODO add your handling code here:
     }//GEN-LAST:event_cbFilteringActionPerformed
 
+    private void chNullFilteringActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chNullFilteringActionPerformed
+        cbNullFiltering.setEnabled(chNullFiltering.isSelected());
+    }//GEN-LAST:event_chNullFilteringActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bCancel;
@@ -531,10 +577,13 @@ public class JParsingDialog extends javax.swing.JDialog {
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JComboBox<Algorithm> cbAlgorithm;
     private javax.swing.JComboBox<Filtering> cbFiltering;
+    private javax.swing.JComboBox<String> cbNullFiltering;
     private javax.swing.JCheckBox chFiltering;
+    private javax.swing.JCheckBox chNullFiltering;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel lbFtcMap;

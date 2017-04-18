@@ -254,7 +254,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miParse = new javax.swing.JMenuItem();
         miBulkParse = new javax.swing.JMenuItem();
         miBinarize = new javax.swing.JMenuItem();
-        miFilterNull = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         miTrainML = new javax.swing.JMenuItem();
         miTrainEM = new javax.swing.JMenuItem();
@@ -407,14 +406,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu4.add(miBinarize);
-
-        miFilterNull.setText("Filter null values on interpretation ...");
-        miFilterNull.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miFilterNullActionPerformed(evt);
-            }
-        });
-        jMenu4.add(miFilterNull);
         jMenu4.add(jSeparator3);
 
         miTrainML.setText("Maximum Likelihood Training ...");
@@ -545,10 +536,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 hasOptions.add(irtg.getInterpretation(intp).getAlgebra().hasOptions());
             }
 
-            JParsingDialog jpd = JParsingDialog.create(annotationsInOrder, this, true);
+            JParsingDialog jpd = JParsingDialog.create(annotationsInOrder, irtg, this, true);
             jpd.setVisible(true);
-            
-            if( jpd.getInputValues() == null ) {
+
+            if (jpd.getInputValues() == null) {
                 // dialog was cancelled
                 return;
             }
@@ -601,9 +592,9 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                              String interp = jpd.getTheOneNonemptyInput().getKey();
                                              String ftc = StringTools.slurp(new FileReader(jpd.getPruningFtcMap()));
                                              CoarseToFineParser ctfp = CoarseToFineParser.makeCoarseToFineParser(irtg, interp, ftc, jpd.getPruningThreshold());
-                                             
-                                             if( jpd.getSelectedAlgorithm() == JParsingDialog.Algorithm.SIBLING_FINDER ) {                                             
-                                                chart = ctfp.parseInputObjectWithSF(inputObjects.get(interp));
+
+                                             if (jpd.getSelectedAlgorithm() == JParsingDialog.Algorithm.SIBLING_FINDER) {
+                                                 chart = ctfp.parseInputObjectWithSF(inputObjects.get(interp));
                                              } else {
                                                  chart = ctfp.parseInputObject(inputObjects.get(interp));
                                              }
@@ -663,49 +654,40 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                          (chart, time) -> {
                                      if (chart != null) {
                                          GuiMain.log("Computed parse chart, for " + inputs + ", " + Util.formatTime(time));
-                                         JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                         jta.setIrtg(irtg);
-                                         jta.setTitle("Parse chart: " + inputs);
-                                         jta.pack();
-                                         jta.setVisible(true);
+                                         showChartAfterNullFiltering(chart, inputs, jpd.getSelectedNullFiltering());
                                      }
                                  });
             }
-
-            /*
-            JInputForm jif = JInputForm.showForm(this, annotationsInOrder, hasOptions);
-            jif.setVisible(true);
-
-            final Map<String, String> inputs = jif.getInputValues();
-            final Map<String, String> options = jif.getOptions();
-
-            if (inputs != null) {
-                GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
-                        listener -> {
-                            GuiUtils.setGlobalListener(listener);
-
-                            for (String intp : options.keySet()) {
-                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
-                            }
-
-                            TreeAutomaton chart = irtg.parse(inputs);
-
-                            GuiUtils.setGlobalListener(null);
-                            return chart;
-                        },
-                        (chart, time) -> {
-                            GuiMain.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
-                            if (chart != null) {
-                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                jta.setIrtg(irtg);
-                                jta.setTitle("Parse chart: " + inputs);
-                                jta.pack();
-                                jta.setVisible(true);
-                            }
-                        });
-            } */
         }
     }//GEN-LAST:event_miParseActionPerformed
+
+    private void showChartAfterNullFiltering(TreeAutomaton chart, Map<String, String> inputs, String nullFiltering) {
+        GuiUtils.withProgressBar(this, "Null filtering", "Null filtering", listener -> {
+                             if (nullFiltering == null) {
+                                 return chart;
+                             } else {
+                                 // TODO - error handling
+                                 // TODO - progress bar
+
+                                 NullFilterAlgebra alg = (NullFilterAlgebra) irtg.getInterpretation(nullFiltering).getAlgebra();
+                                 Homomorphism hom = irtg.getInterpretation(nullFiltering).getHomomorphism();
+                                 return chart.intersect(alg.nullFilter().inverseHomomorphism(hom));
+                             }
+                         }, (cht, time) -> {
+                             String title = "Parse chart: " + inputs;
+
+                             if (nullFiltering != null) {
+                                 GuiMain.log("Performed null filtering on interpretation '" + nullFiltering + " ', " + Util.formatTime(time));
+                                 title += " (null-filtered)";
+                             }
+
+                             JTreeAutomaton jta = new JTreeAutomaton(cht, null);
+                             jta.setIrtg(irtg);
+                             jta.setTitle(title);
+                             jta.pack();
+                             jta.setVisible(true);
+                         });
+    }
 
     private void updateWeights() {
         for (int i = 0; i < rulesInOrder.size(); i++) {
@@ -959,32 +941,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                       });
     }//GEN-LAST:event_miBulkParseActionPerformed
 
-    private void miFilterNullActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFilterNullActionPerformed
-        JOneStringInputForm.withString("Filter null values on interpretation", "Interpretation", this, true, intrp -> {
-            GuiUtils.withProgressBar(this, "Null filtering progress", "Filtering ...",
-                                         listener -> {
-                                             // TODO - better selection of null-filter interpretation
-                                             // TODO - error handling
-                                             // TODO - progress bar
-                                             
-                                             NullFilterAlgebra alg = (NullFilterAlgebra) irtg.getInterpretation(intrp).getAlgebra();
-                                             Homomorphism hom = irtg.getInterpretation(intrp).getHomomorphism();
-                                             return automaton.intersect(alg.nullFilter().inverseHomomorphism(hom));
-                                         },
-                                         (chart, time) -> {
-                                             if (chart != null) {
-                                                 GuiMain.log("Finished null filtering on '" + intrp + "', " + Util.formatTime(time));
-                                                 
-                                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                                jta.setIrtg(irtg);
-                                                jta.setTitle(getTitle() + " (null-filtered)");
-                                                jta.pack();
-                                                jta.setVisible(true);
-                                            }
-                                         });
-        });
-    }//GEN-LAST:event_miFilterNullActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -1004,7 +960,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenuItem miBulkParse;
     private javax.swing.JMenuItem miCloseAllWindows;
     private javax.swing.JMenuItem miCloseWindow;
-    private javax.swing.JMenuItem miFilterNull;
     private javax.swing.JMenuItem miLoadMaxentWeights;
     private javax.swing.JMenu miMaxent;
     private javax.swing.JMenuItem miOpenAutomaton;
