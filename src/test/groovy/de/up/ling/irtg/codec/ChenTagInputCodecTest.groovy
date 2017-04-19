@@ -44,6 +44,9 @@ class ChenTagInputCodecTest {
 
         List<Tree<String>> rawDerivationTrees = ic.lexicalizeFromCorpus(tagg, new StringReader(DEPS));
         
+        System.err.println(DT);
+        System.err.println(rawDerivationTrees.get(0))
+        
         assertThat(rawDerivationTrees.size(), is(1))
         assertThat(rawDerivationTrees.get(0), is(DT))
     }

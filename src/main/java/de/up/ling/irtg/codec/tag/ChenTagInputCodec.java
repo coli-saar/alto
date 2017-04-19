@@ -157,7 +157,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         List<Tree<String>> childTrees = new ArrayList<>();
         String label = posToLabel.get(nodePos);
         String treename = label.split("-")[0];
-        List<String> childStates = tagg.getChildStates(tagg.getElementaryTree(treename));
+        List<String> childStates = tagg.getChildStates(treename); //tagg.getElementaryTree(treename));
 
 //        System.err.println("mkdt nodePos=" + nodePos + ", label=" + label);
 //        if(children != null) System.err.println("  children=" + children);
@@ -307,7 +307,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             // compute tree of post-order visit positions, as when generating
             // the sequence of children in the IRTG rule (see TagGrammar#toIrtg)
             MutableInteger numChildren = new MutableInteger(0);
-            Tree<Integer> dfsNodePositions = tagg.makeDfsNodePositions(tagg.getElementaryTree(etreeName), numChildren);
+            Tree<Integer> dfsNodePositions = tagg.makeDfsNodePositions(etreeName, numChildren); // tagg.getElementaryTree(etreeName)
             etreeNumChildren.put(etreeName, numChildren.getValue());
 
             final Int2IntMap ret = new Int2IntOpenHashMap();

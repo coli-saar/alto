@@ -164,13 +164,10 @@ public class TagGrammar {
         }
     }
 
-    
     private static String safe(String s) {
         return s.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
-    
-    
     private static String makeA(String nonterminal) {
         return nonterminal + "_" + ADJ_VARTYPE;
     }
@@ -190,36 +187,33 @@ public class TagGrammar {
      * @param etree
      * @return
      */
-    List<String> getChildStates(ElementaryTree etree) {
+    List<String> getChildStates(String etreeName) { // ElementaryTree etree
         final List<String> childStates = new ArrayList<>();
+        LexiconEntry lex = new LexiconEntry(null, etreeName);
 
-        etree.getTree().dfs((node, children) -> {
-            String label = node.getLabel().getLabel(); // use these as states
+        dfsEtree(lex, null, childStates, null, new ElementaryTreeVisitor<Void>() {
+             @Override
+             public Void makeAdjTree(Node node, List<Void> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
+                 childStates.add(makeA(node.getLabel()));
+                 return null;
+             }
 
-            switch (node.getLabel().getType()) {
-                case HEAD:
-                case SECONDARY_LEX:
-                    childStates.add(makeA(label));
-                    break;
+             @Override
+             public Void makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
+                 childStates.add(makeS(node.getLabel()));
+                 return null;
+             }
 
-                case SUBSTITUTION:
-                    childStates.add(makeS(label));
-                    break;
+             @Override
+             public Void makeDummyTree(Node node, Homomorphism th) {
+                 return null;
+             }
 
-                case DEFAULT:
-                    if (isTrace(label)) { //  traceP != null && traceP.test(label)) {
-                        // do not allow adjunction around traces
-                    } else {
-                        childStates.add(makeA(label));
-                    }
-                    break;
-
-                default:
-                // NOP
-            }
-
-            return null;
-        });
+             @Override
+             public Void makeAtom(String s, Homomorphism th) {
+                 return null;
+             }
+         });
 
         return childStates;
     }
@@ -239,7 +233,41 @@ public class TagGrammar {
      * @param nextPosition
      * @return
      */
-    Tree<Integer> makeDfsNodePositions(ElementaryTree tree, MutableInteger nextPosition) {
+    Tree<Integer> makeDfsNodePositions(String etreeName, MutableInteger nextPosition) {
+        LexiconEntry lex = new LexiconEntry(null, etreeName);
+
+        System.err.printf("node pos for %s:\n", etreeName);
+
+        return dfsEtree(lex, null, null, null, new ElementaryTreeVisitor<Tree<Integer>>() {
+                    @Override
+                    public Tree<Integer> makeAdjTree(Node node, List<Tree<Integer>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
+                        int ret = nextPosition.incValue();
+                        System.err.printf("[a] %s -> %s\n", node, Tree.create(ret, children));
+                        return Tree.create(ret, children);
+                    }
+
+                    @Override
+                    public Tree<Integer> makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
+                        int ret = nextPosition.incValue();
+                        System.err.printf("[s] %s -> %s\n", node, Tree.create(ret));
+
+                        return Tree.create(ret); // , children
+                    }
+
+                    @Override
+                    public Tree<Integer> makeDummyTree(Node node, Homomorphism th) {
+                        System.err.printf("[d] %s -> -1\n", node);
+                        return Tree.create(-1);
+                    }
+
+                    @Override
+                    public Tree<Integer> makeAtom(String s, Homomorphism th) {
+                        System.err.printf("[atom] %s -> -1\n", s);
+                        return Tree.create(-1);
+                    }
+                });
+
+        /*
         return tree.getTree().dfs((node, children) -> {
             switch (node.getLabel().getType()) {
                 case HEAD:
@@ -259,30 +287,12 @@ public class TagGrammar {
                     return Tree.create(-1, children);
             }
         });
+         */
     }
 
     private static final String ADJ_PREFIX = "?" + ADJ_VARTYPE;
     private static final String SUBST_PREFIX = "?" + SUBST_VARTYPE;
 
-//    private Tree<HomomorphismSymbol> makeAdjTree(Node node, List<Tree<HomomorphismSymbol>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
-//        String label = node.getLabel();
-//
-//        childStates.add(makeA(label));
-//        adjunctionNonterminals.add(makeA(label));
-//        return Tree.create(th.c(TagTreeAlgebra.C, 2),
-//                           Tree.create(th.v(nextVar.gensym(adjPrefix))),
-//                           Tree.create(lwa(label, children.size(), th), children));
-//    }
-//
-//    private Tree<HomomorphismSymbol> makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
-//        String label = node.getLabel();
-//        childStates.add(makeS(label));
-//        return Tree.create(th.v(nextVar.gensym(substPrefix)));
-//    }
-//
-//    private Tree<HomomorphismSymbol> makeDummyTree(Node node, Homomorphism th) {
-//        return Tree.create(lwa(node.getLabel(), 0, th));
-//    }
     private static interface ElementaryTreeVisitor<E> {
         public E makeAdjTree(Node node, List<E> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals);
 
@@ -323,7 +333,7 @@ public class TagGrammar {
         }
     }
 
-    private <E> E dfsEtree(LexiconEntry lex, ElementaryTreeVisitor<E> visitor, Homomorphism th, List<String> childStates, final Set<String> adjunctionNonterminals) {
+    private <E> E dfsEtree(LexiconEntry lex, Homomorphism th, List<String> childStates, final Set<String> adjunctionNonterminals, ElementaryTreeVisitor<E> visitor) {
         ElementaryTree etree = trees.get(lex.getElementaryTreeName());
         MutableInteger nextVar = new MutableInteger(1);
 
@@ -380,7 +390,7 @@ public class TagGrammar {
         // in the grammar. An example is the dummy "tCO" tree from the Chen
         // PTB-TAG. We ignore these lexicon entries.
         if (etree != null) {
-            Tree<HomomorphismSymbol> treeHomTerm = dfsEtree(lex, new HomConstructingEtreeVisitor(), th, childStates, adjunctionNonterminals);
+            Tree<HomomorphismSymbol> treeHomTerm = dfsEtree(lex, th, childStates, adjunctionNonterminals, new HomConstructingEtreeVisitor());
             int terminalSymId = auto.getSignature().addSymbol(terminalSym, childStates.size()); //nextVar.getValue() - 1);
             String parentState = (etree.getType() == ElementaryTreeType.INITIAL) ? makeS(etree.getRootLabel()) : makeA(etree.getRootLabel());
             auto.addRule(auto.createRule(parentState, terminalSym, childStates));
@@ -621,9 +631,6 @@ public class TagGrammar {
 
 //                System.err.printf("msh @ %s\n", HomomorphismSymbol.toStringTree(node, th.getTargetSignature()));
 //                System.err.printf("  - childStates = %s\n", childStates);
-
-
-                
                 if (isSubstitutionVariable(childStates.get(node.getLabel().getValue()))) {
                     return new SortedTree(Tree.create(node.getLabel()), 1);
                 } else {
@@ -694,9 +701,7 @@ public class TagGrammar {
     }
 }
 
-
-
-            /*
+/*
             Tree<HomomorphismSymbol> treeHomTerm = etree.getTree().dfs((node, children) -> {
                 String label = node.getLabel().getLabel(); // use these as states
                 Tree<HomomorphismSymbol> ret = null;
@@ -739,9 +744,7 @@ public class TagGrammar {
 
                 return ret;
             });
-             */
-
+ */
 //            System.err.printf("th: %s\n", HomomorphismSymbol.toStringTree(treeHomTerm, th.getTargetSignature()));
 //            System.err.printf("childStates: %s\n", childStates);
-            
-            
+
