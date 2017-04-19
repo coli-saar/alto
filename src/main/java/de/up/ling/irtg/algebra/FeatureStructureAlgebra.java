@@ -46,6 +46,11 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
 
     @Override
     protected FeatureStructure evaluate(String label, List<FeatureStructure> childrenValues) {
+        // if any of the children are null, just return null
+        if (childrenValues.stream().anyMatch(fs -> fs == null)) {
+            return null;
+        }
+
         if (label == null) {
             Logger.getLogger(FeatureStructureAlgebra.class.getName()).log(Level.SEVERE, null, "Cannot evaluate null label");
             return null;
@@ -54,22 +59,22 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
             return childrenValues.get(0).unify(childrenValues.get(1));
         } else if (label.startsWith(PROJ)) {
             assert childrenValues.size() == 1;
-            
+
             String attr = withoutPrefix(label, PROJ);
             FeatureStructure arg = childrenValues.get(0);
 //            System.err.println(arg.rawToString());
 //            System.err.printf("%s -> proj(%s) / of %s / is %s\n", label, attr, arg, arg.get(attr));
-            
+
             return arg.get(attr);
         } else if (label.startsWith(EMBED)) {
             assert childrenValues.size() == 1;
             AvmFeatureStructure ret = new AvmFeatureStructure();
             ret.put(withoutPrefix(label, EMBED), childrenValues.get(0));
             return ret;
-        } else if( label.startsWith(EMBED_AUX)) {
+        } else if (label.startsWith(EMBED_AUX)) {
             assert childrenValues.size() == 1;
             String[] parts = label.split("_");
-            AvmFeatureStructure ret = new AvmFeatureStructure();            
+            AvmFeatureStructure ret = new AvmFeatureStructure();
             ret.put(parts[1], childrenValues.get(0).get("root"));
             ret.put(parts[2], childrenValues.get(0).get("foot"));
             return ret;
@@ -109,8 +114,6 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
     public JComponent visualize(FeatureStructure object) {
         return new JFeatureStructurePanel(object);
     }
-    
-    
 
     @Override
     public TreeAutomaton nullFilter() {
@@ -163,14 +166,14 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
 
         TreeAutomaton<?> chart = irtg.parse(ImmutableMap.of("string", "john sleeps"));
         sw.record();
-        
+
         System.err.println(chart);
 
         TreeAutomaton<?> filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(irtg.getInterpretation("ft").getHomomorphism()));
         sw.record();
 
         sw.printMilliseconds("chart", "filtering");
-        
+
         System.err.println(filtered);
         System.err.println(filtered.language());
     }

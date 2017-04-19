@@ -11,7 +11,6 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
-import static de.up.ling.irtg.gui.GuiMain.log;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.Util;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
@@ -23,6 +22,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
 import static de.up.ling.irtg.gui.GuiMain.log;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -37,7 +38,6 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private InterpretedTreeAutomaton currentIrtg;
     private Tree<String> currentTree;
     private boolean hasBeenPacked = false; // window has been packed once -- after this, only allow manual size changes
-
 
     /**
      * Creates new form JLanguageViewer
@@ -175,16 +175,16 @@ public class JLanguageViewer extends javax.swing.JFrame {
             // We track this with a progress bar.
             GuiUtils.withProgressBar(this, "Language viewer", "Initializing language iterator ...",
                                      listener -> {
-                                         return languageIterator.next(listener);
-                                     },
+                                 return languageIterator.next(listener);
+                             },
                                      (tree, time) -> {
-                                         if (time > 500000000) {
-                                             GuiMain.log("Initialized language viewer, " + Util.formatTime(time));
-                                         }
+                                 if (time > 500000000) {
+                                     GuiMain.log("Initialized language viewer, " + Util.formatTime(time));
+                                 }
 
-                                         cachedTrees.add(tree);
-                                         fn.accept(null);
-                                     });
+                                 cachedTrees.add(tree);
+                                 fn.accept(null);
+                             });
         }
     }
 
@@ -495,29 +495,47 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_miQuitActionPerformed
 
     private void miAddViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddViewActionPerformed
+        // collect the interpretations that are currently being displayed
+        Set<String> interpretationsCurrentlyDisplayed = new HashSet<>();
+        for (Component other : derivationViewers.getComponents()) {
+            if (other instanceof JDerivationViewer) {
+                String otherView = ((JDerivationViewer) other).getCurrentView();
+                interpretationsCurrentlyDisplayed.add(otherView);
+            }
+        }
+
+        if (currentIrtg != null) {
+            boolean foundInterpretation = false;
+
+            // find an interpretation that is not currently being displayed, and show it
+            for (String interp : currentIrtg.getInterpretations().keySet()) {
+                if (!interpretationsCurrentlyDisplayed.contains(interp)) {
+                    addView(interp);
+                    foundInterpretation = true;
+                    break;
+                }
+            }
+
+            if (!foundInterpretation) {
+                addView(null);
+            }
+        }
+    }//GEN-LAST:event_miAddViewActionPerformed
+
+    /**
+     * Adds a view with the specified interpretation. If interpretation is null,
+     * the view will show the derivation tree.
+     *
+     * @param interpretation
+     */
+    public void addView(String interpretation) {
         JDerivationViewer dv = new JDerivationViewer();
 
         if (currentIrtg != null) {
             dv.setInterpretedTreeAutomaton(currentIrtg);
 
-            // set view to the first view that is not already being displayed;
-            // if none are available, stick with derivation tree view
-            for (String view : dv.getPossibleViews()) {
-                boolean taken = false;
-
-                for (Component other : derivationViewers.getComponents()) {
-                    if (other instanceof JDerivationViewer) {
-                        String otherView = ((JDerivationViewer) other).getCurrentView();
-                        if (view.equals(otherView)) {
-                            taken = true;
-                        }
-                    }
-                }
-
-                if (!taken) {
-                    dv.setView(view);
-                    break;
-                }
+            if (interpretation != null) {
+                dv.setView(interpretation);
             }
         }
 
@@ -526,11 +544,10 @@ public class JLanguageViewer extends javax.swing.JFrame {
         }
 
         derivationViewers.add(dv);
-//        setPreferredSize(getSize());
         derivationViewers.revalidate();
 
         miRemoveView.setEnabled(true);
-    }//GEN-LAST:event_miAddViewActionPerformed
+    }
 
     private void miRemoveViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miRemoveViewActionPerformed
         derivationViewers.remove(derivationViewers.getComponents().length - 1);

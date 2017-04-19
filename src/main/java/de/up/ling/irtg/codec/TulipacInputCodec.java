@@ -14,6 +14,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.codec.tag.ElementaryTree;
 import de.up.ling.irtg.codec.tag.LexiconEntry;
 import de.up.ling.irtg.codec.tag.Node;
+import de.up.ling.irtg.codec.tag.NodeAnnotation;
 import de.up.ling.irtg.codec.tag.NodeType;
 import de.up.ling.irtg.codec.tag.TagGrammar;
 import de.up.ling.irtg.codec.tulipac.TulipacLexer;
@@ -100,12 +101,15 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         String label = identifier(node.identifier());
         NodeType type = NodeType.DEFAULT;
 
-        // TODO - annotations
-        if (!node.marker().isEmpty()) {
-            type = nodeType(node.marker(0));
+        if (node.marker() != null) {
+            type = nodeType(node.marker());
         }
 
         Node n = new Node(label, type);
+        
+        if( node.annotation() != null ) {
+            n.setAnnotation(nodeAnnotation(node.annotation()));
+        }
 
         switch (node.fs().size()) {
             case 2: // top, then bottom
@@ -233,6 +237,14 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         TulipacInputCodec tic = new TulipacInputCodec();
         InterpretedTreeAutomaton irtg = tic.read(new FileInputStream("/Users/koller/Dropbox/Documents/Lehre/alt/gramf-11/tag/new-shieber.tag"));
         Files.write(irtg.toString().getBytes(), new File("shieber.irtg"));
+    }
+
+    private NodeAnnotation nodeAnnotation(AnnotationContext annotation) {
+        if( "@NA".equals(annotation.getText())) {
+            return NodeAnnotation.NO_ADJUNCTION;
+        } else {
+            return NodeAnnotation.NONE;
+        }
     }
 
 }

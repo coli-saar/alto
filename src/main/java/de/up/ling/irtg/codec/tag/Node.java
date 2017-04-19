@@ -16,6 +16,7 @@ public class Node {
     private String label;
     private NodeType type;
     private FeatureStructure top, bottom;
+    private NodeAnnotation annotation;
 
     public Node(String label, NodeType type) {
         this(label, type, null, null);
@@ -26,6 +27,7 @@ public class Node {
         this.type = type;
         this.top = top;
         this.bottom = bottom;
+        this.annotation = NodeAnnotation.NONE;
     }
 
     public String getLabel() {
@@ -52,9 +54,25 @@ public class Node {
         return new Node(label, newType, top, bottom);
     }
 
+    public NodeAnnotation getAnnotation() {
+        return annotation;
+    }
+
+    public void setAnnotation(NodeAnnotation annotation) {
+        this.annotation = annotation;
+    }
+    
+    
+
     @Override
     public String toString() {
         String x = type.mark(label);
+        
+        if( annotation == NodeAnnotation.NO_ADJUNCTION ) {
+            x += "@NA";
+        } else if( annotation == NodeAnnotation.OBLIGATORY_ADJUNCTION ) {
+            x += "@OA";
+        }
         
         if( top != null ) {
             x += top.toString();

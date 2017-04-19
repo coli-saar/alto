@@ -25,6 +25,7 @@ import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -163,7 +164,7 @@ public class TagGrammar {
             return ret + safe(fs.toString());
         }
     }
-    
+
     private static String safe(String s) {
         return s.replaceAll("[^a-zA-Z0-9]", "_");
     }
@@ -258,6 +259,18 @@ public class TagGrammar {
         });
     }
 
+    private static final String adjPrefix = "?" + ADJ_VARTYPE;
+
+    private Tree<HomomorphismSymbol> makeLocalTreeA(Node node, List<Tree<HomomorphismSymbol>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
+        String label = node.getLabel();
+
+        childStates.add(makeA(label));
+        adjunctionNonterminals.add(makeA(label));
+        return Tree.create(th.c(TagTreeAlgebra.C, 2),
+                           Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                           Tree.create(lwa(label, children.size(), th), children));
+    }
+
     /**
      * NB: Keep this consistent with {@link #makeDfsNodePositions(de.up.ling.irtg.codec.tag.ElementaryTree, de.up.ling.irtg.util.MutableInteger)
      * }
@@ -288,19 +301,27 @@ public class TagGrammar {
 
                 switch (node.getLabel().getType()) {
                     case HEAD:
-                        childStates.add(makeA(label));
-                        adjunctionNonterminals.add(makeA(label));
-                        ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getWord()))));
+                        children = Collections.singletonList(Tree.create(th.c(lex.getWord())));
+                        ret = makeLocalTreeA(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        
+//                        
+//                        childStates.add(makeA(label));
+//                        adjunctionNonterminals.add(makeA(label));
+//                        ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
+//                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
+//                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getWord()))));
                         break;
 
                     case SECONDARY_LEX:
-                        childStates.add(makeA(label));
-                        adjunctionNonterminals.add(makeA(label));
-                        ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getSecondaryLex()))));
+                        children = Collections.singletonList(Tree.create(th.c(lex.getSecondaryLex())));
+                        ret = makeLocalTreeA(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        
+                        
+//                        childStates.add(makeA(label));
+//                        adjunctionNonterminals.add(makeA(label));
+//                        ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
+//                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
+//                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getSecondaryLex()))));
                         break;
                     // TODO - maybe XTAG allows multiple secondary lexes, one per POS-tag
 
@@ -318,13 +339,15 @@ public class TagGrammar {
                             // do not allow adjunction around traces
                             ret = Tree.create(lwa(label, 0, th));
                         } else {
-                            childStates.add(makeA(label));
-                            adjunctionNonterminals.add(makeA(label));
-                            int numChildren = children.size();
-
-                            ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                    Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                    Tree.create(lwa(label, numChildren, th), children));
+                            ret = makeLocalTreeA(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                            
+//                            childStates.add(makeA(label));
+//                            adjunctionNonterminals.add(makeA(label));
+//                            int numChildren = children.size();
+//
+//                            ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
+//                                              Tree.create(th.v(nextVar.gensym(adjPrefix))),
+//                                              Tree.create(lwa(label, numChildren, th), children));
                         }
                         break;
 

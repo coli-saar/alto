@@ -48,7 +48,7 @@ grmr: (tr | family | wordByItself | lemma | include)+;
 
 tr: TREE identifier COLON node;
 
-node: identifier (annotation|marker)* fs? fs? (OP_CBK node+ CL_CBK)?;
+node: identifier marker? annotation? fs? fs? (OP_CBK node+ CL_CBK)?;
 
 fs: OP_SBK (ft COMMA)* ft? CL_SBK;
 
