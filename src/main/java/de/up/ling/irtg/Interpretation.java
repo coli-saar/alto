@@ -5,6 +5,7 @@
 package de.up.ling.irtg;
 
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.NullFilterAlgebra;
 import de.up.ling.irtg.automata.Intersectable;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
 import de.up.ling.irtg.automata.NondeletingInverseHomAutomaton;
@@ -226,5 +227,22 @@ public class Interpretation<E> implements Serializable {
      */
     public void setPmLogName(String name) {
         pmFactory.logTitle = name;
+    }
+    
+    /**
+     * Applies the null-filter of the algebra to the given parse chart.
+     * This is only supported if the algebra in this interpretation
+     * implements {@link NullFilterAlgebra}.
+     * 
+     * @param chart
+     * @return 
+     */
+    public TreeAutomaton filterNull(TreeAutomaton chart) {
+        if (algebra instanceof NullFilterAlgebra) {
+            NullFilterAlgebra nf = (NullFilterAlgebra) algebra;
+            return chart.intersect(nf.nullFilter().inverseHomomorphism(hom));
+        } else {
+            throw new UnsupportedOperationException("Can only filterNull if the algebra implements NullFilterAlgebra");
+        }
     }
 }

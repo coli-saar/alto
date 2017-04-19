@@ -51,7 +51,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private static String findSecondary(AvmFeatureStructure features) {
         if (features.getAttributes().contains("sgp1")) {
             return (String) features.get("sgp1").getValue();
-        } else if( features.get("prt1") == null ) {
+        } else if (features.get("prt1") == null) {
             return null;
         } else {
             return (String) features.get("prt1").getValue();
@@ -103,7 +103,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                     int pos = Integer.parseInt(parts[0]);
                     int parentPos = Integer.parseInt(parts[3]);
                     String parentTreename = parts[8];
-                    String label = treename + "-" + word;
+                    String label = TagGrammar.makeTerminalSymbol(lex); //  treename + "-" + word;
 
                     posToLabel.put(pos, label);
 
@@ -192,9 +192,12 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         try {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split("\\s+");
-                Tree<Node> t = decodeElementaryTree(parts, new MutableInteger(1));
-                boolean isAuxiliary = t.some(p -> p.getType().equals(NodeType.FOOT));
-                tagg.addElementaryTree(parts[0], new ElementaryTree(t, isAuxiliary ? ElementaryTreeType.AUXILIARY : ElementaryTreeType.INITIAL));
+
+                if (parts.length > 1) { // skip blank lines
+                    Tree<Node> t = decodeElementaryTree(parts, new MutableInteger(1));
+                    boolean isAuxiliary = t.some(p -> p.getType().equals(NodeType.FOOT));
+                    tagg.addElementaryTree(parts[0], new ElementaryTree(t, isAuxiliary ? ElementaryTreeType.AUXILIARY : ElementaryTreeType.INITIAL));
+                }
             }
 
             return tagg;
@@ -310,15 +313,17 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             final Int2IntMap ret = new Int2IntOpenHashMap();
             final MutableInteger nextPosition = new MutableInteger(1);
 
-            if(DEBUG) System.err.println("dfs tree: " + dfsNodePositions);
-            
+            if (DEBUG) {
+                System.err.println("dfs tree: " + dfsNodePositions);
+            }
+
             // visit nodes in pre-order, as in the tree definitions of the
             // Chen f.str file, and generate pre-order -> post-order mapping
             dfsNodePositions.dfs(new TreeVisitor<Integer, Void, Void>() {
                 @Override
                 public Void visit(Tree<Integer> node, Void data) {
                     int nodePos = nextPosition.incValue();
-                    
+
                     if (node.getLabel() >= 0) {
                         // skip nodes that do not generate rule children
                         ret.put(nodePos, node.getLabel().intValue());
@@ -328,7 +333,9 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 }
             });
 
-            if(DEBUG) System.err.println("mapping: " + ret);
+            if (DEBUG) {
+                System.err.println("mapping: " + ret);
+            }
             return ret;
         }
     }

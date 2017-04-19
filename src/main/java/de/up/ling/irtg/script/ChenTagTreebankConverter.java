@@ -65,7 +65,7 @@ import java.util.function.Function;
 public class ChenTagTreebankConverter {
     private static JCommander jc;
     private static InterpretedTreeAutomaton irtg;
-
+    
     public static void main(String[] args) throws FileNotFoundException, IOException, ParserException, Exception {
         CmdLineParameters param = new CmdLineParameters();
         jc = new JCommander(param, args);
@@ -110,6 +110,8 @@ public class ChenTagTreebankConverter {
         Interpretation ti = irtg.getInterpretation("tree");
         
         for( Tree<String> dt : rawDerivationTrees ) {
+            System.err.printf("dt: %s\n", dt);
+            
             Instance inst = new Instance();
             inst.setDerivationTree(irtg.getAutomaton().getSignature().mapSymbolsToIds(dt));
             inst.setInputObjects(ImmutableMap.of("string", si.interpret(dt), "tree", ti.interpret(dt)));

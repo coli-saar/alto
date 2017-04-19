@@ -129,9 +129,7 @@ public class JFeatureStructurePanel extends JPanel {
                 
                 int topY = y(row.getValue()) - CHARACTER_HEIGHT;
 
-                List<String> attributes = new ArrayList<>(avmFeatureStructure.getAttributes());
-                Collections.sort(attributes);
-                
+                List<String> attributes = avmFeatureStructure.getSortedAttributes();                
                 int attrWidth = 0;
                 for( int i = 0; i < attributes.size(); i++ ) {
                     attrWidth = Math.max(attrWidth, getLabelWidth(attributes.get(i)));

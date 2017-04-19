@@ -913,8 +913,13 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 }
             }
         }
+        
+        if( bestFinalState <= 0 ) {
+            // no final state with weight > -inf found
+            return null;
+        }
 
-        assert bestFinalState > -1 : "Viterbi failed: no useful final state found";
+//        assert bestFinalState > -1 : "Viterbi failed: no useful final state found";
 
         // extract best tree from backpointers
         Tree<Integer> t = extractTreeFromViterbi(bestFinalState, map, 0);

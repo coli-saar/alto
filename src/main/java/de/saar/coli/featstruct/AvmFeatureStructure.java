@@ -7,6 +7,7 @@ package de.saar.coli.featstruct;
 
 import de.up.ling.irtg.util.Util;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -221,6 +222,12 @@ public class AvmFeatureStructure extends FeatureStructure {
      * Printing
      * ************************************************************************
      */
+    public List<String> getSortedAttributes() {
+        List<String> ret = new ArrayList<>(avm.keySet());
+        Collections.sort(ret);
+        return ret;
+    }
+    
     @Override
     protected void appendValue(Set<FeatureStructure> visitedIndexedFs, boolean printedIndexMarker, Map<FeatureStructure, String> reentrantFsToIndex, StringBuilder buf) {
         boolean first = true;
@@ -231,7 +238,7 @@ public class AvmFeatureStructure extends FeatureStructure {
 
         buf.append("[");
 
-        for (String key : avm.keySet()) {
+        for (String key : getSortedAttributes()) {
             if (first) {
                 first = false;
             } else {
@@ -257,11 +264,11 @@ public class AvmFeatureStructure extends FeatureStructure {
         } else {
             id = makeId();
             buf.append(String.format("%savm #%d\n", prefix, id));
-
-            avm.entrySet().forEach(arc -> {
-                buf.append(String.format("%s%s:\n", prefix, arc.getKey()));
-                arc.getValue().appendRawToString(buf, indent + 2);
-            });
+            
+            for( String key : getSortedAttributes() ) {
+                buf.append(String.format("%s%s:\n", prefix, key));
+                avm.get(key).appendRawToString(buf, indent + 2);
+            }
 
             appendForwardAndCopy(buf, indent);
 

@@ -25,7 +25,6 @@ import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -154,7 +153,7 @@ public class TagGrammar {
         return NO_ADJUNCTION + "_" + nt;
     }
 
-    private static String makeTerminalSymbol(LexiconEntry lex) {
+    public static String makeTerminalSymbol(LexiconEntry lex) {
         FeatureStructure fs = lex.getFeatureStructure();
         String ret = lex.getElementaryTreeName() + "-" + lex.getWord();
 
@@ -165,10 +164,13 @@ public class TagGrammar {
         }
     }
 
+    
     private static String safe(String s) {
         return s.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
+    
+    
     private static String makeA(String nonterminal) {
         return nonterminal + "_" + ADJ_VARTYPE;
     }
@@ -259,16 +261,102 @@ public class TagGrammar {
         });
     }
 
-    private static final String adjPrefix = "?" + ADJ_VARTYPE;
+    private static final String ADJ_PREFIX = "?" + ADJ_VARTYPE;
+    private static final String SUBST_PREFIX = "?" + SUBST_VARTYPE;
 
-    private Tree<HomomorphismSymbol> makeLocalTreeA(Node node, List<Tree<HomomorphismSymbol>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
-        String label = node.getLabel();
+//    private Tree<HomomorphismSymbol> makeAdjTree(Node node, List<Tree<HomomorphismSymbol>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
+//        String label = node.getLabel();
+//
+//        childStates.add(makeA(label));
+//        adjunctionNonterminals.add(makeA(label));
+//        return Tree.create(th.c(TagTreeAlgebra.C, 2),
+//                           Tree.create(th.v(nextVar.gensym(adjPrefix))),
+//                           Tree.create(lwa(label, children.size(), th), children));
+//    }
+//
+//    private Tree<HomomorphismSymbol> makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
+//        String label = node.getLabel();
+//        childStates.add(makeS(label));
+//        return Tree.create(th.v(nextVar.gensym(substPrefix)));
+//    }
+//
+//    private Tree<HomomorphismSymbol> makeDummyTree(Node node, Homomorphism th) {
+//        return Tree.create(lwa(node.getLabel(), 0, th));
+//    }
+    private static interface ElementaryTreeVisitor<E> {
+        public E makeAdjTree(Node node, List<E> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals);
 
-        childStates.add(makeA(label));
-        adjunctionNonterminals.add(makeA(label));
-        return Tree.create(th.c(TagTreeAlgebra.C, 2),
-                           Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                           Tree.create(lwa(label, children.size(), th), children));
+        public E makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates);
+
+        public E makeDummyTree(Node node, Homomorphism th);
+
+        public E makeAtom(String s, Homomorphism th);
+    }
+
+    private static class HomConstructingEtreeVisitor implements ElementaryTreeVisitor<Tree<HomomorphismSymbol>> {
+        @Override
+        public Tree<HomomorphismSymbol> makeAdjTree(Node node, List<Tree<HomomorphismSymbol>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
+            String label = node.getLabel();
+
+            childStates.add(makeA(label));
+            adjunctionNonterminals.add(makeA(label));
+            return Tree.create(th.c(TagTreeAlgebra.C, 2),
+                               Tree.create(th.v(nextVar.gensym(ADJ_PREFIX))),
+                               Tree.create(lwa(label, children.size(), th), children));
+        }
+
+        @Override
+        public Tree<HomomorphismSymbol> makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
+            String label = node.getLabel();
+            childStates.add(makeS(label));
+            return Tree.create(th.v(nextVar.gensym(SUBST_PREFIX)));
+        }
+
+        @Override
+        public Tree<HomomorphismSymbol> makeDummyTree(Node node, Homomorphism th) {
+            return Tree.create(lwa(node.getLabel(), 0, th));
+        }
+
+        @Override
+        public Tree<HomomorphismSymbol> makeAtom(String s, Homomorphism th) {
+            return Tree.create(th.c(s));
+        }
+    }
+
+    private <E> E dfsEtree(LexiconEntry lex, ElementaryTreeVisitor<E> visitor, Homomorphism th, List<String> childStates, final Set<String> adjunctionNonterminals) {
+        ElementaryTree etree = trees.get(lex.getElementaryTreeName());
+        MutableInteger nextVar = new MutableInteger(1);
+
+        if (etree != null) {
+            return etree.getTree().dfs((node, children) -> {
+                switch (node.getLabel().getType()) {
+                    case HEAD:
+                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeAtom(lex.getWord(), th)), nextVar, th, childStates, adjunctionNonterminals);
+
+                    case SECONDARY_LEX:
+                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeAtom(lex.getSecondaryLex(), th)), nextVar, th, childStates, adjunctionNonterminals);
+
+                    case FOOT:
+                        return visitor.makeAtom(TagTreeAlgebra.P1, th);
+
+                    case SUBSTITUTION:
+                        return visitor.makeSubstTree(node.getLabel(), nextVar, th, childStates);
+
+                    case DEFAULT:
+                        if (isTrace(node.getLabel().getLabel())) {
+                            // do not allow adjunction around traces
+                            return visitor.makeDummyTree(node.getLabel(), th);
+                        } else {
+                            return visitor.makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        }
+
+                    default:
+                        throw new CodecParseException("Illegal node type in " + lex + ": " + etree.getTree().getLabel());
+                }
+            });
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -286,79 +374,14 @@ public class TagGrammar {
     private void convertElementaryTree(LexiconEntry lex, ConcreteTreeAutomaton<String> auto, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, Homomorphism fh, final Set<String> adjunctionNonterminals) {
         final List<String> childStates = new ArrayList<>();
         ElementaryTree etree = trees.get(lex.getElementaryTreeName());
-        MutableInteger nextVar = new MutableInteger(1);
-        String adjPrefix = "?" + ADJ_VARTYPE;
-        String substPrefix = "?" + SUBST_VARTYPE;
         String terminalSym = makeTerminalSymbol(lex);
 
         // null etree means that no elementary tree of that name was defined
         // in the grammar. An example is the dummy "tCO" tree from the Chen
         // PTB-TAG. We ignore these lexicon entries.
         if (etree != null) {
-            Tree<HomomorphismSymbol> treeHomTerm = etree.getTree().dfs((node, children) -> {
-                String label = node.getLabel().getLabel(); // use these as states
-                Tree<HomomorphismSymbol> ret = null;
-
-                switch (node.getLabel().getType()) {
-                    case HEAD:
-                        children = Collections.singletonList(Tree.create(th.c(lex.getWord())));
-                        ret = makeLocalTreeA(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
-                        
-//                        
-//                        childStates.add(makeA(label));
-//                        adjunctionNonterminals.add(makeA(label));
-//                        ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-//                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
-//                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getWord()))));
-                        break;
-
-                    case SECONDARY_LEX:
-                        children = Collections.singletonList(Tree.create(th.c(lex.getSecondaryLex())));
-                        ret = makeLocalTreeA(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
-                        
-                        
-//                        childStates.add(makeA(label));
-//                        adjunctionNonterminals.add(makeA(label));
-//                        ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-//                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
-//                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getSecondaryLex()))));
-                        break;
-                    // TODO - maybe XTAG allows multiple secondary lexes, one per POS-tag
-
-                    case FOOT:
-                        ret = Tree.create(th.c(TagTreeAlgebra.P1));
-                        break;
-
-                    case SUBSTITUTION:
-                        childStates.add(makeS(label));
-                        ret = Tree.create(th.v(nextVar.gensym(substPrefix)));
-                        break;
-
-                    case DEFAULT:
-                        if (isTrace(label)) {
-                            // do not allow adjunction around traces
-                            ret = Tree.create(lwa(label, 0, th));
-                        } else {
-                            ret = makeLocalTreeA(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
-                            
-//                            childStates.add(makeA(label));
-//                            adjunctionNonterminals.add(makeA(label));
-//                            int numChildren = children.size();
-//
-//                            ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-//                                              Tree.create(th.v(nextVar.gensym(adjPrefix))),
-//                                              Tree.create(lwa(label, numChildren, th), children));
-                        }
-                        break;
-
-                    default:
-                        throw new CodecParseException("Illegal node type in " + lex + ": " + etree.getTree().getLabel());
-                }
-
-                return ret;
-            });
-
-            int terminalSymId = auto.getSignature().addSymbol(terminalSym, nextVar.getValue() - 1);
+            Tree<HomomorphismSymbol> treeHomTerm = dfsEtree(lex, new HomConstructingEtreeVisitor(), th, childStates, adjunctionNonterminals);
+            int terminalSymId = auto.getSignature().addSymbol(terminalSym, childStates.size()); //nextVar.getValue() - 1);
             String parentState = (etree.getType() == ElementaryTreeType.INITIAL) ? makeS(etree.getRootLabel()) : makeA(etree.getRootLabel());
             auto.addRule(auto.createRule(parentState, terminalSym, childStates));
             th.add(terminalSymId, treeHomTerm);
@@ -434,10 +457,6 @@ public class TagGrammar {
 
                 // make sure root attribute points to correct value
                 // and enforce coindexation across different nodes in same etree
-//                System.err.printf("Make core fs for %s:\n", lex);
-//                System.err.printf("   fsForEtree: %s\n", fsForEtree);
-//                System.err.printf("   root maker: %s\n", rootMaker);
-//                System.err.printf("   msi: %s\n\n", mergeSameIndices.merger);
                 final FeatureStructure coreFs = mergeSameIndices.unify(fsForEtree.unify(rootMaker));
 
                 // construct homomorphism term, ensuring that it has the same
@@ -600,6 +619,11 @@ public class TagGrammar {
             if (node.getLabel().isVariable()) {
                 assert children.isEmpty();
 
+//                System.err.printf("msh @ %s\n", HomomorphismSymbol.toStringTree(node, th.getTargetSignature()));
+//                System.err.printf("  - childStates = %s\n", childStates);
+
+
+                
                 if (isSubstitutionVariable(childStates.get(node.getLabel().getValue()))) {
                     return new SortedTree(Tree.create(node.getLabel()), 1);
                 } else {
@@ -669,3 +693,55 @@ public class TagGrammar {
         return buf.toString();
     }
 }
+
+
+
+            /*
+            Tree<HomomorphismSymbol> treeHomTerm = etree.getTree().dfs((node, children) -> {
+                String label = node.getLabel().getLabel(); // use these as states
+                Tree<HomomorphismSymbol> ret = null;
+
+                switch (node.getLabel().getType()) {
+                    case HEAD:
+                        children = Collections.singletonList(Tree.create(th.c(lex.getWord())));
+                        ret = makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        break;
+
+                    case SECONDARY_LEX:
+                        children = Collections.singletonList(Tree.create(th.c(lex.getSecondaryLex())));
+                        ret = makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        break;
+                    // TODO - maybe XTAG allows multiple secondary lexes, one per POS-tag
+
+                    case FOOT:
+                        ret = Tree.create(th.c(TagTreeAlgebra.P1));
+                        break;
+
+                    case SUBSTITUTION:
+                        ret = makeSubstTree(node.getLabel(), nextVar, th, childStates);
+//                        childStates.add(makeS(label));
+//                        ret = Tree.create(th.v(nextVar.gensym(substPrefix)));
+                        break;
+
+                    case DEFAULT:
+                        if (isTrace(label)) {
+                            // do not allow adjunction around traces
+                            ret = makeDummyTree(node.getLabel(), th);
+//                            ret = Tree.create(lwa(label, 0, th));
+                        } else {
+                            ret = makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        }
+                        break;
+
+                    default:
+                        throw new CodecParseException("Illegal node type in " + lex + ": " + etree.getTree().getLabel());
+                }
+
+                return ret;
+            });
+             */
+
+//            System.err.printf("th: %s\n", HomomorphismSymbol.toStringTree(treeHomTerm, th.getTargetSignature()));
+//            System.err.printf("childStates: %s\n", childStates);
+            
+            
