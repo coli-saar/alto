@@ -180,8 +180,6 @@ public class TagGrammar {
         return th.c(label + "_" + arity, arity);
     }
 
-
-
     private static final String ADJ_PREFIX = "?" + ADJ_VARTYPE;
     private static final String SUBST_PREFIX = "?" + SUBST_VARTYPE;
 
@@ -193,7 +191,7 @@ public class TagGrammar {
         public E makeNoAdjTree(Node node, List<E> children, Homomorphism th);
 
         public E makeWordTree(String s, Homomorphism th);
-        
+
         public E makeFootTree(Homomorphism th);
     }
 
@@ -240,10 +238,21 @@ public class TagGrammar {
             return etree.getTree().dfs((node, children) -> {
                 switch (node.getLabel().getType()) {
                     case HEAD:
-                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeWordTree(lex.getWord(), th)), nextVar, th, childStates, adjunctionNonterminals);
+                        children = Collections.singletonList(visitor.makeWordTree(lex.getWord(), th));
+                        if (node.getLabel().getAnnotation() == NodeAnnotation.NO_ADJUNCTION) {
+                            return visitor.makeNoAdjTree(node.getLabel(), children, th);
+                        } else {
+                            return visitor.makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        }
 
                     case SECONDARY_LEX:
-                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeWordTree(lex.getSecondaryLex(), th)), nextVar, th, childStates, adjunctionNonterminals);
+                        children = Collections.singletonList(visitor.makeWordTree(lex.getSecondaryLex(), th));
+                        if (node.getLabel().getAnnotation() == NodeAnnotation.NO_ADJUNCTION) {
+                            return visitor.makeNoAdjTree(node.getLabel(), children, th);
+                        } else {
+                            return visitor.makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
+                        }
+//                        return visitor.makeAdjTree(node.getLabel(), , nextVar, th, childStates, adjunctionNonterminals);
 
                     case FOOT:
                         return visitor.makeFootTree(th);
@@ -256,6 +265,9 @@ public class TagGrammar {
                             // do not allow adjunction around traces
                             List<E> e = Collections.EMPTY_LIST;
                             return visitor.makeNoAdjTree(node.getLabel(), e, th);
+                        } else if (node.getLabel().getAnnotation() == NodeAnnotation.NO_ADJUNCTION) {
+                            // do not allow adjunction at nodes with no-adjunction annotation
+                            return visitor.makeNoAdjTree(node.getLabel(), children, th);
                         } else {
                             return visitor.makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
                         }
@@ -270,7 +282,7 @@ public class TagGrammar {
     }
 
     /**
-     * 
+     *
      * @param lex
      * @param auto
      * @param th

@@ -44,7 +44,17 @@ class TulipacInputCodecTest {
         TreeAutomaton chart = irtg.parse(["string": "mer es huus aastriiche"])
         TreeAutomaton filtered = irtg.getInterpretation("ft").filterNull(chart)
         
-        assertThat(filtered.viterbi(), is(pt("vinf_tv-aastriiche_objcase__acc_(np_pron-mer_case__nom_(*NOP*_pron_A,*NOP*_np_A),np_n-huus__(*NOP*_n_A,adj_det-es_case__acc_(*NOP*_det_A,*NOP*_np_A)),*NOP*_S_A,*NOP*_v_A,*NOP*_S_A)")))
+        assertThat(filtered.viterbi(), is(pt("vinf_tv-aastriiche_objcase__acc_(np_pron-mer_case__nom_(*NOP*_pron_A,*NOP*_np_A),np_n-huus__(*NOP*_n_A,adj_det-es_case__acc_(*NOP*_det_A,*NOP*_np_A)),*NOP*_S_A,*NOP*_v_A)")))
+        // NB this also checks that @NA on root of vinf_tv was processed correctly,
+        // otherwise there would be an extra *NOP*_S_A at the end
+    }
+    
+    @Test
+    public void testShieberCrossSerial() {
+        TreeAutomaton chart = irtg.parse(["string": "mer em hans es huus hälfed aastriiche"])
+        TreeAutomaton filtered = irtg.getInterpretation("ft").filterNull(chart)
+        
+        assertThat(filtered.viterbi(), is(pt("vinf_tv-aastriiche_objcase__acc_(np_pron-mer_case__nom_(*NOP*_pron_A,*NOP*_np_A),np_n-huus__(*NOP*_n_A,adj_det-es_case__acc_(*NOP*_det_A,*NOP*_np_A)),'vinf_tv_aux-hälfed_objcase__dat_'(np_n-hans__(*NOP*_n_A,adj_det-em_case__dat_(*NOP*_det_A,*NOP*_np_A)),*NOP*_S_A,*NOP*_v_A),*NOP*_v_A)")))
     }
     
     @Test
