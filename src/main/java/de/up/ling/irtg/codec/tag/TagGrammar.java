@@ -168,11 +168,11 @@ public class TagGrammar {
         return s.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
-    private static String makeA(String nonterminal) {
+    public static String makeA(String nonterminal) {
         return nonterminal + "_" + ADJ_VARTYPE;
     }
 
-    private static String makeS(String nonterminal) {
+    public static String makeS(String nonterminal) {
         return nonterminal + "_" + SUBST_VARTYPE;
     }
 
@@ -180,127 +180,21 @@ public class TagGrammar {
         return th.c(label + "_" + arity, arity);
     }
 
-    /**
-     * Generates the list of child states, in the same order as
-     * {@link #convertElementaryTree(de.up.ling.irtg.codec.tag.LexiconEntry, de.up.ling.irtg.automata.ConcreteTreeAutomaton, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.algebra.TagStringAlgebra, java.util.Set) }.
-     *
-     * @param etree
-     * @return
-     */
-    List<String> getChildStates(String etreeName) { // ElementaryTree etree
-        final List<String> childStates = new ArrayList<>();
-        LexiconEntry lex = new LexiconEntry(null, etreeName);
 
-        dfsEtree(lex, null, childStates, null, new ElementaryTreeVisitor<Void>() {
-             @Override
-             public Void makeAdjTree(Node node, List<Void> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
-                 childStates.add(makeA(node.getLabel()));
-                 return null;
-             }
-
-             @Override
-             public Void makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
-                 childStates.add(makeS(node.getLabel()));
-                 return null;
-             }
-
-             @Override
-             public Void makeDummyTree(Node node, Homomorphism th) {
-                 return null;
-             }
-
-             @Override
-             public Void makeAtom(String s, Homomorphism th) {
-                 return null;
-             }
-         });
-
-        return childStates;
-    }
-
-    /**
-     * Returns a tree of the same shape as the elementary tree, with each node
-     * replaced by its post-order visit index, starting at nextPosition for the
-     * leftmost leaf. This is the same order in which {@link #convertElementaryTree(de.up.ling.irtg.codec.tag.LexiconEntry, de.up.ling.irtg.automata.ConcreteTreeAutomaton, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.algebra.TagStringAlgebra, java.util.Set)
-     * }
-     * and {@link #getChildStates(de.up.ling.irtg.codec.tag.ElementaryTree) }
-     * generate the lists of child states.
-     *
-     * The node label -1 indicates that this node does not generate a child
-     * state.
-     *
-     * @param tree
-     * @param nextPosition
-     * @return
-     */
-    Tree<Integer> makeDfsNodePositions(String etreeName, MutableInteger nextPosition) {
-        LexiconEntry lex = new LexiconEntry(null, etreeName);
-
-        System.err.printf("node pos for %s:\n", etreeName);
-
-        return dfsEtree(lex, null, null, null, new ElementaryTreeVisitor<Tree<Integer>>() {
-                    @Override
-                    public Tree<Integer> makeAdjTree(Node node, List<Tree<Integer>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
-                        int ret = nextPosition.incValue();
-                        System.err.printf("[a] %s -> %s\n", node, Tree.create(ret, children));
-                        return Tree.create(ret, children);
-                    }
-
-                    @Override
-                    public Tree<Integer> makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
-                        int ret = nextPosition.incValue();
-                        System.err.printf("[s] %s -> %s\n", node, Tree.create(ret));
-
-                        return Tree.create(ret); // , children
-                    }
-
-                    @Override
-                    public Tree<Integer> makeDummyTree(Node node, Homomorphism th) {
-                        System.err.printf("[d] %s -> -1\n", node);
-                        return Tree.create(-1);
-                    }
-
-                    @Override
-                    public Tree<Integer> makeAtom(String s, Homomorphism th) {
-                        System.err.printf("[atom] %s -> -1\n", s);
-                        return Tree.create(-1);
-                    }
-                });
-
-        /*
-        return tree.getTree().dfs((node, children) -> {
-            switch (node.getLabel().getType()) {
-                case HEAD:
-                case SECONDARY_LEX:
-                case SUBSTITUTION:
-                    return Tree.create(nextPosition.incValue(), children);
-
-                case DEFAULT:
-                    if (isTrace(node.getLabel().getLabel())) {
-                        // do not allow adjunction around traces
-                        return Tree.create(-1);
-                    } else {
-                        return Tree.create(nextPosition.incValue(), children);
-                    }
-
-                default:
-                    return Tree.create(-1, children);
-            }
-        });
-         */
-    }
 
     private static final String ADJ_PREFIX = "?" + ADJ_VARTYPE;
     private static final String SUBST_PREFIX = "?" + SUBST_VARTYPE;
 
-    private static interface ElementaryTreeVisitor<E> {
+    public static interface ElementaryTreeVisitor<E> {
         public E makeAdjTree(Node node, List<E> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals);
 
         public E makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates);
 
         public E makeDummyTree(Node node, Homomorphism th);
 
-        public E makeAtom(String s, Homomorphism th);
+        public E makeWordTree(String s, Homomorphism th);
+        
+        public E makeFootTree(Homomorphism th);
     }
 
     private static class HomConstructingEtreeVisitor implements ElementaryTreeVisitor<Tree<HomomorphismSymbol>> {
@@ -328,12 +222,17 @@ public class TagGrammar {
         }
 
         @Override
-        public Tree<HomomorphismSymbol> makeAtom(String s, Homomorphism th) {
+        public Tree<HomomorphismSymbol> makeWordTree(String s, Homomorphism th) {
             return Tree.create(th.c(s));
+        }
+
+        @Override
+        public Tree<HomomorphismSymbol> makeFootTree(Homomorphism th) {
+            return Tree.create(th.c(TagTreeAlgebra.P1));
         }
     }
 
-    private <E> E dfsEtree(LexiconEntry lex, Homomorphism th, List<String> childStates, final Set<String> adjunctionNonterminals, ElementaryTreeVisitor<E> visitor) {
+    public <E> E dfsEtree(LexiconEntry lex, Homomorphism th, List<String> childStates, final Set<String> adjunctionNonterminals, ElementaryTreeVisitor<E> visitor) {
         ElementaryTree etree = trees.get(lex.getElementaryTreeName());
         MutableInteger nextVar = new MutableInteger(1);
 
@@ -341,13 +240,13 @@ public class TagGrammar {
             return etree.getTree().dfs((node, children) -> {
                 switch (node.getLabel().getType()) {
                     case HEAD:
-                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeAtom(lex.getWord(), th)), nextVar, th, childStates, adjunctionNonterminals);
+                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeWordTree(lex.getWord(), th)), nextVar, th, childStates, adjunctionNonterminals);
 
                     case SECONDARY_LEX:
-                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeAtom(lex.getSecondaryLex(), th)), nextVar, th, childStates, adjunctionNonterminals);
+                        return visitor.makeAdjTree(node.getLabel(), Collections.singletonList(visitor.makeWordTree(lex.getSecondaryLex(), th)), nextVar, th, childStates, adjunctionNonterminals);
 
                     case FOOT:
-                        return visitor.makeAtom(TagTreeAlgebra.P1, th);
+                        return visitor.makeFootTree(th);
 
                     case SUBSTITUTION:
                         return visitor.makeSubstTree(node.getLabel(), nextVar, th, childStates);

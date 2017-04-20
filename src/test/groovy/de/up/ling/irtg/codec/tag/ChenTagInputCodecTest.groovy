@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec
+package de.up.ling.irtg.codec.tag
 
 
 import org.junit.Test
@@ -15,6 +15,7 @@ import com.google.common.collect.Iterators
 import de.saar.basic.Pair
 import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.codec.tag.ChenTagInputCodec
+import de.up.ling.irtg.codec.tag.ChenTagInputCodec.NodePosToChildrenPos
 import de.up.ling.irtg.codec.tag.TagGrammar
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
@@ -66,6 +67,29 @@ class ChenTagInputCodecTest {
         
         assertThat("tree interp", irtg.getInterpretation("tree").interpret(DT), is(pt("S(S(NP(NP(N(Vinken)),Punct(',')),VP(VP(V(join),NP(D(the),NP(N(board))),PP(IN(as),NP(A(nonexecutive),NP(N(director))))),NP(NP(N('Nov.')),N('29')))),'.'('.'))")))
     }
+    
+    @Test
+    public void testNodePosInitial() {
+        ChenTagInputCodec ic = new ChenTagInputCodec();
+        TagGrammar tagg = ic.readUnlexicalizedGrammar(new StringReader(GRAMMAR));
+        List<Tree<String>> rawDerivationTrees = ic.lexicalizeFromCorpus(tagg, new StringReader(DEPS));
+        
+        NodePosToChildrenPos npcp = new NodePosToChildrenPos(tagg);
+        
+        assertThat(npcp.getMap("t83"),  is([1:7, 2:0, 3:6, 4:1, 5:2, 6:5, 7:3, 8:4]))
+    }
+    
+    @Test
+    public void testNodePosAuxiliary() {
+        ChenTagInputCodec ic = new ChenTagInputCodec();
+        TagGrammar tagg = ic.readUnlexicalizedGrammar(new StringReader(GRAMMAR));
+        List<Tree<String>> rawDerivationTrees = ic.lexicalizeFromCorpus(tagg, new StringReader(DEPS));
+        
+        NodePosToChildrenPos npcp = new NodePosToChildrenPos(tagg);
+        
+        assertThat(npcp.getMap("t187"),  is([1:2, 3:1, 4:0]))
+    }
+    
 
     private static final String DEPS = """\n\
 1 Pierre NNP 2 Vinken NNP 1 t2 t3 1 pos=NNP preterm=N modifee=NP mdir=right drole=adj srole=adj

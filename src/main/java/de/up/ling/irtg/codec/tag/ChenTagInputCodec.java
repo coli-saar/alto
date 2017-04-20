@@ -5,13 +5,13 @@
  */
 package de.up.ling.irtg.codec.tag;
 
-import de.saar.basic.Pair;
 import de.saar.coli.featstruct.AvmFeatureStructure;
 import de.saar.coli.featstruct.PrimitiveFeatureStructure;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -157,7 +158,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         List<Tree<String>> childTrees = new ArrayList<>();
         String label = posToLabel.get(nodePos);
         String treename = label.split("-")[0];
-        List<String> childStates = tagg.getChildStates(treename); //tagg.getElementaryTree(treename));
+        List<String> childStates = getChildStates(treename, tagg);
 
 //        System.err.println("mkdt nodePos=" + nodePos + ", label=" + label);
 //        if(children != null) System.err.println("  children=" + children);
@@ -264,8 +265,13 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
-    private static class NodePosToChildrenPos {
-
+    /**
+     * Maps from node positions (= the numeric node IDs in d6.f.str) to child
+     * positions (= positions in the child list of the IRTG rule). Node
+     * positions are 1-based, and represent visit times in a DFS. Child
+     * positions are 0-based, and represent exit times in a DFS.
+     */
+    static class NodePosToChildrenPos {
         private Map<String, Int2IntMap> map = new HashMap<String, Int2IntMap>();
         private Object2IntMap<String> etreeNumChildren = new Object2IntOpenHashMap<String>();
         private TagGrammar tagg;
@@ -303,11 +309,18 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             return etreeNumChildren.get(etreeName);
         }
 
+        // use only for testing
+        Int2IntMap getMap(String etreeName) {
+            ensureEtreeCalculated(etreeName);
+            return map.get(etreeName);
+        }
+
         private Int2IntMap computeNodeMapping(String etreeName) {
             // compute tree of post-order visit positions, as when generating
             // the sequence of children in the IRTG rule (see TagGrammar#toIrtg)
             MutableInteger numChildren = new MutableInteger(0);
-            Tree<Integer> dfsNodePositions = tagg.makeDfsNodePositions(etreeName, numChildren); // tagg.getElementaryTree(etreeName)
+            Tree<Integer> dfsNodePositions = makeDfsNodePositions(etreeName, numChildren, tagg);
+            System.err.printf("   -> dfs node positions for %s: %s\n", etreeName, dfsNodePositions);
             etreeNumChildren.put(etreeName, numChildren.getValue());
 
             final Int2IntMap ret = new Int2IntOpenHashMap();
@@ -322,6 +335,12 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             dfsNodePositions.dfs(new TreeVisitor<Integer, Void, Void>() {
                 @Override
                 public Void visit(Tree<Integer> node, Void data) {
+                    if (node.getLabel() == -2) {
+                        // node that was created in lexicalization => did not
+                        // exist in original etree => does not have a node ID, skip it
+                        return null;
+                    }
+
                     int nodePos = nextPosition.incValue();
 
                     if (node.getLabel() >= 0) {
@@ -340,4 +359,89 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
+    private static Tree<Integer> makeDfsNodePositions(String etreeName, MutableInteger nextPosition, TagGrammar tagg) {
+        LexiconEntry lex = new LexiconEntry(null, etreeName);
+
+//        System.err.printf("node pos for %s %s:\n", etreeName, tagg.getElementaryTree(etreeName));
+
+        return tagg.dfsEtree(lex, null, null, null, new TagGrammar.ElementaryTreeVisitor<Tree<Integer>>() {
+                         @Override
+                         public Tree<Integer> makeAdjTree(Node node, List<Tree<Integer>> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
+                             int ret = nextPosition.incValue();
+//                             System.err.printf("[a] %s -> %s\n", node, Tree.create(ret, children));
+                             return Tree.create(ret, children);
+                         }
+
+                         @Override
+                         public Tree<Integer> makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
+                             int ret = nextPosition.incValue();
+//                             System.err.printf("[s] %s -> %s\n", node, Tree.create(ret));
+
+                             return Tree.create(ret); // , children
+                         }
+
+                         @Override
+                         public Tree<Integer> makeDummyTree(Node node, Homomorphism th) {
+//                             System.err.printf("[d] %s -> -1\n", node);
+                             return Tree.create(-1); // this node existed in the unlexicalized etree
+                         }
+
+                         @Override
+                         public Tree<Integer> makeWordTree(String s, Homomorphism th) {
+//                             System.err.printf("[atom] %s -> -2\n", s);
+                             return Tree.create(-2); // this node only exists in the lexicalized etree
+                         }
+
+                         @Override
+                         public Tree<Integer> makeFootTree(Homomorphism th) {
+//                             System.err.printf("[foot] -> -1\n");
+                             return Tree.create(-1);
+                         }
+                     });
+    }
+
+
+    
+    /**
+     * Generates the list of child states, in the same order as
+     * {@link #convertElementaryTree(de.up.ling.irtg.codec.tag.LexiconEntry, de.up.ling.irtg.automata.ConcreteTreeAutomaton, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.algebra.TagStringAlgebra, java.util.Set) }.
+     *
+     * @param etree
+     * @return
+     */
+    private static List<String> getChildStates(String etreeName, TagGrammar tagg) {
+        final List<String> childStates = new ArrayList<>();
+        LexiconEntry lex = new LexiconEntry(null, etreeName);
+
+        tagg.dfsEtree(lex, null, childStates, null, new TagGrammar.ElementaryTreeVisitor<Void>() {
+             @Override
+             public Void makeAdjTree(Node node, List<Void> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals) {
+                 childStates.add(TagGrammar.makeA(node.getLabel()));
+                 return null;
+             }
+
+             @Override
+             public Void makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates) {
+                 childStates.add(TagGrammar.makeS(node.getLabel()));
+                 return null;
+             }
+
+             @Override
+             public Void makeDummyTree(Node node, Homomorphism th) {
+                 return null;
+             }
+
+             @Override
+             public Void makeWordTree(String s, Homomorphism th) {
+                 return null;
+             }
+
+            @Override
+            public Void makeFootTree(Homomorphism th) {
+                return null;
+            }
+         });
+
+        return childStates;
+    }
 }
