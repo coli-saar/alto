@@ -9,10 +9,16 @@ package de.up.ling.irtg.codec
 
 import org.junit.Test
 import java.util.*
+import java.util.function.Function
 import org.junit.BeforeClass
 import java.io.*
 import com.google.common.collect.Iterators
 import de.up.ling.irtg.automata.*
+import de.up.ling.irtg.binarization.BinarizingAlgebraSeed
+import de.up.ling.irtg.binarization.BinaryRuleFactory
+import de.up.ling.irtg.binarization.BkvBinarizer
+import de.up.ling.irtg.binarization.IdentitySeed
+import de.up.ling.irtg.binarization.RegularSeed
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.irtg.InterpretedTreeAutomaton
@@ -22,6 +28,8 @@ import de.up.ling.irtg.algebra.graph.SGraph
 import de.up.ling.irtg.hom.*;
 import de.up.ling.irtg.corpus.*
 import static de.up.ling.irtg.util.TestingTools.*;
+import com.google.common.collect.ImmutableMap
+import de.up.ling.irtg.binarization.*
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
@@ -59,12 +67,48 @@ class TulipacInputCodecTest {
     
     @Test
     public void testShieberFtClash() {
-        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(SHIEBER)
+//        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(SHIEBER)
         TreeAutomaton chart = irtg.parse(["string": "mer em hans aastriiche"])
         TreeAutomaton filtered = irtg.getInterpretation("ft").filterNull(chart)
         
         assertThat(chart.viterbi(), notNullValue())
         assertThat(filtered.viterbi(), nullValue())
+    }
+    
+    @Test
+    public void testShieberBinarization() {
+        InterpretedTreeAutomaton binarized = binarize(irtg)
+        
+        TreeAutomaton chart = binarized.parse(["string": "mer em hans es huus hälfed aastriiche"])
+        TreeAutomaton filtered = binarized.getInterpretation("ft").filterNull(chart)
+        
+        assertThat(filtered.viterbi(), not(nullValue()))
+    }
+    
+    @Test
+    public void testTreeHom() {
+        // checks that @NA is processed correctly
+        // prevents bug where @NA produced S_0 instead of S_3 label
+        assertThat(irtg.getInterpretation("tree").getHomomorphism().get("vinf_tv-hälfed_objcase__dat_"), 
+                    is(pt("S_3(?1,'@'(?3,S_1(?2)),'@'(?4,v_1('hälfed')))")))
+    }
+    
+    private static InterpretedTreeAutomaton binarize(final InterpretedTreeAutomaton irtg) throws Exception {
+        Map<String, Algebra> newAlgebras = ImmutableMap.of("string", new TagStringAlgebra(),
+                                                           "tree", new BinarizingTagTreeAlgebra(),
+                                                           "ft", new FeatureStructureAlgebra());
+
+        Map<String, RegularSeed> seeds = ImmutableMap.of(
+                "string", new IdentitySeed(irtg.getInterpretation("string").getAlgebra(), newAlgebras.get("string")),
+                "ft", new IdentitySeed(irtg.getInterpretation("ft").getAlgebra(), newAlgebras.get("ft")),
+                "tree", new BinarizingAlgebraSeed(irtg.getInterpretation("tree").getAlgebra(), newAlgebras.get("tree")));
+
+        Function<InterpretedTreeAutomaton, BinaryRuleFactory> rff = GensymBinaryRuleFactory.createFactoryFactory();
+        BkvBinarizer binarizer = new BkvBinarizer(seeds, rff);
+
+        InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, newAlgebras, null);
+
+        return binarized;
     }
     
     private static final String SHIEBER = """\n\

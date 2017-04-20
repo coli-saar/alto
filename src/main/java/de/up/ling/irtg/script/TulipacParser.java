@@ -5,21 +5,35 @@
  */
 package de.up.ling.irtg.script;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.google.common.collect.ImmutableMap;
 import de.saar.coli.featstruct.FeatureStructure;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.BinarizingTagTreeAlgebra;
 import de.up.ling.irtg.algebra.FeatureStructureAlgebra;
 import de.up.ling.irtg.algebra.TagStringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.binarization.BinarizingAlgebraSeed;
+import de.up.ling.irtg.binarization.BinaryRuleFactory;
+import de.up.ling.irtg.binarization.BkvBinarizer;
+import de.up.ling.irtg.binarization.IdentitySeed;
+import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.gui.JLanguageViewer;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import jline.console.ConsoleReader;
 
 /**
@@ -33,6 +47,9 @@ public class TulipacParser {
     private static TagStringAlgebra sa;
     private static Homomorphism fh;
 
+    private static JCommander jc;
+    private static CmdLineParameters param = new CmdLineParameters();
+
     private static void reloadGrammar() throws IOException, Exception {
         System.err.printf("Reading grammar from %s ...\n", filename);
 
@@ -41,9 +58,38 @@ public class TulipacParser {
         irtg = ic.read(new FileInputStream(filename));
         System.err.printf("Done, read grammar in %s\n\n", Util.formatTimeSince(start));
 
+        if (param.binarize) {
+            irtg = binarize(irtg);
+        }
+
         fsa = (FeatureStructureAlgebra) irtg.getInterpretation("ft").getAlgebra();
         sa = (TagStringAlgebra) irtg.getInterpretation("string").getAlgebra();
         fh = irtg.getInterpretation("ft").getHomomorphism();
+    }
+
+    private static InterpretedTreeAutomaton binarize(final InterpretedTreeAutomaton irtg) throws Exception {
+        long start = System.nanoTime();
+        System.err.println("Binarizing grammar ...");
+
+        Map<String, Algebra> newAlgebras = ImmutableMap.of("string", new TagStringAlgebra(),
+                                                           "tree", new BinarizingTagTreeAlgebra(),
+                                                           "ft", new FeatureStructureAlgebra());
+
+        Map<String, RegularSeed> seeds = ImmutableMap.of(
+                "string", new IdentitySeed(irtg.getInterpretation("string").getAlgebra(), newAlgebras.get("string")),
+                "ft", new IdentitySeed(irtg.getInterpretation("ft").getAlgebra(), newAlgebras.get("ft")),
+                "tree", new BinarizingAlgebraSeed(irtg.getInterpretation("tree").getAlgebra(), newAlgebras.get("tree")));
+
+        Function<InterpretedTreeAutomaton, BinaryRuleFactory> rff = PennTreebankConverter.makeRuleFactoryFactory("complete");
+        BkvBinarizer binarizer = new BkvBinarizer(seeds, rff);
+
+        InterpretedTreeAutomaton binarized = GuiUtils.withConsoleProgressBar(60, System.out, listener -> {
+                                                                         return binarizer.binarize(irtg, newAlgebras, listener);
+                                                                     });
+        
+        System.err.printf("Done, binarized grammar in %s\n\n", Util.formatTimeSince(start));
+
+        return binarized;
     }
 
     private static class Command {
@@ -71,17 +117,44 @@ public class TulipacParser {
     private static void usage() {
         int maxLen = commands.stream().mapToInt(c -> c.command.length()).max().getAsInt();
         String format = String.format("%%-%ds  %%s\n", maxLen);
-        
+
         for (Command c : commands) {
             System.out.printf(format, c.command, c.description);
         }
     }
 
+    private static void cmdlineUsage(String errorMessage) {
+        if (jc != null) {
+            if (errorMessage != null) {
+                System.out.println(errorMessage);
+            }
+
+            jc.setProgramName("java -cp <alto.jar> de.up.ling.irtg.script.TulipacParser <grammar_filename>");
+            jc.usage();
+
+            if (errorMessage != null) {
+                System.exit(1);
+            } else {
+                System.exit(0);
+            }
+        }
+    }
+
     public static void main(String[] args) throws IOException, Exception {
+        jc = new JCommander(param, args);
+
+        if (param.help) {
+            cmdlineUsage(null);
+        }
+
+        if (param.grammarFilename.isEmpty()) {
+            cmdlineUsage("No grammar file specified.");
+        }
+
         System.err.println("Alto tulipac-style TAG parser, v1.0");
         System.err.println("Type a sentence to parse it, or type 'help' for help.\n");
 
-        filename = args[0];
+        filename = param.grammarFilename.get(0);
         reloadGrammar();
 
         ConsoleReader cr = new ConsoleReader();
@@ -130,7 +203,7 @@ public class TulipacParser {
             lv.addView("ft");
             lv.pack();
             lv.setVisible(true);
-            
+
             System.out.println();
         }
 
@@ -177,5 +250,16 @@ public class TulipacParser {
         for (int i = 0; i < t.getChildren().size(); i++) {
             printTree(t.getChildren().get(i), depth + 3);
         }
+    }
+
+    private static class CmdLineParameters {
+        @Parameter
+        public List<String> grammarFilename = new ArrayList<>();
+
+        @Parameter(names = "--binarize", description = "Binarize the grammar after loading.")
+        public boolean binarize = false;
+
+        @Parameter(names = "--help", help = true, description = "Prints usage information.")
+        private boolean help;
     }
 }

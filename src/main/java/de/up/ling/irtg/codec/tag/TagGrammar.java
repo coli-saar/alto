@@ -216,7 +216,7 @@ public class TagGrammar {
 
         @Override
         public Tree<HomomorphismSymbol> makeNoAdjTree(Node node, List<Tree<HomomorphismSymbol>> children, Homomorphism th) {
-            return Tree.create(lwa(node.getLabel(), 0, th), children);
+            return Tree.create(lwa(node.getLabel(), children.size(), th), children);
         }
 
         @Override
