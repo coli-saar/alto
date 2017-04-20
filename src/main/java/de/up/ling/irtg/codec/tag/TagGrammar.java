@@ -94,13 +94,7 @@ public class TagGrammar {
 
     public InterpretedTreeAutomaton toIrtg(String startSymbol) {
         // check whether this is a TAG with feature structures
-        boolean hasFeatureStructures = trees.values().iterator().next().hasFeatureStructures();
-
-        for (Map.Entry<String, ElementaryTree> et : trees.entrySet()) {
-            if (et.getValue().hasFeatureStructures() != hasFeatureStructures) {
-                throw new RuntimeException("Either all or elementary trees in the grammar must have features; tree " + et.getKey() + " is different.");
-            }
-        }
+        boolean hasFeatureStructures = trees.values().stream().anyMatch(t -> t.hasFeatureStructures());
 
         // set up IRTG
         ConcreteTreeAutomaton<String> auto = new ConcreteTreeAutomaton<>();
