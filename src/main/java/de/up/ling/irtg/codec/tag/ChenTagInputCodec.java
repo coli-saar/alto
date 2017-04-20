@@ -320,7 +320,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             // the sequence of children in the IRTG rule (see TagGrammar#toIrtg)
             MutableInteger numChildren = new MutableInteger(0);
             Tree<Integer> dfsNodePositions = makeDfsNodePositions(etreeName, numChildren, tagg);
-            System.err.printf("   -> dfs node positions for %s: %s\n", etreeName, dfsNodePositions);
+//            System.err.printf("   -> dfs node positions for %s: %s\n", etreeName, dfsNodePositions);
             etreeNumChildren.put(etreeName, numChildren.getValue());
 
             final Int2IntMap ret = new Int2IntOpenHashMap();
@@ -381,9 +381,9 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                          }
 
                          @Override
-                         public Tree<Integer> makeDummyTree(Node node, Homomorphism th) {
+                         public Tree<Integer> makeNoAdjTree(Node node, List<Tree<Integer>> children, Homomorphism th) {
 //                             System.err.printf("[d] %s -> -1\n", node);
-                             return Tree.create(-1); // this node existed in the unlexicalized etree
+                             return Tree.create(-1, children); // this node existed in the unlexicalized etree
                          }
 
                          @Override
@@ -427,7 +427,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
              }
 
              @Override
-             public Void makeDummyTree(Node node, Homomorphism th) {
+             public Void makeNoAdjTree(Node node, List<Void> children, Homomorphism th) {
                  return null;
              }
 

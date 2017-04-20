@@ -190,7 +190,7 @@ public class TagGrammar {
 
         public E makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates);
 
-        public E makeDummyTree(Node node, Homomorphism th);
+        public E makeNoAdjTree(Node node, List<E> children, Homomorphism th);
 
         public E makeWordTree(String s, Homomorphism th);
         
@@ -217,8 +217,8 @@ public class TagGrammar {
         }
 
         @Override
-        public Tree<HomomorphismSymbol> makeDummyTree(Node node, Homomorphism th) {
-            return Tree.create(lwa(node.getLabel(), 0, th));
+        public Tree<HomomorphismSymbol> makeNoAdjTree(Node node, List<Tree<HomomorphismSymbol>> children, Homomorphism th) {
+            return Tree.create(lwa(node.getLabel(), 0, th), children);
         }
 
         @Override
@@ -254,7 +254,8 @@ public class TagGrammar {
                     case DEFAULT:
                         if (isTrace(node.getLabel().getLabel())) {
                             // do not allow adjunction around traces
-                            return visitor.makeDummyTree(node.getLabel(), th);
+                            List<E> e = Collections.EMPTY_LIST;
+                            return visitor.makeNoAdjTree(node.getLabel(), e, th);
                         } else {
                             return visitor.makeAdjTree(node.getLabel(), children, nextVar, th, childStates, adjunctionNonterminals);
                         }
@@ -269,10 +270,7 @@ public class TagGrammar {
     }
 
     /**
-     * NB: Keep this consistent with {@link #makeDfsNodePositions(de.up.ling.irtg.codec.tag.ElementaryTree, de.up.ling.irtg.util.MutableInteger)
-     * }
-     * and {@link #getChildStates(de.up.ling.irtg.codec.tag.ElementaryTree) }.
-     *
+     * 
      * @param lex
      * @param auto
      * @param th
