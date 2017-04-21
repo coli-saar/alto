@@ -33,6 +33,7 @@ import java.util.Set;
  * @author koller
  */
 public class JLanguageViewer extends javax.swing.JFrame implements NodeSelectionListener {
+
     private TreeAutomaton automaton;
     private SortedLanguageIterator languageIterator;
     private long numTrees;
@@ -185,17 +186,17 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
             // internal data structures of the SortedLanguageIterator.
             // We track this with a progress bar.
             GuiUtils.withProgressBar(this, "Language viewer", "Initializing language iterator ...",
-                                     listener -> {
-                                 return languageIterator.next(listener);
-                             },
-                                     (tree, time) -> {
-                                 if (time > 500000000) {
-                                     GuiMain.log("Initialized language viewer, " + Util.formatTime(time));
-                                 }
+                    listener -> {
+                        return languageIterator.next(listener);
+                    },
+                    (tree, time) -> {
+                        if (time > 500000000) {
+                            GuiMain.log("Initialized language viewer, " + Util.formatTime(time));
+                        }
 
-                                 cachedTrees.add(tree);
-                                 fn.accept(null);
-                             });
+                        cachedTrees.add(tree);
+                        fn.accept(null);
+                    });
         }
     }
 
@@ -651,13 +652,14 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
 
     @Override
     public void nodeSelected(Tree node, boolean isSelected, Color markupColor) {
-        System.err.printf("selected[%s]: %s\n", markupColor, node);
+        for (Component dv : derivationViewers.getComponents()) {
+            ((JDerivationViewer) dv).handleNodeSelected(node, isSelected, markupColor);
+        }
     }
-    
-    
+
     /*
-    TODO:
-    - give same TreeInterpretationWithPointers to all viewers
-    - implement nodeSelected so it passes messages to all deriv viewers    
-    */
+     TODO:
+     - give same TreeInterpretationWithPointers to all viewers
+     - implement nodeSelected so it passes messages to all deriv viewers    
+     */
 }

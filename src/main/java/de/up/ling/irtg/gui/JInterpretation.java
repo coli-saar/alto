@@ -31,6 +31,8 @@ public class JInterpretation extends JDerivationDisplayable {
 
     private Interpretation interp;
     private String interpName;
+    private TreeWithInterpretations twi;
+    private TreePanel rawTreePanel;
 
     /**
      * Creates new form JInterpretation
@@ -55,16 +57,15 @@ public class JInterpretation extends JDerivationDisplayable {
     }
 
     @Override
-    public void setDerivationTree(TreeWithInterpretations twi) { //Tree<String> derivationTree) {
-        System.err.println(twi);
-        
+    public void setDerivationTree(TreeWithInterpretations twi) {
+        this.twi = twi;
+
         final Tree<String> term = twi.getInterpretation(interpName).getHomomorphicTerm();
-//        final Tree<String> term = interp.getHomomorphism().apply(derivationTree);
         final Algebra alg = interp.getAlgebra();
 
         // term panel
         termPanel.removeAll();
-        TreePanel<String> rawTreePanel = new TreePanel(term);
+        rawTreePanel = new TreePanel(term);
         rawTreePanel.setTooltipSource(t -> {
             Object val = alg.evaluate(t);
             return (val == null) ? "<null>" : val.toString();
@@ -85,18 +86,20 @@ public class JInterpretation extends JDerivationDisplayable {
             final Object value = alg.evaluate(term);
             valueComponent = alg.visualize(value);
 
-            Map<String, Supplier<String>> popupEntries = new LinkedHashMap<>();
+            if (value != null) {
+                Map<String, Supplier<String>> popupEntries = new LinkedHashMap<>();
 
-            OutputCodec oc = new AlgebraStringRepresentationOutputCodec(alg);
-            popupEntries.put(oc.getMetadata().description(), oc.asStringSupplier(value));
+                OutputCodec oc = new AlgebraStringRepresentationOutputCodec(alg);
+                popupEntries.put(oc.getMetadata().description(), oc.asStringSupplier(value));
 
-            for (OutputCodec codec : OutputCodec.getOutputCodecs(value.getClass())) {
-                if (codec.getMetadata().displayInPopup()) {
-                    popupEntries.put(codec.getMetadata().description(), codec.asStringSupplier(value));
+                for (OutputCodec codec : OutputCodec.getOutputCodecs(value.getClass())) {
+                    if (codec.getMetadata().displayInPopup()) {
+                        popupEntries.put(codec.getMetadata().description(), codec.asStringSupplier(value));
+                    }
                 }
-            }
 
-            new PopupMenu(popupEntries).addAsMouseListener(valueComponent);
+                new PopupMenu(popupEntries).addAsMouseListener(valueComponent);
+            }
         } catch (Exception e) {
             valueComponent = makeErrorComponent(e);
             e.printStackTrace(System.err);
@@ -159,4 +162,20 @@ public class JInterpretation extends JDerivationDisplayable {
     private javax.swing.JPanel termPanel;
     private javax.swing.JPanel valuePanel;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void mark(Tree<String> nodeInDerivationTree, Color markupColor) {
+        if (rawTreePanel != null) {
+            Tree<String> nodeInTerm = twi.getInterpretation(interpName).getDtNodeToTermNode().get(nodeInDerivationTree);
+            rawTreePanel.mark(nodeInTerm, markupColor);
+        }
+    }
+
+    @Override
+    public void unmark(Tree<String> nodeInDerivationTree) {
+        if (rawTreePanel != null) {
+            Tree<String> nodeInTerm = twi.getInterpretation(interpName).getDtNodeToTermNode().get(nodeInDerivationTree);
+            rawTreePanel.unmark(nodeInTerm);
+        }
+    }
 }

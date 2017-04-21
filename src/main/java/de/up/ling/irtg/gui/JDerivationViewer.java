@@ -9,9 +9,11 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.TreeWithInterpretations;
 import de.up.ling.tree.NodeSelectionListener;
 import de.up.ling.tree.Tree;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.DefaultComboBoxModel;
@@ -30,6 +32,9 @@ public class JDerivationViewer extends javax.swing.JPanel {
     private static final String DT_KEY = "** derivation tree **";
     private NodeSelectionListener nsl;
     private TreeWithInterpretations twi;
+    
+    private Map<Tree<String>,Color> markedNodesInDerivationTree = new IdentityHashMap<Tree<String>, Color>(); // node of dt -> non-null color object => should be marked up in displayables
+
 
     /**
      * Creates new form JDerivationViewer
@@ -119,18 +124,27 @@ public class JDerivationViewer extends javax.swing.JPanel {
             content.removeAll();
 
             JDerivationDisplayable dis = displayables.get(viewName);
-//            dis.setDerivationTree(derivationTree);
             dis.setDerivationTree(twi);
-            content.add(dis);
 
             if (oldSize != null) {
                 dis.setPreferredSize(oldSize);
+            }
+
+            content.add(dis);
+            
+            // refresh markers
+            for( Map.Entry<Tree<String>,Color> marker : markedNodesInDerivationTree.entrySet() ) {
+                dis.mark(marker.getKey(), marker.getValue());
             }
 
 //            setPreferredSize(getSize());
             revalidate();
             repaint();
         }
+    }
+    
+    private JDerivationDisplayable getCurrentDisplayable() {
+        return (JDerivationDisplayable) content.getComponent(0);
     }
 
     private void redraw() {
@@ -194,4 +208,17 @@ public class JDerivationViewer extends javax.swing.JPanel {
     private javax.swing.JPanel content;
     private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
+
+    void handleNodeSelected(Tree<String> nodeInDerivationTree, boolean selected, Color markupColor) {
+        for( JDerivationDisplayable dd : displayables.values() ) {
+            if(selected) {
+                dd.mark(nodeInDerivationTree, markupColor);                           // change markup of visible dd
+                markedNodesInDerivationTree.put(nodeInDerivationTree, markupColor);   // remember markup to initialize dd if another interp is selected
+            } else {
+                dd.unmark(nodeInDerivationTree);
+                markedNodesInDerivationTree.remove(nodeInDerivationTree);
+            }
+        }
+        
+    }
 }

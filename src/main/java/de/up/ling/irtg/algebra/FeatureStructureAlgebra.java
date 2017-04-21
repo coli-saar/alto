@@ -27,12 +27,14 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 /**
  *
  * @author koller
  */
 public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implements NullFilterAlgebra {
+
     public static final String UNIFY = "unify";
     public static final String PROJ = "proj_";
     public static final String EMBED = "emb_";
@@ -112,7 +114,11 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
 
     @Override
     public JComponent visualize(FeatureStructure object) {
-        return new JFeatureStructurePanel(object);
+        if (object == null) {
+            return new JLabel("<null>");
+        } else {
+            return new JFeatureStructurePanel(object);
+        }
     }
 
     @Override

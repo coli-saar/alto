@@ -17,7 +17,6 @@ import javax.swing.JScrollPane;
  * @author koller
  */
 public class JDerivationTree extends JDerivationDisplayable {
-
     private TreePanel tp = null;
     private NodeSelectionListener listener = null;
 
@@ -25,7 +24,8 @@ public class JDerivationTree extends JDerivationDisplayable {
      * Creates new form JDerivationTre
      */
     public JDerivationTree() {
-        initComponents();    }
+        initComponents();    
+    }
 
     @Override
     public void setDerivationTree(final TreeWithInterpretations twi) { //final Tree<String> derivationTree) {
@@ -71,4 +71,14 @@ public class JDerivationTree extends JDerivationDisplayable {
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void mark(Tree<String> nodeInDerivationTree, Color markupColor) {
+        // do nothing, to avoid cyclic calls
+    }
+
+    @Override
+    public void unmark(Tree<String> nodeInDerivationTree) {
+        // do nothing, to avoid cyclic calls
+    }
 }
