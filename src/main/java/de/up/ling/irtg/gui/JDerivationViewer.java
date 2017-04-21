@@ -6,6 +6,7 @@ package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.tree.NodeSelectionListener;
 import de.up.ling.tree.Tree;
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
     private static final String DERIVATION_TREE = "derivation tree";
     private Map<String, JDerivationDisplayable> displayables;
     private List<String> viewsInOrder;
+    private JDerivationTree dtView;
 
     /**
      * Creates new form JDerivationViewer
@@ -36,14 +38,18 @@ public class JDerivationViewer extends javax.swing.JPanel {
         viewsInOrder.add("** derivation tree **");
 
         displayables = new HashMap<String, JDerivationDisplayable>();
-        displayables.put("** derivation tree **", new JDerivationTree());
+        dtView = new JDerivationTree();
+        displayables.put("** derivation tree **", dtView);
 
         String[] possibleViews = new String[1];
         possibleViews[0] = DERIVATION_TREE;
         componentSelector.setModel(new DefaultComboBoxModel(possibleViews));
 
         componentSelector.setSelectedIndex(0);
-
+    }
+    
+    public void setNodeSelectionListener(NodeSelectionListener listener) {
+        dtView.addNodeSelectionListener(listener);
     }
 
     public void setInterpretedTreeAutomaton(InterpretedTreeAutomaton irtg) {

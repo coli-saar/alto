@@ -22,15 +22,19 @@ import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
 import static de.up.ling.irtg.gui.GuiMain.log;
+import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.tree.NodeSelectionListener;
+import java.awt.Color;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  *
  * @author koller
  */
-public class JLanguageViewer extends javax.swing.JFrame {
-
+public class JLanguageViewer extends javax.swing.JFrame implements NodeSelectionListener {
     private TreeAutomaton automaton;
     private SortedLanguageIterator languageIterator;
     private long numTrees;
@@ -38,6 +42,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private InterpretedTreeAutomaton currentIrtg;
     private Tree<String> currentTree;
     private boolean hasBeenPacked = false; // window has been packed once -- after this, only allow manual size changes
+    private Map<String, Homomorphism.TreeInterpretationWithPointers> tips;
 
     /**
      * Creates new form JLanguageViewer
@@ -125,6 +130,15 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
             WeightedTree wt = cachedTrees.get(tn);
             Tree<String> tree = automaton.getSignature().resolve(wt.getTree());
+
+            if (currentIrtg != null) {
+                // recalculate mapping of dt node to term nodes
+                tips = new HashMap<>();
+                for (String intrp : currentIrtg.getInterpretations().keySet()) {
+                    Homomorphism.TreeInterpretationWithPointers tip = currentIrtg.getInterpretation(intrp).getHomomorphism().mapWithPointers(tree);
+                    tips.put(intrp, tip);
+                }
+            }
 
             currentTree = tree;
             for (Component dv : derivationViewers.getComponents()) {
@@ -637,4 +651,16 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JTextField treeIndex;
     private javax.swing.JLabel weightLabel;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void nodeSelected(Tree node, boolean isSelected, Color markupColor) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
+    /*
+    TODO:
+    - set myself as listener for all viewers
+    - implement nodeSelected so it passes messages to all deriv viewers    
+    */
 }

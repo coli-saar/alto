@@ -5,6 +5,7 @@
 package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
+import de.up.ling.tree.NodeSelectionListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
@@ -15,6 +16,8 @@ import javax.swing.JScrollPane;
  * @author koller
  */
 public class JDerivationTree extends JDerivationDisplayable {
+    private TreePanel tp = null;
+    
     /**
      * Creates new form JDerivationTre
      */
@@ -25,13 +28,19 @@ public class JDerivationTree extends JDerivationDisplayable {
     @Override
     public void setDerivationTree(final Tree<String> derivationTree) {
         removeAll();
-        JScrollPane jsp = new JScrollPane(new TreePanel(derivationTree), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        tp = new TreePanel(derivationTree);
+        JScrollPane jsp = new JScrollPane(tp, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jsp.setBackground(Color.white);
         add(jsp);
         
         PopupMenu.b().add("text", derivationTree.toString())
                 .add("tikz-qtree", new TikzQtreeOutputCodec().asStringSupplier(derivationTree))
                 .build().addAsMouseListener(jsp);
+    }
+    
+    public void addNodeSelectionListener(NodeSelectionListener listener) {
+        tp.setNodeSelectionEnabled(true);
+        tp.addNodeSelectionListener(listener);
     }
 
     /**
