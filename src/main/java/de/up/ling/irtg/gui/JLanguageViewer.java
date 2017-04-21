@@ -59,7 +59,8 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
         jMenuBar1.remove(mAdvanced);
         jMenuBar1.add(new WindowMenu(this));
 
-        derivationViewers.add(new JDerivationViewer());
+        JDerivationViewer dv = new JDerivationViewer(this);
+        derivationViewers.add(dv);
         miRemoveView.setEnabled(false);
 
         if (!GuiMain.isMac()) {
@@ -543,7 +544,7 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
      * @param interpretation
      */
     public void addView(String interpretation) {
-        JDerivationViewer dv = new JDerivationViewer();
+        JDerivationViewer dv = new JDerivationViewer(this);
 
         if (currentIrtg != null) {
             dv.setInterpretedTreeAutomaton(currentIrtg);
@@ -654,13 +655,13 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
 
     @Override
     public void nodeSelected(Tree node, boolean isSelected, Color markupColor) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        System.err.printf("selected[%s]: %s\n", markupColor, node);
     }
     
     
     /*
     TODO:
-    - set myself as listener for all viewers
+    - give same TreeInterpretationWithPointers to all viewers
     - implement nodeSelected so it passes messages to all deriv viewers    
     */
 }

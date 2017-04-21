@@ -16,31 +16,43 @@ import javax.swing.JScrollPane;
  * @author koller
  */
 public class JDerivationTree extends JDerivationDisplayable {
+
     private TreePanel tp = null;
-    
+    private NodeSelectionListener listener = null;
+
     /**
      * Creates new form JDerivationTre
      */
     public JDerivationTree() {
-        initComponents();
-    }
+        initComponents();    }
 
     @Override
     public void setDerivationTree(final Tree<String> derivationTree) {
         removeAll();
         tp = new TreePanel(derivationTree);
+        setTreePanelListener();
+        
         JScrollPane jsp = new JScrollPane(tp, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jsp.setBackground(Color.white);
         add(jsp);
-        
+
         PopupMenu.b().add("text", derivationTree.toString())
                 .add("tikz-qtree", new TikzQtreeOutputCodec().asStringSupplier(derivationTree))
                 .build().addAsMouseListener(jsp);
     }
-    
-    public void addNodeSelectionListener(NodeSelectionListener listener) {
-        tp.setNodeSelectionEnabled(true);
-        tp.addNodeSelectionListener(listener);
+
+    public void setNodeSelectionListener(NodeSelectionListener listener) {
+        this.listener = listener;
+        setTreePanelListener();
+
+    }
+
+    private void setTreePanelListener() {
+        if (tp != null && listener != null) {
+            tp.setNodeSelectionEnabled(true);
+            tp.addNodeSelectionListener(listener);
+            System.err.println("listener added");
+        }
     }
 
     /**

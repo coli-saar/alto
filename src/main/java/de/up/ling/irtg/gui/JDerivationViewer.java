@@ -26,20 +26,22 @@ public class JDerivationViewer extends javax.swing.JPanel {
     private static final String DERIVATION_TREE = "derivation tree";
     private Map<String, JDerivationDisplayable> displayables;
     private List<String> viewsInOrder;
-    private JDerivationTree dtView;
+    private static final String DT_KEY = "** derivation tree **";
+    private NodeSelectionListener nsl;
 
     /**
      * Creates new form JDerivationViewer
      */
-    public JDerivationViewer() {
+    public JDerivationViewer(NodeSelectionListener nsl) {
         initComponents();
+        
+        this.nsl = nsl;
 
         viewsInOrder = new ArrayList<String>();
-        viewsInOrder.add("** derivation tree **");
+        viewsInOrder.add(DT_KEY);
 
         displayables = new HashMap<String, JDerivationDisplayable>();
-        dtView = new JDerivationTree();
-        displayables.put("** derivation tree **", dtView);
+        addDerivationTree();
 
         String[] possibleViews = new String[1];
         possibleViews[0] = DERIVATION_TREE;
@@ -48,8 +50,14 @@ public class JDerivationViewer extends javax.swing.JPanel {
         componentSelector.setSelectedIndex(0);
     }
     
-    public void setNodeSelectionListener(NodeSelectionListener listener) {
-        dtView.addNodeSelectionListener(listener);
+    private void addDerivationTree() {
+        JDerivationTree dtView = new JDerivationTree();
+        
+        if( nsl != null ) {
+            dtView.setNodeSelectionListener(nsl);
+        }
+        
+        displayables.put(DT_KEY, dtView);
     }
 
     public void setInterpretedTreeAutomaton(InterpretedTreeAutomaton irtg) {
@@ -65,7 +73,8 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
         possibleViews[0] = DERIVATION_TREE;
         possibleViews[0] = DERIVATION_TREE;
-        displayables.put("** derivation tree **", new JDerivationTree());
+        
+        addDerivationTree();
 
         if (irtg != null) {
             int i = 0;
