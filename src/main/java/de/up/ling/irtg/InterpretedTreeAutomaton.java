@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -170,8 +171,6 @@ public class InterpretedTreeAutomaton implements Serializable {
             return ret;
         }
     }
-
-    
 
     /**
      * ***********************************************************************
@@ -935,7 +934,7 @@ public class InterpretedTreeAutomaton implements Serializable {
                         parsedInst.setInputObjects(values);
                         parsedInst.setDerivationTree(t.getTree());
                         parsedInst.setComments("parse_time_ms", Double.toString(sw.getTimeBefore(1) / 1000000),
-                                               "weight=", Double.toString(t.getWeight()));
+                                "weight=", Double.toString(t.getWeight()));
                         corpusConsumer.accept(parsedInst);
                     }
 
@@ -1142,7 +1141,7 @@ public class InterpretedTreeAutomaton implements Serializable {
             getInterpretations().entrySet().stream().forEach((entry) -> {
                 Homomorphism filteredHomomorphism = filteredHomomorphisms.get(entry.getKey());
                 filteredHomomorphism.add(filteredSourceSignature.resolveSymbolId(old2NewSignature.get(matchingRule.getLabel())),
-                                         entry.getValue().getHomomorphism().get(entry.getValue().getHomomorphism().getSourceSignature().resolveSymbolId(matchingRule.getLabel())));
+                        entry.getValue().getHomomorphism().get(entry.getValue().getHomomorphism().getSourceSignature().resolveSymbolId(matchingRule.getLabel())));
             });
         }
 
@@ -1304,6 +1303,41 @@ public class InterpretedTreeAutomaton implements Serializable {
                 ret.add(rule);
             }
         }
+        return ret;
+    }
+
+    /**
+     * Maps the derivationTree to a term using this homomorphism. Returns a data
+     * structure that records, in addition to the derivation tree and the term,
+     * a mapping from nodes of the derivation tree to nodes of the term.
+     *
+     * @param derivationTree
+     * @return
+     */
+    public TreeWithInterpretations interpretWithPointers(Tree<String> derivationTree) {
+        TreeWithInterpretations ret = new TreeWithInterpretations(derivationTree);
+
+        for (String interp : interpretations.keySet()) {
+            Homomorphism hom = getInterpretation(interp).getHomomorphism();            
+            Map<Tree<String>, Tree<String>> dtNodeToTermNode = new IdentityHashMap<>();
+            
+            Tree<String> term = derivationTree.dfs((node, children) -> {
+                Tree<String> h = hom.get(node.getLabel());
+                Tree<String> sub = h.substitute(hNode -> {
+                    if (HomomorphismSymbol.isVariableSymbol(hNode.getLabel())) {
+                        return children.get(HomomorphismSymbol.getVariableIndex(hNode.getLabel()));
+                    } else {
+                        return null;
+                    }
+                });
+
+                dtNodeToTermNode.put(node, sub);
+                return sub;
+            });
+            
+            ret.addInterpretation(interp, term, dtNodeToTermNode);
+        }
+        
         return ret;
     }
 

@@ -6,6 +6,7 @@ package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.TreeWithInterpretations;
 import de.up.ling.tree.NodeSelectionListener;
 import de.up.ling.tree.Tree;
 import java.awt.Dimension;
@@ -28,6 +29,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
     private List<String> viewsInOrder;
     private static final String DT_KEY = "** derivation tree **";
     private NodeSelectionListener nsl;
+    private TreeWithInterpretations twi;
 
     /**
      * Creates new form JDerivationViewer
@@ -81,7 +83,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
             for (String name : irtg.getInterpretations().keySet()) {
                 interpretationForSelection[i] = irtg.getInterpretations().get(name);
                 possibleViews[i + 1] = INTERPRETATION_PREFIX + name;
-                displayables.put(name, new JInterpretation(interpretationForSelection[i]));
+                displayables.put(name, new JInterpretation(name, interpretationForSelection[i]));
                 viewsInOrder.add(name);
                 i++;
             }
@@ -91,8 +93,10 @@ public class JDerivationViewer extends javax.swing.JPanel {
         derivationTree = null;
     }
 
-    public void displayDerivation(Tree<String> derivationTree) {
-        this.derivationTree = derivationTree;
+    public void displayDerivation(TreeWithInterpretations twi) { //  Tree<String> derivationTree) {
+        this.derivationTree = twi.getDerivationTree();
+        this.twi = twi;
+//        this.derivationTree = derivationTree;
         redraw();
     }
 
@@ -115,7 +119,8 @@ public class JDerivationViewer extends javax.swing.JPanel {
             content.removeAll();
 
             JDerivationDisplayable dis = displayables.get(viewName);
-            dis.setDerivationTree(derivationTree);
+//            dis.setDerivationTree(derivationTree);
+            dis.setDerivationTree(twi);
             content.add(dis);
 
             if (oldSize != null) {

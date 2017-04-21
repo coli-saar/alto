@@ -6,6 +6,7 @@ package de.up.ling.irtg.gui;
 
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.TreeWithInterpretations;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
@@ -29,11 +30,13 @@ import javax.swing.ToolTipManager;
 public class JInterpretation extends JDerivationDisplayable {
 
     private Interpretation interp;
+    private String interpName;
 
     /**
      * Creates new form JInterpretation
      */
-    public JInterpretation(Interpretation interp) {
+    public JInterpretation(String interpName, Interpretation interp) {
+        this.interpName = interpName;
         this.interp = interp;
 
         initComponents();
@@ -52,8 +55,11 @@ public class JInterpretation extends JDerivationDisplayable {
     }
 
     @Override
-    public void setDerivationTree(Tree<String> derivationTree) {
-        final Tree<String> term = interp.getHomomorphism().apply(derivationTree);
+    public void setDerivationTree(TreeWithInterpretations twi) { //Tree<String> derivationTree) {
+        System.err.println(twi);
+        
+        final Tree<String> term = twi.getInterpretation(interpName).getHomomorphicTerm();
+//        final Tree<String> term = interp.getHomomorphism().apply(derivationTree);
         final Algebra alg = interp.getAlgebra();
 
         // term panel

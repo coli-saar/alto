@@ -7,6 +7,7 @@ package de.up.ling.irtg.gui;
 import com.bric.window.WindowMenu;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.TreeWithInterpretations;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -22,12 +23,9 @@ import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
 import static de.up.ling.irtg.gui.GuiMain.log;
-import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.NodeSelectionListener;
 import java.awt.Color;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,7 +40,7 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
     private InterpretedTreeAutomaton currentIrtg;
     private Tree<String> currentTree;
     private boolean hasBeenPacked = false; // window has been packed once -- after this, only allow manual size changes
-    private Map<String, Homomorphism.TreeInterpretationWithPointers> tips;
+    private TreeWithInterpretations twi;
 
     /**
      * Creates new form JLanguageViewer
@@ -134,16 +132,14 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
 
             if (currentIrtg != null) {
                 // recalculate mapping of dt node to term nodes
-                tips = new HashMap<>();
-                for (String intrp : currentIrtg.getInterpretations().keySet()) {
-                    Homomorphism.TreeInterpretationWithPointers tip = currentIrtg.getInterpretation(intrp).getHomomorphism().mapWithPointers(tree);
-                    tips.put(intrp, tip);
-                }
+                twi = currentIrtg.interpretWithPointers(tree);
+            } else {
+                twi = null;
             }
 
             currentTree = tree;
             for (Component dv : derivationViewers.getComponents()) {
-                ((JDerivationViewer) dv).displayDerivation(tree);
+                ((JDerivationViewer) dv).displayDerivation(twi);
             }
 
             weightLabel.setText("w = " + formatWeight(wt.getWeight()));
@@ -555,7 +551,7 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
         }
 
         if (currentTree != null) {
-            dv.displayDerivation(currentTree);
+            dv.displayDerivation(twi); // currentTree
         }
 
         derivationViewers.add(dv);

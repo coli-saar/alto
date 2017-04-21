@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
+import de.up.ling.irtg.TreeWithInterpretations;
 import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
 import de.up.ling.tree.NodeSelectionListener;
 import de.up.ling.tree.Tree;
@@ -27,7 +28,9 @@ public class JDerivationTree extends JDerivationDisplayable {
         initComponents();    }
 
     @Override
-    public void setDerivationTree(final Tree<String> derivationTree) {
+    public void setDerivationTree(final TreeWithInterpretations twi) { //final Tree<String> derivationTree) {
+        final Tree<String> derivationTree = twi.getDerivationTree();
+        
         removeAll();
         tp = new TreePanel(derivationTree);
         setTreePanelListener();
@@ -51,7 +54,6 @@ public class JDerivationTree extends JDerivationDisplayable {
         if (tp != null && listener != null) {
             tp.setNodeSelectionEnabled(true);
             tp.addNodeSelectionListener(listener);
-            System.err.println("listener added");
         }
     }
 

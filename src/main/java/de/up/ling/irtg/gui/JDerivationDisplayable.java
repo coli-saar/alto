@@ -4,7 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
-import de.up.ling.tree.Tree;
+import de.up.ling.irtg.TreeWithInterpretations;
 import javax.swing.JPanel;
 
 /**
@@ -12,5 +12,6 @@ import javax.swing.JPanel;
  * @author koller
  */
 abstract public class JDerivationDisplayable extends JPanel {
-    abstract public void setDerivationTree(Tree<String> derivationTree);
+    abstract public void setDerivationTree(TreeWithInterpretations twi);
+//    abstract public void setDerivationTree(Tree<String> derivationTree);
 }

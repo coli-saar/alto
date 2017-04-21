@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.hom;
 
+import de.up.ling.irtg.TreeWithInterpretations;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
@@ -471,64 +472,7 @@ public class Homomorphism implements Serializable {
     public HomomorphismSymbol v(String variable) {
         return HomomorphismSymbol.createVariable(variable);
     }
-    
-    /**
-     * Maps the derivationTree to a term using this homomorphism.
-     * Returns a data structure that records, in addition to the
-     * derivation tree and the term, a mapping from nodes of the
-     * derivation tree to nodes of the term.
-     * 
-     * @param derivationTree
-     * @return 
-     */
-    public TreeInterpretationWithPointers mapWithPointers(Tree<String> derivationTree) {
-        Map<Tree<String>, Tree<String>> dtNodeToTermNode = new IdentityHashMap<>();
-        Tree<String> term = derivationTree.dfs((node, children) -> {
-            Tree<String> h = get(node.getLabel());
-            Tree<String> sub = h.substitute(hNode -> {
-                if( HomomorphismSymbol.isVariableSymbol(hNode.getLabel()) ) {
-                    return children.get(HomomorphismSymbol.getVariableIndex(hNode.getLabel()));
-                } else {
-                    return null;
-                }
-            });
-            
-            dtNodeToTermNode.put(node, sub);
-            return sub;
-        });
-        
-        return new TreeInterpretationWithPointers(derivationTree, term, dtNodeToTermNode);
-    }
+   
     
     
-    public static class TreeInterpretationWithPointers {
-        private Tree<String> derivationTree;   // a derivation tree
-        private Tree<String> homomorphicTerm;  // the image of that tree under the interpretation's homomorphism
-        private Map<Tree<String>, Tree<String>> dtNodeToTermNode;  // a mapping from dt nodes to term nodes
-
-        public TreeInterpretationWithPointers(Tree<String> derivationTree, Tree<String> homomorphicTerm, Map<Tree<String>, Tree<String>> dtNodeToTermNode) {
-            this.derivationTree = derivationTree;
-            this.homomorphicTerm = homomorphicTerm;
-            this.dtNodeToTermNode = dtNodeToTermNode;
-        }
-
-        public Tree<String> getDerivationTree() {
-            return derivationTree;
-        }
-
-        public Tree<String> getHomomorphicTerm() {
-            return homomorphicTerm;
-        }
-
-        public Map<Tree<String>, Tree<String>> getDtNodeToTermNode() {
-            return dtNodeToTermNode;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("dt: %s\nterm: %s\nmapping:%s", derivationTree, homomorphicTerm, dtNodeToTermNode);
-        }
-        
-        
-    }
 }
