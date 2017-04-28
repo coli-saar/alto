@@ -7,8 +7,8 @@ package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Arrays;
 import java.util.Iterator;
-import org.bouncycastle.util.Arrays;
 
 /**
  *
@@ -70,7 +70,7 @@ public class IntSetTupleIterator implements Iterator{
             }
         }
         
-        return Arrays.clone(currentValues);
+        return Arrays.copyOf(currentValues, currentValues.length);
     }
     
     /*private int[] getCurrent() {
