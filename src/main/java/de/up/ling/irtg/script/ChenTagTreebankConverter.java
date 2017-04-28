@@ -65,7 +65,7 @@ import java.util.function.Function;
 public class ChenTagTreebankConverter {
     private static JCommander jc;
     private static InterpretedTreeAutomaton irtg;
-
+    
     public static void main(String[] args) throws FileNotFoundException, IOException, ParserException, Exception {
         CmdLineParameters param = new CmdLineParameters();
         jc = new JCommander(param, args);

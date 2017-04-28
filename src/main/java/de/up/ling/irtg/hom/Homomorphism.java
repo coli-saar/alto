@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.hom;
 
+import de.up.ling.irtg.TreeWithInterpretations;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
@@ -24,7 +25,9 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -469,4 +472,7 @@ public class Homomorphism implements Serializable {
     public HomomorphismSymbol v(String variable) {
         return HomomorphismSymbol.createVariable(variable);
     }
+   
+    
+    
 }

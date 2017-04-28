@@ -6,8 +6,8 @@
 
 package de.up.ling.irtg.codec.tag;
 
-import java.util.HashMap;
-import java.util.Map;
+import de.saar.coli.featstruct.AvmFeatureStructure;
+import de.saar.coli.featstruct.FeatureStructure;
 import java.util.Objects;
 
 /**
@@ -17,13 +17,17 @@ import java.util.Objects;
 public class LexiconEntry {
     private String word;
     private String elementaryTreeName;
-    private Map<String,String> features;
+    private FeatureStructure features;
     private String secondaryLex;
-
-    public LexiconEntry(String word, String elementaryTreeName) {
+    
+    public LexiconEntry(String word, String elementaryTreeName, FeatureStructure fs) {
         this.word = word;
         this.elementaryTreeName = elementaryTreeName;
-        features = new HashMap<>();
+        this.features = fs;
+    }
+
+    public LexiconEntry(String word, String elementaryTreeName) {
+        this(word, elementaryTreeName, new AvmFeatureStructure());
     }
 
     public String getWord() {
@@ -33,17 +37,13 @@ public class LexiconEntry {
     public String getElementaryTreeName() {
         return elementaryTreeName;
     }
-
-    public Map<String, String> getFeatures() {
+    
+    public void setFeatureStructure(FeatureStructure fs) {
+        this.features = fs;
+    }
+    
+    public FeatureStructure getFeatureStructure() {
         return features;
-    }
-    
-    public String getFeature(String ft) {
-        return features.get(ft);
-    }
-    
-    public void addFeature(String key, String value) {
-        features.put(key, value);
     }
 
     public String getSecondaryLex() {
@@ -63,10 +63,11 @@ public class LexiconEntry {
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 47 * hash + Objects.hashCode(this.word);
-        hash = 47 * hash + Objects.hashCode(this.elementaryTreeName);
-        hash = 47 * hash + Objects.hashCode(getSecondaryLex());
+        int hash = 3;
+        hash = 29 * hash + Objects.hashCode(this.word);
+        hash = 29 * hash + Objects.hashCode(this.elementaryTreeName);
+        hash = 29 * hash + Objects.hashCode(this.features);
+        hash = 29 * hash + Objects.hashCode(this.getSecondaryLex());
         return hash;
     }
 
@@ -85,16 +86,14 @@ public class LexiconEntry {
         if (!Objects.equals(this.elementaryTreeName, other.elementaryTreeName)) {
             return false;
         }
-        
-        if( ! Objects.equals(getSecondaryLex(), other.getSecondaryLex()) ) {
+        if (!Objects.equals(this.features, other.features)) {
             return false;
         }
-        
+        if (!Objects.equals(this.getSecondaryLex(), other.getSecondaryLex())) {
+            return false;
+        }
         return true;
     }
-    
-    
-    
-    
+
     
 }

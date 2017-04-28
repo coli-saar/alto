@@ -4,7 +4,9 @@
  */
 package de.up.ling.irtg.gui;
 
+import de.up.ling.irtg.TreeWithInterpretations;
 import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
+import de.up.ling.tree.NodeSelectionListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
@@ -15,23 +17,44 @@ import javax.swing.JScrollPane;
  * @author koller
  */
 public class JDerivationTree extends JDerivationDisplayable {
+    private TreePanel tp = null;
+    private NodeSelectionListener listener = null;
+
     /**
      * Creates new form JDerivationTre
      */
     public JDerivationTree() {
-        initComponents();
+        initComponents();    
     }
 
     @Override
-    public void setDerivationTree(final Tree<String> derivationTree) {
+    public void setDerivationTree(final TreeWithInterpretations twi) { //final Tree<String> derivationTree) {
+        final Tree<String> derivationTree = twi.getDerivationTree();
+        
         removeAll();
-        JScrollPane jsp = new JScrollPane(new TreePanel(derivationTree), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        tp = new TreePanel(derivationTree);
+        setTreePanelListener();
+        
+        JScrollPane jsp = new JScrollPane(tp, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jsp.setBackground(Color.white);
         add(jsp);
-        
+
         PopupMenu.b().add("text", derivationTree.toString())
                 .add("tikz-qtree", new TikzQtreeOutputCodec().asStringSupplier(derivationTree))
                 .build().addAsMouseListener(jsp);
+    }
+
+    public void setNodeSelectionListener(NodeSelectionListener listener) {
+        this.listener = listener;
+        setTreePanelListener();
+
+    }
+
+    private void setTreePanelListener() {
+        if (tp != null && listener != null) {
+            tp.setNodeSelectionEnabled(true);
+            tp.addNodeSelectionListener(listener);
+        }
     }
 
     /**
@@ -48,4 +71,14 @@ public class JDerivationTree extends JDerivationDisplayable {
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void mark(Tree<String> nodeInDerivationTree, Color markupColor) {
+        // do nothing, to avoid cyclic calls
+    }
+
+    @Override
+    public void unmark(Tree<String> nodeInDerivationTree) {
+        // do nothing, to avoid cyclic calls
+    }
 }

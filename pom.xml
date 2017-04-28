@@ -21,7 +21,7 @@
     <dependency>
       <groupId>de.saar.coli</groupId>
       <artifactId>basics</artifactId>
-      <version>[1.2.37-SNAPSHOT,)</version>
+      <version>[1.2.39,)</version>
     </dependency>
 <!--  -->
 <dependency>
@@ -143,6 +143,12 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.2</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>jline</groupId>
+        <artifactId>jline</artifactId>
+        <version>2.14.3</version>
     </dependency>
     
   

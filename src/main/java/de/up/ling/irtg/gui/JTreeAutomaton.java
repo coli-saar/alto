@@ -6,7 +6,6 @@ package de.up.ling.irtg.gui;
 
 import com.bric.window.WindowMenu;
 import com.google.common.collect.Iterables;
-import com.sun.org.apache.xerces.internal.util.DraconianErrorHandler;
 import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.gui.datadialog.DataDialog;
@@ -18,6 +17,7 @@ import de.up.ling.gui.datadialog.entries.ConcreteBooleanDataPanelEntry;
 import de.up.ling.gui.datadialog.entries.ConcreteListDataPanelEntry;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.NullFilterAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.Rule;
@@ -28,13 +28,13 @@ import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.automata.pruning.QuotientPruningPolicy;
 import de.up.ling.irtg.automata.pruning.SemiringFOM;
 import de.up.ling.irtg.binarization.BkvBinarizer;
-import de.up.ling.irtg.binarization.InsideRuleFactory;
 import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.InterpretationPrintingPolicy;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.util.GuiUtils;
@@ -54,8 +54,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -90,17 +88,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 //        }
         if (!GuiMain.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar2);
-//            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-//            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-//            miSaveAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
-//            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-//            miShowLanguage.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
-//            miParse.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
-//            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-//            miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_MASK));
         }
 
-//        new WindowMenu(this).get
         this.automaton = automaton;
 
         // We used to check the automaton for emptiness here and 
@@ -547,10 +536,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 hasOptions.add(irtg.getInterpretation(intp).getAlgebra().hasOptions());
             }
 
-            JParsingDialog jpd = JParsingDialog.create(annotationsInOrder, this, true);
+            JParsingDialog jpd = JParsingDialog.create(annotationsInOrder, irtg, this, true);
             jpd.setVisible(true);
-            
-            if( jpd.getInputValues() == null ) {
+
+            if (jpd.getInputValues() == null) {
                 // dialog was cancelled
                 return;
             }
@@ -603,9 +592,9 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                              String interp = jpd.getTheOneNonemptyInput().getKey();
                                              String ftc = StringTools.slurp(new FileReader(jpd.getPruningFtcMap()));
                                              CoarseToFineParser ctfp = CoarseToFineParser.makeCoarseToFineParser(irtg, interp, ftc, jpd.getPruningThreshold());
-                                             
-                                             if( jpd.getSelectedAlgorithm() == JParsingDialog.Algorithm.SIBLING_FINDER ) {                                             
-                                                chart = ctfp.parseInputObjectWithSF(inputObjects.get(interp));
+
+                                             if (jpd.getSelectedAlgorithm() == JParsingDialog.Algorithm.SIBLING_FINDER) {
+                                                 chart = ctfp.parseInputObjectWithSF(inputObjects.get(interp));
                                              } else {
                                                  chart = ctfp.parseInputObject(inputObjects.get(interp));
                                              }
@@ -665,49 +654,40 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                          (chart, time) -> {
                                      if (chart != null) {
                                          GuiMain.log("Computed parse chart, for " + inputs + ", " + Util.formatTime(time));
-                                         JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                         jta.setIrtg(irtg);
-                                         jta.setTitle("Parse chart: " + inputs);
-                                         jta.pack();
-                                         jta.setVisible(true);
+                                         showChartAfterNullFiltering(chart, inputs, jpd.getSelectedNullFiltering());
                                      }
                                  });
             }
-
-            /*
-            JInputForm jif = JInputForm.showForm(this, annotationsInOrder, hasOptions);
-            jif.setVisible(true);
-
-            final Map<String, String> inputs = jif.getInputValues();
-            final Map<String, String> options = jif.getOptions();
-
-            if (inputs != null) {
-                GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
-                        listener -> {
-                            GuiUtils.setGlobalListener(listener);
-
-                            for (String intp : options.keySet()) {
-                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
-                            }
-
-                            TreeAutomaton chart = irtg.parse(inputs);
-
-                            GuiUtils.setGlobalListener(null);
-                            return chart;
-                        },
-                        (chart, time) -> {
-                            GuiMain.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
-                            if (chart != null) {
-                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                jta.setIrtg(irtg);
-                                jta.setTitle("Parse chart: " + inputs);
-                                jta.pack();
-                                jta.setVisible(true);
-                            }
-                        });
-            } */
         }
     }//GEN-LAST:event_miParseActionPerformed
+
+    private void showChartAfterNullFiltering(TreeAutomaton chart, Map<String, String> inputs, String nullFiltering) {
+        GuiUtils.withProgressBar(this, "Null filtering", "Null filtering", listener -> {
+                             if (nullFiltering == null) {
+                                 return chart;
+                             } else {
+                                 // TODO - error handling
+                                 // TODO - progress bar
+
+                                 NullFilterAlgebra alg = (NullFilterAlgebra) irtg.getInterpretation(nullFiltering).getAlgebra();
+                                 Homomorphism hom = irtg.getInterpretation(nullFiltering).getHomomorphism();
+                                 return chart.intersect(alg.nullFilter().inverseHomomorphism(hom));
+                             }
+                         }, (cht, time) -> {
+                             String title = "Parse chart: " + inputs;
+
+                             if (nullFiltering != null) {
+                                 GuiMain.log("Performed null filtering on interpretation '" + nullFiltering + " ', " + Util.formatTime(time));
+                                 title += " (null-filtered)";
+                             }
+
+                             JTreeAutomaton jta = new JTreeAutomaton(cht, null);
+                             jta.setIrtg(irtg);
+                             jta.setTitle(title);
+                             jta.pack();
+                             jta.setVisible(true);
+                         });
+    }
 
     private void updateWeights() {
         for (int i = 0; i < rulesInOrder.size(); i++) {

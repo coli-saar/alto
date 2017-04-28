@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongMap;
 import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.util.function.Supplier;
 
 /**
  *
@@ -70,5 +71,16 @@ public class CpuTimeStopwatch {
         }
 
         return buf.toString();
+    }
+    
+    public static <E> E measure(String description, Supplier<E> fn) {
+        CpuTimeStopwatch sw = new CpuTimeStopwatch();
+        sw.record();
+        E result = fn.get();
+        sw.record();
+        
+        System.err.printf("%s: %s\n", description, Util.formatTime(sw.getTimeBefore(1)));
+        
+        return result;
     }
 }
