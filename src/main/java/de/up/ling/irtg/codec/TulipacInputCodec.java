@@ -233,12 +233,6 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return stripped;
     }
 
-    public static void main(String[] args) throws FileNotFoundException, CodecParseException, IOException {
-        TulipacInputCodec tic = new TulipacInputCodec();
-        InterpretedTreeAutomaton irtg = tic.read(new FileInputStream("/Users/koller/Dropbox/Documents/Lehre/alt/gramf-11/tag/new-shieber.tag"));
-        Files.write(irtg.toString().getBytes(), new File("shieber.irtg"));
-    }
-
     private NodeAnnotation nodeAnnotation(AnnotationContext annotation) {
         if( "@NA".equals(annotation.getText())) {
             return NodeAnnotation.NO_ADJUNCTION;

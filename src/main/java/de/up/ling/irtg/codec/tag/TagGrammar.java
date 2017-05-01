@@ -22,6 +22,8 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
+import de.up.ling.irtg.codec.TulipacInputCodec;
+import de.up.ling.irtg.codec.tulipac.TulipacLexer;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.MutableInteger;
@@ -428,15 +430,6 @@ public class TagGrammar {
         }
     }
     
-    public static void main(String[] args) throws Exception {
-        InterpretedTreeAutomaton irtg = (InterpretedTreeAutomaton) InputCodec.getInputCodecByNameOrExtension(args[0], null).read(new FileInputStream(args[0]));
-        TreeAutomaton chart = irtg.parse(ImmutableMap.of("string", "die Hund"));
-        Tree dt = chart.viterbi();
-        
-        System.err.println(dt);        
-        System.err.println(irtg.getInterpretation("ft").interpret(dt));
-    }
-
     private static class SameIndexMerger {
 
         private Map<String, FeatureStructure> placeholderForIndex = new HashMap<>();  // a unique placeholder for each index

@@ -523,26 +523,4 @@ public abstract class FeatureStructure {
             return makeId();
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    public static void main(String[] args) throws FsParsingException {
-//        FeatureStructure fs1 = FeatureStructure.parse("[a: [b: c], d: [e: f]]");
-//        FeatureStructure fs2 = FeatureStructure.parse("[a: #1 [b: c], d: #1, g: [h: j]]");
-//        FeatureStructure ret = fs1.unify(fs2);
-
-        FeatureStructure fs1 = FeatureStructure.parse("[a: s, b: #1]");
-        FeatureStructure fs2 = FeatureStructure.parse("[a: #2, b: #2, c: t]");
-        FeatureStructure expected = FeatureStructure.parse("[a: #3 s, b: #3, c: t]");
-        FeatureStructure unif = fs1.unify(fs2);
-        
-        System.err.println(fs1);
-        System.err.println(fs2);
-        System.err.println(expected);
-    }
-
 }

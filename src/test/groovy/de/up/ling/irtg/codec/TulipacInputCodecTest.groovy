@@ -96,13 +96,13 @@ class TulipacInputCodecTest {
     
     @Test
     public void testLindemannNoAgreement() {
-        irtg = new TulipacInputCodec().read(LINDEMANN)
-        TreeAutomaton chart = irtg.parse(["string": "die Hund"])
+        InterpretedTreeAutomaton lirtg = new TulipacInputCodec().read(LINDEMANN)
+        TreeAutomaton chart = lirtg.parse(["string": "die Hund"])
         
         Tree dt = chart.viterbi()
         assertThat(dt, notNullValue())
         
-        Interpretation ft = irtg.getInterpretation("ft")
+        Interpretation ft = lirtg.getInterpretation("ft")
         Tree t = ft.getHomomorphism().apply(dt)
         assertThat(t, notNullValue())        
         assertThat(ft.getAlgebra().evaluate(t), nullValue())
@@ -110,13 +110,13 @@ class TulipacInputCodecTest {
 
     @Test
     public void testLindemannAgreement() {
-        irtg = new TulipacInputCodec().read(LINDEMANN)
-        TreeAutomaton chart = irtg.parse(["string": "der Hund"])
+        InterpretedTreeAutomaton lirtg = new TulipacInputCodec().read(LINDEMANN)
+        TreeAutomaton chart = lirtg.parse(["string": "der Hund"])
         
         Tree dt = chart.viterbi()
         assertThat(dt, notNullValue())
         
-        Interpretation ft = irtg.getInterpretation("ft")
+        Interpretation ft = lirtg.getInterpretation("ft")
         Tree t = ft.getHomomorphism().apply(dt)
         assertThat(t, notNullValue())        
         assertThat(ft.getAlgebra().evaluate(t), notNullValue())
