@@ -21,6 +21,7 @@ import de.up.ling.irtg.binarization.IdentitySeed
 import de.up.ling.irtg.binarization.RegularSeed
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
+import de.up.ling.irtg.Interpretation
 import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
@@ -67,7 +68,7 @@ class TulipacInputCodecTest {
     
     @Test
     public void testShieberFtClash() {
-//        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(SHIEBER)
+        //        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(SHIEBER)
         TreeAutomaton chart = irtg.parse(["string": "mer em hans aastriiche"])
         TreeAutomaton filtered = irtg.getInterpretation("ft").filterNull(chart)
         
@@ -90,8 +91,37 @@ class TulipacInputCodecTest {
         // checks that @NA is processed correctly
         // prevents bug where @NA produced S_0 instead of S_3 label
         assertThat(irtg.getInterpretation("tree").getHomomorphism().get("vinf_tv-hälfed_objcase__dat_"), 
-                    is(pt("S_3(?1,'@'(?3,S_1(?2)),'@'(?4,v_1('hälfed')))")))
+            is(pt("S_3(?1,'@'(?3,S_1(?2)),'@'(?4,v_1('hälfed')))")))
     }
+    
+    @Test
+    public void testLindemannNoAgreement() {
+        irtg = new TulipacInputCodec().read(LINDEMANN)
+        TreeAutomaton chart = irtg.parse(["string": "die Hund"])
+        
+        Tree dt = chart.viterbi()
+        assertThat(dt, notNullValue())
+        
+        Interpretation ft = irtg.getInterpretation("ft")
+        Tree t = ft.getHomomorphism().apply(dt)
+        assertThat(t, notNullValue())        
+        assertThat(ft.getAlgebra().evaluate(t), nullValue())
+    }
+
+    @Test
+    public void testLindemannAgreement() {
+        irtg = new TulipacInputCodec().read(LINDEMANN)
+        TreeAutomaton chart = irtg.parse(["string": "der Hund"])
+        
+        Tree dt = chart.viterbi()
+        assertThat(dt, notNullValue())
+        
+        Interpretation ft = irtg.getInterpretation("ft")
+        Tree t = ft.getHomomorphism().apply(dt)
+        assertThat(t, notNullValue())        
+        assertThat(ft.getAlgebra().evaluate(t), notNullValue())
+    }
+
     
     private static InterpretedTreeAutomaton binarize(final InterpretedTreeAutomaton irtg) throws Exception {
         Map<String, Algebra> newAlgebras = ImmutableMap.of("string", new TagStringAlgebra(),
@@ -110,6 +140,23 @@ class TulipacInputCodecTest {
 
         return binarized;
     }
+    
+    private static final String LINDEMANN = """
+tree A:
+S {
+  Det! [gen=?g, case=?c]
+  N+ [gen=?g, case=?c]
+}
+
+tree det:
+ Det+
+
+word 'Hund' : A[gen=masc, case=nom]
+word 'der' : det[gen=masc, case=nom]
+word 'die' : det[gen=fem, case=nom]
+
+
+""";
     
     private static final String SHIEBER = """\n\
 

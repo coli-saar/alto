@@ -7,6 +7,7 @@ package de.up.ling.irtg.codec.tag;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import de.saar.coli.featstruct.AvmFeatureStructure;
@@ -18,12 +19,15 @@ import de.up.ling.irtg.algebra.FeatureStructureAlgebra;
 import de.up.ling.irtg.algebra.TagStringAlgebra;
 import de.up.ling.irtg.algebra.TagTreeAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -423,6 +427,15 @@ public class TagGrammar {
             }
         }
     }
+    
+    public static void main(String[] args) throws Exception {
+        InterpretedTreeAutomaton irtg = (InterpretedTreeAutomaton) InputCodec.getInputCodecByNameOrExtension(args[0], null).read(new FileInputStream(args[0]));
+        TreeAutomaton chart = irtg.parse(ImmutableMap.of("string", "die Hund"));
+        Tree dt = chart.viterbi();
+        
+        System.err.println(dt);        
+        System.err.println(irtg.getInterpretation("ft").interpret(dt));
+    }
 
     private static class SameIndexMerger {
 
@@ -435,12 +448,16 @@ public class TagGrammar {
         AvmFeatureStructure merger = new AvmFeatureStructure();
 
         public void collect(String attribute, FeatureStructure fs) {
+//            System.err.printf("collect attr=%s, fs=%s\n", attribute, fs == null ? "<null>" : fs);
+            
             if (fs != null) {
                 Set<String> alreadyCollectedIndices = new HashSet<>();
+                AvmFeatureStructure avmForAttribute = new AvmFeatureStructure();
 
                 for (List<String> path : fs.getAllPaths()) {
                     FeatureStructure endpoint = fs.get(path);
                     String index = endpoint.getIndex();
+//                    System.err.printf("-> path %s, endpoint %s, index %s\n", path, endpoint, index);
 
                     if (index != null) {
                         if (!alreadyCollectedIndices.contains(index)) {
@@ -450,11 +467,17 @@ public class TagGrammar {
                                 placeholder = new PlaceholderFeatureStructure(index);
                                 placeholderForIndex.put(index, placeholder);
                             }
+                            
+                            assert path.size() == 1;
+                            avmForAttribute.put(path.get(0), placeholder);
+//                            System.err.printf("   -> avmForAttribute is now %s\n", avmForAttribute);
 
-                            merger.put(attribute, fsWithPath(path, 0, placeholder));
                         }
                     }
                 }
+                
+                merger.put(attribute, avmForAttribute);
+//                System.err.printf(" -> merger is now %s\n", merger);
             }
         }
 
