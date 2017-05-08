@@ -161,6 +161,12 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         allStates = null;
     }
 
+    public FirstOrderModel getModel() {
+        return model;
+    }
+    
+    
+
     /**
      * @return the atomicInterpretations
      */

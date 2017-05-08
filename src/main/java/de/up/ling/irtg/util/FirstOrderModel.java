@@ -8,6 +8,7 @@ package de.up.ling.irtg.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.saar.basic.StringTools;
+import de.up.ling.tree.Tree;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -156,5 +157,22 @@ public class FirstOrderModel {
      */
     public Map<String, Set<List<String>>> getAtomicInterpretations() {
         return atomicInterpretations;
+    }
+    
+    /**
+     * Returns all true atoms in this model, as terms.
+     * @return 
+     */
+    public Iterable<Tree<String>> getTrueAtoms() {
+        List<Tree<String>> ret = new ArrayList<>();
+        
+        for( String f : atomicInterpretations.keySet() ) {
+            for( List<String> args : atomicInterpretations.get(f) ) {
+                Tree t = Tree.create(f, Util.mapToList(args, x -> Tree.create(x)));
+                ret.add(t);
+            }
+        }
+        
+        return ret;
     }
 }

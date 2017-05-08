@@ -5,20 +5,20 @@
  */
 package de.up.ling.irtg.algebra;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -128,27 +128,44 @@ public class SubsetAlgebra<E> extends Algebra<Set<E>> {
             }
         }
 
+        /*
         public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
 //            System.err.printf("grbu: ? -> %s%s\n", getSignature().resolveSymbolId(labelId), Util.mapToList(new IntArrayList(childStates), q -> getStateForId(q).toString()));
             Iterable<Rule> result = super.getRulesBottomUp(labelId, childStates);
 //            System.err.printf("  -> %s\n", Util.mapToList(result, x -> x.toString(this)));
             return result;
         }
+         */
     }
 
     public static void main(String[] args) throws ParseException, FileNotFoundException, IOException, Exception {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
 
-        SubsetAlgebra a = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
-        // pass true facts here
-        a.setOptions("rabbit(r1) | sleep(e,r1) | takefrom(e2,r1,h) | white(r1) | hat(h)");
+        SubsetAlgebra sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
+        SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
+        StringAlgebra str = (StringAlgebra) irtg.getInterpretation("string").getAlgebra();
 
-        System.err.println(a.getSignature());
+        // put true facts here
+        ref.readOptions(new FileReader(args[1]));
+        List<String> trueAtoms = Util.mapToList(ref.getModel().getTrueAtoms(), t -> t.toString());
+        sem.setOptions(StringTools.join(trueAtoms, " | "));
 
-        // pass things we want to say here
-        TreeAutomaton decomp = a.decompose(parseStringSet("sleep(e,r1)"));
-//        decomp.makeAllRulesExplicit();
-        System.err.println(decomp.toStringBottomUp());
+        // put inputs here
+        Object refInput = ref.parseString("{e}");
+        Object semInput = sem.parseString("sleep(e,r1) | rabbit(r1)");
+        
+        TreeAutomaton<?> chart = null;
+        
+        for( int i = 0; i < 20; i++ ) {
+            long start = System.nanoTime();
+            chart = irtg.parseInputObjects(ImmutableMap.of("ref", refInput, "sem", semInput));
+            System.err.printf("chart construction: %s\n", Util.formatTimeSince(start));
+        }
+
+        for (Tree<String> dt : chart.languageIterable()) {
+            System.err.printf("\nderivation: %s\n", dt);
+            System.err.printf("output: %s\n", str.representAsString((List<String>) irtg.interpret(dt, "string")));
+        }
     }
 
 }
