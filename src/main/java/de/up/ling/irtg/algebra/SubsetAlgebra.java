@@ -6,7 +6,6 @@
 package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -26,7 +25,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  *
@@ -108,8 +106,6 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
 
             try {
                 return parseString(label);
-//                Set<E> s = parseString(label);
-//                return makeSubset(s);
             } catch (ParserException ex) {
                 Logging.get().severe(() -> "Could not parse set constant: " + label);
                 return null;
@@ -170,15 +166,7 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
             this.finalSet = finalSet;
 
         }
-
-        /*
-        public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-//            System.err.printf("grbu: ? -> %s%s\n", getSignature().resolveSymbolId(labelId), Util.mapToList(new IntArrayList(childStates), q -> getStateForId(q).toString()));
-            Iterable<Rule> result = super.getRulesBottomUp(labelId, childStates);
-//            System.err.printf("  -> %s\n", Util.mapToList(result, x -> x.toString(this)));
-            return result;
-        }
-         */
+        
         @Override
         protected int addState(BitSet state) {
             if (state == null) {
@@ -195,25 +183,6 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
 
                 return ret;
             }
-        }
-    }
-
-    private void foreachPowerset(int n, Consumer<BitSet> fn) {
-        BitSet accu = new BitSet();
-        foreachPowersetRec(n, 0, accu, fn);
-    }
-
-    private void foreachPowersetRec(int n, int pos, BitSet accu, Consumer<BitSet> fn) {
-        if (pos == n) {
-            BitSet copy = new BitSet();
-            copy.or(accu);
-            fn.accept(copy);
-        } else {
-            accu.set(pos, false);
-            foreachPowersetRec(n, pos + 1, accu, fn);
-
-            accu.set(pos, true);
-            foreachPowersetRec(n, pos + 1, accu, fn);
         }
     }
 
@@ -255,11 +224,13 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
         TreeAutomaton<?> chart = null;
 
         long start = System.nanoTime();
-        int N = 10000;
+        int N = 1;
         
         for (int i = 0; i < N; i++) {
             chart = irtg.parseInputObjects(ImmutableMap.of("ref", refInput, "sem", semInput));
         }
+        
+        System.err.println(chart);
 
         System.err.printf("%dx chart construction: %s\n", N, Util.formatTimeSince(start));
 
