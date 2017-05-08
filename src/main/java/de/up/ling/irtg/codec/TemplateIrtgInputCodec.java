@@ -7,11 +7,6 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton.Guard;
-import de.up.ling.irtg.codec.CodecMetadata;
-import de.up.ling.irtg.codec.CodecParseException;
-import de.up.ling.irtg.codec.CodecUtilities;
-import de.up.ling.irtg.codec.ExceptionErrorStrategy;
-import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.template_irtg.TemplateIrtgLexer;
 import de.up.ling.irtg.codec.template_irtg.TemplateIrtgParser;
 import java.io.IOException;
@@ -23,7 +18,6 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 import static de.up.ling.irtg.codec.template_irtg.TemplateIrtgParser.*;
-import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;

@@ -8,8 +8,11 @@ package de.up.ling.irtg.algebra;
 import com.google.common.collect.ImmutableMap;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.TemplateIrtgInputCodec;
 import de.up.ling.irtg.signature.Interner;
+import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -19,6 +22,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
@@ -37,7 +43,8 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
 //    private Set<E> universe;
     public static final String DISJOINT_UNION = "dunion";
     public static final String EMPTYSET = "EMPTYSET";
-    public static final String SEPARATOR = "\\s*\\|\\s*";
+    private static final String SEPARATOR_RE = "\\s*\\+\\s*";
+    public static final String SEPARATOR = " + ";
 
     // Don't call this directly; it is only needed so
     // an IRTG with this algebra can be constructed by a codec.
@@ -137,6 +144,7 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
     @Override
     public BitSet parseString(String representation) throws ParserException {
         Set<E> s = (Set<E>) parseStringSet(representation);
+//        System.err.printf("parseString: %s\n", s);
         return toBitset(s);
         // TODO - figure out a way to return actual set of E's
     }
@@ -147,7 +155,7 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
         if (s.length() == 0) {
             return Collections.emptySet();
         } else {
-            String[] parts = s.split(SEPARATOR);
+            String[] parts = s.split(SEPARATOR_RE);
             return new HashSet<>(Arrays.asList(parts));
         }
     }
@@ -185,6 +193,8 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
             }
         }
     }
+    
+    
 
     public Set<E> toSet(BitSet bitset) {
         if (bitset == null) {
@@ -205,26 +215,36 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
         return StringTools.join(toSet(object), SEPARATOR);
     }
 
-    public static void main(String[] args) throws ParseException, FileNotFoundException, IOException, Exception {
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
+    /*
+    public static void main(String[] args) throws Exception {
+        FirstOrderModel model = FirstOrderModel.read(new FileReader(args[1]));
+        InterpretedTreeAutomaton irtg = null;
+        
+        if( args[0].endsWith(".tirtg")) {
+            TemplateInterpretedTreeAutomaton tirtg = new TemplateIrtgInputCodec().read(new FileInputStream(args[0]));
+            irtg = tirtg.instantiate(model);
+            Files.write(Paths.get("instantiated.irtg"), irtg.toString().getBytes());
+        } else {
+            irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
+        }
 
         SubsetAlgebra sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
         SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
         StringAlgebra str = (StringAlgebra) irtg.getInterpretation("string").getAlgebra();
 
         // put true facts here
-        ref.readOptions(new FileReader(args[1]));
-        List<String> trueAtoms = Util.mapToList(ref.getModel().getTrueAtoms(), t -> t.toString());
-        sem.setOptions(StringTools.join(trueAtoms, " | "));
+        ref.setModel(model);
+        List<String> trueAtoms = Util.mapToList(model.getTrueAtoms(), t -> t.toString());
+        sem.setOptions(StringTools.join(trueAtoms, SEPARATOR));
 
         // put inputs here
-        Object refInput = ref.parseString("{e}");
-        Object semInput = sem.parseString("sleep(e,r1) | rabbit(r1)");
+        Object refInput = ref.parseString("{e2}");
+        Object semInput = sem.parseString("takefrom(e2,r1,h)");
 
         TreeAutomaton<?> chart = null;
 
         long start = System.nanoTime();
-        int N = 1;
+        int N = 10000;
         
         for (int i = 0; i < N; i++) {
             chart = irtg.parseInputObjects(ImmutableMap.of("ref", refInput, "sem", semInput));
@@ -239,5 +259,6 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
             System.err.printf("output: %s\n", str.representAsString((List<String>) irtg.interpret(dt, "string")));
         }
     }
+    */
 
 }

@@ -164,6 +164,11 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     public FirstOrderModel getModel() {
         return model;
     }
+
+    public void setModel(FirstOrderModel model) {
+        this.model = model;
+    }
+    
     
     
 

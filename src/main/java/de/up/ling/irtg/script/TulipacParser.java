@@ -19,6 +19,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.binarization.BinarizingAlgebraSeed;
 import de.up.ling.irtg.binarization.BinaryRuleFactory;
 import de.up.ling.irtg.binarization.BkvBinarizer;
+import de.up.ling.irtg.binarization.GensymBinaryRuleFactory;
 import de.up.ling.irtg.binarization.IdentitySeed;
 import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.InputCodec;
@@ -41,11 +42,13 @@ import jline.console.ConsoleReader;
  * @author koller
  */
 public class TulipacParser {
+
     private static String filename;
     private static InterpretedTreeAutomaton irtg;
     private static FeatureStructureAlgebra fsa;
     private static TagStringAlgebra sa;
     private static Homomorphism fh;
+    private static boolean hasFeatures;
 
     private static JCommander jc;
     private static CmdLineParameters param = new CmdLineParameters();
@@ -56,43 +59,62 @@ public class TulipacParser {
         long start = System.nanoTime();
         InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension(filename, null);
         irtg = ic.read(new FileInputStream(filename));
-        System.err.printf("Done, read grammar in %s\n\n", Util.formatTimeSince(start));
+        hasFeatures = irtg.getInterpretations().containsKey("ft");
+        System.err.printf("Done, read %s grammar in %s\n\n", hasFeatures ? "FTAG" : "TAG", Util.formatTimeSince(start));
 
         if (param.binarize) {
             irtg = binarize(irtg);
         }
 
-        fsa = (FeatureStructureAlgebra) irtg.getInterpretation("ft").getAlgebra();
         sa = (TagStringAlgebra) irtg.getInterpretation("string").getAlgebra();
-        fh = irtg.getInterpretation("ft").getHomomorphism();
+
+        if (hasFeatures) {
+            fh = irtg.getInterpretation("ft").getHomomorphism();
+            fsa = (FeatureStructureAlgebra) irtg.getInterpretation("ft").getAlgebra();
+        }
     }
 
     private static InterpretedTreeAutomaton binarize(final InterpretedTreeAutomaton irtg) throws Exception {
         long start = System.nanoTime();
         System.err.println("Binarizing grammar ...");
 
-        Map<String, Algebra> newAlgebras = ImmutableMap.of("string", new TagStringAlgebra(),
-                                                           "tree", new BinarizingTagTreeAlgebra(),
-                                                           "ft", new FeatureStructureAlgebra());
+        Map<String, Algebra> newAlgebras;
+        Map<String, RegularSeed> seeds;
 
-        Map<String, RegularSeed> seeds = ImmutableMap.of(
-                "string", new IdentitySeed(irtg.getInterpretation("string").getAlgebra(), newAlgebras.get("string")),
-                "ft", new IdentitySeed(irtg.getInterpretation("ft").getAlgebra(), newAlgebras.get("ft")),
-                "tree", new BinarizingAlgebraSeed(irtg.getInterpretation("tree").getAlgebra(), newAlgebras.get("tree")));
+        if (hasFeatures) {
+            newAlgebras = ImmutableMap.of(
+                    "string", new TagStringAlgebra(),
+                    "tree", new BinarizingTagTreeAlgebra(),
+                    "ft", new FeatureStructureAlgebra());
 
-        Function<InterpretedTreeAutomaton, BinaryRuleFactory> rff = PennTreebankConverter.makeRuleFactoryFactory("complete");
+            seeds = ImmutableMap.of(
+                    "string", new IdentitySeed(irtg.getInterpretation("string").getAlgebra(), newAlgebras.get("string")),
+                    "ft", new IdentitySeed(irtg.getInterpretation("ft").getAlgebra(), newAlgebras.get("ft")),
+                    "tree", new BinarizingAlgebraSeed(irtg.getInterpretation("tree").getAlgebra(), newAlgebras.get("tree")));
+        } else {
+            newAlgebras = ImmutableMap.of(
+                    "string", new TagStringAlgebra(),
+                    "tree", new BinarizingTagTreeAlgebra());
+
+            seeds = ImmutableMap.of(
+                    "string", new IdentitySeed(irtg.getInterpretation("string").getAlgebra(), newAlgebras.get("string")),
+                    "tree", new BinarizingAlgebraSeed(irtg.getInterpretation("tree").getAlgebra(), newAlgebras.get("tree")));
+        }
+
+        Function<InterpretedTreeAutomaton, BinaryRuleFactory> rff = GensymBinaryRuleFactory.createFactoryFactory(); //PennTreebankConverter.makeRuleFactoryFactory("complete");
         BkvBinarizer binarizer = new BkvBinarizer(seeds, rff);
 
         InterpretedTreeAutomaton binarized = GuiUtils.withConsoleProgressBar(60, System.out, listener -> {
-                                                                         return binarizer.binarize(irtg, newAlgebras, listener);
-                                                                     });
-        
+            return binarizer.binarize(irtg, newAlgebras, listener);
+        });
+
         System.err.printf("Done, binarized grammar in %s\n\n", Util.formatTimeSince(start));
 
         return binarized;
     }
 
     private static class Command {
+
         private String command;
         private String description;
         private CommandAction action;
@@ -105,6 +127,7 @@ public class TulipacParser {
     }
 
     private static interface CommandAction {
+
         public void perform() throws Exception;
     }
 
@@ -176,6 +199,7 @@ public class TulipacParser {
             long start = System.nanoTime();
             Object inp = sa.parseString(line);
             TreeAutomaton chart = irtg.parseWithSiblingFinder("string", inp);
+            TreeAutomaton filtered = chart;
             System.out.printf("computed chart: %s\n", Util.formatTimeSince(start));
 
             Tree<String> dt = chart.viterbi();
@@ -185,22 +209,26 @@ public class TulipacParser {
                 continue mainLoop;
             }
 
-            start = System.nanoTime();
-            TreeAutomaton filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(fh));
-            System.out.printf("filtered chart for feature structures: %s\n", Util.formatTimeSince(start));
+            if (hasFeatures) {
+                start = System.nanoTime();
+                filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(fh));
+                System.out.printf("filtered chart for feature structures: %s\n", Util.formatTimeSince(start));
 
-            if (filtered.viterbi() == null) {
-                System.out.printf("Found parses, but they all violate the constraints from the feature structures.\n");
-                debugAnalysis(dt, irtg);
-                System.out.println();
-                continue mainLoop;
+                if (filtered.viterbi() == null) {
+                    System.out.printf("Found parses, but they all violate the constraints from the feature structures.\n");
+                    debugAnalysis(dt, irtg);
+                    System.out.println();
+                    continue mainLoop;
+                }
             }
 
             JLanguageViewer lv = new JLanguageViewer();
             lv.setAutomaton(filtered, irtg);
             lv.setTitle(String.format("Parses of '%s'", line));
             lv.addView("tree");
-            lv.addView("ft");
+            if (hasFeatures) {
+                lv.addView("ft");
+            }
             lv.pack();
             lv.setVisible(true);
 
@@ -213,9 +241,7 @@ public class TulipacParser {
 
     private static void debugAnalysis(Tree<String> dt, InterpretedTreeAutomaton irtg) {
         Interpretation<FeatureStructure> fsi = irtg.getInterpretation("ft");
-
-        System.out.printf("\nExample of a derivation tree that did not unify:\n\n");
-        printTree(dt, 0);
+        List<Tree<String>> failureNodes = new ArrayList<>(); // collect all nodes of dt where unification failed
 
         // node: subtree of dt at this point
         // children: list of FSs for the children
@@ -225,14 +251,7 @@ public class TulipacParser {
 
                 if (fs == null) {
                     // found a place where the unification failed
-                    System.out.printf("\nUnification failed at this subtree:\n\n");
-                    printTree(node, 0);
-
-                    System.out.printf("\n\nFeature structures for children:\n");
-
-                    for (int i = 0; i < children.size(); i++) {
-                        System.out.printf("(%d) %s\n", i + 1, children.get(i));
-                    }
+                    failureNodes.add(node);
                 }
 
                 return fs;
@@ -240,19 +259,41 @@ public class TulipacParser {
                 return null;
             }
         });
+
+        System.out.printf("\nExample of a derivation tree that did not unify (>> marks point of unification failure):\n");
+        printTree(dt, failureNodes.get(0), 0);
+
+        dt.dfs((node, children) -> {
+            if (node == failureNodes.get(0)) {
+                System.out.printf("\n\nFeature structures for children:\n");
+
+                for (int i = 0; i < children.size(); i++) {
+                    System.out.printf("(%d) %s\n", i + 1, children.get(i));
+                }
+            }
+
+            if (children.stream().allMatch((ch) -> ch != null)) {  // all children unified ok
+                FeatureStructure fs = fsi.interpret(node);
+                return fs;
+            } else {
+                return null;
+            }
+        });
     }
 
-    private static void printTree(Tree<String> t, int depth) {
+    private static void printTree(Tree<String> t, Tree<String> markedNode, int depth) {
         String prefix = (depth == 0) ? "" : "|" + Util.repeat("-", depth);
+        String marker = (t == markedNode) ? ">> " : "   ";
 
-        System.out.printf("%s%s\n", prefix, t.getLabel());
+        System.out.printf("%s%s%s\n", marker, prefix, t.getLabel());
 
         for (int i = 0; i < t.getChildren().size(); i++) {
-            printTree(t.getChildren().get(i), depth + 3);
+            printTree(t.getChildren().get(i), markedNode, depth + 3);
         }
     }
 
     private static class CmdLineParameters {
+
         @Parameter
         public List<String> grammarFilename = new ArrayList<>();
 

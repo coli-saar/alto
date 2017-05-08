@@ -1,6 +1,6 @@
 /*
  * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
+ * To change this template file, choose Tools + Templates
  * and open the template in the editor.
  */
 
@@ -28,13 +28,13 @@ import static org.hamcrest.Matchers.*
 class SubsetAlgebraTest {
     @Test
     public void testParseStringSet() {
-        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
+        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         assertThat(s, is(new HashSet(["rabbit(r1)", "sleep(e,r1)"])))
     }
     
     @Test
     public void testEvaluate() {
-        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
+        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
         BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r1)')"))
         assertThat(a.toSet(result), is(s))
@@ -42,15 +42,15 @@ class SubsetAlgebraTest {
     
     @Test
     public void testEvaluateNotDisjoint() {
-        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
+        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
-        BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'rabbit(r1) | sleep(e,r1)')"))
+        BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'rabbit(r1) + sleep(e,r1)')"))
         assertThat(a.toSet(result), nullValue())
     }
     
     @Test
     public void testEvaluateNotElement() {
-        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
+        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
         BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r2)')"))
         assertThat(result, nullValue())
@@ -58,7 +58,7 @@ class SubsetAlgebraTest {
     
     @Test
     public void testParseEmptySetConstant() {
-        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
+        Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
         BitSet result = a.evaluate(TreeParser.parse("EMPTYSET"))
         

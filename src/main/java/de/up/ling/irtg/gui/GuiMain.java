@@ -655,10 +655,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void log(final String log) {
-        final GuiMain x = app;
+        if (app != null) {
+            final GuiMain x = app;
 
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
+            java.awt.EventQueue.invokeLater(() -> {
                 synchronized (x) {
                     String oldLog = x.log.getText();
                     if (!oldLog.endsWith("\n")) {
@@ -669,8 +669,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                     Document d = x.log.getDocument();
                     x.log.select(d.getLength(), d.getLength());
                 }
-            }
-        });
+            });
+        }
     }
 
     /**

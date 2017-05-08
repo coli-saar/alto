@@ -305,6 +305,10 @@ public abstract class Algebra<E> implements Serializable {
                 return ret;
             }
         }
+        
+        protected boolean isValidValue(E parentState) {
+            return Algebra.this.isValidValue(parentState);
+        }
 
         @Override
         public Set<Rule> getRulesTopDown(int label, int parentState) {

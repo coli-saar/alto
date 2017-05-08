@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.algebra;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -158,7 +159,8 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
     @Override
     public String representAsString(List<String> object) {
-        return StringTools.join(object, " ");
+        Iterable<String> nonemptyParts = Iterables.filter(object, x -> ! "".equals(x));
+        return StringTools.join(Util.mapToList(nonemptyParts, x -> x), " ");
     }
 
     @OperationAnnotation(code="getSentenceLength")
