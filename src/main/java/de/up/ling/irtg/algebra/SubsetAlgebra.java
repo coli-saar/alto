@@ -5,26 +5,11 @@
  */
 package de.up.ling.irtg.algebra;
 
-import com.google.common.collect.ImmutableMap;
 import de.saar.basic.StringTools;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.TemplateIrtgInputCodec;
 import de.up.ling.irtg.signature.Interner;
-import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.Util;
-import de.up.ling.tree.ParseException;
-import de.up.ling.tree.Tree;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.Reader;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
