@@ -36,23 +36,23 @@ class SubsetAlgebraTest {
     public void testEvaluate() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
-        Set result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r1)')"))
-        assertThat(result, is(s))
+        BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r1)')"))
+        assertThat(a.toSet(result), is(s))
     }
     
     @Test
     public void testEvaluateNotDisjoint() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
-        Set result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'rabbit(r1) | sleep(e,r1)')"))
-        assertThat(result, nullValue())
+        BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'rabbit(r1) | sleep(e,r1)')"))
+        assertThat(a.toSet(result), nullValue())
     }
     
     @Test
     public void testEvaluateNotElement() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
-        Set result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r2)')"))
+        BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r2)')"))
         assertThat(result, nullValue())
     }
     
@@ -60,9 +60,9 @@ class SubsetAlgebraTest {
     public void testParseEmptySetConstant() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) | sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
-        Set result = a.evaluate(TreeParser.parse("EMPTYSET"))
+        BitSet result = a.evaluate(TreeParser.parse("EMPTYSET"))
         
-        assertThat(result, is(empty()))
+        assertThat(a.toSet(result), is(empty()))
     }
     
     @Test

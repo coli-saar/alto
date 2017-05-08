@@ -242,6 +242,15 @@ public class Interner<E> implements Serializable, Cloneable {
     public int getNextIndex() {
         return nextIndex;
     }
+    
+    /**
+     * Returns the number of known objects.
+     * 
+     * @return 
+     */
+    public int size() {
+        return intToObject.size();
+    }
 
     /**
      * Returns a map from the objects known to the interner to the ids

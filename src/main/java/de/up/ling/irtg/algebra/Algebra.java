@@ -265,6 +265,10 @@ public abstract class Algebra<E> implements Serializable {
             int x = addState(finalElement);
             finalStates.add(x);
         }
+        
+        public EvaluatingDecompositionAutomaton(Signature signature) {
+            super(signature);
+        }
 
         @Override
         public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
