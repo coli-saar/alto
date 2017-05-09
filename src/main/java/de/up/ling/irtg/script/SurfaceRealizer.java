@@ -12,8 +12,8 @@ import com.google.common.collect.ImmutableMap;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.SetAlgebra;
-import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.SubsetAlgebra;
 import static de.up.ling.irtg.algebra.SubsetAlgebra.SEPARATOR;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -71,7 +71,7 @@ public class SurfaceRealizer {
 
         SubsetAlgebra sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
         SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
-        StringAlgebra str = (StringAlgebra) irtg.getInterpretation("string").getAlgebra();
+        Algebra str = irtg.getInterpretation("string").getAlgebra();
 
         // put true facts here
         ref.setModel(model);
@@ -99,7 +99,7 @@ public class SurfaceRealizer {
 
         int count = 1;
         for (Tree<String> dt : chart.languageIterable()) {
-            System.out.printf("[%03d] %s\n", count, str.representAsString((List<String>) irtg.interpret(dt, "string")));
+            System.out.printf("[%03d] %s\n", count, str.representAsString(irtg.interpret(dt, "string")));
             if (param.printDerivations) {
                 System.out.printf("      <deriv = %s>\n\n", dt);
             }

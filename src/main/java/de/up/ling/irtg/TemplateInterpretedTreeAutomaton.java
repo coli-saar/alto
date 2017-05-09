@@ -26,30 +26,30 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * A template IRTG. A template IRTG is an
- * IRTG in which rules may additionally be prefixed by quantification
- * over variables using the <code>foreach</code> keyword, like so:<p>
- * 
+ * A template IRTG. A template IRTG is an IRTG in which rules may additionally
+ * be prefixed by quantification over variables using the <code>foreach</code>
+ * keyword, like so:
+ * <p>
+ *
  * <pre>
-  foreach { x,y | left-of(x,y) and target(x) and distractor(y)}:
-  NP_$x -> leftof_$x(N_$x, NP_$y)
-  [sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
-  [string] *(?1, *("left of", ?2))
-</pre>
- * 
- * A template IRTG can be instantiated to an ordinary IRTG
- * based on the contents of a {@link FirstOrderModel} using the
- * {@link #instantiate(de.up.ling.irtg.util.FirstOrderModel) } method.
- * This will enumerate all values (a,b) for the variables (x,y)
- * that satisfy all the conditions in the foreach clause,
- * and will replace the occurrences of $x and $y in the IRTG
- * rule by a and b respectively.<p>
- * 
- * Template IRTGs are only rarely constructed programmatically.
- * The common use-case is to read a template IRTG from a file
- * using {@link TemplateIrtgInputCodec}. Most methods in this
- * class are meant to be called from that input codec.
- * 
+ * foreach { x,y | left-of(x,y) and target(x) and distractor(y)}:
+ * NP_$x -> leftof_$x(N_$x, NP_$y)
+ * [sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
+ * [string] *(?1, *("left of", ?2))
+ * </pre>
+ *
+ * A template IRTG can be instantiated to an ordinary IRTG based on the contents
+ * of a {@link FirstOrderModel} using the
+ * {@link #instantiate(de.up.ling.irtg.util.FirstOrderModel) } method. This will
+ * enumerate all values (a,b) for the variables (x,y) that satisfy all the
+ * conditions in the foreach clause, and will replace the occurrences of $x and
+ * $y in the IRTG rule by a and b respectively.<p>
+ *
+ * Template IRTGs are only rarely constructed programmatically. The common
+ * use-case is to read a template IRTG from a file using
+ * {@link TemplateIrtgInputCodec}. Most methods in this class are meant to be
+ * called from that input codec.
+ *
  * @author koller
  */
 public class TemplateInterpretedTreeAutomaton {
@@ -58,7 +58,7 @@ public class TemplateInterpretedTreeAutomaton {
     private Map<String, String> algebraClasses;
     private List<FeatureDeclaration> features;
     private double[] featureWeights = null;
-            
+
     /**
      * Constructs an empty template IRTG.
      */
@@ -70,39 +70,36 @@ public class TemplateInterpretedTreeAutomaton {
 
     /**
      * Adds a rule template to the template IRTG.
-     * 
-     * @param trule 
+     *
+     * @param trule
      */
     public void addRuleTemplate(TemplateRule trule) {
         ruleTemplates.add(trule);
     }
-    
+
     /**
-     * Adds a declaration of a constructure feature to the
-     * template IRTG.
-     * 
+     * Adds a declaration of a constructure feature to the template IRTG.
+     *
      * @param id
      * @param featureClass
-     * @param arguments 
+     * @param arguments
      */
     public void addConstructorFeatureDeclaration(String id, String featureClass, List<String> arguments) {
         addFeatureDeclaration(id, featureClass, null, arguments);
     }
-    
+
     /**
-     * Adds a declaration of a static-method feature to
-     * the template IRTG.
-     * 
+     * Adds a declaration of a static-method feature to the template IRTG.
+     *
      * @param id
      * @param featureClass
      * @param featureMethod
-     * @param arguments 
+     * @param arguments
      */
     public void addStaticFeatureDeclaration(String id, String featureClass, String featureMethod, List<String> arguments) {
         addFeatureDeclaration(id, featureClass, featureMethod, arguments);
     }
 
-    
     private void addFeatureDeclaration(String id, String featureClass, String featureMethod, List<String> arguments) {
         FeatureDeclaration decl = new FeatureDeclaration();
         decl.id = id;
@@ -114,26 +111,25 @@ public class TemplateInterpretedTreeAutomaton {
 
     /**
      * Declares an interpretation.
-     * 
+     *
      * @param interpretation
-     * @param className 
+     * @param className
      */
     public void addAlgebraClass(String interpretation, String className) {
         getAlgebraClasses().put(interpretation, className);
     }
 
     /**
-     * Instantiates this template IRTG into a concrete IRTG.
-     * This is done by enumerating valid instances of each
-     * foreach-rule in the given first-order model (see the
-     * documentation for the class as a whole).
-     * 
+     * Instantiates this template IRTG into a concrete IRTG. This is done by
+     * enumerating valid instances of each foreach-rule in the given first-order
+     * model (see the documentation for the class as a whole).
+     *
      * @param model
      * @return
      * @throws ClassNotFoundException
      * @throws InstantiationException
      * @throws IllegalAccessException
-     * @throws CodecParseException 
+     * @throws CodecParseException
      */
     public InterpretedTreeAutomaton instantiate(FirstOrderModel model) throws ClassNotFoundException, InstantiationException, IllegalAccessException, CodecParseException {
         ConcreteTreeAutomaton<String> auto = new ConcreteTreeAutomaton<>();
@@ -159,7 +155,14 @@ public class TemplateInterpretedTreeAutomaton {
                 }
 
                 for (String interp : trule.hom.keySet()) {
-                    interps.get(interp).getHomomorphism().add(label, instantiateTerm(trule.hom.get(interp), variableAssignment));
+                    if( ! interps.containsKey(interp) ) {
+                        throw new CodecParseException("Undefined interpretation '" + interp + "' in rule for '" + label + "'");
+                    }
+                    
+                    Tree<String> instantiatedTerm = instantiateTerm(trule.hom.get(interp), variableAssignment);
+                    if (instantiatedTerm != null) {
+                        interps.get(interp).getHomomorphism().add(label, instantiatedTerm);
+                    }
                 }
             });
         }
@@ -217,7 +220,7 @@ public class TemplateInterpretedTreeAutomaton {
         Map<String, FeatureFunction> ret = new HashMap<>();
 
         for (FeatureDeclaration ft : features) {
-            if( ft.featureMethod != null ) {
+            if (ft.featureMethod != null) {
                 IrtgInputCodec.addStaticFeature(ft.id, ft.featureClass, ft.featureMethod, ft.arguments, ret);
             } else {
                 IrtgInputCodec.addConstructorFeature(ft.id, ft.featureClass, ft.arguments, ret);
@@ -228,28 +231,30 @@ public class TemplateInterpretedTreeAutomaton {
     }
 
     /**
-     * Returns the number of feature declarations this IRTG contains. 
-     * 
-     * @return 
+     * Returns the number of feature declarations this IRTG contains.
+     *
+     * @return
      */
     public int getNumFeatures() {
-        return (features == null? 0 : features.size());
+        return (features == null ? 0 : features.size());
     }
 
     /**
      * Returns a list of ids of the feature declarations this IRTG contains.
-     * 
-     * @return 
+     *
+     * @return
      */
     public List<String> getFeatureIds() {
-        return features.stream().map( f-> {return f.id;}).collect(Collectors.toList());
+        return features.stream().map(f -> {
+            return f.id;
+        }).collect(Collectors.toList());
     }
-    
+
     /**
      * Returns a string to string map of algebra classes.
-     * 
+     *
      * Returns the actual map, not a defensive copy.
-     * 
+     *
      * @return the algebraClasses
      */
     public Map<String, String> getAlgebraClasses() {
@@ -259,9 +264,9 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Returns a double array which contains the current settings of the feature
      * weights.
-     * 
+     *
      * Returns actual array used by the class, not a defensive copy.
-     * 
+     *
      * @return the featureWeights
      */
     public double[] getFeatureWeights() {
@@ -270,7 +275,7 @@ public class TemplateInterpretedTreeAutomaton {
 
     /**
      * Allows for the feature weights to be set externally.
-     * 
+     *
      * @param featureWeights the featureWeights to set
      */
     public void setFeatureWeights(double[] featureWeights) {
@@ -279,9 +284,9 @@ public class TemplateInterpretedTreeAutomaton {
 
     /**
      * Returns an specific entry for the feature weights.
-     * 
+     *
      * @param i
-     * @return 
+     * @return
      */
     public double getFeatureWeight(int i) {
         if (featureWeights != null && i < featureWeights.length) {
@@ -293,9 +298,9 @@ public class TemplateInterpretedTreeAutomaton {
 
     /**
      * Allows for setting a single entry for the feature weights.
-     * 
+     *
      * @param index
-     * @param weight 
+     * @param weight
      */
     public void setFeatureWeight(int index, double weight) {
         featureWeights[index] = weight;
@@ -322,8 +327,9 @@ public class TemplateInterpretedTreeAutomaton {
         public Map<String, Tree<String>> hom;
 
         /**
-         * Constructs a new instance, with all the members set to default (empty) values.
-         * 
+         * Constructs a new instance, with all the members set to default
+         * (empty) values.
+         *
          * Members must be set by directly accessing them.
          */
         public TemplateRule() {
@@ -339,7 +345,7 @@ public class TemplateInterpretedTreeAutomaton {
             return lhs + " -> " + label + rhs;
         }
     }
-    
+
     public interface Guard {
 
         abstract boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model);
@@ -417,6 +423,7 @@ public class TemplateInterpretedTreeAutomaton {
     }
 
     private static class FeatureDeclaration {
+
         public String id;
         public String featureClass;
         public String featureMethod;    // null = constructor feature; method name = static factory feature

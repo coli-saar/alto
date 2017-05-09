@@ -22,6 +22,7 @@ import java.util.Set;
  * @author koller
  */
 public class SubsetAlgebra<E> extends Algebra<BitSet> {
+
     private Interner<E> universeInterner;
     private static final BitSet EMPTY_BITSET = new BitSet();
 
@@ -86,8 +87,11 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
                 BitSet ret = new BitSet();
                 ret.or(s1);
                 ret.or(s2);
+                
+//                System.err.printf("++ %s + %s -> %s\n", toSet(s1), toSet(s2), toSet(ret));
                 return ret;
             } else {
+//                System.err.printf("** not disjoint: %s | %s\n", toSet(s1), toSet(s2));
                 return null;
             }
         } else if (EMPTYSET.equals(label)) {
@@ -97,10 +101,17 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
             assert childrenValues.isEmpty();
 
             try {
-                return parseString(label);
+                BitSet ret = parseString(label);
+                
+                if( ret == null ) {
+                    throw new RuntimeException("Could not parse set constant: " + label);
+                }
+                
+//                System.err.printf("LL %s\n", toSet(ret));
+
+                return ret;
             } catch (ParserException ex) {
-                Logging.get().severe(() -> "Could not parse set constant: " + label);
-                return null;
+                throw new RuntimeException("Could not parse set constant: " + label, ex);
             }
         }
     }
@@ -151,6 +162,7 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
     }
 
     private class DecompositionAuto extends EvaluatingDecompositionAutomaton {
+
         private final BitSet finalSet;
 
         public DecompositionAuto(BitSet finalSet) {
@@ -159,7 +171,7 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
             this.finalSet = finalSet;
 
         }
-        
+
         @Override
         protected int addState(BitSet state) {
             if (state == null) {
@@ -178,8 +190,6 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
             }
         }
     }
-    
-    
 
     public Set<E> toSet(BitSet bitset) {
         if (bitset == null) {
@@ -197,53 +207,10 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
 
     @Override
     public String representAsString(BitSet object) {
-        return StringTools.join(toSet(object), SEPARATOR);
-    }
-
-    /*
-    public static void main(String[] args) throws Exception {
-        FirstOrderModel model = FirstOrderModel.read(new FileReader(args[1]));
-        InterpretedTreeAutomaton irtg = null;
-        
-        if( args[0].endsWith(".tirtg")) {
-            TemplateInterpretedTreeAutomaton tirtg = new TemplateIrtgInputCodec().read(new FileInputStream(args[0]));
-            irtg = tirtg.instantiate(model);
-            Files.write(Paths.get("instantiated.irtg"), irtg.toString().getBytes());
+        if (object == null) {
+            return "<null>";
         } else {
-            irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
-        }
-
-        SubsetAlgebra sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
-        SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
-        StringAlgebra str = (StringAlgebra) irtg.getInterpretation("string").getAlgebra();
-
-        // put true facts here
-        ref.setModel(model);
-        List<String> trueAtoms = Util.mapToList(model.getTrueAtoms(), t -> t.toString());
-        sem.setOptions(StringTools.join(trueAtoms, SEPARATOR));
-
-        // put inputs here
-        Object refInput = ref.parseString("{e2}");
-        Object semInput = sem.parseString("takefrom(e2,r1,h)");
-
-        TreeAutomaton<?> chart = null;
-
-        long start = System.nanoTime();
-        int N = 10000;
-        
-        for (int i = 0; i < N; i++) {
-            chart = irtg.parseInputObjects(ImmutableMap.of("ref", refInput, "sem", semInput));
-        }
-        
-        System.err.println(chart);
-
-        System.err.printf("%dx chart construction: %s\n", N, Util.formatTimeSince(start));
-
-        for (Tree<String> dt : chart.languageIterable()) {
-            System.err.printf("\nderivation: %s\n", dt);
-            System.err.printf("output: %s\n", str.representAsString((List<String>) irtg.interpret(dt, "string")));
+            return StringTools.join(toSet(object), SEPARATOR);
         }
     }
-    */
-
 }
