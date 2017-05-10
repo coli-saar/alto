@@ -12,15 +12,21 @@ import com.google.common.collect.Sets;
 import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.automata.pruning.FOM;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntInt2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
+import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntComparator;
+import it.unimi.dsi.fastutil.ints.IntHeapPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.*;
 
@@ -48,20 +54,23 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     // (index first by right state, then by left state because almost all right states
     // receive corresponding left states, but not vice versa. This keeps outer map very dense,
     // and makes it suitable for a fast ArrayMap)
+    
+    private FOM fom; // for evaluating states; if not null, states are sorted on the agenda according to this
+    private boolean stopWhenFinalStateFound = false; // if true, calculation of intersection automata stops as soon as first final state is found
 
     /**
      * Crates a new instance which represents the intersection of the two given automata.
      * @param left
      * @param right 
      */
-    @OperationAnnotation(code = "bottomUpIntersectionAutomaton")
-    public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
+    public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right, FOM fom) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
 
         labelRemap = left.getSignature().remap(right.getSignature());
 
         this.left = left;
         this.right = right;
+        this.fom = fom;
 
         stateToLeftState = new Int2IntOpenHashMap();
         stateToRightState = new Int2IntOpenHashMap();
@@ -70,6 +79,11 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
 
         stateMapping = new IntInt2IntMap();
+    }
+    
+    @OperationAnnotation(code = "bottomUpIntersectionAutomaton")
+    public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
+        this(left, right, null);
     }
 
     /**
@@ -441,6 +455,87 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         }
     }
 
+    
+
+    protected int addStatePair(int leftState, int rightState) {
+//        System.err.println("make state pair for " + left.getStateForId(leftState) + " and " + right.getStateForId(rightState));
+
+        int ret = stateMapping.get(rightState, leftState);
+
+        if (ret == 0) {
+            ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
+            stateMapping.put(rightState, leftState, ret);
+//            System.err.println("   -> " + ret + " (new)");
+
+            stateToLeftState.put(ret, leftState);
+            stateToRightState.put(ret, rightState);
+
+            if (stateDiscoveryListener != null) {
+                stateDiscoveryListener.accept(ret);
+            }
+
+        } else {
+//            System.err.println("   -> " + ret + " (cached)");
+        }
+
+        return ret;
+    }
+
+    protected Rule combineRules(Rule leftRule, Rule rightRule) {
+        int[] childStates = new int[leftRule.getArity()];
+
+        for (int i = 0; i < leftRule.getArity(); i++) {
+            childStates[i] = addStatePair(leftRule.getChildren()[i], rightRule.getChildren()[i]);
+        }
+
+        int parentState = addStatePair(leftRule.getParent(), rightRule.getParent());
+
+        return createRule(parentState, leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
+    }
+
+    @Override
+    public IntSet getFinalStates() {
+        if (finalStates == null) {
+            getAllStates(); // initialize data structure for addState
+            finalStates = new IntOpenHashSet();
+            collectStatePairs(left.getFinalStates(), right.getFinalStates(), finalStates);
+        }
+
+        return finalStates;
+    }
+
+    private void collectStatePairs(Collection<Integer> leftStates, Collection<Integer> rightStates, Collection<Integer> pairStates) {
+        List<Collection> stateSets = new ArrayList<>();
+        stateSets.add(leftStates);
+        stateSets.add(rightStates);
+
+        CartesianIterator<Integer> it = new CartesianIterator(stateSets);
+        while (it.hasNext()) {
+            List<Integer> states = it.next();
+
+            int state = stateInterner.resolveObject(new Pair(left.getStateForId(states.get(0)), right.getStateForId(states.get(1))));
+            if (state != 0) {
+                pairStates.add(state);
+            }
+        }
+    }
+
+    @Override
+    public Iterable<Rule> getRulesBottomUp(int label, int[] childStates) {
+        makeAllRulesExplicit();
+
+        assert useCachedRuleBottomUp(label, childStates);
+        return getRulesBottomUpFromExplicit(label, childStates);
+    }
+
+    @Override
+    public Iterable<Rule> getRulesTopDown(int label, int parentState) {
+        makeAllRulesExplicit();
+
+        assert useCachedRuleTopDown(label, parentState);
+        return getRulesTopDownFromExplicit(label, parentState);
+    }
+    
     // bottom-up intersection algorithm
     @Override
     public void makeAllRulesExplicit() {
@@ -451,7 +546,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             getStateInterner().setTrustingMode(true);
 
             ListMultimap<Integer, Rule> rulesByChildState = left.getRuleByChildStateMap();  // int = left state ID
-            Queue<Integer> agenda = new LinkedList<>();
+            AgendaI agenda = (fom == null) ? new QueueAgenda() : new PriorityQueueAgenda(fom);
+//            Queue<Integer> agenda = new LinkedList<>();
             Set<Integer> seenStates = new HashSet<>();
             SetMultimap<Integer, Integer> partners = HashMultimap.create(); // left state ID -> right state IDs
 
@@ -470,7 +566,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                     for (Rule rightRule : preterminalRulesForLabel) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRuleBoth(rule);
-                        agenda.offer(rule.getParent());
+                        agenda.enqueue(rule.getParent(), leftRule.getParent(), rightRule.getParent());
                         seenStates.add(rule.getParent());
                         partners.put(leftRule.getParent(), rightRule.getParent());
                     }
@@ -484,7 +580,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             long unsuccessful = 0;
             long iterations = 0;
             while (!agenda.isEmpty()) {
-                int state = agenda.remove();
+                int state = agenda.dequeue();
                 int dequeuedLeftState = getLeftState(state);    // left component p of dequeued state
                 int dequeuedRightState = getRightState(state);  // right component q of dequeued state
 
@@ -539,8 +635,10 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                                 }
                             }
                             for (int newState : newStates) {
-                                agenda.offer(newState);
-                                partners.put(stateToLeftState.get(newState), stateToRightState.get(newState));
+                                int leftState = stateToLeftState.get(newState);
+                                int rightState = stateToRightState.get(newState);
+                                agenda.enqueue(newState, leftState, rightState);
+                                partners.put(leftState, rightState);
                             }
                         }
                     }
@@ -565,153 +663,13 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //            System.err.println(this);
         }
     }
+    
+    
+    
 
-    protected int addStatePair(int leftState, int rightState) {
-//        System.err.println("make state pair for " + left.getStateForId(leftState) + " and " + right.getStateForId(rightState));
-
-        int ret = stateMapping.get(rightState, leftState);
-
-        if (ret == 0) {
-            ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
-            stateMapping.put(rightState, leftState, ret);
-//            System.err.println("   -> " + ret + " (new)");
-
-            stateToLeftState.put(ret, leftState);
-            stateToRightState.put(ret, rightState);
-
-            if (stateDiscoveryListener != null) {
-                stateDiscoveryListener.accept(ret);
-            }
-
-        } else {
-//            System.err.println("   -> " + ret + " (cached)");
-        }
-
-        return ret;
-
-//        
-//        int ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
-//
-//        stateToLeftState.put(ret, leftState);
-//        stateToRightState.put(ret, rightState);
-//
-//        return ret;
-    }
-
-    protected Rule combineRules(Rule leftRule, Rule rightRule) {
-        int[] childStates = new int[leftRule.getArity()];
-
-        for (int i = 0; i < leftRule.getArity(); i++) {
-            childStates[i] = addStatePair(leftRule.getChildren()[i], rightRule.getChildren()[i]);
-        }
-
-        int parentState = addStatePair(leftRule.getParent(), rightRule.getParent());
-
-        return createRule(parentState, leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
-    }
-
-    @Override
-    public IntSet getFinalStates() {
-        if (finalStates == null) {
-            getAllStates(); // initialize data structure for addState
-            finalStates = new IntOpenHashSet();
-            collectStatePairs(left.getFinalStates(), right.getFinalStates(), finalStates);
-        }
-
-        return finalStates;
-    }
-
-    private void collectStatePairs(Collection<Integer> leftStates, Collection<Integer> rightStates, Collection<Integer> pairStates) {
-        List<Collection> stateSets = new ArrayList<>();
-        stateSets.add(leftStates);
-        stateSets.add(rightStates);
-
-        CartesianIterator<Integer> it = new CartesianIterator(stateSets);
-        while (it.hasNext()) {
-            List<Integer> states = it.next();
-
-            int state = stateInterner.resolveObject(new Pair(left.getStateForId(states.get(0)), right.getStateForId(states.get(1))));
-            if (state != 0) {
-                pairStates.add(state);
-            }
-        }
-    }
-
-    @Override
-    public Iterable<Rule> getRulesBottomUp(int label, int[] childStates) {
-        makeAllRulesExplicit();
-
-        assert useCachedRuleBottomUp(label, childStates);
-
-        return getRulesBottomUpFromExplicit(label, childStates);
-
-//
-//
-////        System.err.println("grbu " + getSignature().resolveSymbolId(label) + ", children=" + childStates);
-//
-//        if (useCachedRuleBottomUp(label, childStates)) {
-////            System.err.println("-> cached, " + getRulesBottomUpFromExplicit(label, childStates));
-//            return getRulesBottomUpFromExplicit(label, childStates);
-//        } else {
-////            System.err.println("-> compute fresh");
-//
-//            List<Integer> leftChildStates = new ArrayList<LeftState>();
-//            List<Integer> rightChildStates = new ArrayList<RightState>();
-//            for (Pair<LeftState, RightState> childState : childStates) {
-//                leftChildStates.add(childState.left);
-//                rightChildStates.add(childState.right);
-//            }
-//
-//            Set<Rule<LeftState>> leftRules = left.getRulesBottomUp(label, leftChildStates);
-//            Set<Rule<RightState>> rightRules = right.getRulesBottomUp(label, rightChildStates);
-//            Set<Pair<LeftState, RightState>> parentPairs = new HashSet<Pair<LeftState, RightState>>();
-//
-//            Set<Rule<Pair<LeftState, RightState>>> ret = new HashSet<Rule<Pair<LeftState, RightState>>>();
-//            for (Rule<LeftState> leftRule : leftRules) {
-//                for (Rule<RightState> rightRule : rightRules) {
-//                    Rule<Pair<LeftState, RightState>> rule = new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), label, childStates, leftRule.getWeight() * rightRule.getWeight());
-//                    storeRule(rule);
-//                    ret.add(rule);
-//                }
-//            }
-//
-//            return ret;
-//        }
-    }
-
-    @Override
-    public Iterable<Rule> getRulesTopDown(int label, int parentState) {
-        makeAllRulesExplicit();
-
-        assert useCachedRuleTopDown(label, parentState);
-
-//        if (!useCachedRuleTopDown(label, parentState)) {
-//            Set<Rule<LeftState>> leftRules = left.getRulesTopDown(label, parentState.left);
-//            Set<Rule<RightState>> rightRules = right.getRulesTopDown(label, parentState.right);
-//
-//            for (Rule<LeftState> leftRule : leftRules) {
-//                for (Rule<RightState> rightRule : rightRules) {
-//                    List<Pair<LeftState, RightState>> combinedChildren = new ArrayList<Pair<LeftState, RightState>>();
-//
-//                    for (int i = 0; i < leftRule.getArity(); i++) {
-//                        combinedChildren.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
-//                    }
-//
-//                    Rule<Pair<LeftState, RightState>> rule = new Rule<Pair<LeftState, RightState>>(parentState, label, combinedChildren, leftRule.getWeight() * rightRule.getWeight());
-//                    storeRule(rule);
-//                }
-//            }
-//        }
-        return getRulesTopDownFromExplicit(label, parentState);
-    }
-
-//    @Override
-//    public Set<Integer> getAllStates() {
-//        makeAllRulesExplicit();
-//        return super.getAllStates();
-//    }
+    
     /**
-     * This implements an interesection algorithm in the style of the early
+     * This implements an intersection algorithm in the style of the early
      * algorithm, which predicts possible transition based on the first input
      * automaton and then finds matching rules based on the second input automaton.
      */
@@ -1034,5 +992,80 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         ret.makeAllRulesExplicitCKY();
         return ret;
     }
+
+    public boolean isStopWhenFinalStateFound() {
+        return stopWhenFinalStateFound;
+    }
+
+    public void setStopWhenFinalStateFound(boolean stopWhenFinalStateFound) {
+        this.stopWhenFinalStateFound = stopWhenFinalStateFound;
+    }
     
+    
+    
+    private static interface AgendaI {
+        public void enqueue(int newState, int leftState, int rightState);
+        public int dequeue();
+        public boolean isEmpty();
+    }
+    
+    private class QueueAgenda implements AgendaI {
+        private Queue<Integer> agenda = new LinkedList<>();
+        
+        @Override
+        public void enqueue(int newState, int leftState, int rightState) {
+            agenda.add(newState);
+        }
+
+        @Override
+        public int dequeue() {
+            return agenda.remove();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return agenda.isEmpty();
+        }        
+    }
+    
+    private class PriorityQueueAgenda implements AgendaI {
+        private IntPriorityQueue agenda = new IntHeapPriorityQueue();
+        private Int2DoubleMap foms;
+        private FOM fom;
+
+        public PriorityQueueAgenda(FOM fom) {
+            this.fom = fom;
+            foms = new Int2DoubleOpenHashMap();
+            
+            IntComparator comp = new IntComparator() {
+                @Override
+                public int compare(int newState1, int newState2) {
+                    return Double.compare(foms.get(newState1), foms.get(newState2));
+                }
+
+                @Override
+                public int compare(Integer o1, Integer o2) {
+                    return compare((int) o1, (int) o2);
+                }
+            };
+            
+            agenda = new IntHeapPriorityQueue(comp);
+        }
+        
+        @Override
+        public void enqueue(int newState, int leftState, int rightState) {
+            foms.put(newState, fom.evaluateStates(leftState, rightState));
+            agenda.enqueue(newState);
+        }
+
+        @Override
+        public int dequeue() {
+            return agenda.dequeueInt();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return agenda.isEmpty();
+        }
+    }
 }

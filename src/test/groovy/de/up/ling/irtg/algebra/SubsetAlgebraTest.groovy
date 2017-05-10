@@ -53,12 +53,12 @@ class SubsetAlgebraTest {
         assertThat(a.toSet(result), nullValue())
     }
     
-    @Test
+    @Test(expected=RuntimeException)
     public void testEvaluateNotElement() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
         BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r2)')"))
-        assertThat(result, nullValue())
+//        assertThat(result, nullValue())
     }
     
     @Test

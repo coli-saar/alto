@@ -10,6 +10,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.google.common.collect.ImmutableMap;
 import de.saar.basic.StringTools;
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
@@ -58,7 +59,7 @@ public class SurfaceRealizer {
         FirstOrderModel model = FirstOrderModel.read(new FileReader(param.filenames.get(1)));
         InterpretedTreeAutomaton irtg = null;
 
-        if (args[0].endsWith(".tirtg")) {
+        if (param.filenames.get(0).endsWith(".tirtg")) {
             TemplateInterpretedTreeAutomaton tirtg = new TemplateIrtgInputCodec().read(new FileInputStream(args[0]));
             irtg = tirtg.instantiate(model);
 
@@ -70,7 +71,11 @@ public class SurfaceRealizer {
         }
 
         SubsetAlgebra sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
+        Interpretation semI = irtg.getInterpretation("sem");
+        
         SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
+        Interpretation refI = irtg.getInterpretation("ref");
+        
         Algebra str = irtg.getInterpretation("string").getAlgebra();
 
         // put true facts here
@@ -86,7 +91,12 @@ public class SurfaceRealizer {
 
         long start = System.nanoTime();
         for (int i = 0; i < param.N; i++) {
-            chart = irtg.parseInputObjects(ImmutableMap.of("ref", refInput, "sem", semInput));
+            chart = irtg.getAutomaton();
+            
+            chart = chart.intersect(refI.parse(refInput));
+            chart = chart.intersect(semI.parse(semInput));
+            
+//            chart = irtg.parseInputObjects(ImmutableMap.of("ref", refInput, "sem", semInput));
         }
 
         System.err.printf("%dx chart construction: %s\n", param.N, Util.formatTimeSince(start));
