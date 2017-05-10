@@ -97,18 +97,15 @@ public class SurfaceRealizer {
 
         long start = System.nanoTime();
         for (int i = 0; i < param.N; i++) {
-            chart = irtg.getAutomaton();
-            
-            TreeAutomaton<Pair<String,Set<List<String>>>> afterRef = chart.intersect(refI.parse(refInput));
+            TreeAutomaton<Pair<String,Set<List<String>>>> afterRef = irtg.getAutomaton().intersect(refI.parse(refInput));
             
             TreeAutomaton<BitSet> invhom = (TreeAutomaton) semI.parse(semInput);
             FOM fom = makeFom(invhom, semInput, afterRef);
-            IntersectionAutomaton afterSem = new IntersectionAutomaton(chart, invhom, fom);
+            IntersectionAutomaton afterSem = new IntersectionAutomaton(afterRef, invhom, fom);
             afterSem.setStopWhenFinalStateFound(true);
             afterSem.makeAllRulesExplicit();
             
             chart = afterSem;
-            
         }
 
         System.err.printf("%dx chart construction: %s\n", param.N, Util.formatTimeSince(start));
@@ -154,7 +151,7 @@ public class SurfaceRealizer {
                 Set<List<String>> ref = chartAfterRef.getStateForId(leftState).getRight();
                 int numDistractors = ref.size()-1;
                 
-                double value = 100000*numUnrealized + 1000*numDistractors + numExtra; // lexicographic sort by (numUnrealized, numExtra)
+                double value = 100000*numUnrealized + numDistractors + 1000*numExtra; // lexicographic sort by (numUnrealized, numExtra)
                 
 //                System.err.printf("evaluate %s + %s -> %f\n", leftAuto.getStateForId(leftState), semInvhom.getStateForId(rightState), value);
                 
