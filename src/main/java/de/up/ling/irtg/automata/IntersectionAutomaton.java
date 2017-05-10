@@ -32,8 +32,9 @@ import java.util.*;
 
 /**
  * This class is used to represent the intersection of two tree automata.
- * 
+ *
  * The intersection is computed bottom up.
+ *
  * @author koller
  * @param <LeftState>
  * @param <RightState>
@@ -54,14 +55,16 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     // (index first by right state, then by left state because almost all right states
     // receive corresponding left states, but not vice versa. This keeps outer map very dense,
     // and makes it suitable for a fast ArrayMap)
-    
+
     private FOM fom; // for evaluating states; if not null, states are sorted on the agenda according to this
     private boolean stopWhenFinalStateFound = false; // if true, calculation of intersection automata stops as soon as first final state is found
 
     /**
-     * Crates a new instance which represents the intersection of the two given automata.
+     * Crates a new instance which represents the intersection of the two given
+     * automata.
+     *
      * @param left
-     * @param right 
+     * @param right
      */
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right, FOM fom) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -80,16 +83,17 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
         stateMapping = new IntInt2IntMap();
     }
-    
+
     @OperationAnnotation(code = "bottomUpIntersectionAutomaton")
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         this(left, right, null);
     }
 
     /**
-     * The listener will be informed whenever a new state is visited for the first
-     * time.
-     * @param listener 
+     * The listener will be informed whenever a new state is visited for the
+     * first time.
+     *
+     * @param listener
      */
     public void setStateDiscoveryListener(StateDiscoveryListener listener) {
         this.stateDiscoveryListener = listener;
@@ -332,9 +336,9 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     }
 
     /**
-     * This method constructs all transitions in the automaton in a CKY style 
+     * This method constructs all transitions in the automaton in a CKY style
      * algorithm.
-     * 
+     *
      * This attempts to combine pairs of states that have been found bottom up
      * into new rules.
      */
@@ -376,10 +380,10 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         }
     }
 
-     /**
-     * This method constructs all transitions in the automaton in a CKY style 
+    /**
+     * This method constructs all transitions in the automaton in a CKY style
      * algorithm, there is a newer version that is preferred.
-     * 
+     *
      * This attempts to combine pairs of states that have been found bottom up
      * into new rules.
      */
@@ -454,8 +458,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             labelRemap = oldLabelRemap;
         }
     }
-
-    
 
     protected int addStatePair(int leftState, int rightState) {
 //        System.err.println("make state pair for " + left.getStateForId(leftState) + " and " + right.getStateForId(rightState));
@@ -535,7 +537,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         assert useCachedRuleTopDown(label, parentState);
         return getRulesTopDownFromExplicit(label, parentState);
     }
-    
+
     // bottom-up intersection algorithm
     @Override
     public void makeAllRulesExplicit() {
@@ -579,13 +581,15 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             // compute rules and states bottom-up
             long unsuccessful = 0;
             long iterations = 0;
+
+            AGENDA_LOOP:
             while (!agenda.isEmpty()) {
                 int state = agenda.dequeue();
                 int dequeuedLeftState = getLeftState(state);    // left component p of dequeued state
                 int dequeuedRightState = getRightState(state);  // right component q of dequeued state
 
                 if (GuiUtils.getGlobalListener() != null) {
-                    GuiUtils.getGlobalListener().accept((int)(iterations % 500), 500, "");
+                    GuiUtils.getGlobalListener().accept((int) (iterations % 500), 500, "");
                 }
 
                 //System.out.println(right.getStateForId(dequeuedRightState));
@@ -634,11 +638,27 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                                     }
                                 }
                             }
+
+                            boolean foundFinal = false;
                             for (int newState : newStates) {
                                 int leftState = stateToLeftState.get(newState);
                                 int rightState = stateToRightState.get(newState);
                                 agenda.enqueue(newState, leftState, rightState);
                                 partners.put(leftState, rightState);
+
+                                // if automaton should stop after first final state,
+                                // give them a chance to be identified here
+                                if (stopWhenFinalStateFound) {
+                                    if (left.getFinalStates().contains(leftState) && right.getFinalStates().contains(rightState)) {
+                                        foundFinal = true;
+                                    }
+                                }
+                            }
+
+                            // ... and then stop the agenda loop while there is
+                            // still stuff on the agenda
+                            if (foundFinal) {
+                                break AGENDA_LOOP;
                             }
                         }
                     }
@@ -663,15 +683,12 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //            System.err.println(this);
         }
     }
-    
-    
-    
 
-    
     /**
      * This implements an intersection algorithm in the style of the early
      * algorithm, which predicts possible transition based on the first input
-     * automaton and then finds matching rules based on the second input automaton.
+     * automaton and then finds matching rules based on the second input
+     * automaton.
      */
     public void makeAllRulesExplicitEarley() {
         if (!ruleStore.isExplicit()) {
@@ -955,22 +972,22 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             System.out.println("Error while writing to file:" + ex.getMessage());
         }
     }*/
-
     /**
-     * Defines an interface  which accepts newly discovered states during
-     * the intersection construction.
+     * Defines an interface which accepts newly discovered states during the
+     * intersection construction.
      */
     @FunctionalInterface
     public static interface StateDiscoveryListener {
         public void accept(int state);
     }
-    
+
     /**
-     * Helper method which creates an intersection automaton and
-     * makes all rules explicit with the default algorithm.
+     * Helper method which creates an intersection automaton and makes all rules
+     * explicit with the default algorithm.
+     *
      * @param lhs
      * @param rhs
-     * @return 
+     * @return
      */
     @OperationAnnotation(code = "buIntersect")
     public static IntersectionAutomaton intersectBottomUpNaive(TreeAutomaton lhs, TreeAutomaton rhs) {
@@ -978,13 +995,14 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         ret.makeAllRulesExplicit();
         return ret;
     }
-    
+
     /**
-     * Helper method which creates an intersection automaton and
-     * makes all rules explicit with the CKY algorithm.
+     * Helper method which creates an intersection automaton and makes all rules
+     * explicit with the CKY algorithm.
+     *
      * @param lhs
      * @param rhs
-     * @return 
+     * @return
      */
     @OperationAnnotation(code = "tdbuIntersect")
     public static IntersectionAutomaton intersectTopDownBottomUpCKY(TreeAutomaton lhs, TreeAutomaton rhs) {
@@ -1000,18 +1018,18 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     public void setStopWhenFinalStateFound(boolean stopWhenFinalStateFound) {
         this.stopWhenFinalStateFound = stopWhenFinalStateFound;
     }
-    
-    
-    
+
     private static interface AgendaI {
         public void enqueue(int newState, int leftState, int rightState);
+
         public int dequeue();
+
         public boolean isEmpty();
     }
-    
+
     private class QueueAgenda implements AgendaI {
         private Queue<Integer> agenda = new LinkedList<>();
-        
+
         @Override
         public void enqueue(int newState, int leftState, int rightState) {
             agenda.add(newState);
@@ -1025,9 +1043,9 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         @Override
         public boolean isEmpty() {
             return agenda.isEmpty();
-        }        
+        }
     }
-    
+
     private class PriorityQueueAgenda implements AgendaI {
         private IntPriorityQueue agenda = new IntHeapPriorityQueue();
         private Int2DoubleMap foms;
@@ -1036,7 +1054,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         public PriorityQueueAgenda(FOM fom) {
             this.fom = fom;
             foms = new Int2DoubleOpenHashMap();
-            
+
             IntComparator comp = new IntComparator() {
                 @Override
                 public int compare(int newState1, int newState2) {
@@ -1048,10 +1066,10 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                     return compare((int) o1, (int) o2);
                 }
             };
-            
+
             agenda = new IntHeapPriorityQueue(comp);
         }
-        
+
         @Override
         public void enqueue(int newState, int leftState, int rightState) {
             foms.put(newState, fom.evaluateStates(leftState, rightState));
@@ -1060,7 +1078,11 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
         @Override
         public int dequeue() {
-            return agenda.dequeueInt();
+            int ret = agenda.dequeueInt();
+            
+//            System.err.printf("dequeue %s <%f>\n", getStateForId(ret), foms.get(ret));
+            
+            return ret;
         }
 
         @Override

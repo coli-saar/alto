@@ -8,7 +8,7 @@ package de.up.ling.irtg.script;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import com.google.common.collect.ImmutableMap;
+import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
@@ -17,7 +17,11 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.SetAlgebra;
 import de.up.ling.irtg.algebra.SubsetAlgebra;
 import static de.up.ling.irtg.algebra.SubsetAlgebra.SEPARATOR;
+import de.up.ling.irtg.automata.IntersectionAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
+import de.up.ling.irtg.automata.pruning.FOM;
 import de.up.ling.irtg.codec.TemplateIrtgInputCodec;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
@@ -28,7 +32,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -70,7 +76,7 @@ public class SurfaceRealizer {
             irtg = InterpretedTreeAutomaton.read(new FileInputStream(param.filenames.get(0)));
         }
 
-        SubsetAlgebra sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
+        SubsetAlgebra<String> sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
         Interpretation semI = irtg.getInterpretation("sem");
         
         SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
@@ -85,18 +91,24 @@ public class SurfaceRealizer {
 
         // put inputs here
         Object refInput = ref.parseString(param.ref);
-        Object semInput = sem.parseString(param.sem);
-
+        BitSet semInput = (BitSet) sem.parseString(param.sem);
+        
         TreeAutomaton<?> chart = null;
 
         long start = System.nanoTime();
         for (int i = 0; i < param.N; i++) {
             chart = irtg.getAutomaton();
             
-            chart = chart.intersect(refI.parse(refInput));
-            chart = chart.intersect(semI.parse(semInput));
+            TreeAutomaton<Pair<String,Set<List<String>>>> afterRef = chart.intersect(refI.parse(refInput));
             
-//            chart = irtg.parseInputObjects(ImmutableMap.of("ref", refInput, "sem", semInput));
+            TreeAutomaton<BitSet> invhom = (TreeAutomaton) semI.parse(semInput);
+            FOM fom = makeFom(invhom, semInput, afterRef);
+            IntersectionAutomaton afterSem = new IntersectionAutomaton(chart, invhom, fom);
+            afterSem.setStopWhenFinalStateFound(true);
+            afterSem.makeAllRulesExplicit();
+            
+            chart = afterSem;
+            
         }
 
         System.err.printf("%dx chart construction: %s\n", param.N, Util.formatTimeSince(start));
@@ -116,6 +128,39 @@ public class SurfaceRealizer {
 
             count++;
         }
+    }
+    
+    private static FOM makeFom(TreeAutomaton<BitSet> semInvhom, BitSet targetSem, TreeAutomaton<Pair<String,Set<List<String>>>> chartAfterRef) {
+        return new FOM() {
+            @Override
+            public double evaluate(Rule left, CondensedRule right) {
+                return 0; // not needed
+            }
+
+            @Override
+            public double evaluateStates(int leftState, int rightState) {
+                BitSet rightBitset = semInvhom.getStateForId(rightState);
+                
+                BitSet unrealized = new BitSet();
+                unrealized.or(targetSem);
+                unrealized.andNot(rightBitset);
+                int numUnrealized = unrealized.cardinality();
+                
+                BitSet extraSem = new BitSet();
+                extraSem.or(rightBitset);
+                extraSem.andNot(targetSem);
+                int numExtra = extraSem.cardinality();
+                
+                Set<List<String>> ref = chartAfterRef.getStateForId(leftState).getRight();
+                int numDistractors = ref.size()-1;
+                
+                double value = 100000*numUnrealized + 1000*numDistractors + numExtra; // lexicographic sort by (numUnrealized, numExtra)
+                
+//                System.err.printf("evaluate %s + %s -> %f\n", leftAuto.getStateForId(leftState), semInvhom.getStateForId(rightState), value);
+                
+                return value;
+            }
+        };
     }
 
     private static void cmdlineUsage(String errorMessage) {
