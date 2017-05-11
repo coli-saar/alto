@@ -862,116 +862,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         public String toString() {
             return leftRule.toString(IntersectionAutomaton.this) + getRightChildren();
         }
-//        // TODO - equals and hashCode should be more efficient
-//        @Override
-//        public boolean equals(Object obj) {
-//            if (obj == null) {
-//                return false;
-//            }
-//            if (getClass() != obj.getClass()) {
-//                return false;
-//            }
-//            final IncompleteEarleyItem other = (IncompleteEarleyItem) obj;
-//            if (this.leftRule != other.leftRule && (this.leftRule == null || !this.leftRule.equals(other.leftRule))) {
-//                return false;
-//            }
-//            if (!this.getRightChildren().equals(other.getRightChildren())) {
-//                return false;
-//            }
-//            return true;
-//        }
-//
-//        @Override
-//        public int hashCode() {
-//            if (hashCode < 0) {
-//                hashCode = 5;
-//                hashCode = 29 * hashCode + (this.leftRule != null ? this.leftRule.hashCode() : 0);
-//                hashCode = 29 * hashCode + this.getRightChildren().hashCode();
-//            }
-//            return hashCode;
-//        }
     }
 
-    /*
-     * this is evaluation code which should be moved into a test case or
-        Alto lab
-     * 
-     * Arg1: IRTG Grammar Arg2: List of Sentences Arg3: Interpretation to parse
-     * Arg4: Outputfile Arg5: Comments
-     *
-     * @param args
-     * @throws java.io.FileNotFoundException
-     *
-    public static void main(String[] args) throws FileNotFoundException, IOException, de.up.ling.irtg.codec.CodecParseException {
-        if (args.length != 5) {
-            System.err.println("1. IRTG\n"
-                    + "2. Sentences\n"
-                    + "3. Interpretation\n"
-                    + "4. Output file\n"
-                    + "5. Comments");
-            System.exit(1);
-        }
-
-        String irtgFilename = args[0];
-        String sentencesFilename = args[1];
-        String interpretation = args[2];
-        String outputFile = args[3];
-        String comments = args[4];
-        long[] timestamp = new long[5];
-
-        System.err.print("Reading the IRTG...");
-        timestamp[0] = System.nanoTime();
-
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(new File(irtgFilename)));
-        Interpretation interp = irtg.getInterpretation(interpretation);
-        Homomorphism hom = interp.getHomomorphism();
-        Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
-
-        timestamp[1] = System.nanoTime();
-        System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
-        try {
-            FileWriter outstream;
-            outstream = new FileWriter(outputFile);
-            BufferedWriter out = new BufferedWriter(outstream);
-            out.write("Testing IntersectionAutomaton with old intersection...\n"
-                    + "IRTG-File  : " + irtgFilename + "\n"
-                    + "Input-File : " + sentencesFilename + "\n"
-                    + "Output-File: " + outputFile + "\n"
-                    + "Comments   : " + comments + "\n\n"
-                    + "IRTG read  : " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms\n");
-            out.flush();
-            try {
-                FileInputStream instream = new FileInputStream(new File(sentencesFilename));
-                DataInputStream in = new DataInputStream(instream);
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                String sentence;
-                int times = 0;
-                int sentences = 0;
-
-                while ((sentence = br.readLine()) != null) {
-                    ++sentences;
-                    System.err.println("Current sentence: " + sentence);
-                    timestamp[2] = System.nanoTime();
-
-                    TreeAutomaton decomp = alg.decompose(alg.parseString(sentence));
-                    CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
-                    TreeAutomaton<String> result = irtg.getAutomaton().intersect(inv);
-
-                    timestamp[3] = System.nanoTime();
-
-                    System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
-                    outstream.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
-                    times += (timestamp[3] - timestamp[2]) / 1000000;
-                    outstream.flush();
-                }
-                outstream.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");
-            } catch (IOException ex) {
-                System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
-            }
-        } catch (Exception ex) {
-            System.out.println("Error while writing to file:" + ex.getMessage());
-        }
-    }*/
     /**
      * Defines an interface which accepts newly discovered states during the
      * intersection construction.
@@ -1072,16 +964,18 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
         @Override
         public void enqueue(int newState, int leftState, int rightState) {
-            foms.put(newState, fom.evaluateStates(leftState, rightState));
+            double value = fom.evaluateStates(leftState, rightState);
+            
+            foms.put(newState, value);
             agenda.enqueue(newState);
         }
 
         @Override
         public int dequeue() {
             int ret = agenda.dequeueInt();
-            
+
 //            System.err.printf("dequeue %s <%f>\n", getStateForId(ret), foms.get(ret));
-            
+
             return ret;
         }
 

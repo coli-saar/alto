@@ -19,13 +19,18 @@ import de.up.ling.irtg.algebra.SubsetAlgebra;
 import static de.up.ling.irtg.algebra.SubsetAlgebra.SEPARATOR;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.RuleEvaluatorTopDown;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.pruning.FOM;
 import de.up.ling.irtg.codec.TemplateIrtgInputCodec;
+import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
+import de.up.ling.irtg.semiring.Semiring;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -34,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -78,10 +84,10 @@ public class SurfaceRealizer {
 
         SubsetAlgebra<String> sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
         Interpretation semI = irtg.getInterpretation("sem");
-        
+
         SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
         Interpretation refI = irtg.getInterpretation("ref");
-        
+
         Algebra str = irtg.getInterpretation("string").getAlgebra();
 
         // put true facts here
@@ -92,23 +98,64 @@ public class SurfaceRealizer {
         // put inputs here
         Object refInput = ref.parseString(param.ref);
         BitSet semInput = (BitSet) sem.parseString(param.sem);
-        
+
         TreeAutomaton<?> chart = null;
 
-        long start = System.nanoTime();
-        for (int i = 0; i < param.N; i++) {
-            TreeAutomaton<Pair<String,Set<List<String>>>> afterRef = irtg.getAutomaton().intersect(refI.parse(refInput));
+        CpuTimeStopwatch totalTime = new CpuTimeStopwatch();
+        
+        for (int i = 0; i < param.warmupIterations + param.avgIterations; i++) {
+            CpuTimeStopwatch sw = new CpuTimeStopwatch();
+            sw.record();
             
+            // start recording total runtime after warmup iterations
+            if( i == param.warmupIterations ) {
+                totalTime.record();
+                System.err.println("Finished warming up.");
+            }
+
+            TreeAutomaton<Pair<String, Set<List<String>>>> afterRef = irtg.getAutomaton().intersect(refI.parse(refInput));
+
+            sw.record();
+
+            afterRef = afterRef.reduceTopDown();
+            sw.record();
+
+            Map<Integer, Integer> refDistance = afterRef.evaluateInSemiringTopDown(new DistanceSemiring(), new RuleEvaluatorTopDown<Integer>() {
+                                                                               public Integer initialValue() {
+                                                                                   return 0;
+                                                                               }
+
+                                                                               public Integer evaluateRule(Rule rule, int i) {
+                                                                                   return 1;
+                                                                               }
+                                                                           });
+
+            sw.record();
+
+            /*
+            for( int q : refDistance.keySet() ) {
+                System.err.printf("dist(%s) = %d\n", afterRef.getStateForId(q), refDistance.get(q));
+            }
+            
+            System.exit(0);
+             */
+//            Files.write(Paths.get("after-ref.auto"), afterRef.toString().getBytes());
+//            System.err.printf("ref done, %s\n", Util.formatTimeSince(start));
             TreeAutomaton<BitSet> invhom = (TreeAutomaton) semI.parse(semInput);
-            FOM fom = makeFom(invhom, semInput, afterRef);
+            FOM fom = makeFom(invhom, afterRef, semInput, refDistance, sem);
             IntersectionAutomaton afterSem = new IntersectionAutomaton(afterRef, invhom, fom);
             afterSem.setStopWhenFinalStateFound(true);
             afterSem.makeAllRulesExplicit();
-            
+
+            sw.record();
+//            sw.printMilliseconds("ref chart", "ref reduce", "ref distance", "sem chart");
+
             chart = afterSem;
         }
-
-        System.err.printf("%dx chart construction: %s\n", param.N, Util.formatTimeSince(start));
+        
+        totalTime.record();
+        
+        System.err.printf("chart construction time, averaged over %d iterations: %s\n", param.avgIterations, Util.formatTime(totalTime.getTimeBefore(1)/param.avgIterations));
 
         if (param.printChartFilename != null) {
             Files.write(Paths.get(param.printChartFilename), chart.toString().getBytes());
@@ -126,8 +173,8 @@ public class SurfaceRealizer {
             count++;
         }
     }
-    
-    private static FOM makeFom(TreeAutomaton<BitSet> semInvhom, BitSet targetSem, TreeAutomaton<Pair<String,Set<List<String>>>> chartAfterRef) {
+
+    private static FOM makeFom(TreeAutomaton<BitSet> semInvhom, TreeAutomaton<Pair<String, Set<List<String>>>> chartAfterRef, BitSet targetSem, Map<Integer, Integer> refDistance, SubsetAlgebra<String> sem) {
         return new FOM() {
             @Override
             public double evaluate(Rule left, CondensedRule right) {
@@ -137,27 +184,45 @@ public class SurfaceRealizer {
             @Override
             public double evaluateStates(int leftState, int rightState) {
                 BitSet rightBitset = semInvhom.getStateForId(rightState);
-                
+
                 BitSet unrealized = new BitSet();
                 unrealized.or(targetSem);
                 unrealized.andNot(rightBitset);
                 int numUnrealized = unrealized.cardinality();
-                
+
                 BitSet extraSem = new BitSet();
                 extraSem.or(rightBitset);
                 extraSem.andNot(targetSem);
                 int numExtra = extraSem.cardinality();
-                
-                Set<List<String>> ref = chartAfterRef.getStateForId(leftState).getRight();
-                int numDistractors = ref.size()-1;
-                
-                double value = 100000*numUnrealized + numDistractors + 1000*numExtra; // lexicographic sort by (numUnrealized, numExtra)
-                
-//                System.err.printf("evaluate %s + %s -> %f\n", leftAuto.getStateForId(leftState), semInvhom.getStateForId(rightState), value);
-                
+
+//                Set<List<String>> ref = chartAfterRef.getStateForId(leftState).getRight();
+//                int numDistractors = ref.size() - 1;
+                int dist = refDistance.get(leftState);
+
+                double value = 100000 * numUnrealized + 1000 * dist + numExtra; // lexicographic sort by (numUnrealized, numExtra)
+
+//                System.err.printf("evaluate %s + %s -> %f\n", chartAfterRef.getStateForId(leftState), sem.toSet(rightBitset), value);
                 return value;
             }
         };
+    }
+
+    private static class DistanceSemiring implements Semiring<Integer> {
+        @Override
+        public Integer add(Integer x, Integer y) {
+            return Math.min(x, y);
+        }
+
+        @Override
+        public Integer multiply(Integer x, Integer y) {
+            return x + y;
+        }
+
+        @Override
+        public Integer zero() {
+            return Integer.MAX_VALUE;
+        }
+
     }
 
     private static void cmdlineUsage(String errorMessage) {
@@ -188,8 +253,11 @@ public class SurfaceRealizer {
         @Parameter(names = "--sem", required = true, description = "Semantic atoms that should be expressed.")
         public String sem = null;
 
-        @Parameter(names = "-N", description = "Number of times the chart should be computed (for benchmarking).")
-        public int N = 1;
+        @Parameter(names = "--warmup", description = "Number of warmup iterations.")
+        public int warmupIterations = 0;
+        
+        @Parameter(names = "--avg", description = "Number of iterations over which runtime is averaged.")
+        public int avgIterations = 1;
 
         @Parameter(names = "--debug-tirtg", description = "Write instantiated version of the template IRTG to this filename.")
         public String debugTirtgFilename = null;
