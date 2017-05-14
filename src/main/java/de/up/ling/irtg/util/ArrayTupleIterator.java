@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  *
@@ -40,13 +41,14 @@ public class ArrayTupleIterator<T> implements Iterator<List<T>>{
         this.arrayTuple = arrayTuple;
         curPos = new int[arrayTuple.length];//initializes with 0
         boolean tempIsEmpty = false;
-        for (List<T> list : arrayTuple) {
-            if (list.isEmpty()) {
+        for (Iterable<T> list : arrayTuple) {
+            if ( ! list.iterator().hasNext() ) {
                 tempIsEmpty = true;
             }
         }
         isEmpty = tempIsEmpty;
     }
+    
     
     @Override
     public boolean hasNext() {
@@ -81,6 +83,8 @@ public class ArrayTupleIterator<T> implements Iterator<List<T>>{
         }
         return ret;
     }
+
+    
             
     
 }

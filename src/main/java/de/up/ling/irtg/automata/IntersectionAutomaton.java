@@ -911,7 +911,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         this.stopWhenFinalStateFound = stopWhenFinalStateFound;
     }
 
-    private static interface AgendaI {
+    static interface AgendaI {
         public void enqueue(int newState, int leftState, int rightState);
 
         public int dequeue();
@@ -919,7 +919,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         public boolean isEmpty();
     }
 
-    private class QueueAgenda implements AgendaI {
+    static class QueueAgenda implements AgendaI {
         private Queue<Integer> agenda = new LinkedList<>();
 
         @Override
@@ -938,7 +938,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         }
     }
 
-    private class PriorityQueueAgenda implements AgendaI {
+    static class PriorityQueueAgenda implements AgendaI {
         private IntPriorityQueue agenda = new IntHeapPriorityQueue();
         private Int2DoubleMap foms;
         private FOM fom;

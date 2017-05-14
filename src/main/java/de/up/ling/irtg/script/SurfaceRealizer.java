@@ -23,14 +23,13 @@ import de.up.ling.irtg.automata.RuleEvaluatorTopDown;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.pruning.FOM;
+import de.up.ling.irtg.automata.pruning.MultiFOM;
 import de.up.ling.irtg.codec.TemplateIrtgInputCodec;
-import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -112,7 +111,21 @@ public class SurfaceRealizer {
                 totalTime.record();
                 System.err.println("Finished warming up.");
             }
-
+            
+            /*
+            // with multi intersection
+            
+            TreeAutomaton<BitSet> semInvhom = (TreeAutomaton) semI.parse(semInput);
+            TreeAutomaton<Set<List<String>>> refInvhom = (TreeAutomaton) refI.parse(refInput);
+            MultiFOM fom = makeFom(semInvhom, refInvhom, semInput, sem, irtg.getAutomaton());
+            
+            List<TreeAutomaton> rightAutomata = Lists.newArrayList(refInvhom, semInvhom);
+            MultiIntersectionAutomaton c = new MultiIntersectionAutomaton(irtg.getAutomaton(), rightAutomata, fom);
+            c.makeAllRulesExplicit();
+            
+            chart = c;
+            */
+            
             TreeAutomaton<Pair<String, Set<List<String>>>> afterRef = irtg.getAutomaton().intersect(refI.parse(refInput));
 
             sw.record();
@@ -132,13 +145,6 @@ public class SurfaceRealizer {
 
             sw.record();
 
-            /*
-            for( int q : refDistance.keySet() ) {
-                System.err.printf("dist(%s) = %d\n", afterRef.getStateForId(q), refDistance.get(q));
-            }
-            
-            System.exit(0);
-             */
 //            Files.write(Paths.get("after-ref.auto"), afterRef.toString().getBytes());
 //            System.err.printf("ref done, %s\n", Util.formatTimeSince(start));
             TreeAutomaton<BitSet> invhom = (TreeAutomaton) semI.parse(semInput);
@@ -156,6 +162,8 @@ public class SurfaceRealizer {
         totalTime.record();
         
         System.err.printf("chart construction time, averaged over %d iterations: %s\n", param.avgIterations, Util.formatTime(totalTime.getTimeBefore(1)/param.avgIterations));
+        
+        System.err.println(chart);
 
         if (param.printChartFilename != null) {
             Files.write(Paths.get(param.printChartFilename), chart.toString().getBytes());
@@ -172,6 +180,36 @@ public class SurfaceRealizer {
 
             count++;
         }
+    }
+    
+    private static MultiFOM makeFom(TreeAutomaton<BitSet> semInvhom, TreeAutomaton<Set<List<String>>> refInvhom, BitSet targetSem, SubsetAlgebra<String> sem, TreeAutomaton<String> drtg) {
+        // right[0] = ref
+        // right[1] = sem
+        
+        return new MultiFOM() {
+            @Override
+            public double evaluate(Rule left, CondensedRule right) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public double evaluateStates(int leftState, int[] rightStates) {
+                BitSet rightBitset = semInvhom.getStateForId(rightStates[1]);
+
+                BitSet unrealized = new BitSet();
+                unrealized.or(targetSem);
+                unrealized.andNot(rightBitset);
+                int numUnrealized = unrealized.cardinality();
+                
+                Set<List<String>> ref = refInvhom.getStateForId(rightStates[0]);
+                int numDistractors = ref.size() - 1;
+                
+                double value = 100000 * numUnrealized + numDistractors; // lexicographic sort by (numUnrealized, numExtra)
+
+                System.err.printf("evaluate %s + %s + %s -> %f\n", drtg.getStateForId(leftState), refInvhom.getStateForId(rightStates[0]), sem.toSet(rightBitset), value);
+                return value;
+            }
+        };
     }
 
     private static FOM makeFom(TreeAutomaton<BitSet> semInvhom, TreeAutomaton<Pair<String, Set<List<String>>>> chartAfterRef, BitSet targetSem, Map<Integer, Integer> refDistance, SubsetAlgebra<String> sem) {

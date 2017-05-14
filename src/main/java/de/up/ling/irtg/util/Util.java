@@ -109,10 +109,14 @@ public class Util {
     
     public static int[] mapIntArray(int[] array, IntUnaryOperator fn) {
         int[] ret = new int[array.length];
-        for( int i = 0; i < array.length; i++ ) {
-            ret[i] = fn.applyAsInt(array[i]);
-        }
+        mapIntoIntArray(array, ret, fn);
         return ret;
+    }
+    
+    public static void mapIntoIntArray(int[] source, int[] target, IntUnaryOperator fn) {
+        for( int i = 0; i < source.length; i++ ) {
+            target[i] = fn.applyAsInt(source[i]);
+        }
     }
 
     public static <T> Stream<T> stream(Iterable<T> iterable) {
@@ -333,3 +337,4 @@ public class Util {
         return groups;
     }
 }
+ 
