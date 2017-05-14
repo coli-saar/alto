@@ -8,7 +8,6 @@ package de.up.ling.irtg.automata;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.automata.IntersectionAutomaton.StateDiscoveryListener;
-import de.up.ling.irtg.automata.pruning.FOM;
 import de.up.ling.irtg.automata.pruning.MultiFOM;
 import de.up.ling.irtg.util.ForeachArrayTuple;
 import de.up.ling.irtg.util.GuiUtils;
@@ -582,7 +581,7 @@ public class MultiIntersectionAutomaton extends TreeAutomaton<List> {
         public int dequeue() {
             int ret = agenda.dequeueInt();
 
-            System.err.printf("dequeue %s <%f>\n", getStateForId(ret), foms.get(ret));
+//            System.err.printf("dequeue %s <%f>\n", getStateForId(ret), foms.get(ret));
             return ret;
         }
 
