@@ -18,6 +18,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A string algebra for encoding Regular Dependency Grammars (RDGs).
@@ -55,8 +57,8 @@ import java.util.List;
  * 
  * @author koller
  */
-public class RdgAlgebra extends Algebra<List<List<String>>> {
-
+public class RdgStringAlgebra extends Algebra<List<List<String>>> {
+    public static final Pattern OA_PATTERN = Pattern.compile("\\s*([^ \\t\\n:]+)\\s*:\\s*([0-9,]+)\\s*");
     private static final boolean DEBUG = false;
 
     public static final String COMMA = ",";
@@ -65,11 +67,16 @@ public class RdgAlgebra extends Algebra<List<List<String>>> {
 
     @Override
     protected List<List<String>> evaluate(String label, List<List<List<String>>> childrenValues) {
-        String[] parts = label.split(":");
-        assert parts.length >= 2;
+        Matcher m = OA_PATTERN.matcher(label);
+        if( ! m.matches() ) {
+            throw new IllegalArgumentException("Invalid order annotation: " + label);
+        }
+        
+//        String[] parts = label.split(":");
+//        assert parts.length >= 2;
 
-        String word = parts[0];
-        String orderAnnotation = parts[1];
+        String word = m.group(1);
+        String orderAnnotation = m.group(2);
         int[] posInOA = new int[10]; // initially, all zero
 
         if (orderAnnotation.contains(COMMA_COMMA)) {
@@ -135,7 +142,7 @@ public class RdgAlgebra extends Algebra<List<List<String>>> {
         private ListMultimap<String, Integer> positionsOfWordInString;
 
         public RdgDecompositionAutomaton(List<List<String>> value) {
-            super(RdgAlgebra.this.getSignature());
+            super(RdgStringAlgebra.this.getSignature());
 
             if (value.size() != 1) {
                 throw new IllegalArgumentException("String to be parsed must have block degree 1");
@@ -165,11 +172,14 @@ public class RdgAlgebra extends Algebra<List<List<String>>> {
             } else {
                 // obtain and parse label
                 String label = getSignature().resolveSymbolId(labelId);
-                String[] parts = label.split(":");
-                assert parts.length >= 2;
-
-                String word = parts[0];
-                String orderAnnotation = parts[1];
+                Matcher m = OA_PATTERN.matcher(label);
+                
+                if( ! m.matches() ) {
+                    return Collections.EMPTY_LIST;
+                }
+                
+                String word = m.group(1);
+                String orderAnnotation = m.group(2);
                 int[] posInOA = new int[10]; // initially, all zero
 
                 // obtain child state list

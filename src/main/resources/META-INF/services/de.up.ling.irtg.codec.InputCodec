@@ -10,3 +10,4 @@ de.up.ling.irtg.codec.PtbTreeInputCodec
 de.up.ling.irtg.codec.JoshuaInputCodec
 de.up.ling.irtg.codec.BinaryIrtgInputCodec
 de.up.ling.irtg.codec.TulipacInputCodec
+de.up.ling.irtg.codec.RdgInputCodec
