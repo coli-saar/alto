@@ -174,7 +174,7 @@ public class TulipacParser {
             cmdlineUsage("No grammar file specified.");
         }
 
-        System.err.println("Alto tulipac-style TAG parser, v1.0");
+        System.err.println("Alto tulipac-style TAG parser, v1.1");
         System.err.println("Type a sentence to parse it, or type 'help' for help.\n");
 
         filename = param.grammarFilename.get(0);

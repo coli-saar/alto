@@ -18,62 +18,62 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A string algebra for encoding Regular Dependency Grammars (RDGs).
- * RDG is a mildly context-sensitive grammar formalism developed
- * by Marco Kuhlmann in his PhD thesis, and is equivalent to LCFRS.
+ * A string algebra for encoding Regular Dependency Grammars (RDGs). RDG is a
+ * mildly context-sensitive grammar formalism developed by Marco Kuhlmann in his
+ * PhD thesis, and is equivalent to LCFRS.
  * <p>
- * 
- * The operations of this algebra are of the form "word:oa", where
- * "word" is a word, and "oa" is an order annotation. Order annotations
- * are strings consisting of the digits 0 (indicating the position of the
- * word itself), 1-9 (indicating the first to ninth child, respectively),
- * and commas (indicating a "gap" between two contiguous substrings).
- * Each order annotation combines the string tuples of its children into
- * a larger string tuple, with as many entries as the <i>block degree</i>
- * of the order annotation, i.e. the number of commas plus one. If the
- * string tuple from the k-th child has block degree b, then the digit
- * k is to be used exactly b times in the order annotation.<p>
- * 
- * Unlike in Kuhlmann's work, we explicitly allow for the comma to be
- * the first or last character. This indicates a string tuple which has
- * the empty string as its first or last element, respectively. For instance,
- * the order annotation "word:0," will evaluate to the string pair (word,epsilon),
- * where epsilon is the empty string. This can be useful in modeling
- * TAG auxiliary trees where the foot note is the leftmost or rightmost leaf.
- * It is still illegal, however, to have two commas that follow each other
- * directly.<p>
- * 
- * The decomposition automaton for this algebra supports bottom-up queries,
- * but no top-down queries. Its states are tuples of spans in the string,
- * and the bottom-up rule queries simply apply the order annotation in the
- * rule to these spans. This yields a parsing algorithm that is exponential
- * in the block degree and exponential in the maximum rule rank, as in
- * Kuhlmann's thesis. There is no special treatment for well-nested order
- * annotations, which in principle support faster parsing.
- * 
+ *
+ * The operations of this algebra are of the form "word:oa", where "word" is a
+ * word, and "oa" is an order annotation. Order annotations are strings
+ * consisting of the digits 0 (indicating the position of the word itself), 1-9
+ * (indicating the first to ninth child, respectively), and commas (indicating a
+ * "gap" between two contiguous substrings). Each order annotation combines the
+ * string tuples of its children into a larger string tuple, with as many
+ * entries as the <i>block degree</i>
+ * of the order annotation, i.e. the number of commas plus one. If the string
+ * tuple from the k-th child has block degree b, then the digit k is to be used
+ * exactly b times in the order annotation.<p>
+ *
+ * Unlike in Kuhlmann's work, we explicitly allow for the comma to be the first
+ * or last character. This indicates a string tuple which has the empty string
+ * as its first or last element, respectively. For instance, the order
+ * annotation "word:0," will evaluate to the string pair (word,epsilon), where
+ * epsilon is the empty string. This can be useful in modeling TAG auxiliary
+ * trees where the foot note is the leftmost or rightmost leaf. It is still
+ * illegal, however, to have two commas that follow each other directly.<p>
+ *
+ * The decomposition automaton for this algebra supports bottom-up queries, but
+ * no top-down queries. Its states are tuples of spans in the string, and the
+ * bottom-up rule queries simply apply the order annotation in the rule to these
+ * spans. This yields a parsing algorithm that is exponential in the block
+ * degree and exponential in the maximum rule rank, as in Kuhlmann's thesis.
+ * There is no special treatment for well-nested order annotations, which in
+ * principle support faster parsing.
+ *
  * @author koller
  */
 public class RdgStringAlgebra extends Algebra<List<List<String>>> {
+
     public static final Pattern OA_PATTERN = Pattern.compile("\\s*([^ \\t\\n:]+)\\s*:\\s*([0-9,]+)\\s*");
     private static final boolean DEBUG = false;
 
     public static final String COMMA = ",";
     private static final String COMMA_COMMA = COMMA + COMMA;
-//    public static final String EPSILON = "-";
+
+    private static final Logger logger = Logger.getLogger(RdgStringAlgebra.class.getName());
 
     @Override
     protected List<List<String>> evaluate(String label, List<List<List<String>>> childrenValues) {
         Matcher m = OA_PATTERN.matcher(label);
-        if( ! m.matches() ) {
+        if (!m.matches()) {
             throw new IllegalArgumentException("Invalid order annotation: " + label);
         }
-        
-//        String[] parts = label.split(":");
-//        assert parts.length >= 2;
 
         String word = m.group(1);
         String orderAnnotation = m.group(2);
@@ -159,10 +159,32 @@ public class RdgStringAlgebra extends Algebra<List<List<String>>> {
             isBottomUpDeterministic = new HashSet<String>(value.get(0)).size() == n;
 
             // find word positions
+            Set<String> knownWords = collectKnownWords();
             positionsOfWordInString = ArrayListMultimap.create();
             for (int pos = 0; pos < n; pos++) {
-                positionsOfWordInString.put(w.get(pos), pos);
+                String word = w.get(pos);
+                positionsOfWordInString.put(word, pos);
+
+                if (!knownWords.contains(word)) {
+                    logger.warning("Unknown word: '" + word + "'");
+                }
             }
+        }
+
+        private Set<String> collectKnownWords() {
+            Set<String> ret = new HashSet<>();
+
+            for (String label : getSignature().getSymbols()) {
+                Matcher m = OA_PATTERN.matcher(label);
+
+                if (!m.matches()) {
+                    assert false;
+                } else {
+                    ret.add(m.group(1));
+                }
+            }
+
+            return ret;
         }
 
         @Override
@@ -173,11 +195,11 @@ public class RdgStringAlgebra extends Algebra<List<List<String>>> {
                 // obtain and parse label
                 String label = getSignature().resolveSymbolId(labelId);
                 Matcher m = OA_PATTERN.matcher(label);
-                
-                if( ! m.matches() ) {
+
+                if (!m.matches()) {
                     return Collections.EMPTY_LIST;
                 }
-                
+
                 String word = m.group(1);
                 String orderAnnotation = m.group(2);
                 int[] posInOA = new int[10]; // initially, all zero
@@ -191,7 +213,6 @@ public class RdgStringAlgebra extends Algebra<List<List<String>>> {
                 // look up positions of word
                 if (!positionsOfWordInString.containsKey(word)) {
                     return Collections.EMPTY_LIST;
-//                    throw new IllegalArgumentException("Unknown word: '" + word + "'");
                 }
 
                 List<Integer> wordPositions = positionsOfWordInString.get(word);
@@ -290,4 +311,7 @@ public class RdgStringAlgebra extends Algebra<List<List<String>>> {
         }
     }
 
+    public static Logger getLogger() {
+        return logger;
+    }
 }

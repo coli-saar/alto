@@ -91,6 +91,7 @@ public class RdgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         // make automaton rule
         String ruleLabel = Util.gensym("r");
+        ruleLabel = String.format("%s.%s\u2192%s%s", ruleLabel, parent, label, children.isEmpty() ? "" : children);
         Rule rule = auto.createRule(parent, ruleLabel, children);
         auto.addRule(rule);
         
