@@ -11,6 +11,8 @@ import java.util.*
 import java.io.*
 import com.google.common.collect.Iterators
 import de.up.ling.irtg.automata.*
+import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
@@ -140,6 +142,25 @@ class ExamplesTest {
              "left":"b c d",
              "right":"d a b c"
             ])
+    }
+    
+    //currently failing
+    @Test
+    public void testTAGCondensedAndSiblingFinder() {
+        int gold = 819;//I am confident that this is the correct value, confirmed in multiple experiments. JG
+        InterpretedTreeAutomaton irtg = piBin(new FileInputStream("examples/tests/vinkenTAG.irtb"));
+        Object input = irtg.parseString("string", "Vinken is chairman .");
+        
+        //sibling finder
+        TreeAutomaton sf = irtg.parseWithSiblingFinder("string", input);
+        assert sf.countTrees() == gold;
+        
+        //condensed
+        TreeAutomaton decomp = irtg.getInterpretation("string").getAlgebra().decompose(input);
+        CondensedTreeAutomaton condInvhom = new CondensedNondeletingInverseHomAutomaton(decomp, irtg.getInterpretation("string").getHomomorphism());
+        TreeAutomaton cond = irtg.getAutomaton().intersectCondensed(condInvhom);
+        cond.makeAllRulesExplicit();
+        assert cond.countTrees() == gold;
     }
     
 }

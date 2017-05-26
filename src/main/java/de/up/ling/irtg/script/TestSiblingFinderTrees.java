@@ -13,20 +13,16 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.NondeletingInverseHomAutomaton;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.coarse_to_fine.CoarseToFineParser;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
 import de.up.ling.irtg.codec.BinaryIrtgInputCodec;
-import de.up.ling.irtg.codec.BinaryIrtgOutputCodec;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -45,14 +41,15 @@ public class TestSiblingFinderTrees {
     //find minimal 
     
     public static void main(String[] args) throws IOException, ParserException, FileNotFoundException, ParseException {
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.fromPath("../../experimentData/grammar_37.irtg");
-        //Object input = irtg.parseString("string", "Vinken is chairman .");
-        Object input2 = irtg.parseString("string", "There no asbestos now . ''");
+//        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.fromPath("../../experimentData/grammar_37.irtg");
+//        Object input2 = irtg.parseString("string", "There no asbestos now . ''");
         //InterpretedTreeAutomaton irtg2 = InterpretedTreeAutomaton.fromString(ASBESTOS_REDUCED_IRTG_SMALL);
-        InterpretedTreeAutomaton irtg3 = new BinaryIrtgInputCodec().read(new FileInputStream("examples/tests/asbestosTAG.irtb"));
+//        InterpretedTreeAutomaton irtg3 = new BinaryIrtgInputCodec().read(new FileInputStream("examples/tests/asbestosTAG.irtb"));
+        InterpretedTreeAutomaton irtg4 = new BinaryIrtgInputCodec().read(new FileInputStream("examples/tests/vinkenTAG.irtb"));
         
-        //testLanguageSize(irtg, input);
-        testViterbi(irtg3, input2, 0.00001);
+        Object input = irtg4.parseString("string", "Vinken is chairman .");
+        testLanguageSize(irtg4, input);
+//        testViterbi(irtg3, input2, 0.00001);
 //        try {
 //            makeCondensedInvhomExplicit(irtg2, input);
 //        } catch (Throwable ex) {
@@ -64,10 +61,9 @@ public class TestSiblingFinderTrees {
     }    
     
     private static void testLanguageSize(InterpretedTreeAutomaton irtg, Object input) throws IOException, ParseException, ParserException {
-        irtg = irtg.filterForAppearingConstants("string", input);
         System.err.println("starting sf parsing..");
         TreeAutomaton sf = irtg.parseWithSiblingFinder("string", input);
-        System.err.println(sf.countTrees());
+        System.err.println("Language size: "+sf.countTrees());
         System.err.println("starting simple parsing..");
         Map<String, Object> map = new HashMap<>();
         map.put("string", input);
@@ -76,44 +72,44 @@ public class TestSiblingFinderTrees {
         TreeAutomaton invhom = new NondeletingInverseHomAutomaton(decomp, interp.getHomomorphism());
         TreeAutomaton def = new IntersectionAutomaton(irtg.getAutomaton(), invhom);
         def.makeAllRulesExplicit();
-        System.err.println(def.countTrees());
+        System.err.println("Language size: "+def.countTrees());
         System.err.println("starting condensed parsing..");
-        TreeAutomaton cond = irtg.parseCondensedWithPruning(map, new NoPruningPolicy());
         CondensedTreeAutomaton condInvhom = new CondensedNondeletingInverseHomAutomaton(decomp, interp.getHomomorphism());
-        TreeAutomaton cond2 = irtg.getAutomaton().intersectCondensed(condInvhom);
-        cond2.makeAllRulesExplicit();
-        System.err.println(cond.countTrees());
-        System.err.println(cond2.countTrees());
+        TreeAutomaton cond = irtg.getAutomaton().intersectCondensed(condInvhom);
+        cond.makeAllRulesExplicit();
+        System.err.println("Language size: "+cond.countTrees());
         
         
         
-        double th = 0;
-        String ftc = StringTools.slurp(new FileReader("../../experimentData/chen_ctf.txt"));
-        CoarseToFineParser ctfp = CoarseToFineParser.makeCoarseToFineParser(irtg, "string", ftc, th);
-                                                                          
-        System.err.println("parsing with chen CTF: ");             
-        TreeAutomaton sfCtfp = ctfp.parseInputObjectWithSF(input);
-        TreeAutomaton basicCtfp = ctfp.parseInputObject(input);
-        System.err.println(sfCtfp.countTrees());
-        System.err.println(basicCtfp.countTrees());
+//        double th = 0;
+//        String ftc = StringTools.slurp(new FileReader("../../experimentData/chen_ctf.txt"));
+//        CoarseToFineParser ctfp = CoarseToFineParser.makeCoarseToFineParser(irtg, "string", ftc, th);
+//                                                                          
+//        System.err.println("parsing with chen CTF: ");             
+//        TreeAutomaton sfCtfp = ctfp.parseInputObjectWithSF(input);
+//        TreeAutomaton basicCtfp = ctfp.parseInputObject(input);
+//        System.err.println(sfCtfp.countTrees());
+//        System.err.println(basicCtfp.countTrees());
         
         System.err.println("iteration over sf language");
         int condC = 0;
-        int cond2C = 0;
         int invhomC = 0;
         int grammarC = 0;
         //ConcreteTreeAutomaton concInvhom = invhom.asConcreteTreeAutomaton();//TODO make a test out of this
+        boolean print = true;
         for (Tree<String> tree : (Set<Tree>)sf.language()) {
             if (cond.accepts(tree)) {
                 condC++;
             }
-            if (cond2.accepts(tree)) {
-                cond2C++;
-            }
-            System.err.println(interp.getAlgebra().evaluate(tree));
-            
-            if (interp.getAlgebra().evaluate(tree).equals(input)) {
+            Tree<String> forwardImg = irtg.getInterpretation("string").getHomomorphism().apply(tree);
+            if (interp.getAlgebra().evaluate(forwardImg).equals(input)) {
                 invhomC++;
+            } else {
+                if (print) {
+                    System.err.println(interp.getAlgebra().evaluate(forwardImg));
+                    System.err.println(input);
+                    print = false;
+                }
             }
             if (irtg.getAutomaton().accepts(tree)) {
                 grammarC++;
@@ -122,27 +118,42 @@ public class TestSiblingFinderTrees {
 //                condInvhomC++;
 //            }
         }
-        System.err.println("cond: "+condC);
-        System.err.println("cond2: "+cond2C);
-        System.err.println("invhom: "+invhomC);
-        System.err.println("grammar: "+grammarC);
+        System.err.println("evaluates correctly: "+invhomC);
+        System.err.println("accepted by grammar: "+grammarC);
+        System.err.println("accepted by condensed automaton: "+condC);
         
-        System.err.println("comparing cond and ctfp");
-        int c = 0;
-        for (Tree<String> tree : (Set<Tree>)basicCtfp.language()) {
-            if (cond.accepts(tree)) {
-                c++;
-            }
-        }
-        System.err.println("cond: "+c);
         
-        c = 0;
-        for (Tree<String> tree : (Set<Tree>)cond.language()) {
-            if (basicCtfp.accepts(tree)) {
-                c++;
-            }
-        }
-        System.err.println("basicCtfp: "+c);
+        System.err.println("comparing decomp languages:");
+        TreeAutomaton decompBU = interp.getAlgebra().decompose(input).asConcreteTreeAutomatonBottomUp();
+        TreeAutomaton decompTD = interp.getAlgebra().decompose(input).asConcreteTreeAutomaton();
+        System.err.println("bottom-up: "+decompBU.countTrees());
+        System.err.println("top-down: "+decompTD.countTrees());
+        
+        System.err.println("this is very odd, if we repeat the experiment having replaced irtg with irtg.filterForAppearingConstants(\"string\",input), we get");
+        System.err.println("IRTG rules before filtering: "+Iterables.size(irtg.getAutomaton().getRuleSet()));
+        irtg = irtg.filterForAppearingConstants("string", input);
+        System.err.println("IRTG rules after filtering: "+Iterables.size(irtg.getAutomaton().getRuleSet()));
+        decompBU = irtg.getInterpretation("string").getAlgebra().decompose(input).asConcreteTreeAutomatonBottomUp();
+        decompTD = irtg.getInterpretation("string").getAlgebra().decompose(input).asConcreteTreeAutomaton();
+        System.err.println("bottom-up: "+decompBU.countTrees());
+        System.err.println("top-down: "+decompTD.countTrees());
+        
+//        System.err.println("comparing cond and ctfp");
+//        int c = 0;
+//        for (Tree<String> tree : (Set<Tree>)basicCtfp.language()) {
+//            if (cond.accepts(tree)) {
+//                c++;
+//            }
+//        }
+//        System.err.println("cond: "+c);
+//        
+//        c = 0;
+//        for (Tree<String> tree : (Set<Tree>)cond.language()) {
+//            if (basicCtfp.accepts(tree)) {
+//                c++;
+//            }
+//        }
+//        System.err.println("basicCtfp: "+c);
         
     }
     

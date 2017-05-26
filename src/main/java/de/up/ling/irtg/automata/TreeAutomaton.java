@@ -1407,7 +1407,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public ConcreteTreeAutomaton asConcreteTreeAutomatonBottomUp() {
         ConcreteTreeAutomaton ret = new ConcreteTreeAutomaton(getSignature());
         processAllRulesBottomUp(rule -> ret.addRule(ret.createRule(getStateForId(rule.getParent()), rule.getLabel(this), getStatesFromIds(rule.getChildren()))));
-        finalStates.stream().forEach(finalState -> ret.addFinalState(finalState));
+        finalStates.stream().forEach(finalState -> ret.addFinalState(ret.getIdForState(getStateForId(finalState))));
         return ret;
         //return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
     }
