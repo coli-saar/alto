@@ -233,6 +233,11 @@ public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
     }
     
     public boolean isLoop() {
-        return getArity() == 1 && children[0] == parent;
+        for (int child : children) {
+            if (child == parent) {
+                return true;
+            }
+        }
+        return false;
     }
 }
