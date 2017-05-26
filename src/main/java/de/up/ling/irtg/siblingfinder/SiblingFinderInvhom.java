@@ -147,6 +147,7 @@ public class SiblingFinderInvhom<State> implements Intersectable<State> {
         Tree<HomomorphismSymbol> term = hom.get(ruleLabel);
         int arity = hom.getSourceSignature().getArity(ruleLabel);
         
+        //initialize constant in this term
         if (!isPrecomputed.get(ruleLabel)) {
             isPrecomputed.set(ruleLabel);
             for (String path : termAndLeafNr2Path.get(ruleLabel)) {
@@ -160,7 +161,6 @@ public class SiblingFinderInvhom<State> implements Intersectable<State> {
         }
         
         String pathHere = leafPath;
-
         //introduce rhsState at variable
         Map<String, Int2ObjectMap<List<Pair<int[], Double>>>> pos2State2Vars = labelAndPosAndStateToVariablesAndWeights.get(ruleLabel);
         if (pos2State2Vars == null) {

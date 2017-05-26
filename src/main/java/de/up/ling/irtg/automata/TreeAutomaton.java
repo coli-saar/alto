@@ -43,6 +43,8 @@ import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -2964,8 +2966,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
-     * Iterates through all rules top-down, applying processingFunction to each
-     * rule found. Returns true if a final state was found.
+     * Iterates through all rules bottom-up with the use of sibling-finders,
+     * applying processingFunction to each rule found.
+     * Returns true if a final state was found.
      *
      * @param processingFunction
      * @return
@@ -3055,6 +3058,91 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return ret;
     }
 
+    /**
+     * Applies the ruleConsumer and loopRuleConsumer to all rules in bottom-up order.
+     * Applies loopRuleConsumer to rules where isLoop is true, and ruleConsumer to
+     * all other rules. Note: this calls makeAllRulesExplicit.
+     * @param ruleConsumer
+     * @param loopRuleConsumer 
+     */
+    public void ckyDfsInBottomUpOrder(Consumer<Rule> ruleConsumer, Consumer<Rule> loopRuleConsumer) {
+        makeAllRulesExplicit();
+        Int2BooleanMap visited = new Int2BooleanOpenHashMap();
+        for (int finalState : finalStates) {
+            ckyDfsInBottomUpOrder(finalState, visited, 0, ruleConsumer, loopRuleConsumer);
+        }
+    }
+    
+    /**
+     * Recursively expands the state q top-down, applying ruleConsumer to all
+     * encountered productive rules in bottom-up order.
+     * Returns true iff q is productive.
+     * @param q
+     * @param visited
+     * @param depth
+     * @param ruleConsumer
+     * @return 
+     */
+    private boolean ckyDfsInBottomUpOrder(int q, Int2BooleanMap visited, int depth, Consumer<Rule> ruleConsumer, Consumer<Rule> loopRuleConsumer) {
+        List<Rule> loopRules = new ArrayList<>();
+
+        if (!visited.containsKey(q)) {
+
+            boolean qProductive = false;
+
+            for (final Rule rule : getRulesTopDown(q)) {
+                
+                // If the right rule is a "self-loop", i.e. of the form q -> f(q),
+                // the normal DFS doesn't work. We give it special treatment by
+                // postponing its combination with the right rules until below.
+                if (rule.isLoop()) {
+                    loopRules.add(rule);
+                    // make sure that all non-loopy children have been explored
+                    for (int i = 0; i < rule.getArity(); i++) {
+                        int ch = rule.getChildren()[i];
+                        if (ch != rule.getParent()) {
+                            ckyDfsInBottomUpOrder(ch, visited, depth + 1, ruleConsumer, loopRuleConsumer);
+                        }
+                    }
+                    continue;
+                }
+
+                int[] rightChildren = rule.getChildren();
+
+                boolean ruleProductive = true;
+                // iterate over all children in the right rule
+                for (int i = 0; i < rule.getArity(); ++i) {
+                    // go into the recursion first to obtain the topological order that is needed for the CKY algorithm
+                    if (!ckyDfsInBottomUpOrder(rightChildren[i], visited, depth + 1, ruleConsumer, loopRuleConsumer)) {
+                        ruleProductive = false;
+                    }
+                }
+
+                if (ruleProductive) {
+                    ruleConsumer.accept(rule);
+                    qProductive = true;
+                }
+                    
+            }
+
+            // Now that we have seen all children of q through rules that
+            // are not self-loops, go through the self-loops and process them.
+            if (qProductive) {
+                // If q is not productive, any loopy expansions will be
+                // unproductive, so we can skip them.
+
+                for (Rule rightRule : loopRules) {
+                    loopRuleConsumer.accept(rightRule);
+                    
+                }
+            }
+            visited.put(q, qProductive);
+            return qProductive;
+        } else {
+            return visited.get(q);
+        }
+    }
+    
     @OperationAnnotation(code = "countStates")
     public int getNumberOfSeenStates() {
         return stateInterner.getNextIndex() - 1;

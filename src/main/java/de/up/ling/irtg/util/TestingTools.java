@@ -18,6 +18,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser;
 import de.up.ling.irtg.automata.language_iteration.EvaluatedItem;
 import de.up.ling.irtg.automata.language_iteration.ItemEvaluator;
 import de.up.ling.irtg.automata.language_iteration.UnevaluatedItem;
+import de.up.ling.irtg.codec.BinaryIrtgInputCodec;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
@@ -88,6 +89,10 @@ public class TestingTools {
         return new IrtgInputCodec().read(s);
     }
 
+    public static InterpretedTreeAutomaton piBin(InputStream r) throws IOException, de.up.ling.irtg.codec.CodecParseException {
+        return new BinaryIrtgInputCodec().read(r);
+    }
+    
     public static InterpretedTreeAutomaton pi(InputStream r) throws IOException, de.up.ling.irtg.codec.CodecParseException {
         return InterpretedTreeAutomaton.read(r);
     }

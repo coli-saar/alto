@@ -19,7 +19,6 @@ import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.binarization.InsideRuleFactory;
 import de.up.ling.irtg.codec.BinaryIrtgInputCodec;
-import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.CpuTimeStopwatch;

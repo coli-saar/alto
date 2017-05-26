@@ -60,6 +60,7 @@ public class CondensedCoarsestParser<InvhomState> {
         });
     }
 
+    //TODO: can this be done with the new, more generic TreeAutomaton#ckyDfsForStatesInBottomUpOrder? (JG)
     private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, Int2ObjectMap<IntSet> partners, int depth) {
         final IntList foundPartners = new IntArrayList();
         List<CondensedRule> loopRules = new ArrayList<>();
