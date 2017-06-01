@@ -97,6 +97,10 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
             numTrees = automaton.countTrees();
             languageSizeLabel.setText("of " + numTrees);
         }
+        
+        if( irtg == null ) {
+            miAddView.setEnabled(false);
+        }
 
         goToTree(0);
     }
@@ -135,7 +139,7 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
                 // recalculate mapping of dt node to term nodes
                 twi = currentIrtg.interpretWithPointers(tree);
             } else {
-                twi = null;
+                twi = new TreeWithInterpretations(tree);
             }
 
             currentTree = tree;
