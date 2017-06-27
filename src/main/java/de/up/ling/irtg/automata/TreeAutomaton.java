@@ -1230,8 +1230,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Computes a string representation of this automaton. This method
      * elaborates the rules of the automaton in a top-down fashion, starting
-     * with the final states and working from parents to children. TODO *** this
-     * is no longer true!
+     * with the final states and working from parents to children.
      *
      * @return
      */
@@ -1330,6 +1329,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                     //storeRuleBottomUp(rule);
                     //storeRuleTopDown(rule);
                 });
+                
+                System.err.println("** WARNING ** Invalid use of TreeAutomaton#makeAllRulesExplicit.");
             }
 
             ruleStore.setExplicit(true);
