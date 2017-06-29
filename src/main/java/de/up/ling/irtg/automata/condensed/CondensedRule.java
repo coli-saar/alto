@@ -225,15 +225,14 @@ public class CondensedRule implements AbstractRule {
         return Arrays.equals(this.children, other.children);
     }
 
+    @Override
     public boolean isLoop() {
-        for( int i = 0; i < children.length; i++ ) {
-            if( children[i] == parent ) {
+        for (int child : children) {
+            if (child == parent) {
                 return true;
             }
         }
-        
         return false;
-//        return getArity() == 1 && children[0] == parent;
     }
 
 }
