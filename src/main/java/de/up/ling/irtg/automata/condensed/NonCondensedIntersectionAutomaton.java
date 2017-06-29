@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -52,6 +53,8 @@ import java.util.function.Supplier;
  * performance benefits of condensed automata.
  *
  * @author koller
+ * @param <LeftState>
+ * @param <RightState>
  */
 public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
 
@@ -79,7 +82,7 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
     
     public NonCondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper, boolean debug) {
         this(left, right, sigMapper);
-        this.DEBUG = debug;
+        NonCondensedIntersectionAutomaton.DEBUG = debug;
     }
 
     protected void collectOutputRule(Rule outputRule) {
@@ -129,7 +132,7 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
 
             // Perform a DFS in the right automaton to find all partner states
             IntSet visited = new IntOpenHashSet();
-            right.getFinalStates().forEach((q) -> {
+            right.getFinalStates().forEach((IntConsumer) (q) -> {
                 // starting the dfs by the final states ensures a topological order
                 ckyDfsForStatesInBottomUpOrder(q, visited, partners, 0);
             });
@@ -414,7 +417,7 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
     // get all states for this automaton, that are the result of the combination of a state in the
     // leftStates set and one in the rightStates set
     private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet pairStates) {
-        leftStates.forEach((leftState) -> {
+        leftStates.forEach((IntConsumer) (leftState) -> {
             rightStates.stream().map((rightState) -> getStateMapping(leftState, rightState))
                     .filter((state) ->
                             (state != 0)).forEach((state) -> {
@@ -458,10 +461,9 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
      * @param showViterbiTrees
      * @param icall what intersection should be used?
      * @throws FileNotFoundException
-     * @throws ParseException
+     * @throws de.up.ling.tree.ParseException
      * @throws IOException
      * @throws ParserException
-     * @throws AntlrIrtgBuilder.ParseException
      */
     public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, de.up.ling.tree.ParseException, IOException, ParserException, de.up.ling.irtg.codec.CodecParseException {
         if (args.length != 5) {
@@ -562,7 +564,7 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
             } catch (IOException ex) {
                 System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
             }
-        } catch (Exception ex) {
+        } catch (IOException | ParserException ex) {
             System.out.println("Error while writing to file:" + ex.getMessage());
             ex.printStackTrace(System.err);
         }

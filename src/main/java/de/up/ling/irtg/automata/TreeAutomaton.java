@@ -75,6 +75,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
@@ -276,7 +277,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     // TODO Test this function!
     public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
-        labelIds.forEach(labelId -> {
+        labelIds.forEach((java.util.function.IntConsumer) labelId -> {
             if (signature.getArity(labelId) == childStateSets.size()) {
                 FastutilUtils.forEachIntCartesian(childStateSets, childStates -> {
                                               Iterable<Rule> rules = getRulesBottomUp(signatureMapper.remapForward(labelId), childStates);
@@ -2207,7 +2208,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     public void foreachStateInBottomUpOrder(BottomUpStateVisitor visitor) {
         IntSet visited = new IntOpenHashSet();
-        getFinalStates().forEach(q -> foreachStateInBottomUpOrder(q, visited, visitor));
+        getFinalStates().forEach((IntConsumer) q -> foreachStateInBottomUpOrder(q, visited, visitor));
     }
 
     private void foreachStateInBottomUpOrder(int q, IntSet visited, BottomUpStateVisitor visitor) {

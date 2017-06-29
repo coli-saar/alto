@@ -21,12 +21,14 @@ import it.unimi.dsi.fastutil.ints.IntSets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
  *
  * @author koller
+ * @param <InvhomState>
  */
 public class CondensedCoarsestParser<InvhomState> {
 
@@ -54,7 +56,7 @@ public class CondensedCoarsestParser<InvhomState> {
 
         Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<>();
         IntSet visited = new IntOpenHashSet();
-        invhom.getFinalStates().forEach((q) -> {
+        invhom.getFinalStates().forEach((IntConsumer) (q) -> {
             // starting the dfs by the final states ensures a topological order
             ckyDfsForStatesInBottomUpOrder(q, visited, partners, 0);
         });

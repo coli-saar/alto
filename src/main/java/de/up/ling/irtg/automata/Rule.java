@@ -232,6 +232,7 @@ public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
         return ret;
     }
     
+    @Override
     public boolean isLoop() {
         for (int child : children) {
             if (child == parent) {

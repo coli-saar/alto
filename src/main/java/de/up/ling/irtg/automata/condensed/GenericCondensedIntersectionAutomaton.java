@@ -41,6 +41,7 @@ import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -120,7 +121,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 //            System.err.println("\n\nright: " + right + "\n\n");
             // Perform a DFS in the right automaton to find all partner states
             IntSet visited = new IntOpenHashSet();
-            right.getFinalStates().forEach((q) -> {
+            right.getFinalStates().forEach((IntConsumer) (q) -> {
                 // starting the dfs by the final states ensures a topological order
                 ckyDfsForStatesInBottomUpOrder(q, visited, partners, 0);
             });
@@ -384,11 +385,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     // get all states for this automaton, that are the result of the combination of a state in the
     // leftStates set and one in the rightStates set
     private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet pairStates) {
-        leftStates.forEach((leftState) -> {
+        leftStates.forEach((IntConsumer) (leftState) -> {
             rightStates.stream().map((rightState) -> getStateMapping(leftState, rightState))
                     .filter((state) ->
                             (state != 0)).forEach((state) -> {
-                pairStates.add(state);
+                pairStates.add((int) state);
             });
         });
     }
@@ -424,7 +425,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
      * @throws ParseException
      * @throws IOException
      * @throws ParserException
-     * @throws AntlrIrtgBuilder.ParseException
      */
     public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.codec.CodecParseException {
         if (args.length != 5) {
@@ -525,7 +525,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             } catch (IOException ex) {
                 System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
             }
-        } catch (Exception ex) {
+        } catch (IOException | ParserException ex) {
             System.out.println("Error while writing to file:" + ex.getMessage());
             ex.printStackTrace(System.err);
         }

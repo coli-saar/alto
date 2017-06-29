@@ -177,7 +177,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
         private int[] words;
         private IntSet allLabels;
-        private boolean isBottomUpDeterministic;
+        private final boolean isBottomUpDeterministic;
 
         public CkyAutomaton(List<String> words) {
             super(StringAlgebra.this.getSignature());
@@ -207,7 +207,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
             // automaton becomes nondeterministic if the same word
             // occurs twice in the string
-            isBottomUpDeterministic = new HashSet<String>(words).size() == words.size();
+            isBottomUpDeterministic = new HashSet<>(words).size() == words.size();
         }
 
         @Override
@@ -476,10 +476,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             if (this.start != other.start) {
                 return false;
             }
-            if (this.end != other.end) {
-                return false;
-            }
-            return true;
+            return this.end == other.end;
         }
 
         @Override
@@ -534,7 +531,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
             for (int i = 1; i <= hom.getMaxLabelSetID(); i++) {
                 IntSet labelSet = hom.getLabelSetByLabelSetID(i);
-                int someLabel = labelSet.intIterator().nextInt();
+                int someLabel = labelSet.iterator().nextInt();
                 int arity = srcSignature.getArity(someLabel);
 
                 switch (arity) {
