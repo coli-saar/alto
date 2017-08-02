@@ -64,17 +64,6 @@ public class WideStringAlgebra extends StringAlgebra {
     }
 
     @Override
-    public List<String> evaluate(Tree<String> t) {
-        List<List<String>> kids = new ArrayList<>(t.getChildren().size());
-        
-        for(int i=0;i<t.getChildren().size();++i) {
-            kids.add(this.evaluate(t.getChildren().get(i)));
-        }
-        
-        return this.evaluate(t.getLabel(), kids);
-    }
-
-    @Override
     protected List<String> evaluate(String label, List<List<String>> childrenValues) {
         List<String> val = new ArrayList<>();
         
