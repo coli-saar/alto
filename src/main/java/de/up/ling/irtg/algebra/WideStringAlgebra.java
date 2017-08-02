@@ -9,11 +9,13 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.StringAlgebraSeed;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +63,40 @@ public class WideStringAlgebra extends StringAlgebra {
         return new WideCkyAutomaton(value);
     }
 
+    @Override
+    public List<String> evaluate(Tree<String> t) {
+        List<List<String>> kids = new ArrayList<>(t.getChildren().size());
+        
+        for(int i=0;i<t.getChildren().size();++i) {
+            kids.add(this.evaluate(t.getChildren().get(i)));
+        }
+        
+        return this.evaluate(t.getLabel(), kids);
+    }
+
+    @Override
+    protected List<String> evaluate(String label, List<List<String>> childrenValues) {
+        List<String> val = new ArrayList<>();
+        
+        if(label.equals(SPECIAL_STAR)) {
+            val.add("*");
+            return val;
+        }
+        
+        if(childrenValues.size() > 0) {
+            for(int i=0;i<childrenValues.size();++i) {
+                val.addAll(childrenValues.get(i));
+            }
+            
+            return val;
+        }
+        
+        val.add(label);
+        
+        return val;
+    }
+
+
     private class WideCkyAutomaton extends TreeAutomaton<Span> {
 
         private final int[] words;
@@ -106,7 +142,7 @@ public class WideStringAlgebra extends StringAlgebra {
 
             // automaton is nondeterministic iff the same word
             // occurs twice in the string
-            isBottomUpDeterministic = new HashSet<String>(words).size() == words.size();
+            isBottomUpDeterministic = new HashSet<>(words).size() == words.size();
         }
 
         @Override
