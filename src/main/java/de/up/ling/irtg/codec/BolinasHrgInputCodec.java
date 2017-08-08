@@ -535,8 +535,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private void addEdge(String src, String tgt, String edgelabel, BolinasRule rule, Map<String, GraphNode> nameToNode) {
         GraphNode srcn = nameToNode.get(src);
         GraphNode tgtn = nameToNode.get(tgt);
-        GraphEdge e = rule.getRhsGraph().addEdge(srcn, tgtn);
-        e.setLabel(edgelabel);
+        rule.getRhsGraph().addEdge(srcn, tgtn, new GraphEdge(srcn, tgtn, edgelabel));
     }
     /**
     * A Bolinas-style hyperedge replacement grammar.

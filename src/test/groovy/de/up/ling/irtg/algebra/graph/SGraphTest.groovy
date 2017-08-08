@@ -44,9 +44,11 @@ class SGraphTest {
         assertThat(g1, is(not(g2)))
     }
     
+    //changed first graph from (w / want-01  :ARG0 (w)  :ARG1 (g))
+    //to (w / want-01  :ARG0 (g)  :ARG1 (g)), since loops are not allowed. --JG
     @Test
     public void testIso3() {
-        SGraph g1 = pg("(w / want-01  :ARG0 (w)  :ARG1 (g))");
+        SGraph g1 = pg("(w / want-01  :ARG0 (g)  :ARG1 (g))");
         SGraph g2 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))");
         assertThat(g1, is(not(g2)))
     }
@@ -62,6 +64,13 @@ class SGraphTest {
     public void testIso5() {
         SGraph g1 = pg("(u_273 / want :ARG1 (u_274 / sleep :ARG0 (u_272 / boy)) :ARG0 u_272)")
         SGraph g2 = pg("(u_27 / want :ARG0 (u_26 / boy) :ARG1 (u_28 / sleep :ARG0 u_26))")
+        assertEquals(g1, g2);
+    }
+    
+    //tests that node names do not mess up iso
+    public void testIso6() {
+        SGraph g1 = pg("(v / want-01  :ARG0 (w)  :ARG1 (b))");        
+        SGraph g2 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))");
         assertEquals(g1, g2);
     }
     
@@ -226,5 +235,22 @@ class SGraphTest {
         assert matches.get(0).isIdentical(pg("(w<1> :ARG0 (b<2>))")) || matches.get(0).isIdentical(pg("(g<1> :ARG0 (b<2>))"))
         assert matches.get(1).isIdentical(pg("(w<1> :ARG0 (b<2>))")) || matches.get(1).isIdentical(pg("(g<1> :ARG0 (b<2>))"))
     }
+    
+    @Test
+    public void testMultiedge() {
+        SGraph g = pg("(l<root> / like-01 :ARG0 (h / he) :ARG1 h)")
+        assert g.getGraph().edgeSet().size() == 2
+        assert g.getGraph().vertexSet().size() == 2
+    }
+    
+    @Test
+    public void testMultiedge2() {
+        SGraph g1 = pg("(r<root> / rt :a (o / other) :b o :c o)")
+        SGraph g2 = pg("(r2<root> / rt :b (o2 / other) :c o2 :a o2)")
+        assert g1.getGraph().edgeSet().size() == 3
+        assert g1.getGraph().vertexSet().size() == 2
+        assert g1.equals(g2)
+    }
+    
 }
 

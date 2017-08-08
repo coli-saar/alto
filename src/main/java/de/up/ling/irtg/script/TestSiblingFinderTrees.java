@@ -131,7 +131,9 @@ public class TestSiblingFinderTrees {
         
         System.err.println("this is very odd, if we repeat the experiment having replaced irtg with irtg.filterForAppearingConstants(\"string\",input), we get");
         System.err.println("IRTG rules before filtering: "+Iterables.size(irtg.getAutomaton().getRuleSet()));
+        System.err.println(irtg.getInterpretation("string").getAlgebra().getSignature());
         irtg = irtg.filterForAppearingConstants("string", input);
+        System.err.println(irtg.getInterpretation("string").getAlgebra().getSignature());
         System.err.println("IRTG rules after filtering: "+Iterables.size(irtg.getAutomaton().getRuleSet()));
         decompBU = irtg.getInterpretation("string").getAlgebra().decompose(input).asConcreteTreeAutomatonBottomUp();
         decompTD = irtg.getInterpretation("string").getAlgebra().decompose(input).asConcreteTreeAutomaton();

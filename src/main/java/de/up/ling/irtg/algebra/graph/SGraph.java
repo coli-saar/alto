@@ -23,14 +23,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
 import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DirectedMultigraph;
+import org.jgrapht.graph.SimpleDirectedGraph;
 
 /**
  * An s-graph, in the sense of <a href="http://www.cambridge.org/fr/academic/subjects/mathematics/logic-categories-and-sets/graph-structure-and-monadic-second-order-logic-language-theoretic-approach?format=HB">
@@ -46,7 +50,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * @author koller
  */
 public class SGraph{
-    private DirectedGraph<GraphNode, GraphEdge> graph;
+    private DirectedMultigraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
     private SetMultimap<String, String> nodenameToSources;
@@ -65,8 +69,8 @@ public class SGraph{
      * Creates an empty s-graph.
      */
     public SGraph() {
-        graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
-        nameToNode = new HashMap<String, GraphNode>();
+        graph = new DirectedMultigraph<>(new GraphEdgeFactory());
+        nameToNode = new HashMap<>();
         sourceToNodename = new HashMap<>();
         nodenameToSources = HashMultimap.create();
         hasCachedHashcode = false;
@@ -84,7 +88,7 @@ public class SGraph{
      * 
      * @param graph 
      */
-    SGraph(DirectedGraph<GraphNode, GraphEdge> graph) {
+    SGraph(DirectedMultigraph<GraphNode, GraphEdge> graph) {
         this.graph = graph;
 
         sourceToNodename = new HashMap<>();
@@ -153,16 +157,17 @@ public class SGraph{
      * @return the newly created edge
      */
     public GraphEdge addEdge(GraphNode src, GraphNode tgt, String label) {
-        GraphEdge e = graph.addEdge(src, tgt);
+        GraphEdge e = new GraphEdge(src, tgt, label);
+        boolean success = graph.addEdge(src, tgt, e);
 
         // TODO: figure out what causes e to be null, and
         // adjust parsing algorithm to make sure this is never attempted
-        if (e == null) {
-//            System.err.println("addEdge null: " + src.repr() + " -" + label + "-> " + tgt.repr());
-//            System.err.println("graph was: " + this);
-        } else {
+        if (success) {
             e.setLabel(label);
             invalidate();
+        } else {
+//            System.err.println("addEdge null: " + src.repr() + " -" + label + "-> " + tgt.repr());
+//            System.err.println("graph was: " + this);
         }
 
         return e;
@@ -475,7 +480,7 @@ public class SGraph{
                                              edge.getLabel());
 
             if (newEdge == null) {
-                // e.g. because an edge already existed between the two nodes
+                // e.g. because an edge with the same label already existed between the two nodes
                 return false;
             }
         }
@@ -496,7 +501,7 @@ public class SGraph{
      * @see JGraphT library at <a href="http://jgrapht.org/">http://jgrapht.org/</a>
      * @return 
      */
-    public DirectedGraph<GraphNode, GraphEdge> getGraph() {
+    public DirectedMultigraph<GraphNode, GraphEdge> getGraph() {
         return graph;
     }
 
@@ -805,32 +810,12 @@ public class SGraph{
                 }
             }
 
-            for (GraphEdge edge : graph.edgeSet()) {
-                GraphEdge edgeInOther = other.findEdge(edge, x -> x);
-                if (edgeInOther == null) {
-                    return false;
-                } else if (edge.getLabel() == null && edgeInOther.getLabel() != null) {
-                    return false;
-                } else if (!edge.getLabel().equals(edgeInOther.getLabel())) {
-                    return false;
-                }
+            if (!other.graph.edgeSet().equals(graph.edgeSet())) {
+                return false;
             }
         }
 
         return true;
-    }
-
-    private GraphEdge findEdge(GraphEdge originalEdge, Function<String, String> nodeRenaming) {
-        String remappedSrc = nodeRenaming.apply(originalEdge.getSource().getName());
-        String remappedTgt = nodeRenaming.apply(originalEdge.getTarget().getName());
-        GraphNode src = getNode(remappedSrc);
-        GraphNode tgt = getNode(remappedTgt);
-
-        if (src == null || tgt == null) {
-            return null;
-        } else {
-            return graph.getEdge(src, tgt);
-        }
     }
 
     /**
@@ -915,11 +900,16 @@ public class SGraph{
             if (src == null || tgt == null) {
                 return false;
             } else {
-                GraphEdge eInSuper = getGraph().getEdge(src, tgt);
+                Set<GraphEdge> esInSuper = getGraph().getAllEdges(src, tgt);
 
-                if (eInSuper == null) {
-                    return false;
-                } else if (e.getLabel() != null && !e.getLabel().equals(eInSuper.getLabel())) {
+                boolean hasMatchingLabel = false;
+                for (GraphEdge eInSuper : esInSuper) {
+                    if (Objects.equals(eInSuper.getLabel(), e.getLabel())) {
+                        hasMatchingLabel = true;
+                        break;
+                    }
+                }
+                if (!hasMatchingLabel) {
                     return false;
                 }
             }
@@ -1094,8 +1084,8 @@ public class SGraph{
     public boolean isIsomorphic(SGraph other) {
         GraphIsomorphismInspector iso
                 = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
-                        getGraph(),
-                        other.getGraph(),
+                        getGraphAsSimpleGraph(),
+                        other.getGraphAsSimpleGraph(),
                         new GraphNode.NodeLabelEquivalenceComparator(),
                         null);
 
@@ -1133,8 +1123,8 @@ public class SGraph{
     public boolean isIsomorphicAlsoEdges(SGraph other) {
         GraphIsomorphismInspector iso
                 = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
-                        getGraph(),
-                        other.getGraph(),
+                        getGraphAsSimpleGraph(),
+                        other.getGraphAsSimpleGraph(),
                         new GraphNode.NodeLabelEquivalenceComparator(),
                         new GraphEdge.EdgeLabelEquivalenceComparator());
 
@@ -1159,7 +1149,27 @@ public class SGraph{
             return false;
         }
     }
+    
+    private static final String MULTIEDGE_SEPARATOR = "__MULTIEDGE__";
 
+    private SimpleDirectedGraph<GraphNode, GraphEdge> getGraphAsSimpleGraph() {
+        SimpleDirectedGraph<GraphNode, GraphEdge> simpleGraph = new SimpleDirectedGraph<>(GraphEdge.class);
+        for (GraphNode node : graph.vertexSet()) {
+            simpleGraph.addVertex(node);
+        }
+        for (GraphNode n1 : graph.vertexSet()) {
+            for (GraphNode n2 : graph.vertexSet()) {
+                Set<GraphEdge> edges = graph.getAllEdges(n1, n2);
+                if (!edges.isEmpty()) {
+                    String newLabel = edges.stream().map(edge -> edge.getLabel()).sorted().collect(Collectors.joining(MULTIEDGE_SEPARATOR));
+                    simpleGraph.addEdge(n1, n2, new GraphEdge(n1, n2, newLabel));
+                }
+            }
+        }
+        return simpleGraph;
+    }
+    
+    
     /**
      * Computes a hash code for the s-graph. This implementation of hashCode
      * adds up generic label, edge, and source information for the nodes in this

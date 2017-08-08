@@ -326,7 +326,6 @@ public class Util {
         return sw.toString();
     }
     
-    
     public static <E,F> ListMultimap<E,F> groupBy(Iterable<F> elements, Function<F,E> by) {
         ListMultimap<E,F> groups = ArrayListMultimap.create();
         
@@ -336,5 +335,6 @@ public class Util {
         
         return groups;
     }
+    
 }
  

@@ -128,7 +128,7 @@ public class SComponentRepresentation {
                         IntSet vSingleton = new IntOpenHashSet();
                         vSingleton.add(vNr);
                         IntSet loopSingleton = new IntOpenHashSet();
-                        loopSingleton.add(completeGraphInfo.getEdge(vNr,vNr));
+                        loopSingleton.add(completeGraphInfo.getLoopID(vNr));
 
                         components.add(SComponent.makeComponent(vSingleton, loopSingleton, storedComponents, completeGraphInfo));
                     }

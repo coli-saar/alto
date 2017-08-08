@@ -88,16 +88,16 @@ public class SComponent {
             UndirectedGraph<Integer, Integer> ret = new Multigraph<>(new GraphInfoEdgeFactory(graphInfo));
             for (int v = 0; v < graphInfo.getNrNodes(); v++) {
                 ret.addVertex(v);
-                if (graphInfo.getEdge(v, v)>-1) {
+                if (graphInfo.getLoopID(v)>-1) {
                     ret.addVertex(v+graphInfo.getNrNodes());
-                    ret.addEdge(v, v+graphInfo.getNrNodes());
+                    ret.addEdge(v, v+graphInfo.getNrNodes(), graphInfo.getLoopID(v));
                 }
             }
             for (int edge = 0; edge < graphInfo.getNrEdges(); edge++) {
                 int v1 = graphInfo.getEdgeSource(edge);
                 int v2 = graphInfo.getEdgeTarget(edge);
                 if (v1 != v2) {
-                    ret.addEdge(v1, v2);
+                    ret.addEdge(v1, v2, edge);
                 }
             }
             return ret;
@@ -145,7 +145,7 @@ public class SComponent {
                     ret.addVertex(shiftedVs[1]);
                  //   System.err.println();
                 }
-                ret.addEdge(shiftedVs[0], shiftedVs[1]);
+                ret.addEdge(shiftedVs[0], shiftedVs[1], curE);
 
             }
             return ret;
@@ -242,12 +242,7 @@ public class SComponent {
          */
         @Override
         public Integer createEdge(Integer v, Integer v1) {
-            try {
-                return graphInfo.getEdge(v%graphInfo.getNrNodes(),v1%graphInfo.getNrNodes());
-            } catch (java.lang.Exception e) {
-                System.err.println("error in creating edge in compGraph!");
-                return 0;
-            }
+            throw new UnsupportedOperationException("SComponent.GraphInfoEdgeFactory is a dummy, do not use it to create edges!");
         }
         
     } 

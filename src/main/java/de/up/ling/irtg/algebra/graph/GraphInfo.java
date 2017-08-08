@@ -36,7 +36,7 @@ public class GraphInfo {
    
     private final int[] edgeSources;
     private final int[] edgeTargets;
-    private final int[][] edgesBySourceAndTarget;
+    private final IntSet[][] edgesBySourceAndTarget;
     private final Object2IntMap<GraphEdge> edgeToId;
     private final GraphEdge[] idToEdge;
     
@@ -94,9 +94,11 @@ public class GraphInfo {
         
         useBytes = (n+m<128);
         
-        edgesBySourceAndTarget = new int[n][n];
+        edgesBySourceAndTarget = new IntSet[n][n];
         for (int j = 0; j<n; j++){
-            Arrays.fill(edgesBySourceAndTarget[j], -1);//just to get an error when accessing a wrong entry, instead of a "silent" 0.
+            for (int k = 0; k<n; k++) {
+                edgesBySourceAndTarget[j][k] = new IntOpenHashSet();
+            }
         }
         edgeToId = new Object2IntOpenHashMap<>();
         
@@ -108,7 +110,7 @@ public class GraphInfo {
         for (GraphEdge e : graph.getGraph().edgeSet()) {
             int s = nodenameToInt.get(e.getSource().getName());
             int t = nodenameToInt.get(e.getTarget().getName());
-            edgesBySourceAndTarget[s][t] = edgeId;
+            edgesBySourceAndTarget[s][t].add(edgeId);
             edgeSourceList.add(s);
             edgeTargetList.add(t);
             edgeToId.put(e, edgeId);
@@ -123,7 +125,7 @@ public class GraphInfo {
             if (!( seenLoops.contains(vNr) || vLabel == null || vLabel.equals("") )) {
                 edgeSourceList.add(vNr);
                 edgeTargetList.add(vNr);
-                edgesBySourceAndTarget[vNr][vNr] = edgeId;
+                edgesBySourceAndTarget[vNr][vNr].add(edgeId);
                 edgeList.add(edgeId);
                 edgeId++;
             }
@@ -138,7 +140,7 @@ public class GraphInfo {
         }
         idToEdge = new GraphEdge[edgeList.size()];
         for (GraphEdge e : graph.getGraph().edgeSet()) {
-            idToEdge[edgeToId.get(e)] = e;
+            idToEdge[edgeToId.getInt(e)] = e;
         }
 
         
@@ -203,12 +205,11 @@ public class GraphInfo {
             IntSet tempList = new IntOpenHashSet();//use set such that loops dont get added twice.
             for (GraphEdge e : graph.getGraph().edgeSet()) {
                 if (vNr == getIntForNode(e.getSource().getName()) || vNr == getIntForNode(e.getTarget().getName())) {
-                    tempList.add(edgesBySourceAndTarget[getIntForNode(e.getSource().getName())][getIntForNode(e.getTarget().getName())]);
+                    tempList.add(edgeToId.getInt(e));
                 }
             }
-            int loop = edgesBySourceAndTarget[vNr][vNr];
-            if (loop > -1) {
-                tempList.add(loop);
+            for (int loop : edgesBySourceAndTarget[vNr][vNr]) {
+                tempList.add(loop);//at the moment, will only have one such loop. But this nicely covers the case where the set is empty.
             }
             res[vNr] = tempList.toIntArray();
         }
@@ -276,7 +277,7 @@ public class GraphInfo {
             }
         }
         for (int i : vertices) {
-            res.add(edgesBySourceAndTarget[i][i]);
+            res.addAll(edgesBySourceAndTarget[i][i]);
         }
         return res.toIntArray();
     }
@@ -388,8 +389,21 @@ public class GraphInfo {
      * @param target
      * @return
      */
-    public int getEdge(int source, int target) {
+    public IntSet getEdges(int source, int target) {
         return edgesBySourceAndTarget[source][target];
+    }
+    
+    //currently only support max one loop per edge, so this *should* be unique.
+    public int getLoopID(int vNr) {
+        IntSet loops = edgesBySourceAndTarget[vNr][vNr];
+        if (loops.isEmpty()) {
+            return -1;
+        } else {
+            if (loops.size() > 2) {
+                System.err.println("WARNING: more than one loop in an s-graph!");
+            }
+            return loops.iterator().nextInt();
+        }
     }
     
     /**

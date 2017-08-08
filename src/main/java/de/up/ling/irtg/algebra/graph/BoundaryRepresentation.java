@@ -53,10 +53,10 @@ public class BoundaryRepresentation {
     //}
     /**
      * creates a new BoundaryRepresentation for a subgraph T of the graph represented by completeGraphInfo.
-     * @param T
+     * @param subgraph
      * @param completeGraphInfo 
      */
-    public BoundaryRepresentation(SGraph T, GraphInfo completeGraphInfo) {
+    public BoundaryRepresentation(SGraph subgraph, GraphInfo completeGraphInfo) {
         if (completeGraphInfo.useBytes()) {
             inBoundaryEdges = new ByteBasedEdgeSet();
         } else {
@@ -73,12 +73,12 @@ public class BoundaryRepresentation {
 
         int n = completeGraphInfo.getNrNodes();
         isInBoundaryEdge = new BitSet();
-        for (String source : T.getAllSources()) {
+        for (String source : subgraph.getAllSources()) {
             int sNr = completeGraphInfo.getIntForSource(source);
             tempSourcesAllBottom = false;
-            String vName = T.getNodeForSource(source);
+            String vName = subgraph.getNodeForSource(source);
             int vNr = completeGraphInfo.getIntForNode(vName);
-            GraphNode v = T.getNode(vName);
+            GraphNode v = subgraph.getNode(vName);
             sourceToNode[completeGraphInfo.getIntForSource(source)] = (short) vNr;
             
             if (!isSourceNode.get(vNr)) {
@@ -86,18 +86,18 @@ public class BoundaryRepresentation {
             }
             if (v.getLabel() != null) {
                 if (!v.getLabel().equals("")) {
-                    inBoundaryEdges.add(vNr, vNr, completeGraphInfo);
-                    isInBoundaryEdge.set(completeGraphInfo.getEdge(vNr, vNr));
+                    inBoundaryEdges.add(completeGraphInfo.getLoopID(vNr));
+                    isInBoundaryEdge.set(completeGraphInfo.getEdges(vNr, vNr).iterator().nextInt());//currently only support max one loop per edge 
                 }
             }
-            for (GraphEdge e : T.getGraph().edgesOf(v)) {
+            for (GraphEdge e : subgraph.getGraph().edgesOf(v)) {
                 isInBoundaryEdge.set(completeGraphInfo.getEdgeId(e));
                 inBoundaryEdges.add(e, completeGraphInfo);
             }
         }
 
         sourcesAllBottom = tempSourcesAllBottom;
-        innerNodeCount = ((Collection<String>) T.getAllNonSourceNodenames()).size();
+        innerNodeCount = ((Collection<String>) subgraph.getAllNonSourceNodenames()).size();
         long temp = calculateSourceCountAndMax();
         sourceCount = NumbersCombine.getFirst(temp);
         largestSource = NumbersCombine.getSecond(temp);
@@ -135,7 +135,6 @@ public class BoundaryRepresentation {
     public SGraph getGraph() {
         SGraph wholeGraph = completeGraphInfo.getSGraph();
         SGraph T = new SGraph();
-        DirectedGraph<GraphNode, GraphEdge> g = wholeGraph.getGraph();
         List<String> activeNodes = new ArrayList<>();
 
         if (sourcesAllBottom) {
@@ -156,7 +155,7 @@ public class BoundaryRepresentation {
             String vName = activeNodes.get(i);
             GraphNode v = wholeGraph.getNode(vName);
             boolean isSource = isSource(vName, completeGraphInfo);
-            for (GraphEdge e : g.edgeSet()) {
+            for (GraphEdge e : wholeGraph.getGraph().edgeSet()) {
                 if (!isSource || isInBoundary(e, completeGraphInfo)) {
                     GraphNode target = e.getTarget();
                     GraphNode source = e.getSource();
@@ -229,7 +228,7 @@ public class BoundaryRepresentation {
         GraphNode v = wholeGraph.getNode(nodeName);
         //DirectedGraph<GraphNode, GraphEdge> G = wholeGraph.getGraph();
         //GraphEdge e = G.getEdge(v, v);
-        if ((!isSource) || inBoundaryEdges.contains(completeGraphInfo.getIntForNode(nodeName), completeGraphInfo.getIntForNode(nodeName), completeGraphInfo)) {
+        if ((!isSource) || inBoundaryEdges.contains(completeGraphInfo.getLoopID(completeGraphInfo.getIntForNode(nodeName)))) {
             return v.getLabel();
         } else {
             return null;
@@ -434,10 +433,9 @@ public class BoundaryRepresentation {
             return true;
         } else if (isSource(vNr)) {
             return false;
-        }
-        {
+        } else {
             int decidingEdge = completeGraphInfo.getDecidingEdgePWSP(sourceToNode, vNr);
-            return inBoundaryEdges.contains(completeGraphInfo.getEdgeSource(decidingEdge), completeGraphInfo.getEdgeTarget(decidingEdge), completeGraphInfo);
+            return inBoundaryEdges.contains(decidingEdge);
         }
     }
 

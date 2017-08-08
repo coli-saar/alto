@@ -4,6 +4,8 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.util.Util;
+import java.util.Objects;
 import java.util.function.Function;
 import org.jgrapht.Graph;
 import org.jgrapht.experimental.equivalence.EquivalenceComparator;
@@ -27,6 +29,12 @@ public class GraphEdge{
     public GraphEdge(GraphNode source, GraphNode target) {
         this.source = source;
         this.target = target;
+    }
+    
+    public GraphEdge(GraphNode source, GraphNode target, String label) {
+        this.source = source;
+        this.target = target;
+        this.label = label;
     }
 
     public String getLabel() {
@@ -69,7 +77,8 @@ public class GraphEdge{
     }
 
     /**
-     * Based on source and target.
+     * Based on source and target, and label. The check on the
+     * label is new in August 2017 -JG
      * @return 
      */
     @Override
@@ -77,16 +86,21 @@ public class GraphEdge{
         int hash = 5;
         hash = 97 * hash + (this.source != null ? this.source.hashCode() : 0);
         hash = 97 * hash + (this.target != null ? this.target.hashCode() : 0);
+        hash = 97 * hash + (this.label != null ? this.label.hashCode() : 0);
         return hash;
     }
 
     /**
-     * Only checks whether source and target are equal, the label is not checked.
+     * Checks whether source and target, and label are equal. The check on the
+     * label is new in August 2017 -JG
      * @param obj
-     * @return 
+     * @return
      */
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (obj == null) {
             return false;
         }
@@ -94,14 +108,25 @@ public class GraphEdge{
             return false;
         }
         final GraphEdge other = (GraphEdge) obj;
-        if (this.source != other.source && (this.source == null || !this.source.equals(other.source))) {
+        if (!Objects.equals(this.label, other.label)) {
             return false;
         }
-        if (this.target != other.target && (this.target == null || !this.target.equals(other.target))) {
+        if (!Objects.equals(this.source, other.source)) {
+            return false;
+        }
+        if (!Objects.equals(this.target, other.target)) {
             return false;
         }
         return true;
     }
+
+    /**
+     * Checks whether source and target, and label are equal. The check on the
+     * label is new in August 2017 -JG
+     * @param obj
+     * @return 
+     */
+    
     
     
     static class EdgeLabelEquivalenceComparator implements EquivalenceComparator<GraphEdge, Graph<GraphNode, GraphEdge>> {

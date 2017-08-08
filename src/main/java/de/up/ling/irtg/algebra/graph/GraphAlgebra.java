@@ -542,6 +542,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * @throws Exception
      * @return
      */
+    @Deprecated
     public static GraphAlgebra makeCompleteDecompositionAlgebra(SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
         Signature sig = new Signature();
@@ -564,17 +565,12 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 if (!source2.equals(source1)) {
                     sig.addSymbol("r_" + source1 + "_" + source2, 1);
                     sig.addSymbol("s_" + source1 + "_" + source2, 1);
-                    for (String vName1 : graph.getAllNodeNames()) {
-                        for (String vName2 : graph.getAllNodeNames()) {
-                            if (!vName1.equals(vName2)) {
-                                GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
-                                if (e != null) {
-                                    String edgeLabel = e.getLabel();
-                                    if (!seenEdgeLabels.contains(edgeLabel)){
-                                        seenEdgeLabels.add(edgeLabel);
-                                        sig.addSymbol("(" + vName1 + "<" + source1 + "> :" + edgeLabel + " (" + vName2 + "<" + source2 + ">))", 0);
-                                    }
-                                }
+                    for (GraphEdge e : graph.getGraph().edgeSet()) {
+                        if (e != null) {
+                            String edgeLabel = e.getLabel();
+                            if (!seenEdgeLabels.contains(edgeLabel)){
+                                seenEdgeLabels.add(edgeLabel);
+                                sig.addSymbol("(" + e.getSource().getName() + "<" + source1 + "> :" + edgeLabel + " (" + e.getTarget().getName() + "<" + source2 + ">))", 0);
                             }
                         }
                     }
@@ -629,23 +625,18 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             }
         }
         Set<String> seenEdgeLabels = new HashSet<>();
-        for (String vName1 : graph.getAllNodeNames()) {
-            for (String vName2 : graph.getAllNodeNames()) {
-                String internalVName1 = "u";
-                String internalVName2 = "v";
-                if (!vName1.equals(vName2)) {
-                    GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
-                    if (e != null) {
-                        String edgeLabel = e.getLabel();
-                        if (!seenEdgeLabels.contains(edgeLabel)){
-                            seenEdgeLabels.add(edgeLabel);
-                            Iterator<String> it = sources.iterator();
-                            String s1 = it.next();
-                            String s2 = it.next();
-                            sig.addSymbol("(" + internalVName1 + "<" + s1 + "> :" + edgeLabel + " (" + internalVName2 + "<" + s2 + ">))", 0);
-                            sig.addSymbol("(" + internalVName2 + "<" + s2 + "> :" + edgeLabel + " (" + internalVName1 + "<" + s1 + ">))", 0);
-                        }
-                    }
+        for (GraphEdge edge : graph.getGraph().edgeSet()) {
+            String internalVName1 = "u";
+            String internalVName2 = "v";
+            if (edge != null) {
+                String edgeLabel = edge.getLabel();
+                if (!seenEdgeLabels.contains(edgeLabel)){
+                    seenEdgeLabels.add(edgeLabel);
+                    Iterator<String> it = sources.iterator();
+                    String s1 = it.next();
+                    String s2 = it.next();
+                    sig.addSymbol("(" + internalVName1 + "<" + s1 + "> :" + edgeLabel + " (" + internalVName2 + "<" + s2 + ">))", 0);
+                    sig.addSymbol("(" + internalVName2 + "<" + s2 + "> :" + edgeLabel + " (" + internalVName1 + "<" + s1 + ">))", 0);
                 }
             }
         }
@@ -726,31 +717,28 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         }
 
         Set<String> seenEdgeLabels = new HashSet<>();
-        for (String vName1 : graph.getAllNodeNames()) {
-            for (String vName2 : graph.getAllNodeNames()) {
-                if (!vName1.equals(vName2)) {
-                    GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
-                    if (e != null) {
-                        String edgeLabel = e.getLabel();
-                        if (!seenEdgeLabels.contains(edgeLabel)){
-                            seenEdgeLabels.add(edgeLabel);
-                            Iterator<String> it = sources.iterator();
-                            String s1 = it.next();
-                            String s2 = it.next();
+        for (GraphEdge edge : graph.getGraph().edgeSet()) {
+            String vName1 = "u";
+            String vName2 = "v";
+            if (edge != null) {
+                String edgeLabel = edge.getLabel();
+                if (!seenEdgeLabels.contains(edgeLabel)){
+                    seenEdgeLabels.add(edgeLabel);
+                    Iterator<String> it = sources.iterator();
+                    String s1 = it.next();
+                    String s2 = it.next();
 
-                            String algString = "(" + vName1 + "<" + s1 + "> :" + edgeLabel + " (" + vName2 + "<" + s2 + ">))";
-                            sig.addSymbol(algString, 0);
-                            writer.println(nonterminal + transition + edgeLabel + "EDGE");
-                            writer.println(strGraph + "\"" + algString + "\"");
-                            writer.println();
+                    String algString = "(" + vName1 + "<" + s1 + "> :" + edgeLabel + " (" + vName2 + "<" + s2 + ">))";
+                    sig.addSymbol(algString, 0);
+                    writer.println(nonterminal + transition + edgeLabel + "EDGE");
+                    writer.println(strGraph + "\"" + algString + "\"");
+                    writer.println();
 
-                            algString = "(" + vName1 + "<" + s2 + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))";
-                            sig.addSymbol(algString, 0);
-                            writer.println(nonterminal + transition + edgeLabel + "EDGE2");
-                            writer.println(strGraph + "\"" + algString + "\"");
-                            writer.println();
-                        }
-                    }
+                    algString = "(" + vName1 + "<" + s2 + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))";
+                    sig.addSymbol(algString, 0);
+                    writer.println(nonterminal + transition + edgeLabel + "EDGE2");
+                    writer.println(strGraph + "\"" + algString + "\"");
+                    writer.println();
                 }
             }
         }

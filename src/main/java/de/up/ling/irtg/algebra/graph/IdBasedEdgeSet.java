@@ -17,14 +17,6 @@ import java.util.function.IntConsumer;
  * @author groschwitz
  */
 abstract interface IdBasedEdgeSet {
-
-    /**
-     * Adds an edge given by its source and target node.
-     * @param source
-     * @param target
-     * @param graphInfo this is needed to find the corresponding edge id.
-     */
-    public abstract void add(int source, int target, GraphInfo graphInfo);
     
     /**
      * Adds the edge.
@@ -33,28 +25,11 @@ abstract interface IdBasedEdgeSet {
     public abstract void add(int edge);
 
     /**
-     * Returns true iff an edge with the given source and target node is contained in this set.
-     * @param source
-     * @param target
-     * @param graphInfo
-     * @return
-     */
-    public abstract boolean contains(int source, int target, GraphInfo graphInfo);
-
-    /**
      * Returns true iff this set contains the given edge.
      * @param edge
      * @return
      */
     public abstract boolean contains(int edge);
-
-    /**
-     * Removes the edge with the given source and target node from this set.
-     * @param source
-     * @param target
-     * @param graphInfo
-     */
-    public abstract void remove(int source, int target, GraphInfo graphInfo);
 
     /**
      * Returns true iff this set and the other set are disjoint. 

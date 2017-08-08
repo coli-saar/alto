@@ -46,31 +46,15 @@ class ShortBasedEdgeSet implements IdBasedEdgeSet {
         //System.err.println(ID + " created by cloning from " + input.ID);
     }
 
-    @Override
-    public void add(int source, int target, GraphInfo graphInfo) {
-        edges.add((short) graphInfo.getEdge(source,target));
-        //System.err.println(ID + " added " + NumbersCombine.combine(source, target));
-    }
 
     @Override
     public void add(int edge) {
         edges.add((short) edge);
         //System.err.println(ID + " added " + String.valueOf(edge));
     }
-
-    @Override
-    public boolean contains(int source, int target, GraphInfo graphInfo) {
-        return edges.contains((short) graphInfo.getEdge(source,target));
-    }
-
     @Override
     public boolean contains(int edge) {
         return edges.contains((short) edge);
-    }
-
-    @Override
-    public void remove(int source, int target, GraphInfo graphInfo) {
-        edges.remove((short) graphInfo.getEdge(source,target));
     }
 
     @Override
