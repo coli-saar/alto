@@ -71,4 +71,4 @@ Here's the result of parsing "the boy wants to go" with this grammar:
 * Johannes Gontrum (BSc University of Potsdam, 2015)
 * [Jonas Groschwitz](http://www.ling.uni-potsdam.de/~groschwitz)
 * [Alexander Koller](http://www.coli.uni-saarland.de/~koller/)
-* [Christoph Teichmann](https://sites.google.com/site/christophteichmanncl/)
+* [Christoph Teichmann](https://www.cteichmann.com/)
