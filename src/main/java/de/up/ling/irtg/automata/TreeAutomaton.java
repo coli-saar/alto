@@ -106,6 +106,7 @@ import java.util.stream.Collectors;
  * automaton; this is expensive, and is noted in the method descriptions.
  *
  * @author koller
+ * @param <State> The type of the states that the rules of the automaton use.
  */
 public abstract class TreeAutomaton<State> implements Serializable, Intersectable<State> {
 
@@ -132,7 +133,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     protected boolean isKnownToBeTopDownReduced = false;
 
     public TreeAutomaton(Signature signature) {
-        this(signature, new Interner<State>());
+        this(signature, new Interner<>());
     }
 
     protected TreeAutomaton(Signature signature, Interner<State> stateInterner) {
@@ -262,7 +263,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Iterable<Rule> getRulesBottomUp(IntSet labelIds, List<Integer> childStates) {
-        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
+        List<Iterable<Rule>> ruleSets = new ArrayList<>();
 
         for (int label : labelIds) {
             Iterable<Rule> it = getRulesBottomUp(label, childStates);
@@ -296,7 +297,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     protected static List<Integer> intArrayToList(int[] ints) {
-        List<Integer> ret = new ArrayList<Integer>();
+        List<Integer> ret = new ArrayList<>();
         for (int i : ints) {
             ret.add(i);
         }
@@ -338,7 +339,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         if (ruleStore.isExplicit()) {
             return ruleStore.getRulesTopDown(parentState);
         } else {
-            List<Iterable<Rule>> ruleLists = new ArrayList<Iterable<Rule>>();
+            List<Iterable<Rule>> ruleLists = new ArrayList<>();
 
             for (int label : getLabelsTopDown(parentState)) {
                 ruleLists.add(getRulesTopDown(label, parentState));
@@ -782,11 +783,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public long countTrees() {
-        Map<Integer, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<Long>() {
-                                                public Long evaluateRule(Rule rule) {
-                                                    return 1L;
-                                                }
-                                            });
+        Map<Integer, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), (Rule rule) -> 1L);
 
         long ret = 0L;
         for (int f : getFinalStates()) {
@@ -802,11 +799,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Int2ObjectMap<Double> inside() {
-        return evaluateInSemiring(new DoubleArithmeticSemiring(), new RuleEvaluator<Double>() {
-                              public Double evaluateRule(Rule rule) {
-                                  return rule.getWeight();
-                              }
-                          });
+        return evaluateInSemiring(new DoubleArithmeticSemiring(), (Rule rule) -> rule.getWeight());
     }
 
     /**
@@ -818,10 +811,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public Map<Integer, Double> outside(final Map<Integer, Double> inside) {
         return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<Double>() {
+                                     @Override
                                      public Double initialValue() {
                                          return 1.0;
                                      }
 
+                                     @Override
                                      public Double evaluateRule(Rule rule, int i) {
                                          Double ret = rule.getWeight();
                                          for (int j = 0; j < rule.getArity(); j++) {
@@ -971,7 +966,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Set<Tree<Integer>> languageRaw() {
-        Set<Tree<Integer>> ret = new HashSet<Tree<Integer>>();
+        Set<Tree<Integer>> ret = new HashSet<>();
         Iterator<Tree<Integer>> it = languageIteratorRaw();
 
         while (it.hasNext()) {
@@ -990,7 +985,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Set<Tree<String>> language() {
-        Set<Tree<String>> ret = new HashSet<Tree<String>>();
+        Set<Tree<String>> ret = new HashSet<>();
         Iterator<Tree<Integer>> it = languageIteratorRaw();
 
         while (it.hasNext()) {
@@ -1185,7 +1180,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             return false;
         }
 
-        List<Rule> tmp = new ArrayList<Rule>();
+        List<Rule> tmp = new ArrayList<>();
         Iterables.addAll(tmp, r2);
 
         for (Rule r : r1) {
@@ -1242,14 +1237,14 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
         for (Rule rule : getRuleSet()) {
             if (isRulePrinting(rule)) {
-                buf.append(rule.toString(this, getFinalStates().contains(rule.getParent())) + "\n");
+                buf.append(rule.toString(this, getFinalStates().contains(rule.getParent()))).append("\n");
             } else {
                 countSuppressed++;
             }
         }
 
         if (countSuppressed > 0) {
-            buf.append("(" + countSuppressed + " rules omitted)\n");
+            buf.append("(").append(countSuppressed).append(" rules omitted)\n");
         }
 
         return buf.toString();
@@ -1347,7 +1342,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public ConcreteTreeAutomaton<State> asConcreteTreeAutomaton() {
-        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<>();
         ret.signature = signature;
         ret.stateInterner = stateInterner;
 
@@ -1376,7 +1371,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public ConcreteTreeAutomaton<String> asConcreteTreeAutomatonWithStringStates() {
-        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
+        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();
         ret.signature = signature;
 
         makeAllRulesExplicit();
@@ -1406,9 +1401,10 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * @return
      */
-    public ConcreteTreeAutomaton asConcreteTreeAutomatonBottomUp() {
-        ConcreteTreeAutomaton ret = new ConcreteTreeAutomaton(getSignature());
-        processAllRulesBottomUp(rule -> ret.addRule(ret.createRule(getStateForId(rule.getParent()), rule.getLabel(this), getStatesFromIds(rule.getChildren()))));
+    public ConcreteTreeAutomaton<State> asConcreteTreeAutomatonBottomUp() {        
+        ConcreteTreeAutomaton ret = new ConcreteTreeAutomaton(getSignature(),this.stateInterner);
+        processAllRulesBottomUp(rule -> ret.addRule(ret.createRule(getStateForId(rule.getParent()),
+                rule.getLabel(this), getStatesFromIds(rule.getChildren()),rule.getWeight())));
         finalStates.stream().forEach(finalState -> ret.addFinalState(ret.getIdForState(getStateForId(finalState))));
         return ret;
         //return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
@@ -1487,13 +1483,13 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectBottomUp(TreeAutomaton<OtherState> other) {
-        TreeAutomaton<Pair<State, OtherState>> ret = new IntersectionAutomaton<State, OtherState>(this, other);
+        TreeAutomaton<Pair<State, OtherState>> ret = new IntersectionAutomaton<>(this, other);
         ret.makeAllRulesExplicit();
         return ret;
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<>(this, other, signatureMapper);
         ret.makeAllRulesExplicit();
         return ret;
     }
@@ -1509,7 +1505,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 //        PruningPolicy pp = new HistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 120);
 //        PruningPolicy pp = new StatewiseHistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 10);
 
-        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signature.getIdentityMapper(), pp);
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<>(this, other, signature.getIdentityMapper(), pp);
         ret.makeAllRulesExplicit();
         return ret;
     }
@@ -1525,7 +1521,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectViterbi(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedViterbiIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedViterbiIntersectionAutomaton<>(this, other, signatureMapper);
         ret.makeAllRulesExplicit();
         return ret;
     }
@@ -1545,7 +1541,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectEarley(TreeAutomaton<OtherState> other) {
-        IntersectionAutomaton<State, OtherState> ret = new IntersectionAutomaton<State, OtherState>(this, other);
+        IntersectionAutomaton<State, OtherState> ret = new IntersectionAutomaton<>(this, other);
         ret.makeAllRulesExplicitEarley();
         return ret;
     }
@@ -1558,15 +1554,15 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public TreeAutomaton inverseHomomorphism(Homomorphism hom) {
         if (hom.isNonDeleting()) {
-            return new NondeletingInverseHomAutomaton<State>(this, hom);
+            return new NondeletingInverseHomAutomaton<>(this, hom);
         } else {
-            return new InverseHomAutomaton<State>(this, hom);
+            return new InverseHomAutomaton<>(this, hom);
         }
     }
 
     public CondensedTreeAutomaton inverseCondensedHomomorphism(Homomorphism hom) {
         if (hom.isNonDeleting()) {
-            return new CondensedNondeletingInverseHomAutomaton<State>(this, hom);
+            return new CondensedNondeletingInverseHomAutomaton<>(this, hom);
         } else {
             throw new UnsupportedOperationException("Condensed deleting Inv Hom is not implemented yet.");
         }
@@ -1655,7 +1651,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 //        System.err.println("grt " + getSignature().resolve(derivationTree) + " @" + stateInterner.resolveId(state));
         ruleLoop:
         for (Rule rule : rules) {
-            List<Tree<Rule>> childResults = new ArrayList<Tree<Rule>>();
+            List<Tree<Rule>> childResults = new ArrayList<>();
 
             for (int i = 0; i < rule.getArity(); i++) {
                 Tree<Rule> resultHere = getRuleTree(derivationTree.getChildren().get(i), rule.getChildren()[i]);
@@ -1693,24 +1689,25 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     protected Iterable<State> getStatesFromIds(final IntIterable states) {
-        return new Iterable<State>() {
-            public Iterator<State> iterator() {
-                return new Iterator<State>() {
-                    private final IntIterator it = states.iterator();
-
-                    public boolean hasNext() {
-                        return it.hasNext();
-                    }
-
-                    public State next() {
-                        return getStateForId(it.nextInt());
-                    }
-
-                    public void remove() {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-                };
-            }
+        return () -> {
+            return new Iterator<State>() {
+                private final IntIterator it = states.iterator();
+                
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext();
+                }
+                
+                @Override
+                public State next() {
+                    return getStateForId(it.nextInt());
+                }
+                
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+            };
         };
 
 //        List<State> ret = new ArrayList<State>();
@@ -1776,6 +1773,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * @param <TreeLabels>
      * @param node
+     * @param labelIdSource
      * @param subst
      * @return
      */
@@ -1898,7 +1896,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             runD1(f, labelIdSource, states);
         } else {
             boolean allChildrenSingleton = true;
-            List<IntList> stateSetsPerChild = new ArrayList<IntList>();
+            List<IntList> stateSetsPerChild = new ArrayList<>();
 
             D1aResult ret = runD1a(node, labelIdSource, subst, stateSetsPerChild);
 
@@ -1949,6 +1947,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             }
         }
 
+        @Override
         public boolean hasNext() {
             if (empty) {
                 return false;
@@ -1963,6 +1962,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             return false;
         }
 
+        @Override
         public IntList next() {
             if (first) {
                 first = false;
@@ -1983,6 +1983,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             }
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException("Not supported yet.");
         }
@@ -2072,20 +2073,20 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public double getWeightRaw(final Tree<Integer> tree) {
-        final List<Integer> children = new ArrayList<Integer>();
+        final List<Integer> children = new ArrayList<>();
 
         Set<Pair<Integer, Double>> weights = (Set<Pair<Integer, Double>>) tree.dfs(new TreeVisitor<Integer, Void, Set<Pair<Integer, Double>>>() {
             @Override
             public Set<Pair<Integer, Double>> combine(Tree<Integer> node, List<Set<Pair<Integer, Double>>> childrenValues) {
                 int f = node.getLabel();
-                Set<Pair<Integer, Double>> ret = new HashSet<Pair<Integer, Double>>();
+                Set<Pair<Integer, Double>> ret = new HashSet<>();
 
                 if (childrenValues.isEmpty()) {
                     for (Rule rule : getRulesBottomUp(f, new int[0])) {
-                        ret.add(new Pair<Integer, Double>(rule.getParent(), rule.getWeight()));
+                        ret.add(new Pair<>(rule.getParent(), rule.getWeight()));
                     }
                 } else {
-                    CartesianIterator<Pair<Integer, Double>> it = new CartesianIterator<Pair<Integer, Double>>(childrenValues);
+                    CartesianIterator<Pair<Integer, Double>> it = new CartesianIterator<>(childrenValues);
 
                     while (it.hasNext()) {
                         List<Pair<Integer, Double>> pairs = it.next();
@@ -2098,7 +2099,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                         }
 
                         for (Rule rule : getRulesBottomUp(f, children)) {
-                            ret.add(new Pair<Integer, Double>(rule.getParent(), childWeights * rule.getWeight()));
+                            ret.add(new Pair<>(rule.getParent(), childWeights * rule.getWeight()));
                         }
                     }
                 }
@@ -2153,7 +2154,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             return this;
         } else {
             IntSet reachableStates = getReachableStates();
-            ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+            ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<>();
 
             ret.signature = this.signature;
             ret.stateInterner = (Interner) stateInterner.clone();
@@ -2241,7 +2242,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     private <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
-        final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<E>();
+        final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<>();
 
         foreachStateInBottomUpOrder((state, rulesTopDown) -> {
             E accu = semiring.zero();
@@ -2344,7 +2345,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return a map assigning values in the semiring to all reachable states.
      */
     public <E> Map<Integer, E> evaluateInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown< E> evaluator) {
-        Map<Integer, E> ret = new HashMap<Integer, E>();
+        Map<Integer, E> ret = new HashMap<>();
         List<Integer> statesInOrder = getStatesInBottomUpOrder();
         Collections.reverse(statesInOrder);
 
@@ -2393,9 +2394,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public List<Integer> getStatesInBottomUpOrder() {
-        List<Integer> ret = new ArrayList<Integer>();
+        List<Integer> ret = new ArrayList<>();
 //        SetMultimap<Integer, Integer> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
-        Set<Integer> visited = new HashSet<Integer>();
+        Set<Integer> visited = new HashSet<>();
 
         // traverse all rules to compute graph
 //        Map<Integer, Map<int[], Set<Rule>>> rules = getAllRules();
@@ -2633,11 +2634,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Iterable<Tree<String>> languageIterable() {
-        return new Iterable<Tree<String>>() {
-            public Iterator<Tree<String>> iterator() {
-                return languageIterator();
-            }
-        };
+        return () -> languageIterator();
     }
 
     /**
@@ -2651,7 +2648,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public Iterator<Tree<Integer>> languageIteratorRaw() {
 //        makeAllRulesExplicit();
-        return new LanguageIterator(new SortedLanguageIterator<State>(this));
+        return new LanguageIterator(new SortedLanguageIterator<>(this));
     }
 
     /**
@@ -2674,11 +2671,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Iterator<Tree<String>> languageIterator() {
-        return Iterators.transform(languageIteratorRaw(), new Function<Tree<Integer>, Tree<String>>() {
-                               public Tree<String> apply(Tree<Integer> f) {
-                                   return getSignature().resolve(f);
-                               }
-                           });
+        return Iterators.transform(languageIteratorRaw(), getSignature()::resolve);
     }
 
     /**
@@ -2693,12 +2686,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Iterator<WeightedTree> sortedLanguageIterator() {
-        return new SortedLanguageIterator<State>(this);
+        return new SortedLanguageIterator<>(this);
     }
 
     private class LanguageIterator implements Iterator<Tree<Integer>> {
 
-        private Iterator<WeightedTree> it;
+        private final Iterator<WeightedTree> it;
 
         public LanguageIterator(Iterator<WeightedTree> it) {
             this.it = it;
@@ -3176,10 +3169,16 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return false;
     }
 
+    /**
+     * Writes the string representation of this automaton to file in the given
+     * path, overriding the file in the process.
+     * @param filename
+     * @throws IOException 
+     */
     public void dumpToFile(String filename) throws IOException {
-        PrintWriter pw = new PrintWriter(new FileWriter(filename));
-        pw.println(this);
-        pw.flush();
-        pw.close();
+        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
+            pw.println(this);
+            pw.flush();
+        }
     }
 }

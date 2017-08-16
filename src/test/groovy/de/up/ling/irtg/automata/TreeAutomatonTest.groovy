@@ -181,6 +181,14 @@ class TreeAutomatonTest{
         TreeAutomaton pre = rhs.inverseHomomorphism(h);        
         
         assertEquals(pre, pre.asConcreteTreeAutomaton());
+        
+        TreeAutomaton copy = pre.asConcreteTreeAutomatonBottomUp();
+        
+        assertEquals(pre, copy);
+        assertTrue(copy instanceof ConcreteTreeAutomaton);
+        
+        boolean b = pre.getStateInterner().is(copy.getStateInterner());
+        assertTrue(b);
     }
     
     
