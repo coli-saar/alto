@@ -45,7 +45,7 @@ public class GraphInfo {
     
     private final Map<String, Integer> sourcenameToInt;
     private final Map<String, Integer> nodenameToInt;
-    private final String[] intToSourcename;
+    private final List<String> intToSourcename;
     private final String[] intToNodename;
     
     private final int[][] incidentEdges;
@@ -58,24 +58,30 @@ public class GraphInfo {
     
     /**
     * Creates a {@code GraphInfo} object representing {@code completeGraph}, with respect to the given algebra.
+    * Sets up usage of the source names in additionalSourceNames for use in rename etc operations in BoundaryRepresentations
+    * based on this GraphInfo object.
     * Also computes distances between nodes using Floyd-Warshall , runtime O(n^3).
     * @param completeGraph
     * @param algebra
+     * @param additionalSourceNames
     */
-    public GraphInfo(SGraph completeGraph, GraphAlgebra algebra) {
+    public GraphInfo(SGraph completeGraph, GraphAlgebra algebra, Set<String> additionalSourceNames) {
         this.graph = completeGraph;
         sourcenameToInt = new HashMap<>();
         nodenameToInt = new HashMap<>();
         Set<String> sources;
         sources = algebra.getAllSourceNames();
+        if (additionalSourceNames != null) {
+            sources.addAll(additionalSourceNames);
+        }
         Signature signature = algebra.getSignature();
         
         
-        intToSourcename = new String[sources.size()];
+        intToSourcename = new ArrayList<>();
         int i = 0;
         for (String source : sources) {
+            intToSourcename.add(source);
             sourcenameToInt.put(source, i);
-            intToSourcename[i] = source;
             i++;
         }
         
@@ -196,7 +202,16 @@ public class GraphInfo {
         }
     }
     
-    
+    /**
+    * Creates a {@code GraphInfo} object representing {@code completeGraph}, with respect to the given algebra.
+    * Equivalent to calling the other constructor with an empty set of additional source names.
+    * Also computes distances between nodes using Floyd-Warshall , runtime O(n^3).
+    * @param completeGraph
+    * @param algebra
+    */
+    public GraphInfo(SGraph completeGraph, GraphAlgebra algebra) {
+        this(completeGraph, algebra, null);
+    }
     
     private int[][] computeIncidentEdges() {
         int n = getNrNodes();
@@ -223,7 +238,10 @@ public class GraphInfo {
      */
     public final int getIntForSource(String source) {
         if (!sourcenameToInt.containsKey(source)) {
-            System.err.println("unknown Source in GraphInfo#getIntForSource!");
+            synchronized(intToSourcename) {
+                intToSourcename.add(source);
+                sourcenameToInt.put(source, intToSourcename.size()-1);
+            }
         }
         return sourcenameToInt.get(source);
     }
@@ -243,7 +261,7 @@ public class GraphInfo {
      * @return 
      */
     public String getSourceForInt(int sourceID) {
-        return intToSourcename[sourceID];
+        return intToSourcename.get(sourceID);
     }
 
     /**
@@ -260,7 +278,7 @@ public class GraphInfo {
      * @return 
      */
     public int getNrSources() {
-        return intToSourcename.length;
+        return intToSourcename.size();
     }
 
     /**

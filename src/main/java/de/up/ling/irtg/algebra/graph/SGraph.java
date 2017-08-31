@@ -47,6 +47,9 @@ import org.jgrapht.graph.SimpleDirectedGraph;
  * multiple source names (i.e. the same node may be the "root"-source and
  * the "subject"-source at the same time).<p>
  * 
+ * This implementation supports multiple edges between the same nodes, as
+ * long as these edges have different labels.
+ * 
  * @author koller
  */
 public class SGraph{

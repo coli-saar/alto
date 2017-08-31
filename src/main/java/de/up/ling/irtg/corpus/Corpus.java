@@ -193,9 +193,9 @@ public class Corpus implements Iterable<Instance> {
     }
 
     /**
-     * Reads a corpus from a string format available via a reader.
-     * 
-     * 
+     * Reads a corpus from a string format available via a reader. Loads all interpretations
+     * shared by corpus and grammar. There must be at least one such interpretation,
+     * or an error is thrown.
      * @param reader
      * @param irtg
      * @return
@@ -203,142 +203,6 @@ public class Corpus implements Iterable<Instance> {
      * @throws CorpusReadingException 
      */
     public static Corpus readCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
-        Corpus ret = new Corpus();
-        boolean annotated = false;
-
-        BufferedReader br = new BufferedReader(reader);
-        List<String> interpretationOrder = new ArrayList<>();
-        Map<String, Object> currentInputs = new HashMap<>();
-        int currentInterpretationIndex = 0;
-        MutableInteger lineNumber = new MutableInteger(0);
-        String commentPrefix = null;
-
-        // first non-blank line is declaration of annotated or unannotated corpus
-        String line = readNextLine(br, lineNumber);
-
-        Matcher unannoMatcher = UNANNOTATED_CORPUS_DECLARATION_PATTERN.matcher(line);
-        if (unannoMatcher.matches()) {
-            annotated = false;
-            commentPrefix = unannoMatcher.group(1);
-            if (!CORPUS_VERSION.equals(unannoMatcher.group(2))) {
-                throw new CorpusReadingException("Expecting corpus file format version " + CORPUS_VERSION + ", but file is version " + unannoMatcher.group(1));
-            }
-        } else {
-            Matcher annoMatcher = ANNOTATED_CORPUS_DECLARATION_PATTERN.matcher(line);
-            if (annoMatcher.matches()) {
-                annotated = true;
-                commentPrefix = annoMatcher.group(1);
-                if (!CORPUS_VERSION.equals(annoMatcher.group(2))) {
-                    throw new CorpusReadingException("Expecting corpus file format version " + CORPUS_VERSION + ", but file is version " + annoMatcher.group(1));
-                }
-            }
-        }
-
-        if (commentPrefix == null) {
-            throw new CorpusReadingException("First non-blank line of corpus must be corpus declaration, but was " + line);
-        }
-
-//        System.err.println("comment pattern: |" + commentPrefix + "|");
-        // read and check header
-        while (true) {
-            line = readNextLine(br, lineNumber);
-
-            if (line == null) {
-                return ret;
-            }
-
-            String stripped = readAsComment(line, commentPrefix);
-            if (stripped == null) {
-                // first non-comment, non-empty, non-metadata-declaring line => finished reading metadata
-                break;
-            } else {
-                Matcher interpretationMatcher = INTERPRETATION_DECLARATION_PATTERN.matcher(stripped);
-                if (interpretationMatcher.matches()) {
-                    String interpretationName = interpretationMatcher.group(1);
-
-                    if (!irtg.getInterpretations().containsKey(interpretationName)) {
-                        throw new CorpusReadingException("Corpus file specified interpretation '" + interpretationName + "', which is not declared in IRTG");
-                    }
-                    
-                    String interpretationAlgebraName = interpretationMatcher.group(2);
-                    String irtgAlgebraName = irtg.getInterpretation(interpretationName).getAlgebra().getClass().getName();
-                    
-                    // too heavy-handed
-//                    if( ! interpretationAlgebraName.equals(irtgAlgebraName)) {
-//                        throw new CorpusReadingException("Corpus file uses algebra '" + interpretationAlgebraName + "' for interpretation '" + interpretationName + "', but grammar expected '" + irtgAlgebraName + "'");
-//                    }
-
-                    interpretationOrder.add(interpretationName);
-                }
-            }
-        }
-
-        if (interpretationOrder.isEmpty()) {
-            throw new CorpusReadingException("Corpus defined no interpretations");
-        }
-
-        ret.isAnnotated = annotated;
-
-        // read actual corpus
-        while (true) {
-            if (line == null) {
-                return ret;
-            }
-
-            String stripped = readAsComment(line, commentPrefix);
-            if (stripped != null) {
-                line = readNextLine(br, lineNumber);
-                continue;
-            }
-
-            String current = interpretationOrder.get(currentInterpretationIndex++);
-
-            try {
-                Object inputObject = irtg.parseString(current, line);
-                currentInputs.put(current, inputObject);
-            } catch (Throwable ex) {
-                throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ", expected interpretation " + current + ": " + ex.getMessage(), ex);
-            }
-
-            if (currentInterpretationIndex == interpretationOrder.size()) {
-                Instance inst = new Instance();
-                inst.setInputObjects(currentInputs);
-
-                if (annotated) {
-                    String annoLine = readNextLine(br, lineNumber);
-                    
-                    if (annoLine == null) {
-                        throw new CorpusReadingException("Expected a derivation tree in line " + lineNumber);
-                    }
-
-                    try {
-                        Tree<String> derivationTree = TreeParser.parse(annoLine);
-                        inst.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(derivationTree));
-                    } catch (Throwable ex) {  // TreeParser#parse can throw weird Errors, hence Throwable
-                        throw new CorpusReadingException("An error occurred while reading the derivation tree in line " + lineNumber + ": " + ex.getMessage(), ex);
-                    }
-                }
-
-                ret.instances.add(inst);
-                currentInputs = new HashMap<>();
-                currentInterpretationIndex = 0;
-            }
-
-            line = readNextLine(br, lineNumber);
-        }
-    }
-    
-    /**
-     * A version of readCorpus that allows interpretations in the corpus file to not be declared in the grammar.
-     * These interpretations are omitted in the returned corpus. Returns an error if none of the interpretations
-     * are declared in the grammar.
-     * @param reader
-     * @param irtg
-     * @return
-     * @throws IOException
-     * @throws CorpusReadingException 
-     */
-    public static Corpus readCorpusLenient(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
         Corpus ret = new Corpus();
         boolean annotated = false;
 
@@ -465,7 +329,7 @@ public class Corpus implements Iterable<Instance> {
             line = readNextLine(br, lineNumber);
         }
     }
-
+    
     private static String readNextLine(BufferedReader br, MutableInteger lineNumber) throws IOException {
         String ret = null;
 

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -31,6 +32,7 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
@@ -334,6 +336,55 @@ public class Util {
         }
         
         return groups;
+    }
+    
+    
+    /**
+     * Appends the suffix to all strings in the set, returning a new set with those
+     * strings. If keepOld is true, the new set also contains the original strings.
+     * @param set
+     * @param suffix
+     * @param keepOld
+     * @return 
+     */
+    public static Set<String> appendToAll(Set<String> set, String suffix, boolean keepOld) {
+        Set<String> ret = new HashSet<>();
+        if (keepOld) {
+            ret.addAll(set);
+        }
+        for (String string : set) {
+            ret.add(string+suffix);
+        }
+        return ret;
+    }
+    
+    /**
+     * Appends the suffix to all strings in the set, returning a new set with those
+     * strings. If keepOld is true, the new set also contains the original strings.
+     * In this version, the suffix is only added to the strings which test true
+     * with addIf; for other strings the original is kept.
+     * @param set
+     * @param suffix
+     * @param keepOld
+     * @param addIf
+     * @return 
+     */
+    public static Set<String> appendToAll(Set<String> set, String suffix, boolean keepOld, Predicate<String> addIf) {
+        if (addIf == null) {
+            return appendToAll(set, suffix, keepOld);
+        }
+        Set<String> ret = new HashSet<>();
+        if (keepOld) {
+            ret.addAll(set);
+        }
+        for (String string : set) {
+            if (addIf.test(string)) {
+                ret.add(string+suffix);
+            } else {
+                ret.add(string);
+            }
+        }
+        return ret;
     }
     
 }
