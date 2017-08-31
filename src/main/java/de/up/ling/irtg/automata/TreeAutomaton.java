@@ -37,6 +37,7 @@ import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.DebuggingWriter;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
@@ -2968,16 +2969,33 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
-     * Iterates through all rules bottom-up with the use of sibling-finders,
-     * applying processingFunction to each rule found.
-     * Returns true if a final state was found.
+     * Iterates through all rules top-down, applying processingFunction to each
+     * rule found. Returns true if a final state was found.
      *
      * @param processingFunction
      * @return
      */
     public boolean processAllRulesBottomUp(Consumer<Rule> processingFunction) {
-        boolean ret = false;
+        try {
+            return processAllRulesBottomUp(processingFunction, -1);
+        } catch (InterruptedException ex) {
+            System.err.println("processAllRulesBottomUp without time constraint ran out of time, this should never happen, check code!");
+            return false;
+        }
+    }
 
+    /**
+     * Iterates through all rules top-down, applying processingFunction to each
+     * rule found. Returns true if a final state was found.
+     *
+     * @param processingFunction
+     * @param maxMS cancel after this amount of milliseconds has passed. Ignored if negative or 0.
+     * @return
+     */
+    public boolean processAllRulesBottomUp(Consumer<Rule> processingFunction, int maxMS) throws InterruptedException {
+        CpuTimeStopwatch watch = new CpuTimeStopwatch();
+        watch.record(0);
+        boolean ret = false;
         //initialize agenda by processing constants
         IntList agenda = new IntArrayList();
         IntSet seen = new IntOpenHashSet();
@@ -3016,6 +3034,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
 
         for (int i = 0; i < agenda.size(); i++) {
+            if (maxMS > 0) {
+                watch.record(1);
+                if (watch.getTimeBefore(1)/1000000>maxMS) {
+                    throw new InterruptedException("ran out of time!");
+                }
+            }
             if (Thread.interrupted()) {
                 return ret;
             }

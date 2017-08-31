@@ -596,7 +596,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * @throws Exception
      * @return
      */
-    public static GraphAlgebra makeIncompleteDecompositionAlgebra(SGraph graph, int nrSources) throws Exception//only add empty algebra!!
+    public static GraphAlgebra makeIncompleteDecompositionAlgebra(SGraph graph, int nrSources)//only add empty algebra!!
     {
         Signature sig = new Signature();
         Set<String> sources = new HashSet<>();

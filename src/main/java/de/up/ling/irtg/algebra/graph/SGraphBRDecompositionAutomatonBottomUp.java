@@ -58,7 +58,7 @@ import java.util.Set;
  */
 public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<BoundaryRepresentation> {
 //    private final BottomUpRuleIndex storedRules;    
-    private final GraphInfo completeGraphInfo;    
+    final GraphInfo graphInfo;    
     private final GraphAlgebra algebra;
     
 
@@ -72,7 +72,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
         this.algebra = algebra;
 
-        completeGraphInfo = new GraphInfo(completeGraph, algebra);
+        graphInfo = new GraphInfo(completeGraph, algebra);
         
         ruleStore = new RuleStore(this, new MapTopDownIndex(this), new BinaryBottomUpRuleIndex(this));
         
@@ -206,7 +206,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
             for (Integer sourceToForget : arg.getForgottenSources(label, labelId))//check if we may forget.
             {
-                if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.getSGraph(), completeGraphInfo)) {
+                if (!arg.isForgetAllowed(sourceToForget)) {
                     return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;//
                 }
             }
@@ -239,12 +239,12 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             }
 
 //                System.err.println(" - looking for matches of " + sgraph + " in " + completeGraphInfo.graph);
-            completeGraphInfo.getSGraph().foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+            graphInfo.getSGraph().foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                 if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                     //ParseTester.averageLogger.increaseValue("Constants found");
                     matchedSubgraph.setEqualsMeansIsomorphy(false);
-                    rules.add(makeRule(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo), labelId, childStates));
+                    rules.add(makeRule(new BoundaryRepresentation(matchedSubgraph, graphInfo), labelId, childStates));
                 } else {
 //                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
                 }
@@ -275,23 +275,23 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     private boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
         for (String nodename : nodenames) {
             if (!subgraph.isSourceNode(nodename)) {
-                GraphNode node = completeGraphInfo.getSGraph().getNode(nodename);
+                GraphNode node = graphInfo.getSGraph().getNode(nodename);
 
-                if (!completeGraphInfo.getSGraph().getGraph().containsVertex(node)) {
+                if (!graphInfo.getSGraph().getGraph().containsVertex(node)) {
                     System.err.println("*** TERRIBLE ERROR ***");
-                    System.err.println(" int graph: " + completeGraphInfo.getSGraph());
+                    System.err.println(" int graph: " + graphInfo.getSGraph());
                     System.err.println("can't find node " + node);
                     System.err.println(" - node name: " + nodename);
                     assert false;
                 }
 
-                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().incomingEdgesOf(node)) {
+                for (GraphEdge edge : graphInfo.getSGraph().getGraph().incomingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getSource().getName()) == null) {
                         return true;
                     }
                 }
 
-                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().outgoingEdgesOf(node)) {
+                for (GraphEdge edge : graphInfo.getSGraph().getGraph().outgoingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getTarget().getName()) == null) {
                         return true;
                     }
@@ -349,7 +349,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * returns the ID of the merge label in the algebra.
      * @return 
      */
-    private int getMergeLabelID() {
+    int getMergeLabelID() {
         if (algebraIsPure == null) {
             
             algebraIsPure = true;
@@ -369,7 +369,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
-        throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
+        return ruleStore.getRulesTopDown(labelId, parentState);
     }
     
     
@@ -389,9 +389,9 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
     
     
-    private SinglesideMergePartnerFinder makeNewSinglesideMergePartnerFinder() {
+    SinglesideMergePartnerFinder makeNewSinglesideMergePartnerFinder() {
         if (isAlgebraPure()) {
-            return new DynamicMergePartnerFinder(0 , this.completeGraphInfo.getNrSources(), this.completeGraphInfo.getNrNodes(), this); //To change body of generated methods, choose Tools | Templates.
+            return new DynamicMergePartnerFinder(0 , this.graphInfo.getNrSources(), this.graphInfo.getNrNodes(), this); //To change body of generated methods, choose Tools | Templates.
         } else {
             System.err.println("WARNING: impure algebra found, falling back on SetPartnerFinder (default)");
             return new StorageMPF(this);
@@ -445,7 +445,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
     
     //original MergePartnerFinder
-    private static interface SinglesideMergePartnerFinder {
+    static interface SinglesideMergePartnerFinder {
         /**
          * stores the graph state represented by the int, for future reference
          * @param graph
@@ -587,7 +587,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
         public EdgeMPF(IntSet vertices, SGraphBRDecompositionAutomatonBottomUp auto) {
             currentIndex = -1;
-            local2GlobalEdgeIDs = auto.completeGraphInfo.getAllIncidentEdges(vertices);
+            local2GlobalEdgeIDs = auto.graphInfo.getAllIncidentEdges(vertices);
             Arrays.sort(local2GlobalEdgeIDs);
             global2LocalEdgeIDs = new Int2IntOpenHashMap();
             for (int i = 0; i<local2GlobalEdgeIDs.length; i++) {
