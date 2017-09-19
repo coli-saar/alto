@@ -29,7 +29,13 @@ import javax.swing.JComponent;
  * higher-order tree substitution. The symbols "@" and "*" from the paper are
  * represented by the binary operation "@" and the nullary operation "*" here.
  * All other strings represent the ordinary tree-combining operations, as in
- * {@link TreeAlgebra}.
+ * {@link TreeAlgebra}.<p>
+ * 
+ * Because "@" is a reserved symbol of arity 2 in this algebra, you cannot use
+ * "@" as a constant (of arity zero). This means that if you use this algebra
+ * to convert a TAG grammar into an IRTG, the TAG grammar cannot have a lexicon
+ * entry for the word "@". The easiest solution is to change your grammar so it
+ * uses a different word instead, e.g. "@@", and preprocess your corpus accordingly.
  *
  * @author koller
  */
