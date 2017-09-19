@@ -8,7 +8,8 @@ package de.up.ling.irtg.codec.tag;
 import de.saar.coli.featstruct.AvmFeatureStructure;
 import de.saar.coli.featstruct.PrimitiveFeatureStructure;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.TagTreeAlgebra;
+import static de.up.ling.irtg.algebra.TagTreeAlgebra.C;
+import static de.up.ling.irtg.algebra.TagTreeAlgebra.P1;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
@@ -41,7 +42,7 @@ import java.util.Set;
  */
 @CodecMetadata(name = "chen-tag", description = "Tree-adjoining grammar (Chen format)", type = InterpretedTreeAutomaton.class)
 public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
-    private String replacementForAtTokens = null;
+    private Map<String,String> tokenReplacements = new HashMap<>();
 
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
@@ -81,10 +82,12 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
             if (parts.length >= 2) {
                 String word = parts[1];
+                String replacement = tokenReplacements.get(word);
                 
-                if( (replacementForAtTokens != null) && TagTreeAlgebra.C.equals(word)) {
-                    word = replacementForAtTokens;
+                if( replacement != null ) {
+                    word = replacement;
                 }
+                
                 
                 String treename = parts[7];
                 LexiconEntry lex = new LexiconEntry(word, treename);
@@ -272,6 +275,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
+    
     /**
      * Maps from node positions (= the numeric node IDs in d6.f.str) to child
      * positions (= positions in the child list of the IRTG rule). Node
@@ -452,15 +456,11 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return childStates;
     }
 
-    public String getReplacementForAtTokens() {
-        return replacementForAtTokens;
-    }
-
     public void setReplacementForAtTokens(String replacementForAtTokens) {
-        this.replacementForAtTokens = replacementForAtTokens;
+        tokenReplacements.put(C, replacementForAtTokens);
     }
     
-    
-    
-    
+    public void setReplacementForStarTokens(String replacementForStarTokens) {
+        tokenReplacements.put(P1, replacementForStarTokens);
+    }
 }

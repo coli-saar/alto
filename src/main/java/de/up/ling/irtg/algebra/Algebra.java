@@ -104,7 +104,13 @@ public abstract class Algebra<E> implements Serializable {
             return (E) t.dfs(new TreeVisitor<String, Void, E>() {
                 @Override
                 public E combine(Tree<String> node, List<E> childrenValues) {
-                    return evaluate(node.getLabel(), childrenValues);
+                    try {
+                        return evaluate(node.getLabel(), childrenValues);
+                    } catch (UnsupportedOperationException e) {
+                        String msg = "Error while evaluating term " + t + "\n";
+                        msg += "(at subterm " + node + ")";                        
+                        throw new UnsupportedOperationException(msg, e);
+                    }
                 }
             });
         }
@@ -248,7 +254,7 @@ public abstract class Algebra<E> implements Serializable {
 
     /**
      * Returns an iterator over all subclasses of Algebra.
-     * 
+     *
      * This is used for finding all available types of algebras.
      *
      * @return
@@ -265,7 +271,7 @@ public abstract class Algebra<E> implements Serializable {
             int x = addState(finalElement);
             finalStates.add(x);
         }
-        
+
         public EvaluatingDecompositionAutomaton(Signature signature) {
             super(signature);
         }
@@ -305,7 +311,7 @@ public abstract class Algebra<E> implements Serializable {
                 return ret;
             }
         }
-        
+
         protected boolean isValidValue(E parentState) {
             return Algebra.this.isValidValue(parentState);
         }
