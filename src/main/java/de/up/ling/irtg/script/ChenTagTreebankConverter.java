@@ -9,6 +9,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
@@ -62,9 +63,9 @@ import java.util.function.Function;
  * probability zero, because they were used in the original Chen corpus in the
  * context of a multiple adjunction and got lost in the simplification described
  * above. If required, this class will also binarize the resulting IRTG.<p>
- * 
+ *
  * The symbols "@" and "*" have special meaning in the {@link TagTreeAlgebra}
- * (which see). This script provides options for replacing all occurrences of 
+ * (which see). This script provides options for replacing all occurrences of
  * these symbols by something else when the corpus is converted.
  *
  * @author koller
@@ -86,6 +87,8 @@ public class ChenTagTreebankConverter {
             usage("No input files specified.");
         }
 
+        System.err.println("Reading corpus and grammar ...");
+        
         ChenTagInputCodec ic = new ChenTagInputCodec();
         ic.setReplacementForAtTokens(param.replacementForAtTokens);
         ic.setReplacementForStarTokens(param.replacementForStarTokens);
@@ -112,14 +115,16 @@ public class ChenTagTreebankConverter {
         pw.close();
 
         // convert TAG grammar to IRTG
+        System.err.println("\nConverting grammar to IRTG ...");
         irtg = tagg.toIrtg();
 
         // convert raw derivation trees into ones for this IRTG
-        System.err.println("\nMaximum likelihood estimation ...");
+        System.err.println("\nConverting corpus ...");
         Corpus corpus = new Corpus();
         Interpretation si = irtg.getInterpretation("string");
         Interpretation ti = irtg.getInterpretation("tree");
         int instanceIndex = 1;
+        int skipped = 0;
 
         for (Tree<String> dt : rawDerivationTrees) {
             Instance inst = new Instance();
@@ -142,11 +147,19 @@ public class ChenTagTreebankConverter {
                 throw e;
             }
 
-            inst.setInputObjects(ImmutableMap.of("string", s, "tree", t));
-            corpus.addInstance(inst);
+            List<String> ss = (List) ((Pair) s).left;
+            if (ss.size() > param.maxLen) {
+                skipped++;
+//                System.err.println("skip #" + instanceIndex + ", len=" + ss.size());
+//                System.err.println(ss);
+            } else {
+                inst.setInputObjects(ImmutableMap.of("string", s, "tree", t));
+                corpus.addInstance(inst);
+            }
+
             instanceIndex++;
         }
-
+        
         // write as IRTG corpus
         pw = new PrintWriter(param.outCorpusFilename);
         AbstractCorpusWriter cw = param.corpusWriterFromFilename(args);
@@ -154,8 +167,16 @@ public class ChenTagTreebankConverter {
         cw.writeCorpus(corpus);
         pw.flush();
         pw.close();
+        
+        System.err.printf("Converted corpus has %d instances", corpus.getNumberOfInstances());
+        if( skipped > 0 ) {
+            System.err.printf(" (%d skipped for length).\n", skipped);
+        } else {
+            System.err.println(".");
+        }
 
         // maximum likelihood estimation
+        System.err.println("\nMaximum likelihood estimation ...");
         irtg.trainML(corpus);
 
         // binarize grammar if requested
@@ -181,6 +202,8 @@ public class ChenTagTreebankConverter {
         pw.println(irtg);
         pw.flush();
         pw.close();
+        
+        System.err.println("\nDone.");
     }
 
     private static class CmdLineParameters {
@@ -212,7 +235,7 @@ public class ChenTagTreebankConverter {
 
         @Parameter(names = "--replace-at-tokens", description = "Replace all @ tokens by this symbol instead.")
         public String replacementForAtTokens = null;
-        
+
         @Parameter(names = "--replace-star-tokens", description = "Replace all * tokens by this symbol instead.")
         public String replacementForStarTokens = null;
 
@@ -222,7 +245,7 @@ public class ChenTagTreebankConverter {
         @Parameter(names = "--help", help = true, description = "Prints usage information.")
         private boolean help;
 
-        @Parameter(names = "--len", description = "Skip all sentences with more than len words.")
+        @Parameter(names = "--maxlen", description = "Skip all sentences longer than this many words.")
         public int maxLen = 10000;
 
         AbstractCorpusWriter corpusWriterFromFilename(String[] args) throws IOException {
