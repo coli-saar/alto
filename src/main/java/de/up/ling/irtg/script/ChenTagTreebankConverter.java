@@ -42,30 +42,33 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Converts a tree-adjoining grammar and treebank in the Chen format (d6.clean2.*) to an
- * IRTG and accompanying IRTG corpus.<p>
- * 
- * Because the Chen TAG supports multiple adjunction and the {@link TagStringAlgebra} does not, 
- * the grammars will not be entirely equivalent. This class compensates for this as follows.
- * It reads the annotated derivation tree for each Chen corpus instance and converts it
- * into an IRTG derivation tree. Whenever the Chen corpus attempts to adjoin to elementary
- * trees into the same node, the IRTG derivation tree only retains the last adjunction.
- * These simplified derivation trees are then projected to a string and a derived tree
- * using the elementary trees in the Chen grammar, yielding abbreviated strings and trees
- * which can be parsed with the converted IRTG grammar.<p>
- * 
- * The class outputs the converted corpus and performs maximum likelihood estimation
- * of the converted IRTG grammar on this corpus. Some rules receive probability zero,
- * because they were used in the original Chen corpus in the context of a multiple adjunction
- * and got lost in the simplification described above. If required, this class will
- * also binarize the resulting IRTG.
- * 
+ * Converts a tree-adjoining grammar and treebank in the Chen format
+ * (d6.clean2.*) to an IRTG and accompanying IRTG corpus.<p>
+ *
+ * Because the Chen TAG supports multiple adjunction and the
+ * {@link TagStringAlgebra} does not, the grammars will not be entirely
+ * equivalent. This class compensates for this as follows. It reads the
+ * annotated derivation tree for each Chen corpus instance and converts it into
+ * an IRTG derivation tree. Whenever the Chen corpus attempts to adjoin to
+ * elementary trees into the same node, the IRTG derivation tree only retains
+ * the last adjunction. These simplified derivation trees are then projected to
+ * a string and a derived tree using the elementary trees in the Chen grammar,
+ * yielding abbreviated strings and trees which can be parsed with the converted
+ * IRTG grammar.<p>
+ *
+ * The class outputs the converted corpus and performs maximum likelihood
+ * estimation of the converted IRTG grammar on this corpus. Some rules receive
+ * probability zero, because they were used in the original Chen corpus in the
+ * context of a multiple adjunction and got lost in the simplification described
+ * above. If required, this class will also binarize the resulting IRTG.
+ *
  * @author koller
  */
 public class ChenTagTreebankConverter {
+
     private static JCommander jc;
     private static InterpretedTreeAutomaton irtg;
-    
+
     public static void main(String[] args) throws FileNotFoundException, IOException, ParserException, Exception {
         CmdLineParameters param = new CmdLineParameters();
         jc = new JCommander(param, args);
@@ -79,6 +82,8 @@ public class ChenTagTreebankConverter {
         }
 
         ChenTagInputCodec ic = new ChenTagInputCodec();
+        ic.setReplacementForAtTokens(param.replacementForAtTokens);
+
         TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(param.inGrammarFilename));
         tagg.setTracePredicate(s -> s.contains("-NONE-"));
 
@@ -102,20 +107,20 @@ public class ChenTagTreebankConverter {
 
         // convert TAG grammar to IRTG
         irtg = tagg.toIrtg();
-        
+
         // convert raw derivation trees into ones for this IRTG
         System.err.println("\nMaximum likelihood estimation ...");
         Corpus corpus = new Corpus();
         Interpretation si = irtg.getInterpretation("string");
         Interpretation ti = irtg.getInterpretation("tree");
-        
-        for( Tree<String> dt : rawDerivationTrees ) {
+
+        for (Tree<String> dt : rawDerivationTrees) {
             Instance inst = new Instance();
             inst.setDerivationTree(irtg.getAutomaton().getSignature().mapSymbolsToIds(dt));
             inst.setInputObjects(ImmutableMap.of("string", si.interpret(dt), "tree", ti.interpret(dt)));
             corpus.addInstance(inst);
         }
-        
+
         // write as IRTG corpus
         pw = new PrintWriter(param.outCorpusFilename);
         AbstractCorpusWriter cw = param.corpusWriterFromFilename(args);
@@ -123,7 +128,7 @@ public class ChenTagTreebankConverter {
         cw.writeCorpus(corpus);
         pw.flush();
         pw.close();
-        
+
         // maximum likelihood estimation
         irtg.trainML(corpus);
 
@@ -140,8 +145,8 @@ public class ChenTagTreebankConverter {
             BkvBinarizer binarizer = new BkvBinarizer(seeds, rff);
 
             InterpretedTreeAutomaton binarized = GuiUtils.withConsoleProgressBar(60, System.out, listener -> {
-                                                                             return binarizer.binarize(irtg, newAlgebras, listener);
-                                                                         });
+                return binarizer.binarize(irtg, newAlgebras, listener);
+            });
 
             irtg = binarized;
         }
@@ -162,13 +167,13 @@ public class ChenTagTreebankConverter {
 
         @Parameter(names = {"--out-grammar", "-og"}, description = "Filename to which the grammar will be written.")
         public String outGrammarFilename = "out.irtg";
-        
+
         @Parameter(names = {"--in-grammar", "-ig"}, description = "Filename of the TAG grammar we will read.", required = true)
         public String inGrammarFilename = null;
 
         @Parameter(names = {"--out-automaton", "-oa"}, description = "Filename to which the tree automaton will be written.")
         public String outAutomatonFilename = "out.auto";
-        
+
         @Parameter(names = {"--lowercase"}, description = "Convert all words to lowercase.")
         public boolean lowercase = false;
 
@@ -179,13 +184,16 @@ public class ChenTagTreebankConverter {
                 validateWith = PennTreebankConverter.BinarizationStyleValidator.class)
         public String binarizationMode = "complete";
 
+        @Parameter(names = "--replace-at-tokens", description = "Replace all @ tokens by this symbol instead.")
+        public String replacementForAtTokens = null;
+
         @Parameter(names = "--verbose", description = "Print some debugging output.")
         public boolean verbose = false;
 
         @Parameter(names = "--help", help = true, description = "Prints usage information.")
         private boolean help;
 
-        @Parameter(names = "--len", description = "Maximum length of an input")
+        @Parameter(names = "--len", description = "Skip all sentences with more than len words.")
         public int maxLen = 10000;
 
         AbstractCorpusWriter corpusWriterFromFilename(String[] args) throws IOException {

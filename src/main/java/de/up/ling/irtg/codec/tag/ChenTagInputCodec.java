@@ -8,6 +8,7 @@ package de.up.ling.irtg.codec.tag;
 import de.saar.coli.featstruct.AvmFeatureStructure;
 import de.saar.coli.featstruct.PrimitiveFeatureStructure;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.TagTreeAlgebra;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
@@ -40,6 +41,7 @@ import java.util.Set;
  */
 @CodecMetadata(name = "chen-tag", description = "Tree-adjoining grammar (Chen format)", type = InterpretedTreeAutomaton.class)
 public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
+    private String replacementForAtTokens = null;
 
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
@@ -79,6 +81,11 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
             if (parts.length >= 2) {
                 String word = parts[1];
+                
+                if( (replacementForAtTokens != null) && TagTreeAlgebra.C.equals(word)) {
+                    word = replacementForAtTokens;
+                }
+                
                 String treename = parts[7];
                 LexiconEntry lex = new LexiconEntry(word, treename);
                 AvmFeatureStructure fs = new AvmFeatureStructure();
@@ -444,4 +451,16 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         return childStates;
     }
+
+    public String getReplacementForAtTokens() {
+        return replacementForAtTokens;
+    }
+
+    public void setReplacementForAtTokens(String replacementForAtTokens) {
+        this.replacementForAtTokens = replacementForAtTokens;
+    }
+    
+    
+    
+    
 }
