@@ -135,19 +135,19 @@ public class BoundaryRepresentation {
      */
     public SGraph getGraph() {
         SGraph wholeGraph = completeGraphInfo.getSGraph();
-        SGraph T = new SGraph();
+        SGraph ret = new SGraph();
         List<String> activeNodes = new ArrayList<>();
 
         if (sourcesAllBottom) {
-            return wholeGraph;
+            return wholeGraph.forgetSourcesExcept(new HashSet<>());//forget sources, in case original graph had some
         }
 
         for (int source = 0; source < sourceToNode.length; source++) {
             int node = getSourceNode(source);
             if (node >= 0) {
                 String nodeName = completeGraphInfo.getNodeForInt(node);
-                T.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, completeGraphInfo));
-                T.addSource(completeGraphInfo.getSourceForInt(source), nodeName);
+                ret.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, completeGraphInfo));
+                ret.addSource(completeGraphInfo.getSourceForInt(source), nodeName);
                 activeNodes.add(nodeName);
             }
         }
@@ -161,22 +161,22 @@ public class BoundaryRepresentation {
                     GraphNode target = e.getTarget();
                     GraphNode source = e.getSource();
                     if (source == v && !(target == v)) {
-                        if (!T.containsNode(target.getName())) {
-                            T.addNode(target.getName(), target.getLabel());
+                        if (!ret.containsNode(target.getName())) {
+                            ret.addNode(target.getName(), target.getLabel());
                             activeNodes.add(target.getName());
                         }
-                        T.addEdge(source, target, e.getLabel());
+                        ret.addEdge(source, target, e.getLabel());
                     } else if (target == v && !(source == v)) {
-                        if (!T.containsNode(source.getName())) {
-                            T.addNode(source.getName(), source.getLabel());
+                        if (!ret.containsNode(source.getName())) {
+                            ret.addNode(source.getName(), source.getLabel());
                             activeNodes.add(source.getName());
                         }
-                        T.addEdge(source, target, e.getLabel());
+                        ret.addEdge(source, target, e.getLabel());
                     }
                 }
             }
         }
-        return T;
+        return ret;
     }
 
     private boolean arrayContains(int[] array, int value) {

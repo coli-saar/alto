@@ -8,5 +8,5 @@ de.up.ling.irtg.algebra.TreeAlgebra
 de.up.ling.irtg.algebra.TreeWithAritiesAlgebra
 de.up.ling.irtg.algebra.WideStringAlgebra
 de.up.ling.irtg.algebra.graph.GraphAlgebra
+de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra
 de.up.ling.irtg.algebra.BinarizingTagTreeAlgebra
-de.up.ling.irtg.algebra.RdgAlgebra
