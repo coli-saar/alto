@@ -184,7 +184,7 @@ public class DecompositionDialog extends javax.swing.JDialog {
             }
 
             TreeAutomaton auto = alg.decompose(alg.parseString(tfValue.getText()));
-
+            auto.makeAllRulesExplicit();
             JTreeAutomaton jta = new JTreeAutomaton(auto, null);
             jta.setTitle("Decompositions of " + tfValue.getText());
             jta.pack();
