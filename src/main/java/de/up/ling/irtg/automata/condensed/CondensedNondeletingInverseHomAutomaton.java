@@ -76,34 +76,39 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         validLabelSetIDs = hom.getLabelsetIDsForTgtSymbols(allRemappedLabels);
 
         // For RHS terms without variables, we can precompute the states from which they
-        // can be reached.  This avoides re-running the right automaton each time they
-        // are queried.
+        // can be reached.  This avoids re-running the right automaton each time they
+        // are queried. However, this is the only place in this class where we ask
+        // bottom-up queries of the rhsAutomaton. If the rhsAutomaton does not support
+        // such queries, we skip this step, and simply re-run the rhsAutomaton top-down,
+        // even on the homomorphic images of constants.
         statesToNullaryLabelSets = new Int2ObjectOpenHashMap<IntSet>();
         labelSetsWithVariables = new IntOpenHashSet(validLabelSetIDs);
 
-        for (int labelSetID : validLabelSetIDs) {
-            Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
+        if (rhsAutomaton.supportsBottomUpQueries()) {
+            for (int labelSetID : validLabelSetIDs) {
+                Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
 
-            if (rhs.getMaximumArity() == 0) {
-                // An arity of 0 does not necessarily mean, it is a terminal symbol, 
-                // because it would exclude rules like:
-                // S! -> r1(X)
-                //  [i] ?1
+                if (rhs.getMaximumArity() == 0) {
+                    // An arity of 0 does not necessarily mean, it is a terminal symbol, 
+                    // because it would exclude rules like:
+                    // S! -> r1(X)
+                    //  [i] ?1
 
-                boolean isVariable = true;
-                for (int state : rhsAutomaton.run(rhs, HomomorphismSymbol.getRemappingSymbolToIntFunction(labelsRemap), x -> 0)) {
-                    isVariable = false;
-                    if (statesToNullaryLabelSets.containsKey(state)) {
-                        statesToNullaryLabelSets.get(state).add(labelSetID);
-                    } else {
-                        IntSet insert = new IntOpenHashSet();
-                        insert.add(labelSetID);
-                        statesToNullaryLabelSets.put(state, insert);
+                    boolean isVariable = true;
+                    for (int state : rhsAutomaton.run(rhs, HomomorphismSymbol.getRemappingSymbolToIntFunction(labelsRemap), x -> 0)) {
+                        isVariable = false;
+                        if (statesToNullaryLabelSets.containsKey(state)) {
+                            statesToNullaryLabelSets.get(state).add(labelSetID);
+                        } else {
+                            IntSet insert = new IntOpenHashSet();
+                            insert.add(labelSetID);
+                            statesToNullaryLabelSets.put(state, insert);
+                        }
                     }
-                }
 
-                if (!isVariable) {
-                    labelSetsWithVariables.remove(labelSetID); // only remove, if it is not a variable
+                    if (!isVariable) {
+                        labelSetsWithVariables.remove(labelSetID); // only remove, if it is not a variable
+                    }
                 }
             }
         }
@@ -145,7 +150,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         FastutilUtils.forEach(labelSetsWithVariables, labelSetID -> {
             Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
             Tree<HomomorphismSymbol> rightmostLeaf = getRightmostLeaf(rhs);
-            
+
             for (List<Integer> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
                 if (isCompleteSubstitutionTuple(substitutionTuple)) {
                     // TODO: weights
@@ -221,17 +226,17 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 
         return max + 1;
     }
-    
+
     private static <E> Tree<E> getRightmostLeaf(Tree<E> tree) {
-        if( tree.getChildren().isEmpty() ) {
+        if (tree.getChildren().isEmpty()) {
             return tree;
         } else {
             List<Tree<E>> children = tree.getChildren();
-            return getRightmostLeaf(children.get(children.size()-1));
+            return getRightmostLeaf(children.get(children.size() - 1));
         }
     }
-    
-/*
+
+    /*
     private boolean grtdDfs(Tree<HomomorphismSymbol> rhs, Tree<HomomorphismSymbol> rightmostLeaf, int state, int[] leafStates, Consumer<int[]> fn) {
         System.err.println("dfs on " + HomomorphismSymbol.toStringTree(rhs, rhsAutomaton.getSignature()) + " in state " + rhsAutomaton.getStateForId(state));
         
@@ -275,20 +280,19 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 
         return true;
     }
-    */
-    
+     */
     public static void main(String[] args) throws Exception {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/cfg.irtg"));
-        Map<String,String> inputs = new HashMap<>();
+        Map<String, String> inputs = new HashMap<>();
         inputs.put("i", "john watches the woman with the telescope");
-        System.err.println(irtg.parse(inputs));        
+        System.err.println(irtg.parse(inputs));
     }
 
     private Set<List<Integer>> grtdDfs(Tree<HomomorphismSymbol> rhs, int state, int rhsArity) {
         Set<List<Integer>> ret = new HashSet<List<Integer>>();
 
         switch (rhs.getLabel().getType()) {
-            case CONSTANT:                
+            case CONSTANT:
                 for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap.remapForward(rhs.getLabel().getValue()), state)) {
                     List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<Set<List<Integer>>>(); // len = #children
 
