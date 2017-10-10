@@ -259,7 +259,10 @@ public class CommandLineInterface {
             if (task.getWarmup() > 0) {
                 System.err.println("\nRunning " + task.getWarmup() + " warmup instances...");
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
-                            program.run(corpus, new ResultManager.DummyManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), true, null, cli.flushFrequency);
+                            program.run(corpus,
+                                    new ResultManager.DummyManager(), 
+                                    i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()),
+                                    task.getWarmup(), true, null, cli.flushFrequency);
                             return null;
                         });
             }

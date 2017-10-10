@@ -4,6 +4,8 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.saar.basic.Pair;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.siblingfinder.SiblingFinder;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
@@ -12,7 +14,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -108,6 +112,28 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Consumer<Rule> fn) {
         ruleStore.foreachRuleBottomUpForSets(labelIds, childStateSets, signatureMapper, fn);
     }
+    
+    
+    
+    /**
+     * This is an old helper function to get debug info when parsing with the
+     * sibling finder method. This function is in this code for legacy reasons
+     * (such that older AltoLab tasks can still run).
+     * @return 
+     */
+    @Deprecated
+    @OperationAnnotation(code ="countRhsStates")
+    public int getNumberOfSeenRhsStates() {
+        Set seenRhsStates = new HashSet<>();
+        for (Object obj : stateInterner.getKnownObjects()) {
+            if (obj instanceof Pair) {
+                seenRhsStates.add(((Pair)obj).right);
+            }
+        }
+        return seenRhsStates.size();
+    }
+    
+    
 
     @Override
     public SiblingFinder newSiblingFinder(int labelID) {

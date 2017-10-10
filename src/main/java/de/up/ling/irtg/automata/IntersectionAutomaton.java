@@ -984,4 +984,22 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             return agenda.isEmpty();
         }
     }
+    
+    
+    /**
+     * This is an old helper function to get debug info when parsing.
+     * This function is in this code for legacy reasons
+     * (such that older AltoLab tasks can still run).
+     * @return 
+     */
+    @Deprecated
+    @OperationAnnotation(code ="countRhsStates")
+    public int getNumberOfSeenRhsStates() {
+        Set<RightState> seenStates = new HashSet<>();
+        for (Pair<LeftState, RightState> pair : stateInterner.getKnownObjects()) {
+            seenStates.add(pair.right);
+        }
+        return seenStates.size();
+    }
+    
 }
