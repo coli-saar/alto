@@ -771,7 +771,7 @@ public class Program {
                 Object[] variableTrackerHere = new Object[variableTracker.length];
                 Tree<Operation>[] localProgram = new Tree[program.size()];
                 for (int j = 0; j < program.size(); j++) {
-                    localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere, instanceID);
+                    localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere, instanceID-1);//since instanceID is 1-based, but internal things are 0-based
                 }
 
                 Map<String, CpuTimeStopwatch> name2Watch = new HashMap<>();

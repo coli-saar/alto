@@ -326,7 +326,12 @@ public interface Operation {
         }
         
         public String getLine(int i) {
-            return lines[i];
+            if (i < lines.length) {
+                return lines[i];
+            } else {
+                System.err.println("Warning: could not read line "+i+" (0-based) in additional data! Have "+lines.length+" total lines.");
+                return null;
+            }
         }
         
         @Override
