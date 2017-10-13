@@ -422,17 +422,32 @@ public class Program {
                     break;
                 default:
                     if (code.startsWith(ADDITIONAL_DATA_SYMBOL)) {
-                        try {
-                            int additionalDataNr = Integer.valueOf(code.substring(1));
-                            if (additionalDataNr > additionalData.size()) {
-                                System.err.println("WARNING: Additional data number " + code.substring(1) + " was not given. Using null instead");
+                        if (code.substring(1).startsWith(ADDITIONAL_DATA_SYMBOL)) {
+                            try {
+                                int additionalDataNr = Integer.valueOf(code.substring(2));
+                                if (additionalDataNr >= additionalData.size()) {
+                                    System.err.println("WARNING: Additional data number " + code.substring(1) + " was not given. Using null instead");
+                                    retLabel = new Operation.NullOperation();
+                                } else {
+                                    retLabel = new Operation.StringByLineStorageOperation(additionalData.get(additionalDataNr));
+                                }
+                            } catch (NumberFormatException ex) {
+                                System.err.println("Error parsing '" + code + "', expected number after '" + ADDITIONAL_DATA_SYMBOL + "' to indicate additional data index");
                                 retLabel = new Operation.NullOperation();
-                            } else {
-                                retLabel = new Operation.LookupVariableOperation(globalVariableTracker, variableTypeTracker, shiftAdditionalDataIndex(additionalDataNr), "global");//no modification of neededForGlobal necessary, since this is global already
                             }
-                        } catch (NumberFormatException ex) {
-                            System.err.println("Error parsing '" + code + "', expected number after '" + ADDITIONAL_DATA_SYMBOL + "' to indicate additional data index");
-                            retLabel = new Operation.NullOperation();
+                        } else {
+                            try {
+                                int additionalDataNr = Integer.valueOf(code.substring(1));
+                                if (additionalDataNr >= additionalData.size()) {
+                                    System.err.println("WARNING: Additional data number " + code.substring(1) + " was not given. Using null instead");
+                                    retLabel = new Operation.NullOperation();
+                                } else {
+                                    retLabel = new Operation.LookupVariableOperation(globalVariableTracker, variableTypeTracker, shiftAdditionalDataIndex(additionalDataNr), "global");//no modification of neededForGlobal necessary, since this is global already
+                                }
+                            } catch (NumberFormatException ex) {
+                                System.err.println("Error parsing '" + code + "', expected number after '" + ADDITIONAL_DATA_SYMBOL + "' to indicate additional data index");
+                                retLabel = new Operation.NullOperation();
+                            }
                         }
                     } else if (code.startsWith(LEFT_INPUT_DELIMITER) && code.endsWith(RIGHT_INPUT_DELIMITER)) {
                         String interpName = code.substring(LEFT_INPUT_DELIMITER.length(), code.length() - RIGHT_INPUT_DELIMITER.length());
@@ -650,7 +665,7 @@ public class Program {
         return ret;
     }
 
-    private static Tree<Operation> createLocalOperationTreeCopy(Tree<Operation> original, Object[] variableTracker) {
+    private static Tree<Operation> createLocalOperationTreeCopy(Tree<Operation> original, Object[] variableTracker, int instanceID) {
         return original.dfs((Tree<Operation> node, List<Tree<Operation>> childrenValues) -> {
             Operation newOp = node.getLabel();
 
@@ -662,6 +677,9 @@ public class Program {
                 if (lookupOp.getExtra() == null || !lookupOp.getExtra().equals("global")) {
                     newOp = new Operation.LookupVariableOperation(variableTracker, lookupOp.getResultsTypeTracker(), lookupOp.getIndex(), lookupOp.getExtra());
                 }
+            } else if (newOp instanceof Operation.StringByLineStorageOperation) {
+                Operation.StringByLineStorageOperation storageOp = (Operation.StringByLineStorageOperation) newOp;
+                newOp = new Operation.StringOperation(storageOp.getLine(instanceID));
             }
             return Tree.create(newOp, childrenValues);
         });
@@ -753,7 +771,7 @@ public class Program {
                 Object[] variableTrackerHere = new Object[variableTracker.length];
                 Tree<Operation>[] localProgram = new Tree[program.size()];
                 for (int j = 0; j < program.size(); j++) {
-                    localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere);
+                    localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere, instanceID);
                 }
 
                 Map<String, CpuTimeStopwatch> name2Watch = new HashMap<>();

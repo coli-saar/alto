@@ -317,6 +317,30 @@ public interface Operation {
         }
     }
     
+    public static class StringByLineStorageOperation implements Operation {
+
+        private final String[] lines;
+        
+        public StringByLineStorageOperation(String string) {
+            lines = string.split("\n");
+        }
+        
+        public String getLine(int i) {
+            return lines[i];
+        }
+        
+        @Override
+        public Object apply(List<Object> input) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+            throw new UnsupportedOperationException("This Operation is for storage only, use StringOperation for execution."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public Class getReturnType() {
+            return String.class;
+        }
+        
+    }
+    
     /**
      * Runs a tree of operations. Simple bottom-up execution:
      * Leaves are given empty input lists, and results
