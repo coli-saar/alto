@@ -10,7 +10,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.codec.SgraphAmrOutputCodec;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Logging;
@@ -32,7 +31,6 @@ import org.jgrapht.DirectedGraph;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
-import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
 
@@ -62,6 +60,7 @@ public class SGraph{
     private boolean hasCachedHashcode;
     private int cachedHashcode;
     private boolean equalsMeansIsomorphy;
+    private boolean writeAsAMR;
     private Map<String, Set<String>> incomingEdgeLabels;
     private Map<String, Set<String>> outgoingEdgeLabels;
     private Map<String, String[]> incomingEdgeLabelsAsList;
@@ -78,6 +77,7 @@ public class SGraph{
         nodenameToSources = HashMultimap.create();
         hasCachedHashcode = false;
         equalsMeansIsomorphy = true;
+        writeAsAMR = false;
     }
     
     private void invalidate() {
@@ -98,6 +98,7 @@ public class SGraph{
         nodenameToSources = HashMultimap.create();
         invalidate();
         equalsMeansIsomorphy = true;
+        writeAsAMR = false;
 
         nameToNode = new HashMap<>();
         for (GraphNode u : graph.vertexSet()) {
@@ -527,7 +528,7 @@ public class SGraph{
      * @return 
      */
     public String getSourceLabel(String nodename) {
-        return "<" + StringTools.join(nodenameToSources.get(nodename), ",") + ">";
+        return "<" + nodenameToSources.get(nodename).stream().collect(Collectors.joining(",")) + ">";
     }
     
     /**
@@ -603,7 +604,7 @@ public class SGraph{
 
         if (!visitedNodes.contains(node.getName())) {
             if (nodenameToSources.containsKey(node.getName())) {
-                buf.append("<" + StringTools.join(nodenameToSources.get(node.getName()), ",") + ">");
+                buf.append("<" + nodenameToSources.get(node.getName()).stream().collect(Collectors.joining(",")) + ">");
             }
 
             if (node.getLabel() != null) {
@@ -684,37 +685,11 @@ public class SGraph{
      */
     @Override
     public String toString() {
-        return graphToString(graph, this::appendFullRepr);
-        
-//        StringBuilder buf = new StringBuilder();
-//        Set<String> visitedNodes = new HashSet<>();
-//
-//        buf.append("[");
-//        for (GraphEdge edge : graph.edgeSet()) {
-//            if (!visitedNodes.isEmpty()) {
-//                buf.append("; ");
-//            }
-//
-//            appendFullRepr(edge.getSource(), visitedNodes, buf);
-//            buf.append(" -" + edge.getLabel() + "-> ");
-//            appendFullRepr(edge.getTarget(), visitedNodes, buf);
-//        }
-//
-//        for (GraphNode node : graph.vertexSet()) {
-//            String nodename = node.getName();
-//
-//            if (!visitedNodes.contains(nodename)) {
-//                if (!visitedNodes.isEmpty()) {
-//                    buf.append("; ");
-//                }
-//
-//                appendFullRepr(node, visitedNodes, buf);
-//            }
-//        }
-//
-//        buf.append("]");
-//
-//        return buf.toString();
+        if (writeAsAMR) {
+            return toIsiAmrString();
+        } else {
+            return graphToString(graph, this::appendFullRepr);
+        }
     }
 
     /**
@@ -726,6 +701,17 @@ public class SGraph{
      */
     public void setEqualsMeansIsomorphy(boolean equalsMeansIsomorphy) {
         this.equalsMeansIsomorphy = equalsMeansIsomorphy;
+    }
+    
+    /**
+     * Controls whether the toString method uses the general one for graphs,
+     * or the specific one for AMRs.
+     * 
+     * @see #equals(java.lang.Object) 
+     * @param equalsMeansIsomorphy 
+     */
+    public void setWriteAsAMR(boolean writeAsAMR) {
+        this.writeAsAMR = writeAsAMR;
     }
 
     /**
