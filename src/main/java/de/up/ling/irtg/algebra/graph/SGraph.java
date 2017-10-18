@@ -11,6 +11,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.codec.SgraphAmrOutputCodec;
+import de.up.ling.irtg.codec.SgraphAmrWithSourcesOutputCodec;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
@@ -598,6 +599,16 @@ public class SGraph{
     public String toIsiAmrString() {
         return new SgraphAmrOutputCodec().asString(this);
     }
+    
+    /**
+     * Returns a string representation of this s-graph in the format
+     * of the ISI AMR-Bank. 
+     * 
+     * @return 
+     */
+    public String toIsiAmrStringWithSources() {
+        return new SgraphAmrWithSourcesOutputCodec().asString(this);
+    }
 
     private void appendFullRepr(GraphNode node, Set<String> visitedNodes, StringBuilder buf) {
         buf.append(node.getName());
@@ -686,7 +697,7 @@ public class SGraph{
     @Override
     public String toString() {
         if (writeAsAMR) {
-            return toIsiAmrString();
+            return toIsiAmrStringWithSources();
         } else {
             return graphToString(graph, this::appendFullRepr);
         }
