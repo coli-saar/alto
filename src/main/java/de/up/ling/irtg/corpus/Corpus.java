@@ -20,6 +20,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -203,6 +206,42 @@ public class Corpus implements Iterable<Instance> {
      * @throws CorpusReadingException 
      */
     public static Corpus readCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
+        return readCorpusWrapper(reader, irtg, br -> lineNumber -> interpIndex -> {
+            try {
+                return readNextLine(br, lineNumber);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);//TODO: this is not pretty. Check e.g. http://www.baeldung.com/java-lambda-exceptions section 3.1 for a cleaner solution?
+            }
+        });
+    }
+    
+    /**
+     * Reads a corpus from a string format available via a reader, assuming strict
+     * ordering of lines to allow empty entries to be read properly.
+     * The assumed format is: header, one empty line, instance lines, one empty line,
+     * instance lines, one empty line, instance lines, and so on. This matches the
+     * default output format of the CorpusWriter (last checked 11/2017 -- JG).
+     * Loads all interpretations
+     * shared by corpus and grammar. There must be at least one such interpretation,
+     * or an error is thrown.
+     * @param reader
+     * @param irtg
+     * @return
+     * @throws IOException
+     * @throws CorpusReadingException 
+     */
+    public static Corpus readCorpusWithStrictFormatting(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
+        return readCorpusWrapper(reader, irtg, br -> lineNumber -> interpIndex -> {
+            try {
+                return readNextLineStrict(br, lineNumber, interpIndex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);//TODO: this is not pretty. Check e.g. http://www.baeldung.com/java-lambda-exceptions section 3.1 for a cleaner solution?
+            }
+        });
+    }
+    
+    private static Corpus readCorpusWrapper(Reader reader, InterpretedTreeAutomaton irtg,
+            Function<BufferedReader, Function<MutableInteger, Function<Integer, String>>> readLine) throws IOException, CorpusReadingException {
         Corpus ret = new Corpus();
         boolean annotated = false;
 
@@ -243,7 +282,7 @@ public class Corpus implements Iterable<Instance> {
         boolean foundInterpretation = false;
         Set<String> ungrammaticalInterpretations = new HashSet<>();
         while (true) {
-            line = readNextLine(br, lineNumber);
+            line = readLine.apply(br).apply(lineNumber).apply(-1);//do not know interpretations yet, pass -1 as interpretation counter
 
             if (line == null) {
                 return ret;
@@ -287,7 +326,7 @@ public class Corpus implements Iterable<Instance> {
 
             String stripped = readAsComment(line, commentPrefix);
             if (stripped != null) {
-                line = readNextLine(br, lineNumber);
+                line = readLine.apply(br).apply(lineNumber).apply(currentInterpretationIndex);
                 continue;
             }
 
@@ -307,7 +346,7 @@ public class Corpus implements Iterable<Instance> {
                 inst.setInputObjects(currentInputs);
 
                 if (annotated) {
-                    String annoLine = readNextLine(br, lineNumber);
+                    String annoLine = readLine.apply(br).apply(lineNumber).apply(currentInterpretationIndex);
 
                     if (annoLine == null) {
                         throw new CorpusReadingException("Expected a derivation tree in line " + lineNumber);
@@ -326,9 +365,10 @@ public class Corpus implements Iterable<Instance> {
                 currentInterpretationIndex = 0;
             }
 
-            line = readNextLine(br, lineNumber);
+            line = readLine.apply(br).apply(lineNumber).apply(currentInterpretationIndex);
         }
     }
+    
     
     private static String readNextLine(BufferedReader br, MutableInteger lineNumber) throws IOException {
         String ret = null;
@@ -337,6 +377,31 @@ public class Corpus implements Iterable<Instance> {
             ret = br.readLine();
             lineNumber.incValue();
         } while (ret != null && WHITESPACE_PATTERN.matcher(ret).matches());
+
+        if (DEBUG) {
+            System.err.println("**read line: " + ret);
+        }
+
+        return ret;
+    }
+    
+    private static String readNextLineStrict(BufferedReader br, MutableInteger lineNumber, int currentInterpretationIndex) throws IOException {
+        String ret = br.readLine();
+        lineNumber.incValue();
+        
+        if (currentInterpretationIndex == 0) {
+            //skip exactly one whitespace line in between instance (triggers after(!) each instance)
+            if (ret != null && !WHITESPACE_PATTERN.matcher(ret).matches()) {
+                System.err.println("***WARNING*** found nonempty line in between instances!");
+                System.err.println(ret);
+            }
+            ret = br.readLine();
+            lineNumber.incValue();
+        } else if (currentInterpretationIndex < 0 && ret != null && WHITESPACE_PATTERN.matcher(ret).matches()) {
+            //skip exactly one whitespace line after header
+            ret = br.readLine();
+            lineNumber.incValue();
+        }
 
         if (DEBUG) {
             System.err.println("**read line: " + ret);
