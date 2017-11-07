@@ -31,6 +31,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -145,11 +146,11 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
     @Override
     public List<String> parseString(String representation) {
-        final List<String> symbols = Arrays.asList(representation.split("\\s+"));
+        List<String> symbols = Arrays.asList(representation.split("\\s+"));
         if (symbols.size() == 1 && symbols.get(0).equals("")) {
-            symbols.remove(0);//this happens when representation is empty or only whitespace, we then want the empty list --JG
+            symbols = Collections.EMPTY_LIST;//this happens when representation is empty or only whitespace, we then want the empty list --JG
         }
-        
+
         for (String word : symbols) {
             // here we check whether we need to tranform the word because it is "*"
             if (!CONCAT.equals(word)) {
