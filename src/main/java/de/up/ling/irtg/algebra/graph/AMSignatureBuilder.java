@@ -6,27 +6,18 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Sets;
-import de.up.ling.irtg.Interpretation;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_COREFMARKER;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
-import de.up.ling.irtg.corpus.Instance;
-import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Counter;
 import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -79,6 +70,14 @@ public class AMSignatureBuilder {
         lexiconSourceRemappingsOne.add(map -> passivize(map, 9));
     }
     
+    /**
+     * Creates a signature with all relevant constants (including source annotations)
+     * for the decomposition automaton.
+     * @param graph
+     * @param maxCorefs
+     * @return
+     * @throws ParseException 
+     */
     public static Signature makeDecompositionSignature(SGraph graph, int maxCorefs) throws ParseException {
         Signature ret = new Signature();
         Map<GraphEdge, Set<String>> edgeSources = new HashMap<>();
@@ -199,7 +198,7 @@ public class AMSignatureBuilder {
                                 typeStrings = Util.appendToAll(typeStrings, ")", false);
                                 typeMultCounter.add(typeStrings.size());
                                 for (String typeString : typeStrings) {
-                                    typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
+                                    //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
                                     ret.addSymbol(graphString+GRAPH_TYPE_SEP+typeString, 0);
                                     for (int i = 0; i<maxCorefs; i++) {
                                         String graphStringHere = graphString.replaceFirst("<root>", "<root, COREF"+i+">");
@@ -268,7 +267,7 @@ public class AMSignatureBuilder {
                     typeStrings = Util.appendToAll(typeStrings, ")", false);
                     typeMultCounter.add(typeStrings.size());
                     for (String typeString : typeStrings) {
-                        typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
+                        //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
                         ret.addSymbol(graphString+GRAPH_TYPE_SEP+typeString, 0);
                         for (int i = 0; i<maxCorefs; i++) {
                             String graphStringHere = graphString.replaceFirst("<root>", "<root, COREF"+i+">");
@@ -320,7 +319,7 @@ public class AMSignatureBuilder {
                     typeStrings = Util.appendToAll(typeStrings, ")", false);
                     typeMultCounter.add(typeStrings.size());
                     for (String typeString : typeStrings) {
-                        typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
+                        //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
                         ret.addSymbol(graphString+GRAPH_TYPE_SEP+typeString, 0);
                         for (int i = 0; i<maxCorefs; i++) {
                             String graphStringHere = graphString.replaceFirst("<root>", "<root, COREF"+i+">");
@@ -506,14 +505,16 @@ public class AMSignatureBuilder {
     
     
     /**
-     * A target here is a node that is on the other end of an edge of the input
-     * node's blob, the resulting map maps the target to this blob edge's label.
-     * If a blob edge 
+     * Essentially returns the blob-targets, except for conjunction/coordination
+     * and raising nodes, where the respective nested targets are added, and the
+     * intermediate nodes are removed. E.g. if node is u, and we have
+     * (u :op1 (v1 :ARG1 w) :op2 (v2 :ARG1 w)), then w is added and v1, v2 are
+     * removed.
      * @param graph
      * @param node the input node of which to get the targets.
      * @return 
      */
-    public static Collection<Map<GraphNode, String>> getTargets(SGraph graph, GraphNode node) {
+    private static Collection<Map<GraphNode, String>> getTargets(SGraph graph, GraphNode node) {
         Collection<Map<GraphNode, String>> blob = getBlobTargets(graph, node);
         if (BlobUtils.isConjunctionNode(graph, node)) {
             Collection<Map<GraphNode, String>> conj = getConjunctionTargets(graph, node);
@@ -567,7 +568,14 @@ public class AMSignatureBuilder {
         }
     }
     
-    public static Collection<GraphNode> getRaisingTargets(SGraph graph, GraphNode node) {
+    /**
+     * If node has an ARG1 edge (to say a node v) and no other edges, this returns all the targets
+     * of v that are assigned an S or O_i source.
+     * @param graph
+     * @param node
+     * @return 
+     */
+    private static Collection<GraphNode> getRaisingTargets(SGraph graph, GraphNode node) {
         Set<GraphNode> ret = new HashSet<>();
         Set<GraphEdge> argEdges = BlobUtils.getArgEdges(node, graph);
         if (argEdges.size() == 1 &&
@@ -584,15 +592,25 @@ public class AMSignatureBuilder {
         return ret;
     }
     
-    public static Collection<Map<GraphNode, String>> getConjunctionTargets(SGraph graph, GraphNode node) {
-        if (BlobUtils.isConjunctionNode(graph, node)) {
+    /**
+     * Returns maps from the common targets of the nodes coordinated by coordNode,
+     * to source names. I.e. if
+     * coordNode is u, and we have (u :op1 (v1 :ARG1 w) :op2 (v2 :ARG1 w)), then
+     * both v1 and v2 can assign both O and S (through passive) to w. Thus we get
+     * two maps, one mapping w to O, and one mapping w to S. 
+     * @param graph
+     * @param coordNode
+     * @return 
+     */
+    private static Collection<Map<GraphNode, String>> getConjunctionTargets(SGraph graph, GraphNode coordNode) {
+        if (BlobUtils.isConjunctionNode(graph, coordNode)) {
             Collection<Map<GraphNode, String>> ret = new HashSet<>();
             Set<GraphNode> jointTargets = new HashSet();
             jointTargets.addAll(graph.getGraph().vertexSet());//add all first, remove wrong nodes later
             List<GraphNode> opTargets = new ArrayList<>();
-            for (GraphEdge edge : graph.getGraph().outgoingEdgesOf(node)) {
+            for (GraphEdge edge : graph.getGraph().outgoingEdgesOf(coordNode)) {
                 if (BlobUtils.isConjEdgeLabel(edge.getLabel())) {
-                    GraphNode other = BlobUtils.otherNode(node, edge);
+                    GraphNode other = BlobUtils.otherNode(coordNode, edge);
                     opTargets.add(other);
                     Collection<Map<GraphNode, String>> otherTargets = getTargets(graph, other);
                     Set<GraphNode> targetsHere = new HashSet<>();
@@ -672,7 +690,13 @@ public class AMSignatureBuilder {
         }
     }
     
-    public static Collection<Map<GraphNode, String>> getBlobTargets(SGraph graph, GraphNode node) {
+    /**
+     * Returns all possible blob-target-maps (each maps each blob target to a source).
+     * @param graph
+     * @param node
+     * @return 
+     */
+    private static Collection<Map<GraphNode, String>> getBlobTargets(SGraph graph, GraphNode node) {
         Collection<Map<GraphNode, String>> ret = new HashSet<>();
         for (Map<GraphEdge, String> map : getSourceAssignments(BlobUtils.getBlobEdges(graph, node), graph)) {
             Map<GraphNode, String> retHere = new HashMap<>();

@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
@@ -52,6 +54,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
     
     @Override
     public TreeAutomaton decompose(Pair<SGraph, ApplyModifyGraphAlgebra.Type> value) {
+        //first, if the signature is empty, we make one. This is necessary for e.g. the GUI to work
+        if (signature.getSymbols().isEmpty()) {
+            try {
+                signature = AMSignatureBuilder.makeDecompositionSignature(value.left, 0);
+            } catch (ParseException ex) {
+                Logger.getLogger(ApplyModifyGraphAlgebra.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         if (value.right.rho.isEmpty()) {
             return new AMDecompositionAutomaton(this, null, value.left);
         } else {
@@ -131,7 +141,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (retGraph == null) {
                 System.err.println("APP merge failed!");
             }
-            return new Pair(retGraph, leftType.remove(appName));
+            return new Pair(retGraph, leftType.simulateApply(appName));
             
         } else if (label.startsWith(OP_MODIFICATION) && childrenValues.size() == 2) {
             String modName = label.substring(OP_MODIFICATION.length());
@@ -340,6 +350,38 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             newId.remove(r);
             newRho.remove(r);
             return new Type(newRho, newId);
+        }
+        
+        public Type simulateApply(String s) {
+            //check if we need this for unification later
+            Type closure = closure();
+            Set<String> allUnifTargets = new HashSet();
+            for (String role : closure.rho.keySet()) {
+                allUnifTargets.addAll(closure.id.get(role).values());
+            }
+            if (allUnifTargets.contains(s)) {
+                return null;
+            } else {
+                Map<String, Map<String, String>> newId = new HashMap<>();
+                Map<String, Type> newRho = new HashMap<>();
+                for (String r : keySet()) {
+                    if (!s.equals(r)) {
+                        Type recHere = rho.get(r);
+                        newRho.put(r, recHere);
+                        Map<String, String> idHere = id.get(r);
+                        newId.put(r, idHere);
+                    }
+                }
+                Type recHere = rho.get(s);
+                Map<String, String> idHere = id.get(s);
+                for (String u : idHere.keySet()) {
+                    if (!keySet().contains(idHere.get(u))) {
+                        newRho.put(idHere.get(u), recHere.rho.get(u));
+                        newId.put(idHere.get(u), recHere.id.get(u));
+                    }
+                }
+                return new Type(newRho, newId);
+            }
         }
         
         public boolean isCompatibleWith(Type other) {

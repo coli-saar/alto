@@ -6,6 +6,7 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.algebra.ParserException;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_APPLICATION;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_MODIFICATION;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_COREF;
@@ -17,6 +18,7 @@ import de.up.ling.irtg.automata.index.MapTopDownIndex;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.siblingfinder.SiblingFinder;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -152,7 +154,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             //rename temps to left sources
             Int2IntMap nestedRole2Unif = leftType.role2nestedRole2Unif.get(appSource);
             for (int i = 0; i<orderedSources.size(); i++) {
-                int src = orderedSources.get(i);
+                int src = orderedSources.getInt(i);
 //                if (target == null) {
 //                    System.err.println();
 //                }
@@ -237,7 +239,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             }
 
             AverageLogger.increaseValue("APP success");
-            return cacheRules(sing(retGraph, leftType.remove(appSource), labelId, childStates, weight), labelId, childStates);
+            return cacheRules(sing(retGraph, leftType.simulateApply(appSource), labelId, childStates, weight), labelId, childStates);
             
             
         } else if (label.startsWith(OP_MODIFICATION) && childStates.length == 2) {
@@ -758,6 +760,34 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             return new Type(r2nr2u, r2Type);
         }
         
+        /**
+         * Creates a copy with r removed from the domain, and nested types of r
+         * added if necessary. Does not modify the original type.
+         * @param r
+         * @return 
+         */
+        public Type simulateApply(int r) {
+            Int2ObjectMap<Int2IntMap> r2nr2u = new Int2ObjectOpenHashMap<>(role2nestedRole2Unif);
+            r2nr2u.remove(r);
+            Int2ObjectMap<Type> r2Type = new Int2ObjectOpenHashMap<>(role2Type);
+            r2Type.remove(r);
+            Int2IntMap nr2u = role2nestedRole2Unif.get(r);
+            Type nt = role2Type.get(r);
+            for (int nr : nt.domain()) {
+                int nru;
+                if (nr2u.containsKey(nr)) {
+                    nru = nr2u.get(nr);
+                } else {
+                    nru = nr;
+                }
+                if (!domain().contains(nru)) {
+                    r2nr2u.put(nru, nt.role2nestedRole2Unif.get(nr));//theoretically, we should also apply renames within the map we get from nt.role2nestedRole2Unif.get(nr). But in for signatures provided by the current version of AMSignature builder, this also works. JG, 2017-11-24
+                    r2Type.put(nru, nt.role2Type.get(nr));
+                }
+            }
+            return new Type(r2nr2u, r2Type);
+        }
+        
     }
 
     @Override
@@ -1139,5 +1169,18 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
 
     }
     
+    public static void main(String[] args) throws ParseException, ParserException {
+        SGraph graph = new IsiAmrInputCodec().read("(r<root>/root)");
+        Signature sig = AMSignatureBuilder.makeDecompositionSignature(graph, 0);
+        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(sig);
+        TreeAutomaton auto = alg.decompose(alg.parseString("(r<root>/root)"));
+        auto.makeAllRulesExplicit();
+        System.err.println("vit "+auto.viterbi());
+        for (Object rule : auto.getRuleSet()) {
+            System.err.println("rule "+rule);
+        }
+        
+        System.err.println(auto);
+    }
     
 }
