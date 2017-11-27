@@ -2,7 +2,7 @@
 
 Welcome to Alto, the Algebraic Language Toolkit.
 
-Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It is being developed at the [University of Potsdam](http://www.ling.uni-potsdam.de/en/) in the Theoretical Computational Linguistics group, led by [Alexander Koller](http://www.ling.uni-potsdam.de/~koller/). Its main features are:
+Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It is being developed at [Saarland University](http://www.coli.uni-saarland.de/) in the Computational Linguistics group, led by [Alexander Koller](http://www.coli.uni-saarland.de/~koller/). Its main features are:
 
 - Represents grammars from a wide variety of popular grammar formalisms as IRTGs, including:
 	- Context-free grammars
@@ -22,6 +22,8 @@ Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It i
 - Supports PCFG-style and log-linear probability models for all of these grammar formalisms.
 - Built for easy extensibility: implement your own grammar formalism by adding an [Algebra](https://bitbucket.org/tclup/alto/wiki/Algebras) class, and use any of the Alto algorithms directly.
 - Comes with a GUI that provides access to most of these algorithms and visualizes parsing results.
+
+Alto is published under a [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
 
 The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11). You can find more details on the [Literature](https://bitbucket.org/tclup/alto/wiki/Literature) page.
 
