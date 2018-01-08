@@ -14,6 +14,8 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -258,8 +260,15 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             EMPTY_TYPE=temp;
         }
         
-        //  (ARG0, ARG1(ARG2_UNIFY_ARG0, ARG1_UNIFY_ARG2), ARG2(ARG0_UNIFY_ARG0))
-        // allow only this depth, unify argument is always top level
+        /**
+         * Creates a type from a string representation. Example format:
+         * (S, O(O2_UNIFY_S, O_UNIFY_O2), O2(S_UNIFY_S))
+         * Notes: No depth deeper than this example is allowed.
+         * The unify target always corresponds to the top level
+         * Note that a unify target also needs to be specified if no rename occures,
+         * as in S_UNIFY_S. Differences to the notation in the paper include round
+         * brackets instead of square brackets, and '_UNIFY_' instead of '->'.
+         **/
         public Type(String typeString) throws ParseException {
             this(TreeParser.parse("TOP"+typeString.replaceAll("\\(\\)", "")));
         }
@@ -352,6 +361,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return new Type(newRho, newId);
         }
         
+        //TODO fix this to return null if s is not contained.
+        /**
+         * Returns the type that we obtain after using APP_s on this type (does not
+         * modify this type). Only use if
+         * this type actually contains s!
+         * @param s
+         * @return 
+         */
         public Type simulateApply(String s) {
             //check if we need this for unification later
             Type closure = closure();
@@ -384,6 +401,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
         }
         
+        /**
+         * Checks whether type 'other' is a 'subset' of this type, when extending
+         * the subset notion to functions.
+         * @param other
+         * @return 
+         */
         public boolean isCompatibleWith(Type other) {
             if (!other.keySet().containsAll(keySet())) {
                 return false;
@@ -405,6 +428,10 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return true;
         }
         
+        /**
+         * [] has depth 0, [O] has depth 1, [O[S]] has depth 2, etc.
+         * @return 
+         */
         public int depth() {
             if (keySet().isEmpty()) {
                 return 0;
@@ -417,10 +444,21 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
         }
         
+        /**
+         * Returns the set of all types that are expected at the sources.
+         * @return 
+         */
         public Collection<Type> getNestedTypes() {
             return rho.values();
         }
         
+        /**
+         * Returns all source names that the nested types signal to be added through APP,
+         * e.g. S in [O[S]] or in O[O->S]. This method is not recursive, so to get all
+         * types that will be added through any sequence of applies, us this function
+         * on the closure of this type.
+         * @return 
+         */
         public Set<String> getUnificationTargets() {
             Set<String> ret = new HashSet<>();
             for (Map<String, String> i : id.values()) {
@@ -430,7 +468,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
         
         /**
-         * returns the closure (wrt completeness) of this type.
+         * Returns the closure of this type, i.e., this function adds all sources
+         * now that can later be added through application,
+         * and their target types, to this type. E.g. [O[S]] becomes [O[S], S]. 
          * @return 
          */
         Type closure() {
@@ -451,10 +491,49 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return new Type(newRho, newId);
         }
         
+        /**
+         * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this type,
+         * and G_2 has type argument.
+         * @param argument
+         * @param appSource
+         * @return 
+         */        
+        public boolean canApplyTo(Type argument, String appSource) {
+            //check if the type expected here at appSource is equal to the argument type
+            Type rhoR = this.rho.get(appSource);
+            if (rhoR == null || !rhoR.equals(argument)) {
+                return false;
+            }
+            //check if this removes a unification target that we will need later
+            Set<String> allUnifTargets = new HashSet<>();
+            for (String role : this.keySet()) {
+                allUnifTargets.addAll(this.id.get(role).values());
+            }
+            return !allUnifTargets.contains(appSource);
+        }
+        
+        /**
+         * Checks whether MOD_modSource(G_1, G_2) is allowed, given G_1 has this type,
+         * and G_2 has type argument.
+         * @param modifier
+         * @param modSource
+         * @return 
+         */
+        public boolean canBeModifiedBy(Type modifier, String modSource) {
+            Type rhoR = modifier.rho.get(modSource);
+            return rhoR != null && rhoR.keySet().isEmpty()
+                    && modifier.remove(modSource).isCompatibleWith(this);
+        }
+        
     }
     
-    
-    
+    /**
+     * Checks whether g1 and g2 are isomorphic, taking only sources into account
+     * that do not start with 'COREF'.
+     * @param g1
+     * @param g2
+     * @return 
+     */
     public static boolean isomExceptCOREFs(SGraph g1, SGraph g2) {
         GraphIsomorphismInspector iso
                 = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(

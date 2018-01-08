@@ -125,18 +125,8 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             int appSource = label2SourceID.getInt(label);
             
             //check if application is allowed according to types
-            Type rhoR = leftType.role2Type.get(appSource);
-            if (rhoR == null || !rhoR.equals(targetType)) {
-                AverageLogger.increaseValue("APP failed type");
-                return cacheRules(Collections.EMPTY_LIST, labelId, childStates);
-            }
-            //check if this removes a unification target that we will need later
-            IntSet allUnifTargets = new IntOpenHashSet();
-            for (int role : leftType.domain()) {
-                allUnifTargets.addAll(leftType.role2nestedRole2Unif.get(role).values());
-            }
-            if (allUnifTargets.contains(appSource)) {
-                AverageLogger.increaseValue("APP before unif");
+            if (!leftType.canApplyTo(targetType, appSource)) {
+                AverageLogger.increaseValue("APP failed type, or before unif");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);
             }
             
@@ -254,9 +244,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             Type leftType = child0.right;
             
             //check if MOD is allowed according to types
-            Type rhoR = targetType.role2Type.get(modSource);
-            if (rhoR == null || !rhoR.domain().isEmpty()
-                    || !targetType.remove(modSource).isCompatibleWith(leftType)) {
+            if (!leftType.canBeModifiedBy(targetType, modSource)) {
                 AverageLogger.increaseValue("MOD fail type");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);
             }
@@ -693,6 +681,11 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             return true;
         }
 
+        /**
+         * Returns this type as a ApplyModifyGraphAlgebra.Type, which is more readable.
+         * @param graphInfo
+         * @return 
+         */
         public ApplyModifyGraphAlgebra.Type toAlgebraType(GraphInfo graphInfo) {
             Map<String, ApplyModifyGraphAlgebra.Type> retRho = new HashMap<>();
             for (Int2ObjectMap.Entry<Type> entry : role2Type.int2ObjectEntrySet()) {
@@ -726,6 +719,12 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             return role2nestedRole2Unif.keySet();//same as role2nestedRole2Type.keySet()
         }
         
+        /**
+         * Checks whether type 'other' is a 'subset' of this type, when extending
+         * the subset notion to functions.
+         * @param other
+         * @return 
+         */
         public boolean isCompatibleWith(Type other) {
             if (!other.domain().containsAll(domain())) {
                 return false;
@@ -762,7 +761,8 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
         
         /**
          * Creates a copy with r removed from the domain, and nested types of r
-         * added if necessary. Does not modify the original type.
+         * added if necessary, i.e.~the result of using APP_r on this type.
+         * Does not modify the original type.
          * @param r
          * @return 
          */
@@ -788,6 +788,39 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             return new Type(r2nr2u, r2Type);
         }
         
+        /**
+         * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this type,
+         * and G_2 has type argument.
+         * @param argument
+         * @param appSource
+         * @return 
+         */
+        public boolean canApplyTo(Type argument, int appSource) {
+            //check if the type expected here at appSource is equal to the argument type
+            Type rhoR = this.role2Type.get(appSource);
+            if (rhoR == null || !rhoR.equals(argument)) {
+                return false;
+            }
+            //check if this removes a unification target that we will need later
+            IntSet allUnifTargets = new IntOpenHashSet();
+            for (int role : this.domain()) {
+                allUnifTargets.addAll(this.role2nestedRole2Unif.get(role).values());
+            }
+            return !allUnifTargets.contains(appSource);
+        }
+        
+        /**
+         * Checks whether MOD_modSource(G_1, G_2) is allowed, given G_1 has this type,
+         * and G_2 has type argument.
+         * @param modifier
+         * @param modSource
+         * @return 
+         */
+        public boolean canBeModifiedBy(Type modifier, int modSource) {
+            Type rhoR = modifier.role2Type.get(modSource);
+            return rhoR != null && rhoR.domain().isEmpty()
+                    && modifier.remove(modSource).isCompatibleWith(this);
+        }
     }
 
     @Override
