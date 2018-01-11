@@ -391,8 +391,8 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             for (String r : keySet()) {
                 Type rhoR = rho.get(r);
                 Type otherRhoR = other.rho.get(r);
-                if (!rhoR.equals(otherRhoR)) {
-                    return false;//use stricter version to match with IWCS paper
+                if (!rhoR.isCompatibleWith(otherRhoR)) {
+                    return false;//use stricter version to match with IWCS paper -- EDIT currently using the less strict version again with 'isCompatibleWith' instead of 'equals' in the check.
                 }
                 Map<String, String> iR = id.get(r);
                 Map<String, String> otherIR = other.id.get(r);
