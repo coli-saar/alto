@@ -1087,6 +1087,10 @@ public class InterpretedTreeAutomaton implements Serializable {
      * The rules are filtered out if they contain a constant in the given
      * interpretation which cannot be used in deriving the given object.
      *
+     * Note: for some binarized grammars, {@link de.up.ling.irtg.InterpretedTreeAutomaton#filterForAppearingConstants(java.lang.String, java.lang.Object)}
+     * is applicable and much more efficient. It is recommend it to use it instead
+     * of this method whenever applicable (read its documentation carefully).
+     * 
      * @param interpName
      * @param input
      * @return
@@ -1177,12 +1181,21 @@ public class InterpretedTreeAutomaton implements Serializable {
      * The rules are filtered out if they contain a constant in the given
      * interpretation which cannot be used in deriving the given object or rules
      * which are connected by binarization to the rules that have been removed.
+     * Here "connected by binarization" means that the rule labels share a prefix
+     * before the binarization tag starting with "_br".
      *
      * Note that some binarization techniques, e.g. the "inside" strategy used
      * in {@link de.up.ling.irtg.binarization.InsideRuleFactory}, pool rules
-     * together after binarization. Removing all rules connected by binarization
-     * to rules removed due to constants removes some of these pooled rules that
-     * would be necessary for parsing. Thus, for grammars binarized with such
+     * together after binarization. In these cases, this function is not applicable!!
+     * The reason is: when this method removes a rule due to an invalid constant,
+     * it also removes all rules with the same prefix before the "_br" marker.
+     * If the non-lexicalized parts of the rules are pooled, this can remove a rule we would actually need.
+     * E.g. if two rules a and b are split into rules a_br1, a_br2, b_br3 and b_br4, where a_br1 and b_br3 have constants,
+     * and the binarization method considers a_br2 and b_br4 to be equal (same homomorphic images etc) and pools them
+     * (keeping only b_br_4),
+     * then we have only a_br1, b_br3 and b_br4 left. If we now parse a sentence which contains the constant in
+     * a but not the one in b, we remove rules b_br3 and b_br4. But to parse, we would need the rule b_br_4.
+     * Thus, for grammars binarized with such
      * strategies, use
      * {@link de.up.ling.irtg.InterpretedTreeAutomaton#filterForAppearingConstants(java.lang.String, java.lang.Object)}
      * instead.
