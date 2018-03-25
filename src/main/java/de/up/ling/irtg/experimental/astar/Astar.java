@@ -63,15 +63,12 @@ public class Astar {
                 it.setCreatedBySupertag(s);
                 it.setOutsideEstimate(outside.evaluate(it));
                 agenda.enqueue(it);
-//                System.err.println("add: " + it);
             }
         }
 
-//        System.err.println("--------");
         // iterate over agenda
         while (!agenda.isEmpty()) {
             Item it = agenda.dequeue();
-//            System.err.printf("\npop %s\n", it);
 
             // return first found goal item
             if (isGoal(it)) {
@@ -144,6 +141,11 @@ public class Astar {
         }
     }
 
+    /**
+     * Parses the given string and returns an AM term.
+     * 
+     * @return 
+     */
     public Tree<String> parse() {
         Item goalItem = process();
 
@@ -154,6 +156,7 @@ public class Astar {
         }
     }
 
+    // check whether the item is a goal item
     private boolean isGoal(Item item) {
         return item.getStart() == 0 && item.getEnd() == N && item.getType().getType().equals("[]");
     }
@@ -188,6 +191,7 @@ public class Astar {
         }
     }
 
+    // combine a functor and argument type using the given operation
     private Type combine(int op, Type functor, Type argument) {
         if (op == APP_S) { // APP_s
             if (argument.getType().equals("[]")) {
