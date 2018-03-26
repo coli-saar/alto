@@ -265,9 +265,11 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * (S, O(O2_UNIFY_S, O_UNIFY_O2), O2(S_UNIFY_S))
          * Notes: No depth deeper than this example is allowed.
          * The unify target always corresponds to the top level
-         * Note that a unify target also needs to be specified if no rename occures,
+         * Note that a unify target also needs to be specified if no rename occurs,
          * as in S_UNIFY_S. Differences to the notation in the paper include round
          * brackets instead of square brackets, and '_UNIFY_' instead of '->'.
+         * @param typeString
+         * @throws de.up.ling.tree.ParseException
          **/
         public Type(String typeString) throws ParseException {
             this(TreeParser.parse("TOP"+typeString.replaceAll("\\(\\)", "")));
@@ -361,15 +363,20 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return new Type(newRho, newId);
         }
         
-        //TODO fix this to return null if s is not contained.
         /**
          * Returns the type that we obtain after using APP_s on this type (does not
-         * modify this type). Only use if
-         * this type actually contains s!
+         * modify this type). Returns null if APP_s is not allowed for this
+         * type (i.e. if this type does not contain s, or s is needed for later
+         * unification).
          * @param s
          * @return 
          */
         public Type simulateApply(String s) {
+            
+            if (!rho.containsKey(s)) {
+                return null;
+            }
+            
             //check if we need this for unification later
             Type closure = closure();
             Set<String> allUnifTargets = new HashSet();
@@ -493,7 +500,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         
         /**
          * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this type,
-         * and G_2 has type argument.
+         * and G_2 has type 'argument'.
          * @param argument
          * @param appSource
          * @return 
