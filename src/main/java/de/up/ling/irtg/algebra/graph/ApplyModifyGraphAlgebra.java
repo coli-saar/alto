@@ -532,6 +532,32 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                     && modifier.remove(modSource).isCompatibleWith(this);
         }
         
+        /**
+         * Returns the type of operation(left, right) if that is defined,
+         * and null otherwise. Objects left and right are not modified.
+         * @param left
+         * @param right
+         * @param operation
+         * @return 
+         */
+        public static Type evaluateOperation(Type left, Type right, String operation) {
+            String s;
+            boolean app = false;
+            if (operation.startsWith(OP_APPLICATION)) {
+                s = operation.substring(OP_APPLICATION.length());
+                app = true;
+            } else {
+                s = operation.substring(OP_MODIFICATION.length());
+            }
+            if (app && left.canApplyTo(right, s)) {
+                return left.simulateApply(s);
+            } else if (left.canBeModifiedBy(right, s)) {
+                return left;
+            } else {
+                return null;
+            }
+        }
+        
     }
     
     /**
