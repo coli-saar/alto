@@ -248,7 +248,7 @@ public class InterpretedTreeAutomaton implements Serializable {
     }
 
     /**
-     * Parses a single input representations to a parse chart without using a
+     * Parses a single input representations to a parse chart using a
      * sibling finder in the intersection.
      *
      * @param interpretationName name of the interpretation from which the
