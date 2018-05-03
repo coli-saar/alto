@@ -1,0 +1,81 @@
+/*
+Grammar for the example in the INLG paper
+
+example model: { "button" : [["b1"], ["b2"], ["b3"]], "round" : [["b1"], ["b3"]], "square": [["b2"]],
+                  "left-of": [["b1","b2"], ["b2","b3"]], "right-of": [["b3","b2"], ["b2", "b1"]]}
+                  
+feature red_comp: de.up.ling.regirtg.features.FeatureFactory::makePredicateFeature(red, red, false)
+feature blue_comp: de.up.ling.regirtg.features.FeatureFactory::makePredicateFeature(blue, blue, false)
+feature yellow_comp: de.up.ling.regirtg.features.FeatureFactory::makePredicateFeature(yellow, yellow, false)
+feature leftof: de.up.ling.regirtg.features.FeatureFactory::makeBinaryRelationalFeature(left-of, leftof)
+feature rightof: de.up.ling.regirtg.features.FeatureFactory::makeBinaryRelationalFeature(right-of, rightof)
+feature square: de.up.ling.regirtg.features.FeatureFactory::makePredicateFeature(square, square)
+feature blue: de.up.ling.regirtg.features.FeatureFactory::makePredicateFeature(blue, blue)
+feature red: de.up.ling.regirtg.features.FeatureFactory::makePredicateFeature(red, red)
+feature yellow: de.up.ling.regirtg.features.FeatureFactory::makePredicateFeature(yellow, yellow)
+feature salience: de.up.ling.regirtg.features.FeatureFactory::makeCustomFeature(salience, def)
+feature entropy: de.up.ling.regirtg.features.FeatureFactory::makeEntropyFeature 
+feature definiteness: de.up.ling.regirtg.features.FeatureFactory::makeDefinitenessFeature 
+
+
+*/
+
+interpretation sem: de.up.ling.irtg.algebra.SetAlgebra
+interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+
+
+
+foreach {a | button(a)}:
+N_$a -> button_$a
+[sem] button
+[string] button
+
+foreach {a | blue(a)}:
+N_$a -> blue_$a(N_$a)
+[sem] intersect_1(blue, ?1)
+[string] *(blue, ?1)
+
+foreach {a | square(a)}:
+N_$a -> square_$a(N_$a)  
+[sem] intersect_1(square, ?1)
+[string] *(square, ?1)
+
+foreach {a | green(a)}:
+N_$a -> green_$a(N_$a)  
+[sem] intersect_1(green, ?1)
+[string] *(green, ?1)
+
+foreach {a | red(a)}:
+N_$a -> red_$a(N_$a)  
+[sem] intersect_1(red, ?1)
+[string] *(red, ?1)
+
+foreach {a | yellow(a)}:
+N_$a -> yellow_$a(N_$a)  
+[sem] intersect_1(yellow, ?1)
+[string] *(yellow, ?1)
+
+
+
+foreach {a | round(a)}:
+N_$a -> round_$a(N_$a)  
+[sem] intersect_1(round, ?1)
+[string] *(round, ?1)
+
+
+foreach {a,b | right-of(a,b)}:
+N_$a -> rightof_$a_$b(N_$a, NP_$b)
+[sem] project_1(intersect_2(intersect_1(right-of, ?1), ?2))
+[string] *(?1, *("right of", ?2))
+
+foreach {a,b | left-of(a,b)}:
+N_$a -> leftof_$a_$b(N_$a, NP_$b)
+[sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
+[string] *(?1, *("left of", ?2))
+
+
+
+foreach {a | T(a)}:
+NP_$a! -> def_$a(N_$a)
+[sem] member_$a(?1)
+[string] *(the, ?1)
