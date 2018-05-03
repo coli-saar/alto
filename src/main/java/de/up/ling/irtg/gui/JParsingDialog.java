@@ -11,6 +11,7 @@ import de.up.ling.irtg.algebra.NullFilterAlgebra;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JFileChooser;
@@ -60,6 +61,7 @@ public class JParsingDialog extends javax.swing.JDialog {
     }
 
     private Map<String, String> inputValues;
+    private Map<String, String> optionValues;
     private Map.Entry<String, String> theOneNonemptyInput;
     private Algorithm selectedAlgorithm;
     private Filtering selectedFiltering;
@@ -111,16 +113,18 @@ public class JParsingDialog extends javax.swing.JDialog {
     public static JParsingDialog create(List<String> interpretations, InterpretedTreeAutomaton irtg, Frame parent, boolean modal) {
         JParsingDialog ret = new JParsingDialog(parent, modal);
         
+        List<Boolean> hasOptions = new ArrayList();
         for( String interpName : interpretations ) {
             Algebra alg = irtg.getInterpretation(interpName).getAlgebra();
             if( alg instanceof NullFilterAlgebra ) {
                 ret.cbNullFiltering.addItem(interpName);
             }
+            hasOptions.add(alg.hasOptions());
         }
 
         ret.pInterpretationsContainer.removeAll();
         ret.pInterpretationsContainer.setLayout(new BorderLayout());
-        ret.pInterpretationsContainer.add(new JInterpretationsPanel(interpretations), BorderLayout.CENTER);
+        ret.pInterpretationsContainer.add(new JInterpretationsPanel(interpretations, hasOptions), BorderLayout.CENTER);
         ret.pInterpretationsContainer.revalidate();
         ret.pInterpretationsContainer.repaint();
         ret.validate();
@@ -452,6 +456,8 @@ public class JParsingDialog extends javax.swing.JDialog {
             theOneNonemptyInput = inputValues.entrySet().iterator().next();
         }
 
+        optionValues = ((JInterpretationsPanel) pInterpretationsContainer.getComponent(0)).getOptionValues();
+        
         selectedAlgorithm = (Algorithm) cbAlgorithm.getSelectedItem();
 
         selectedFiltering = null;
@@ -477,6 +483,10 @@ public class JParsingDialog extends javax.swing.JDialog {
 
     public Map<String, String> getInputValues() {
         return inputValues;
+    }
+    
+    public Map<String, String> getOptionValues() {
+        return optionValues;
     }
 
     public Map.Entry<String, String> getTheOneNonemptyInput() {

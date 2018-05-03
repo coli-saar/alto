@@ -20,11 +20,12 @@ import javax.swing.JTextField;
  */
 public class JInterpretationsPanel extends javax.swing.JPanel {
     private final Map<String, JTextField> inputFields;
+    private final Map<String, JTextField> optionFields;
     
     /**
      * Creates new form JInterpretationsPanel
      */
-    public JInterpretationsPanel(List<String> interpretations) {
+    public JInterpretationsPanel(List<String> interpretations, List<Boolean> hasOptions) {
         setBorder(javax.swing.BorderFactory.createTitledBorder("Inputs"));
 //        initComponents();
         
@@ -36,6 +37,7 @@ public class JInterpretationsPanel extends javax.swing.JPanel {
         setLayout(gridbag);
 
         inputFields = new HashMap<>();
+        optionFields = new HashMap<>();
 
         int nextY = 0;
 
@@ -68,7 +70,58 @@ public class JInterpretationsPanel extends javax.swing.JPanel {
             nextY++;
         }
         
+        for (int i = 0; i < interpretations.size(); i++) {
+            String intp = interpretations.get(i);
+            boolean opts = hasOptions.get(i);
+
+            if (opts) {
+                c.gridy = nextY;
+
+                c.fill = GridBagConstraints.NONE;
+                c.gridx = 0;
+                c.weightx = 0;
+                c.insets = new Insets(0, 0, 0, 0);
+                JLabel jl = new JLabel("Options for interpretation " + intp + ":");
+                gridbag.setConstraints(jl, c);
+                add(jl);
+
+                nextY++;
+                c.gridy = nextY;
+
+                c.fill = GridBagConstraints.HORIZONTAL;
+                c.gridx = 0;
+                c.weightx = 1;
+                c.insets = new Insets(0, 0, 10, 0);
+
+                JTextField comp = new JTextField(40);
+                gridbag.setConstraints(comp, c);
+                add(comp);
+                optionFields.put(intp, comp);
+
+                nextY++;
+            }
+        }
+        
         validate();
+        
+//        // create fields for options
+//        // create fields for input values
+//        c = new GridBagConstraints();
+//        c.fill = GridBagConstraints.NONE;
+//        c.anchor = GridBagConstraints.WEST;
+//
+//        gridbag = new GridBagLayout();
+//        setLayout(gridbag);
+//
+//        nextY = 0;
+//
+//        c.anchor = GridBagConstraints.FIRST_LINE_START;
+//
+//        
+//
+//        revalidate();
+
+        //jif.pack();
 //        initComponents();
     }
     
@@ -84,6 +137,18 @@ public class JInterpretationsPanel extends javax.swing.JPanel {
         return inputValues;
     }
 
+    public Map<String, String> getOptionValues() {
+        Map<String,String> inputValues = new HashMap<>();
+
+        for (String intp : optionFields.keySet()) {
+            if (!"".equals(optionFields.get(intp).getText())) {
+                inputValues.put(intp, optionFields.get(intp).getText());
+            }
+        }
+        
+        return inputValues;
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

@@ -54,6 +54,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -531,10 +533,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     private void miParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miParseActionPerformed
         if (irtg != null) {
-            List<Boolean> hasOptions = new ArrayList<Boolean>(annotationsInOrder.size());
-            for (String intp : annotationsInOrder) {
-                hasOptions.add(irtg.getInterpretation(intp).getAlgebra().hasOptions());
-            }
+            
 
             JParsingDialog jpd = JParsingDialog.create(annotationsInOrder, irtg, this, true);
             jpd.setVisible(true);
@@ -545,8 +544,18 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
 
             final Map<String, String> inputs = jpd.getInputValues();
+            final Map<String, String> options = jpd.getOptionValues();
             final Map<String, Object> inputObjects = new HashMap<>();
 
+            for (String interp : options.keySet()) {
+                try {
+                        irtg.getInterpretation(interp).getAlgebra().setOptions(jpd.getOptionValues().get(interp));
+                } catch (Exception ex) {
+                        GuiMain.log("Exception while parsing options for interpretation '" + interp + "': " + ex.toString());
+                    return;
+                    }
+            }
+            
             for (String interp : inputs.keySet()) {
                 try {
                     inputObjects.put(interp, irtg.parseString(interp, inputs.get(interp)));
