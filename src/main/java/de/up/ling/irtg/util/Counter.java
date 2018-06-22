@@ -128,12 +128,7 @@ public class Counter<E> {
     }
     
     public void writeAllSorted(Writer w) throws IOException {
-        List<Object2IntMap.Entry<E>> list = ct.object2IntEntrySet().stream().sorted(new Comparator<Object2IntMap.Entry<E>>() {
-            @Override
-            public int compare(Object2IntMap.Entry<E> o1, Object2IntMap.Entry<E> o2) {
-                return o2.getIntValue()-o1.getIntValue();
-            }
-        }).collect(Collectors.toList());
+        List<Object2IntMap.Entry<E>> list = getAllSorted();
         for (Object2IntMap.Entry<E> o : list) {
             w.write(o.getKey().toString()+": "+o.getIntValue()+"\n");
         };
@@ -148,7 +143,14 @@ public class Counter<E> {
         }
     }
     
+    public List<Object2IntMap.Entry<E>> getAllSorted() {
+        return ct.object2IntEntrySet().stream()
+                .sorted((Object2IntMap.Entry<E> o1, Object2IntMap.Entry<E> o2) -> o2.getIntValue()-o1.getIntValue())
+                .collect(Collectors.toList());
+    }
     
-    
+    public int sum() {
+        return ct.values().stream().collect(Collectors.summingInt(i -> i));
+    }
 }
 

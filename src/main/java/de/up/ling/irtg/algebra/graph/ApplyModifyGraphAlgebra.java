@@ -14,8 +14,6 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -42,18 +40,18 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
     public ApplyModifyGraphAlgebra() {
         this(new Signature());
     }
-    
+
     public ApplyModifyGraphAlgebra(Signature signature) {
         this.signature = signature;
     }
 
     public static final String GRAPH_TYPE_SEP = "--TYPE--";
-    
+
     public static final String OP_APPLICATION = "APP_";
     public static final String OP_MODIFICATION = "MOD_";
     public static final String OP_COREF = "COREF_";
     public static final String OP_COREFMARKER = "MARKER_";
-    
+
     @Override
     public TreeAutomaton decompose(Pair<SGraph, ApplyModifyGraphAlgebra.Type> value) {
         //first, if the signature is empty, we make one. This is necessary for e.g. the GUI to work
@@ -76,34 +74,13 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         return new GraphAlgebra().visualize(object.left); //To change body of generated methods, choose Tools | Templates.
     }
 
-    
-    
     @Override
     protected Pair<SGraph, ApplyModifyGraphAlgebra.Type> evaluate(String label, List<Pair<SGraph, ApplyModifyGraphAlgebra.Type>> childrenValues) {
         if (label.startsWith(OP_APPLICATION) && childrenValues.size() == 2) {
-            String appName = label.substring(OP_APPLICATION.length());
+            String appSource = label.substring(OP_APPLICATION.length());
             SGraph target = childrenValues.get(1).left;
             Type targetType = childrenValues.get(1).right;
-//            List<String> orderedSources = new ArrayList<>(target.getAllSources());
-//            int rootIndex = orderedSources.indexOf("root");
             Type leftType = childrenValues.get(0).right;
-//            Map<String, String> nestedRole2Unif = leftType.role2nestedRoleAndUnif.get(appName);
-//            if (nestedRole2Unif.size() != orderedSources.size()-1) {
-//                return null;
-//            }
-//            String[] index2nestedRole = new String[orderedSources.size()];
-//            for (String nestedRole : nestedRole2Unif.keySet()) {
-//                int i = orderedSources.indexOf(nestedRole);
-//                if (i == -1) {
-//                    return null;
-//                }
-//                index2nestedRole[i] = nestedRole;
-//                target = target.renameSource(orderedSources.get(i), "temp"+i);
-//            }
-//            target = target.renameSource("root", "temp"+rootIndex);
-//            for (int i = 0; i<index2nestedRole.length; i++) {
-//                target = target.renameSource("temp"+i, index2nestedRole[i]);
-//            }
 
             //rename right sources to temps
             List<String> orderedSources = new ArrayList(targetType.keySet());
@@ -113,20 +90,18 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 System.err.println("target had no root in APP!");
                 return null;//target must have root for APP to be allowed.
             }
-            for (int i = 0; i<orderedSources.size(); i++) {
-                target = target.renameSource(orderedSources.get(i), "temp"+i);
+            for (int i = 0; i < orderedSources.size(); i++) {
+                target = target.renameSource(orderedSources.get(i), "temp" + i);
             }
+
             //rename temps to left sources
-            Map<String, String> nestedRole2Unif = leftType.id.get(appName);
-            for (int i = 0; i<orderedSources.size(); i++) {
+            Map<String, String> nestedRole2Unif = leftType.id.get(appSource);
+            for (int i = 0; i < orderedSources.size(); i++) {
                 String src = orderedSources.get(i);
-//                if (target == null) {
-//                    System.err.println();
-//                }
                 if (src.equals("root")) {
-                    target = target.renameSource("temp"+i, appName);
+                    target = target.renameSource("temp" + i, appSource);
                 } else {
-                    target = target.renameSource("temp"+i, nestedRole2Unif.get(orderedSources.get(i)));
+                    target = target.renameSource("temp" + i, nestedRole2Unif.get(orderedSources.get(i)));
                 }
             }
 
@@ -134,68 +109,33 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             SGraph leftGraph = childrenValues.get(0).left;
             Set<String> retainedSources = new HashSet<>(leftGraph.getAllSources());
             retainedSources.addAll(target.getAllSources());
-            retainedSources.remove(appName);
-            
-            
-            
-            
+            retainedSources.remove(appSource);
+
             SGraph retGraph = target.merge(childrenValues.get(0).left).forgetSourcesExcept(retainedSources);
             if (retGraph == null) {
                 System.err.println("APP merge failed!");
             }
-            return new Pair(retGraph, leftType.simulateApply(appName));
-            
+            return new Pair(retGraph, leftType.simulateApply(appSource));
+
         } else if (label.startsWith(OP_MODIFICATION) && childrenValues.size() == 2) {
-            String modName = label.substring(OP_MODIFICATION.length());
+            String modSource = label.substring(OP_MODIFICATION.length());
             SGraph target = childrenValues.get(1).left;
             Type targetType = childrenValues.get(1).right;
-            
+
             if (target.getNodeForSource("root") != null) {
                 Set<String> retainedSources = new HashSet<>(target.getAllSources());
                 retainedSources.remove("root");
                 target = target.forgetSourcesExcept(retainedSources);
             }
-            target = target.renameSource(modName, "root");
-            
-            if (!targetType.rho.get(modName).rho.isEmpty()
-                    || !targetType.remove(modName).isCompatibleWith(childrenValues.get(0).right)) {
+            target = target.renameSource(modSource, "root");
+
+            if (!childrenValues.get(0).right.canBeModifiedBy(targetType, modSource)) {
+                System.err.println("MOD evaluation failed: invalid types! " + childrenValues.get(0).right + " mod by " + targetType);
                 return null;//modifier must have empty type at modName, and rest must be compatible with modifyee
             }
-            
-//            Map<String, String> targetUnifR = targetType.id.get(modName);
-////            if (targetUnifR == null) {
-////                System.err.println();
-////            }
-//            Map<String, String> reverse = new HashMap();
-//            for (Map.Entry<String, String> entry : targetUnifR.entrySet()) {
-//                reverse.put(entry.getValue(), entry.getKey());
-//            }
-//            //rename right sources to temps
-//            List<String> orderedSources = new ArrayList(targetType.remove(modName).keySet());
-//            for (int i = 0; i<orderedSources.size(); i++) {
-//                SGraph tempTarget = target.renameSource(orderedSources.get(i), "temp"+i);
-//                if (tempTarget != null) {
-//                    target = tempTarget;//must not necessarily contain this source
-//                }
-//            }
-//            //rename temps to left sources
-//            for (int i = 0; i<orderedSources.size(); i++) {
-//                SGraph tempTarget = target.renameSource("temp"+i, reverse.get(orderedSources.get(i)));
-//                if (tempTarget != null) {
-//                    target = tempTarget;//must not necessarily contain this source
-//                }
-//            }
-            
+
             SGraph leftGraph = childrenValues.get(0).left;
-            
-//            target = target.renameSource(modName, "root");
-//            Type leftType = childrenValues.get(0).right;
-//            //check if mod is allowed
-//            Type rhoR = targetType.rho.get(modName);
-//            if (rhoR == null || !rhoR.keySet().isEmpty()
-//                    || !targetType.remove(modName).isCompatibleWith(leftType)) {
-//                return null;
-//            }
+
             //then just merge
             SGraph retGraph = leftGraph.merge(target);
             if (retGraph == null) {
@@ -217,7 +157,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         if (representation.contains(GRAPH_TYPE_SEP)) {
             if (representation.startsWith(OP_COREFMARKER)) {
                 representation = representation.substring(OP_COREFMARKER.length());
-                representation = representation.substring(representation.indexOf("_")+1);
+                representation = representation.substring(representation.indexOf("_") + 1);
             }
             String[] parts = representation.split(GRAPH_TYPE_SEP);
             try {
@@ -227,7 +167,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
         } else if (representation.startsWith(OP_COREF)) {
             String corefIndex = representation.substring(OP_COREF.length());
-            String graphString = "(u<root,COREF"+corefIndex+">)";
+            String graphString = "(u<root,COREF" + corefIndex + ">)";
             try {
                 return new Pair(new IsiAmrInputCodec().read(graphString), new Type("()"));
             } catch (ParseException ex) {
@@ -241,40 +181,42 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
         }
     }
-    
-    
+
     public static class Type {
+
         final Map<String, Type> rho;
         final Map<String, Map<String, String>> id;
-        
+
         public static final Type EMPTY_TYPE;
-        
+
         static {
             Type temp;
             try {
                 temp = new Type("()");
             } catch (ParseException ex) {
-                temp=null;
+                temp = null;
                 System.err.println("this should really never happen");
             }
-            EMPTY_TYPE=temp;
+            EMPTY_TYPE = temp;
         }
-        
+
         /**
-         * Creates a type from a string representation. Example format:
-         * (S, O(O2_UNIFY_S, O_UNIFY_O2), O2(S_UNIFY_S))
-         * Notes: No depth deeper than this example is allowed.
-         * The unify target always corresponds to the top level
-         * Note that a unify target also needs to be specified if no rename occurs,
-         * as in S_UNIFY_S. Differences to the notation in the paper include round
-         * brackets instead of square brackets, and '_UNIFY_' instead of '->'.
+         * Creates a type from a string representation. Example format: (S,
+         * O(O2_UNIFY_S, O_UNIFY_O2), O2(S_UNIFY_S)) Notes: No depth deeper than
+         * this example is allowed. The unify target always corresponds to the
+         * top level Note that a unify target also needs to be specified if no
+         * rename occurs, as in S_UNIFY_S. Differences to the notation in the
+         * paper include round brackets instead of square brackets, and
+         * '_UNIFY_' instead of '->'.
+         *
          * @param typeString
          * @throws de.up.ling.tree.ParseException
-         **/
+         *
+         */
         public Type(String typeString) throws ParseException {
-            this(TreeParser.parse("TOP"+typeString.replaceAll("\\(\\)", "")));
+            this(TreeParser.parse("TOP" + typeString.replaceAll("\\(\\)", "")));
         }
-        
+
         private Type(Tree<String> typeTree) throws ParseException {
             this.rho = new HashMap<>();
             this.id = new HashMap<>();
@@ -289,10 +231,10 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 id.put(keyHere, role2Unif);
             }
         }
-        
+
         public Type(Map<String, Type> rho, Map<String, Map<String, String>> id) {
             if (!rho.keySet().equals(id.keySet())) {
-                
+
             }
             this.rho = rho;
             this.id = id;
@@ -335,25 +277,27 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         public String toString() {
             List<String> roleStrings = new ArrayList();
             for (String role : rho.keySet()) {
-                roleStrings.add(role+rho.get(role).toStringWithUnify(id.get(role)));
+                roleStrings.add(role + rho.get(role).toStringWithUnify(id.get(role)));
             }
             roleStrings.sort(Comparator.naturalOrder());
-            return "("+roleStrings.stream().collect(Collectors.joining(", "))+")";
+            return "(" + roleStrings.stream().collect(Collectors.joining(", ")) + ")";
         }
-        
+
         private String toStringWithUnify(Map<String, String> id4Unif) {
             List<String> roleStrings = new ArrayList();
             for (String role : rho.keySet()) {
-                roleStrings.add(role+ "_UNIFY_"+id4Unif.get(role)+rho.get(role).toStringWithUnify(id.get(role)));
+                roleStrings.add(role + "_UNIFY_" + id4Unif.get(role) + rho.get(role).toStringWithUnify(id.get(role)));
             }
             roleStrings.sort(Comparator.naturalOrder());
-            return "("+roleStrings.stream().collect(Collectors.joining(", "))+")";
+            return "(" + roleStrings.stream().collect(Collectors.joining(", ")) + ")";
         }
-        
+
         /**
-         * Creates a copy with r removed from the domain. Does not modify the original type.
+         * Creates a copy with r removed from the domain. Does not modify the
+         * original type.
+         *
          * @param r
-         * @return 
+         * @return
          */
         public Type remove(String r) {
             Map<String, Map<String, String>> newId = new HashMap<>(id);
@@ -362,21 +306,22 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             newRho.remove(r);
             return new Type(newRho, newId);
         }
-        
+
         /**
-         * Returns the type that we obtain after using APP_s on this type (does not
-         * modify this type). Returns null if APP_s is not allowed for this
+         * Returns the type that we obtain after using APP_s on this type (does
+         * not modify this type). Returns null if APP_s is not allowed for this
          * type (i.e. if this type does not contain s, or s is needed for later
          * unification).
+         *
          * @param s
-         * @return 
+         * @return
          */
         public Type simulateApply(String s) {
-            
+
             if (!rho.containsKey(s)) {
                 return null;
             }
-            
+
             //check if we need this for unification later
             Type closure = closure();
             Set<String> allUnifTargets = new HashSet();
@@ -407,12 +352,13 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 return new Type(newRho, newId);
             }
         }
-        
+
         /**
-         * Checks whether type 'other' is a 'subset' of this type, when extending
-         * the subset notion to functions.
+         * Checks whether this type is a 'subset' of type 'other', when
+         * extending the subset notion to functions.
+         *
          * @param other
-         * @return 
+         * @return
          */
         public boolean isCompatibleWith(Type other) {
             if (!other.keySet().containsAll(keySet())) {
@@ -434,10 +380,11 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             return true;
         }
-        
+
         /**
          * [] has depth 0, [O] has depth 1, [O[S]] has depth 2, etc.
-         * @return 
+         *
+         * @return
          */
         public int depth() {
             if (keySet().isEmpty()) {
@@ -447,24 +394,26 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 for (Type t : rho.values()) {
                     max = Math.max(max, t.depth());
                 }
-                return max+1;
+                return max + 1;
             }
         }
-        
+
         /**
          * Returns the set of all types that are expected at the sources.
-         * @return 
+         *
+         * @return
          */
         public Collection<Type> getNestedTypes() {
             return rho.values();
         }
-        
+
         /**
-         * Returns all source names that the nested types signal to be added through APP,
-         * e.g. S in [O[S]] or in O[O->S]. This method is not recursive, so to get all
-         * types that will be added through any sequence of applies, us this function
-         * on the closure of this type.
-         * @return 
+         * Returns all source names that the nested types signal to be added
+         * through APP, e.g. S in [O[S]] or in O[O->S]. This method is not
+         * recursive, so to get all types that will be added through any
+         * sequence of applies, us this function on the closure of this type.
+         *
+         * @return
          */
         public Set<String> getUnificationTargets() {
             Set<String> ret = new HashSet<>();
@@ -473,14 +422,15 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             return ret;
         }
-        
+
         /**
-         * Returns the closure of this type, i.e., this function adds all sources
-         * now that can later be added through application,
-         * and their target types, to this type. E.g. [O[S]] becomes [O[S], S]. 
-         * @return 
+         * Returns the closure of this type, i.e., this function adds all
+         * sources now that can later be added through application, and their
+         * target types, to this type. E.g. [O[S]] becomes [O[S], S].
+         *
+         * @return
          */
-        Type closure() {
+        public Type closure() {
             Map<String, Map<String, String>> newId = new HashMap<>();
             Map<String, Type> newRho = new HashMap<>();
             for (String r : keySet()) {
@@ -497,14 +447,38 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             return new Type(newRho, newId);
         }
-        
+
+        public Type getTargetType(String s) {
+            if (rho.containsKey(s)) {
+                return rho.get(s);
+            } else {
+                return null;
+            }
+        }
+
+        public Set<Type> getAllSubtypes() {
+            Set<Type> ret = new HashSet<>();
+            ret.add(this);
+            //TODO the following check is an arbitrary choice to keep complexity explosion in check. This should be properly fixed.
+            if (rho.keySet().size() < 10) {
+                for (String s : rho.keySet()) {
+                    Type after = simulateApply(s);
+                    if (after != null) {
+                        ret.addAll(after.getAllSubtypes());
+                    }
+                }
+            }
+            return ret;
+        }
+
         /**
-         * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this type,
-         * and G_2 has type 'argument'.
+         * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this
+         * type, and G_2 has type 'argument'.
+         *
          * @param argument
          * @param appSource
-         * @return 
-         */        
+         * @return
+         */
         public boolean canApplyTo(Type argument, String appSource) {
             //check if the type expected here at appSource is equal to the argument type
             Type rhoR = this.rho.get(appSource);
@@ -518,54 +492,67 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             return !allUnifTargets.contains(appSource);
         }
-        
+
         /**
-         * Checks whether MOD_modSource(G_1, G_2) is allowed, given G_1 has this type,
-         * and G_2 has type argument.
+         * Checks whether MOD_modSource(G_1, G_2) is allowed, given G_1 has this
+         * type, and G_2 has type argument.
+         *
          * @param modifier
          * @param modSource
-         * @return 
+         * @return
          */
         public boolean canBeModifiedBy(Type modifier, String modSource) {
             Type rhoR = modifier.rho.get(modSource);
             return rhoR != null && rhoR.keySet().isEmpty()
                     && modifier.remove(modSource).isCompatibleWith(this);
         }
-        
+
         /**
-         * Returns the type of operation(left, right) if that is defined,
-         * and null otherwise. Objects left and right are not modified.
+         * Returns the type of operation(left, right) if that is defined, and
+         * null otherwise. Objects left and right are not modified.
+         *
          * @param left
          * @param right
          * @param operation
-         * @return 
+         * @return
          */
         public static Type evaluateOperation(Type left, Type right, String operation) {
             String s;
             boolean app = false;
+            
+            //System.err.println(operation);
+
             if (operation.startsWith(OP_APPLICATION)) {
                 s = operation.substring(OP_APPLICATION.length());
                 app = true;
+                //System.err.println("apply!");
             } else {
                 s = operation.substring(OP_MODIFICATION.length());
             }
-            if (app && left.canApplyTo(right, s)) {
-                return left.simulateApply(s);
-            } else if (left.canBeModifiedBy(right, s)) {
-                return left;
+            if (app) {
+                if (left.canApplyTo(right, s)) {
+                    return left.simulateApply(s);
+                } else {
+                    return null;
+                }
             } else {
-                return null;
+                if (left.canBeModifiedBy(right, s)) {
+                    return left;
+                } else {
+                    return null;
+                }
             }
         }
-        
+
     }
-    
+
     /**
      * Checks whether g1 and g2 are isomorphic, taking only sources into account
      * that do not start with 'COREF'.
+     *
      * @param g1
      * @param g2
-     * @return 
+     * @return
      */
     public static boolean isomExceptCOREFs(SGraph g1, SGraph g2) {
         GraphIsomorphismInspector iso
@@ -580,10 +567,10 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         } else {
             while (iso.hasNext()) {
                 final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
-                
+
                 boolean foundSourceMismatch = false;
-                                
-                for(String source : g1.getAllSources() ) {
+
+                for (String source : g1.getAllSources()) {
                     if (!source.startsWith("COREF")) {
                         GraphNode newNode = ir.getVertexCorrespondence(g1.getNode(g1.getNodeForSource(source)), true);
                         Collection<String> sourcesHere = g2.getSourcesAtNode(newNode.getName());
@@ -592,7 +579,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                         }
                     }
                 }
-                
+
                 if (!foundSourceMismatch) {
                     return true;
                 }
@@ -601,8 +588,5 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return false;
         }
     }
-    
-    
-    
-    
+
 }

@@ -5,7 +5,7 @@
   <groupId>de.up.ling</groupId>
   <artifactId>alto</artifactId>
   <packaging>jar</packaging>
-  <version>2.2-SNAPSHOT</version>
+  <version>2.3-SNAPSHOT</version>
   <name>alto</name>
   <url>http://maven.apache.org</url>
 
@@ -21,7 +21,7 @@
     <dependency>
       <groupId>de.saar.coli</groupId>
       <artifactId>basics</artifactId>
-      <version>[1.2.39,)</version>
+      <version>1.2.41-SNAPSHOT</version>
     </dependency>
 <!--  -->
 <dependency>
@@ -35,6 +35,18 @@
 	<groupId>mysql</groupId>
 	<artifactId>mysql-connector-java</artifactId>
 	<version>5.1.37</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>edu.stanford.nlp</groupId>
+        <artifactId>stanford-corenlp</artifactId>
+        <version>3.8.0</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>edu.mit</groupId>
+        <artifactId>jwi</artifactId>
+        <version>2.2.3</version>
     </dependency>
     
     <dependency>
@@ -52,7 +64,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
-      <version>3.0</version>
+      <version>3.6.1</version>
     </dependency>
     
     <dependency>
@@ -467,6 +479,15 @@
 
 
   <repositories>
+      <!-- added maven central repository for stanford corenlp and edu.mit.jwi.
+    May want to add that to external at coli? -->
+    <repository>
+        <id>maven-central</id>
+        <name>maven-central</name>
+        <url>http://central.maven.org/maven2</url>
+    </repository>
+    
+    
     <repository>
       <snapshots>
         <enabled>false</enabled>

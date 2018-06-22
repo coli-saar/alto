@@ -134,6 +134,22 @@ public class SGraph{
         invalidate();
         return u;
     }
+    
+    /**
+     * safely removes a node. Returns true if successful, false if not
+     * (may not remove a node with a source).
+     * @param name
+     * @return 
+     */
+    public boolean removeNode(String name) {
+        if (!nameToNode.keySet().contains(name) || isSourceNode(name)) {
+            return false;
+        } else {
+            graph.removeVertex(getNode(name));
+            nameToNode.remove(name);
+            return true;
+        }
+    }
 
     /**
      * Adds an "anonymous" node with the given label to the s-graph.
@@ -485,7 +501,7 @@ public class SGraph{
                                              edge.getLabel());
 
             if (newEdge == null) {
-                // e.g. because an edge with the same label already existed between the two nodes
+                // e.g. because an edge with the same label already existed between the two nodes -- Edit: this case should no longer happen, since multigraphs are allowed now.
                 return false;
             }
         }
@@ -756,7 +772,7 @@ public class SGraph{
         final SGraph other = (SGraph) obj;
 
         if (equalsMeansIsomorphy) {
-            return isIsomorphic(other);
+            return isIsomorphicAlsoEdges(other);
         } else {
             return isIdentical(other);
         }
