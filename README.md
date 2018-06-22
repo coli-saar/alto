@@ -23,7 +23,7 @@ Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It i
 - Built for easy extensibility: implement your own grammar formalism by adding an [Algebra](https://bitbucket.org/tclup/alto/wiki/Algebras) class, and use any of the Alto algorithms directly.
 - Comes with a GUI that provides access to most of these algorithms and visualizes parsing results.
 
-Alto is published under a [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
+Alto is published under a [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0). More license information can be found in the file [license-info.md](https://bitbucket.org/tclup/alto/src/default/license-info.md).
 
 The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11). You can find more details on the [Literature](https://bitbucket.org/tclup/alto/wiki/Literature) page.
 
