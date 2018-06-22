@@ -238,10 +238,8 @@ public class GraphInfo {
      */
     public final int getIntForSource(String source) {
         if (!sourcenameToInt.containsKey(source)) {
-            synchronized(intToSourcename) {
-                intToSourcename.add(source);
-                sourcenameToInt.put(source, intToSourcename.size()-1);
-            }
+            intToSourcename.add(source);
+            sourcenameToInt.put(source, intToSourcename.size()-1);
         }
         return sourcenameToInt.get(source);
     }
