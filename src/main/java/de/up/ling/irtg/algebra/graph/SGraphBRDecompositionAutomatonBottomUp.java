@@ -585,6 +585,11 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         private final StorageMPF storeHere;
         private final int parentEdge;
 
+        /**
+         * Top level constructor.
+         * @param vertices
+         * @param auto 
+         */
         public EdgeMPF(IntSet vertices, SGraphBRDecompositionAutomatonBottomUp auto) {
             currentIndex = -1;
             local2GlobalEdgeIDs = auto.graphInfo.getAllIncidentEdges(vertices);
@@ -599,7 +604,15 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             parentEdge = -1;
             storeHere = new StorageMPF(auto);
         }
-
+        
+        /**
+         * Nested constructor.
+         * @param local2Global
+         * @param global2Local
+         * @param currentIndex
+         * @param auto
+         * @param parentEdge 
+         */
         private EdgeMPF(int[] local2Global, Int2IntMap global2Local, int currentIndex, SGraphBRDecompositionAutomatonBottomUp auto, int parentEdge) {
             local2GlobalEdgeIDs = local2Global;
             global2LocalEdgeIDs = global2Local;
@@ -618,7 +631,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         public void insert(int rep) {
             BoundaryRepresentation bRep = auto.getStateForId(rep);
 
-            int nextEdgeIndex;
+            int nextEdgeIndex; // index of the next relevant edge in bRep.getSortedInBEdges()
             if (parentEdge == -1) {
                 nextEdgeIndex = 0;
             } else {
@@ -627,18 +640,20 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
 
             if (nextEdgeIndex >= bRep.getSortedInBEdges().size()) {
-                storeHere.insert(rep);
+                storeHere.insert(rep);//there are no more relevant edges!
             } else {
-                int nextEdge = bRep.getSortedInBEdges().get(nextEdgeIndex);
-                int localEdgeID = global2LocalEdgeIDs.get(nextEdge);
+                int nextEdge = bRep.getSortedInBEdges().getInt(nextEdgeIndex);//get the next relevant edge
+                int localEdgeID = global2LocalEdgeIDs.get(nextEdge);//find the local ID for it
                 int childIndex = localEdgeID-currentIndex-1;
 
                 SinglesideMergePartnerFinder targetChild = children[childIndex];
                 if (targetChild == null) {
                     if (currentIndex == local2GlobalEdgeIDs.length - 1) {
+                        //in this case we are at the end of the line, and can use direct lookup instead of nested one.
                         childIsEdgeMPF[childIndex]=false;
                         targetChild = new StorageMPF(auto);
                     } else {
+                        //here we need nested lookup. 
                         targetChild = new EdgeMPF(local2GlobalEdgeIDs, global2LocalEdgeIDs, localEdgeID, auto, nextEdge);
                         childIsEdgeMPF[childIndex]=true;
                     }
