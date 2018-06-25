@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Decoder and command line interface for the JAMR style baseline; call with --help to see options.
  * @author JG
  */
 public class JAMRParser2ExtFormat {

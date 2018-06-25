@@ -9,16 +9,16 @@ import de.up.ling.tree.ParseException;
 import java.io.IOException;
 
 /**
- * 
+ * A script that turns a raw AMR corpus into alto format.
  * @author Jonas
  */
 public class FullProcess {
     
     /**
+     * A script that turns a raw AMR corpus into alto format.
      * Takes three arguments: first folder that contains the original AMR corpus
      * files; Second the output folder; third the path to the stanford parser
-     * grammar file englishPCFG.txt. The third argument is optional, if not given,
-     * then a corpus without trees is produced.
+     * grammar file englishPCFG.txt.
      * @param args
      * @throws IOException 
      * @throws de.up.ling.tree.ParseException 
@@ -26,10 +26,11 @@ public class FullProcess {
     public static void main(String[] args) throws IOException, ParseException {
         String[] onlyOutput = new String[]{args[1], args[2]};
         
-        fullProcess(args[0], args[1], args.length > 2 ? args[2] : null);
+        fullProcess(args[0], args[1], args[2]);
     }
     
     /**
+     * A script that turns a raw AMR corpus into alto format.
      * Takes three arguments: first folder that contains the original AMR corpus
      * files; Second the output folder; third the path to the stanford parser
      * grammar file englishPCFG.txt. 
@@ -45,7 +46,7 @@ public class FullProcess {
         System.err.println("Building raw corpus...");
         Stripped2Corpus.stripped2Corpus(outputPath, grammarFile);
         System.err.println("Fixing corpus...");
-        FixSemeval2017AMRCorpus.fixAMRCorpus(outputPath, grammarFile != null);
+        FixAMRAltoCorpus.fixAMRCorpus(outputPath, true);
         System.err.println("Done!");
     }
     

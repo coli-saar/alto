@@ -39,7 +39,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- *
+ * An AM decomposition automaton that also tracks the indeces that constants
+ * are aligned to across the term, creating indexed AM terms.
  * @author jonas
  */
 public class AlignmentTrackingAutomaton extends TreeAutomaton<Pair<Pair<BoundaryRepresentation, AMDecompositionAutomaton.Type>, Integer>> {
@@ -52,7 +53,7 @@ public class AlignmentTrackingAutomaton extends TreeAutomaton<Pair<Pair<Boundary
     private final Int2IntMap state2head;
     private final Map<Integer, Double> scoreConst;
     
-    AlignmentTrackingAutomaton(ApplyModifyGraphAlgebra alg, Signature signature, SGraph graph, Map<Integer, Set<String>> index2nns,
+    private AlignmentTrackingAutomaton(ApplyModifyGraphAlgebra alg, Signature signature, SGraph graph, Map<Integer, Set<String>> index2nns,
             Function<SGraph, Double> scoreConst) {
         super(signature);
         decomp = new AMDecompositionAutomaton(alg, null, graph);
@@ -71,10 +72,6 @@ public class AlignmentTrackingAutomaton extends TreeAutomaton<Pair<Pair<Boundary
                 this.scoreConst.put(id, scoreConst.apply(c));
             }
         }
-    }
-    
-    AlignmentTrackingAutomaton(ApplyModifyGraphAlgebra alg, Signature signature, SGraph graph, Map<Integer, Set<String>> index2nns) {
-        this(alg, signature, graph, index2nns, (g -> 1.0));
     }
 
     @Override
@@ -234,12 +231,33 @@ public class AlignmentTrackingAutomaton extends TreeAutomaton<Pair<Pair<Boundary
     }
     
     
-    
+    /**
+     * Like the other 'create' function, but assigning weight 1.0 to all constants.
+     * @param graph
+     * @param alignments
+     * @param sentLength
+     * @param coref
+     * @return
+     * @throws IllegalArgumentException
+     * @throws ParseException 
+     */
     public static AlignmentTrackingAutomaton create(SGraph graph, String[] alignments, int sentLength, boolean coref) throws IllegalArgumentException, ParseException {
         return create(graph, alignments, sentLength, coref, (g -> 1.0));
     }
     
-    
+    /**
+     * Creates a new AlignmentTrackingAutomaton, also building the signature for decomposing it,
+     * using de.up.ling.irtg.algebra.graph.AMSignatureBuilder.getConstantsForAlignment.
+     * @param graph the graph to be decomposed
+     * @param alignments a list of alignments in string form (see Alignment.toString())
+     * @param sentLength the length of the sentence corresponding to the graph.
+     * @param coref whether to use coref sources (set to false in the ACL 2018 experiments)
+     * @param scoreConst A function that assigns a weight to each constant. Used for
+     * scoring source assignments according to heuristic preferences in the ACL 2018 experiments.
+     * @return
+     * @throws IllegalArgumentException
+     * @throws ParseException 
+     */
     public static AlignmentTrackingAutomaton create(SGraph graph, String[] alignments, int sentLength, boolean coref,
             Function<SGraph, Double> scoreConst) throws IllegalArgumentException, ParseException {
         Signature sig = new Signature();

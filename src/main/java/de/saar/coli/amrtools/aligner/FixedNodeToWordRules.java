@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * A set of rules mapping AMR labels to corresponding words.
  * @author Jonas
  */
 public class FixedNodeToWordRules {
@@ -109,8 +109,12 @@ public class FixedNodeToWordRules {
     }
     
     
-    
-    public static Set<String> getDirectWords(String nodeLabel) {
+    /**
+     * Gets directly related words for a node label.
+     * @param nodeLabel
+     * @return 
+     */
+    static Set<String> getDirectWords(String nodeLabel) {
         Set<String> ret = new HashSet<>();
         
         //e.g. for run-01, add run
@@ -146,11 +150,12 @@ public class FixedNodeToWordRules {
     }
     
     /**
+     * Gets indirectly related words for a node label.
      * Contains the direct words. For now the direct words + pronouns.
      * @param nodeLabel
      * @return 
      */
-    public static Set<String> getIndirectWords(String nodeLabel) {
+    static Set<String> getIndirectWords(String nodeLabel) {
         Set<String> ret = getDirectWords(nodeLabel);
         if (FIXED_SECONDARY_RULES.containsKey(nodeLabel)) {
             ret.addAll(Arrays.asList(FIXED_SECONDARY_RULES.get(nodeLabel)));

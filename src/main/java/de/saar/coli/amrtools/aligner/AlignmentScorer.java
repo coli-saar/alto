@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Utility function for the scoring part of Aligner.
  * @author Jonas
  */
 public class AlignmentScorer {
@@ -80,7 +80,7 @@ public class AlignmentScorer {
      * @param coordinationTuples 
      * @param aligner 
      */
-    public AlignmentScorer(Set<Alignment> candidates, Set<Alignment> fixed, Set<Alignment> discarded,
+    AlignmentScorer(Set<Alignment> candidates, Set<Alignment> fixed, Set<Alignment> discarded,
             List<String> sent, SGraph graph, WordnetEnumerator we, Set<Set<String>> coordinationTuples, Aligner aligner) {
         this.scoreBuffer = new Object2DoubleOpenHashMap<>();
         this.sent = sent;
@@ -117,7 +117,7 @@ public class AlignmentScorer {
         }
     }
             
-    public double score(Alignment al) {
+    double score(Alignment al) {
         double max = 0;
         for (int index = al.span.start; index<al.span.end; index++) {
             Set<Alignment> competitors = Sets.difference(index2als.get(index),
@@ -219,7 +219,7 @@ public class AlignmentScorer {
     }
     
     //TODO skip words that have no candidate assignment
-    public static double neighborScoreForProb(GraphNode node, Span span, SGraph graph, Map<String, Set<Pair<Span, Double>>> nn2scoredCandidates) {
+    static double neighborScoreForProb(GraphNode node, Span span, SGraph graph, Map<String, Set<Pair<Span, Double>>> nn2scoredCandidates) {
         double ret = 0.0;
         Set<String> covered = new HashSet<>();
         for (GraphEdge e : graph.getGraph().edgesOf(node)) {
@@ -240,7 +240,7 @@ public class AlignmentScorer {
         return ret;
     }
     
-    public static double extendingNeighborScoreForProb(GraphNode node, Span span, SGraph graph,
+    static double extendingNeighborScoreForProb(GraphNode node, Span span, SGraph graph,
             List<TaggedWord> tags, Map<String, Alignment> nn2fixedAlign,
             Map<String, Set<Pair<Span, Double>>> nn2scoredCandidates, WordnetEnumerator we) {
         Object2DoubleMap<GraphNode> extensionScores = new Object2DoubleOpenHashMap<>();
@@ -292,31 +292,8 @@ public class AlignmentScorer {
         }
         return ret;
     }
-    
-    public static double basicScore(WordnetEnumerator we, String word, String label) {
-        Set<String> wnLemmas = we.getWNCandidates(word);
-        Set<String> closeLabels = FixedNodeToWordRules.getDirectWords(label);
-        if (closeLabels.contains(word)) {
-            return SC_PERFECT;
-        }
-        Set<String> relLabels = FixedNodeToWordRules.getIndirectWords(label);
-        Set<String> closeIntersection = Sets.intersection(wnLemmas, closeLabels);
-        if (!closeIntersection.isEmpty()) {
-            return SC_PERFECT + closeIntersection.stream().map(lemma -> we.scoreRel(word, lemma))
-                    .collect(Collectors.maxBy(Comparator.naturalOrder())).get();
-        } else {
-            Set<String> indirectIntersection = Sets.intersection(wnLemmas, relLabels);
-            if (!indirectIntersection.isEmpty()) {
-                return SC_PERFECT + indirectIntersection.stream().map(lemma -> we.scoreRel(word, lemma))
-                        .collect(Collectors.maxBy(Comparator.naturalOrder())).get() - SC_INDIRECT_NODE_COST;
-            } else {
-                System.err.println("No match found when computing basic score; this should not happen at the moment! word = "+word+", label="+label);
-                return SC_NO_MATCH;
-            }
-        }
-    }
-    
-    public static double basicScoreProb(WordnetEnumerator we, String word, String label) {
+        
+    static double basicScoreProb(WordnetEnumerator we, String word, String label) {
         Set<String> wnLemmas = we.getWNCandidates(word);
         Set<String> closeLabels = FixedNodeToWordRules.getDirectWords(label);
         if (closeLabels.contains(word)) {
@@ -343,7 +320,7 @@ public class AlignmentScorer {
         return !inEdges.isEmpty() && inEdges.iterator().next().getLabel().equals("wiki");
     }
     
-    public static double matchFraction(String label, String word) {
+    static double matchFraction(String label, String word) {
         label = Util.stripSenseSuffix(label);
         String wordWithoutSpecial = word.replaceAll("[,\\.'()]", "");
         if (!word.equals(wordWithoutSpecial)) {
@@ -353,32 +330,4 @@ public class AlignmentScorer {
         }
     }
     
-    
-    public static class ScoredAlignment implements Comparable {
-        
-        public final double score;
-        public final Alignment alignment;
-        
-        public ScoredAlignment(double score, Alignment alignment) {
-            this.score = score;
-            this.alignment = alignment;
-        }
-        
-        @Override
-        public int compareTo(Object o) {
-            if (o instanceof ScoredAlignment) {
-                return Double.compare(score, ((ScoredAlignment)o).score);
-            } else {
-                throw new IllegalArgumentException("Wrong class when comparing ScoredAlignment!");
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "(" + alignment + ", " + score + ')';
-        }
-        
-        
-        
-    }
 }

@@ -21,10 +21,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
+ * Fixes minor problems when transforming an AMR corpus into alto format,
+ * concerning things such as root sources, single quotes and tokenization.
  * @author Jonas
  */
-public class FixSemeval2017AMRCorpus {
+public class FixAMRAltoCorpus {
     
     public static void main(String[] args) throws IOException, ParseException {
         String outputPath = args[0];
@@ -35,8 +36,16 @@ public class FixSemeval2017AMRCorpus {
         fixAMRCorpus(outputPath, true);
     }
     
-    public static void fixAMRCorpus(String path, boolean useTrees) throws IOException, ParseException {
-        FixSemeval2017AMRCorpus fixer = new FixSemeval2017AMRCorpus(useTrees);
+    /**
+     * Fixes minor problems when transforming an AMR corpus into alto format,
+     * concerning things such as root sources, single quotes and tokenization.
+     * @param path
+     * @param useTrees
+     * @throws IOException
+     * @throws ParseException 
+     */
+    static void fixAMRCorpus(String path, boolean useTrees) throws IOException, ParseException {
+        FixAMRAltoCorpus fixer = new FixAMRAltoCorpus(useTrees);
         
         fixer.replaceSinglequotes(path);
         fixer.makeAnonNodesExplicit(path);
@@ -46,7 +55,7 @@ public class FixSemeval2017AMRCorpus {
         fixer.addRootSources(path);
     }
     
-    public FixSemeval2017AMRCorpus(boolean useTrees) {
+    private FixAMRAltoCorpus(boolean useTrees) {
         if (useTrees) {
             START_LINE = 8;
             STRING_LINE = 0;
@@ -203,7 +212,12 @@ public class FixSemeval2017AMRCorpus {
         writer.close();
     }
     
-    
+    /**
+     * makes anonymous nodes (e.g.~for numbers or names) explicit, i.e.~gives
+     * them node names.
+     * @param graph
+     * @return 
+     */
     public static String makeAnonExpl(String graph) {
         int explCounter = 0;
         String regex = "( )(:[A-Za-z0-9-]+) (\"[^\"]+\"|\\+|\\-[0-9.,]*|interrogative|expressive|imperative|[0-9.,]+)";

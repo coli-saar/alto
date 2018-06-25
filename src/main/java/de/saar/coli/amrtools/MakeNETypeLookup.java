@@ -32,11 +32,19 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 /**
- *
+ * Small script to create named entity type lookup chart from corpus.
  * @author JG
  */
 public class MakeNETypeLookup {
     
+    /**
+     * Small script to create named entity type lookup chart from corpus.
+     * First argument is path to corpus created by RareWordsAnnotater,
+     * second argument is path to output file.
+     * @param args
+     * @throws IOException
+     * @throws CorpusReadingException 
+     */
     public static void main(String[] args) throws IOException, CorpusReadingException {
         InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySig = new Signature();

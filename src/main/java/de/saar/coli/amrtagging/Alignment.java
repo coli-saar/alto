@@ -13,7 +13,8 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 /**
- *
+ * Represents an alignment between a span in a string and a set of nodes in a graph,
+ * also marking nodes lexically related to the span. 
  * @author Jonas
  */
 public class Alignment {
@@ -32,6 +33,15 @@ public class Alignment {
         this.weight = weight;
     }
     
+    /**
+     * Full constructor, creates a weighted alignment between nodes and span, marking
+     * lexNodes as lexical.
+     * @param nodes
+     * @param span
+     * @param lexNodes
+     * @param color the color used for visualization, just use 0 if you don't know what to put here.
+     * @param weight some algorithms use weighted alignments, use 1.0 as default if you don't know what to put here.
+     */
     public Alignment(Set<String> nodes, Span span, Set<String> lexNodes, int color, double weight) {
         this.nodes = new HashSet(nodes);//such that if nodes is an abstract collection, we can still add something later.
         this.span = span;
@@ -40,16 +50,30 @@ public class Alignment {
         this.weight = weight;
     }
     
+    /**
+     * Creates an alignment between nodes and span, marking
+     * lexNodes as lexical.
+     * @param nodes
+     * @param span
+     * @param lexNodes
+     * @param color the color used for visualization.
+     */
     public Alignment(Set<String> nodes, Span span, Set<String> lexNodes, int color) {
         this(nodes, span, lexNodes, color, 1.0);
     }
     
+    /**
+     * Creates an alignment between nodes and span, with no nodes marked as lexical.
+     * @param nodes
+     * @param span 
+     */
     public Alignment(Set<String> nodes, Span span) {
         this(nodes, span, Collections.EMPTY_SET, 0);
     }
     
     /**
-     * Also adds nn to the lexNodes.
+     * Creates an alignment between the one node nn and the span [index,index+1];
+     * also marks nn as lexical.
      * @param nn
      * @param index 
      */
@@ -57,6 +81,11 @@ public class Alignment {
         this(Collections.singleton(nn), new Span(index, index+1), Collections.singleton(nn), 0);
     }
     
+    /**
+     * Format is n1|n2|...||span||weight, where n1, n2,... are the aligned nodes,
+     * followed by an exclamation point '!' if lexical. 
+     * @return 
+     */
     @Override
     public String toString() {
         StringJoiner sjN = new StringJoiner("|");
@@ -83,6 +112,11 @@ public class Alignment {
         return hash;
     }
 
+    /**
+     * Equality depends on everything except weight.
+     * @param obj
+     * @return 
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -110,6 +144,12 @@ public class Alignment {
         return true;
     }
     
+    /**
+     * returns true iff nodes and span of the two objects are equal, i.e. if
+     * they describe the same things being aligned to each other.
+     * @param other
+     * @return 
+     */
     public boolean equalsBasic(Alignment other) {
         return nodes.equals(other.nodes) && span.equals(other.span);
     }
@@ -127,6 +167,14 @@ public class Alignment {
     }
     
     
+    /**
+     * Inverse of the toString method, allowing a color to be specified for
+     * visualization. Can read inputs that do not have a weight, using default
+     * weight 1.0 there.
+     * @param input
+     * @param color
+     * @return 
+     */
     public static Alignment read(String input, int color) {
         if (!input.contains("||")) {
             return null;
@@ -158,6 +206,13 @@ public class Alignment {
         return new Alignment(nodes, span, lexNodes, color, weight);
     }
     
+    /**
+     * Inverse of the toString method, using default color 1 for visualization.
+     * Can read inputs that do not have a weight, using default weight 1.0 there.
+     * Use this read method if you don't know which one to use.
+     * @param input
+     * @return 
+     */
     public static Alignment read(String input) {
         return read(input, 0);
     }
@@ -184,6 +239,10 @@ public class Alignment {
             this.end = end;
         }
         
+        /**
+         * From a string representation i-j, creates the span [i,j].
+         * @param rep 
+         */
         public Span(String rep) {
             String[] parts = rep.split("-");
             this.start = Integer.valueOf(parts[0]);
@@ -195,14 +254,30 @@ public class Alignment {
             return start+"-"+end;
         }
         
+        /**
+         * Returns true iff end >= other.start && start <= other.end.
+         * @param other
+         * @return 
+         */
         public boolean overlapsOrTouches(Span other) {
             return end >= other.start && start <= other.end; 
         }
         
+        /**
+         * Returns true iff end > other.start && start < other.end.
+         * @param other
+         * @return 
+         */
         public boolean overlaps(Span other) {
             return end > other.start && start < other.end; 
         }
         
+        /**
+         * merges the two spans into another, returning [Math.min(start, other.start), Math.max(end, other.end)].
+         * Prints a warning if the spans don't overlap or touch.
+         * @param other
+         * @return 
+         */
         public Span merge(Span other) {
             if (!overlapsOrTouches(other)) {
                 System.err.println("Warning: merging non-touching spans "+this.toString() +" and "+other.toString()+".");
@@ -210,6 +285,10 @@ public class Alignment {
             return new Span(Math.min(start, other.start), Math.max(end, other.end));
         }
         
+        /**
+         * returns true iff end == start+1.
+         * @return 
+         */
         public boolean isSingleton() {
             return end == start+1;
         }

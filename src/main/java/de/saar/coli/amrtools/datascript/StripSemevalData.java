@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 /**
- *
+ * Extracts raw graphs and english sentences from a raw AMR corpus.
  * @author Jonas
  */
 public class StripSemevalData {
@@ -24,6 +24,7 @@ public class StripSemevalData {
     static final String COMMENT_PREF = "#";
     
     /**
+     * calls stringSemevalData with arguments in order.
      * @param args the command line arguments
      * @throws java.io.FileNotFoundException
      */

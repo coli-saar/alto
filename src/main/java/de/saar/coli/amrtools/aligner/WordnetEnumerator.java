@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 
+ * Enumerates words that are closely connected in WordNet for a given word, given some conditions.
  * @author Jonas
  */
 public class WordnetEnumerator {
@@ -49,7 +49,7 @@ public class WordnetEnumerator {
     private final RAMDictionary dict;
     private final Map<String, Object2DoubleMap<String>> wordPairScores;
     
-    public WordnetEnumerator(String dictPath) throws MalformedURLException, IOException, InterruptedException {
+    WordnetEnumerator(String dictPath) throws MalformedURLException, IOException, InterruptedException {
         this.wordPairScores = new HashMap<>();
         URL url = new URL("file", null, dictPath);
         
@@ -66,7 +66,7 @@ public class WordnetEnumerator {
     private final static double GOOD_COST = 0.2;
     private final static double COST_THRESHOLD = 1.8;//with current SEARCH_DEPTH, worst score with only one BAD_COST is 1.6, so use this to test for more than 1 BAD_COST.
     
-    public Set<String> getStems(String word) {
+    Set<String> getStems(String word) {
         Set<String> ret = new HashSet<>();
         for (POS pos : POS.values()) {
             for (String stem : stemmer.findStems(word, pos)) {
@@ -77,7 +77,7 @@ public class WordnetEnumerator {
     }
     
     
-    public Set<String> getWNCandidates(String word) {
+    Set<String> getWNCandidates(String word) {
         if (wordPairScores.containsKey(word)) {
             return wordPairScores.get(word).keySet();
         }
@@ -169,23 +169,25 @@ public class WordnetEnumerator {
      * @param lemma2check
      * @return 
      */
-    public double scoreRel(String word, String lemma2check) {
+    double scoreRel(String word, String lemma2check) {
         if (!wordPairScores.containsKey(word)) {
             getWNCandidates(word);//this will fill add an entry for word to the wordPairScores, and set its default return value.
         }
         return wordPairScores.get(word).getDouble(lemma2check);
     }
     
-    
+    /**
+     * For testing, first argument is the path to wordnet 3.0 (the dict folder), second a word, and optionally
+     * third a second word. Prints near neighbors of the first word and, if applicable, shortest paths to the second word.
+     * @param args
+     * @throws IOException
+     * @throws CorpusReadingException
+     * @throws MalformedURLException
+     * @throws InterruptedException 
+     */
     public static void main(String[] args) throws IOException, CorpusReadingException, MalformedURLException, InterruptedException {
         
         
-        
-//        InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
-//        Signature dummySig = new Signature();
-//        loaderIRTG.addInterpretation("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
-//        loaderIRTG.addInterpretation("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-//        Corpus corpus = Corpus.readCorpus(new FileReader(args[1]), loaderIRTG);
         
         WordnetEnumerator we = new WordnetEnumerator(args[0]);
         String word = args[1];
@@ -272,17 +274,6 @@ public class WordnetEnumerator {
         
         
         
-//        for (Instance inst : corpus) {
-//            List<String> sent = (List)inst.getInputObjects().get("string");
-//            System.out.println(sent.stream().collect(Collectors.joining(" ")));
-//            for (String word : sent) {
-//                System.out.println(word);
-//                System.out.println(we.getWNCandidates(word));
-//                System.out.println();
-//            }
-//            System.out.println();
-//            System.out.println();
-//        }
     }
     
     private static void addPath(IWord iW, List<String> path, Map<IWord, Set<List<String>>> found) {
@@ -304,7 +295,7 @@ public class WordnetEnumerator {
     
     private final Map<String, Set<String>> word2Hypers = new HashMap<>();
     
-    public Set<String> getAllNounHypernyms(String word) {
+    Set<String> getAllNounHypernyms(String word) {
         if (word2Hypers.containsKey(word)) {
             return word2Hypers.get(word);
         }

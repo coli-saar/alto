@@ -14,11 +14,17 @@ import java.util.List;
 import java.util.StringJoiner;
 
 /**
- * extracts the highest-scoring non-null labels from a labelProbs.txt file.
+ * Extracts the highest-scoring labels from a file with label probabilities (e.g.~produced by neural tagger).
  * @author Jonas
  */
 public class LabelProbs2Labels {
     
+    /**
+     * First argument is the folder path, second argument is the prefix to the probs file
+     * (e.g.~label for labelProbs.txt), third argument should be true iff null tokens are allowed.
+     * @param args
+     * @throws IOException 
+     */
     public static void main(String[] args) throws IOException {
         String type = args[1];
         List<List<List<Pair<String, Double>>>> labelProbs = Util.readProbs(args[0]+args[1]+"Probs.txt", true);

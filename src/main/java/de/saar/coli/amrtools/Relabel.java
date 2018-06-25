@@ -37,7 +37,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Takes the graphs created by de.saar.coli.amrtaggin.Parser
+ * and fills in labels at lexical nodes.
  * @author Jonas
  */
 public class Relabel {
@@ -49,6 +50,21 @@ public class Relabel {
     public static Counter<String> seenNETypeCounter = new Counter<>();
     public static Counter<String> unseenNETypeCounter = new Counter<>();
     
+    /**
+     * Takes the graphs created by de.saar.coli.amrtaggin.Parser
+     * and fills in labels at lexical nodes. Also makes sure that the
+     * gold graphs and predicted graphs are in the same order.
+     * Needs three parameters, fourth is optional:
+     *       1) path to parser output, must contain files parserOut.txt (output of parser, including root markers, one AMR per line), sentences.txt, literal.txt, labels.txt (all from the supertagger)
+     *           and a file indices.txt that contains an index for each instance of parserOut that refers to its original index in the sentences.txt etc files. Also requires a file goldAMR.txt with the original gold AMRs.
+     *       2) path to lookup folder (nameLookup.txt etc)
+     *       3) path to wordnet (3.0/dict/ folder)
+     *       4) (optional) threshold for when to use the backup over the neural predictions
+     * @param args
+     * @throws IOException
+     * @throws MalformedURLException
+     * @throws InterruptedException 
+     */
     public static void main(String[] args) throws IOException, MalformedURLException, InterruptedException {
         
         if (args.length < 3) {
@@ -149,7 +165,7 @@ public class Relabel {
     private final int lookupThreshold;
     
     
-    public Relabel(String wordnetPath, String mapsPath, int nnThreshold, int lookupThreshold)
+    private Relabel(String wordnetPath, String mapsPath, int nnThreshold, int lookupThreshold)
             throws IOException, MalformedURLException, InterruptedException {
         
         URL url = new URL("file", null, wordnetPath);
@@ -170,7 +186,7 @@ public class Relabel {
     }
     
     
-    public void fixGraph(SGraph graph, List<String> sent, List<String> lit, List<String> nnLabels) {
+    private void fixGraph(SGraph graph, List<String> sent, List<String> lit, List<String> nnLabels) {
         
         for (GraphNode node : new HashSet<>(graph.getGraph().vertexSet())) {
             if (node.getLabel().matches(LEXMARKER+"[0-9]+")) {
@@ -188,7 +204,7 @@ public class Relabel {
     }
     
     
-    public void fixLabel(String word, String lit, String nextWord,
+    private void fixLabel(String word, String lit, String nextWord,
             String nnLabel, SGraph graph, GraphNode lexNode) {
         
         if (word.equals(RareWordsAnnotator.NAME_TOKEN.toLowerCase())) {
@@ -396,7 +412,7 @@ public class Relabel {
         }
     }
     
-    public static Map<String, String> readMap(String filePath) throws IOException {
+    private static Map<String, String> readMap(String filePath) throws IOException {
         Map<String, String> ret = new HashMap<>();
         BufferedReader br = new BufferedReader(new FileReader(filePath));
         while (br.ready()) {

@@ -38,7 +38,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * The projective decoder of the ACL 2018 paper. Can be used via the Parser2ExtFormat command line interface.
  * @author JG
  */
 public class Parser {
@@ -70,7 +70,7 @@ public class Parser {
      * @param stringAlg
      * @throws ParseException 
      */
-    public Parser(List<List<Pair<String, Double>>> fragmentProbs, List<List<Pair<String, Double>>> labelProbs,
+    Parser(List<List<Pair<String, Double>>> fragmentProbs, List<List<Pair<String, Double>>> labelProbs,
             Map<String, Int2ObjectMap<Int2DoubleMap>> edgeLabel2pos2pos2prob, List<String> sent, int maxK,
             double edgeExponent, double edgeFactor, double tagExponent,
             boolean addNull, boolean addEdges, Algebra stringAlg) throws ParseException {
@@ -125,7 +125,7 @@ public class Parser {
                             label = ilp.get(1).left;
                         }
                     }
-                    String fullGraphString = Util.raw2readable(fAndP.left).replace(ConstraintExtractor.LEX_MARKER, Util.raw2readable(label));
+                    String fullGraphString = Util.raw2readable(fAndP.left).replace(DependencyExtractor.LEX_MARKER, Util.raw2readable(label));
                     String type = fAndP.left.split(ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP)[1];
                     int head = i;
                     String nt = head+"|"+new Type(type).toString();//to make strings consistent with method below
@@ -331,7 +331,7 @@ public class Parser {
         return new Pair(Math.pow(pos2prob.get(second), exponent)*factor, true);
     }
     
-    public Pair<SGraph, Tree<String>> run() throws ParserException {
+    Pair<SGraph, Tree<String>> run() throws ParserException {
         Object input = irtg.getInterpretation("string").getAlgebra().parseString(sentInternal.stream().collect(Collectors.joining(" ")));
         TreeAutomaton<String> auto = irtg.parseSimple("string", input);
         auto.makeAllRulesExplicit();
@@ -353,11 +353,11 @@ public class Parser {
         }
     }
     
-    public void printIRTG() {
+    void printIRTG() {
         System.err.println(irtg);
     }
     
-    public Pair<String[], List<String>> getConstraintsFromTree(Tree<String> tree, int sentLength) {
+    Pair<String[], List<String>> getConstraintsFromTree(Tree<String> tree, int sentLength) {
         //MOD_*_rl_mod_0_1__20
         //const_1__5
         String[] tags = new String[sentLength];

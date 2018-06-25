@@ -32,13 +32,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Provides utility for matching named entities, in particular dates.
  * @author JG
  */
 public class TestNER {
     
     public static final String OTHER = "O";
     
+    /**
+     * Testing script to gain accuracy data for the named entity tagger. Currently
+     * uses hardcoded local file paths.
+     * @param args
+     * @throws IOException
+     * @throws ClassCastException
+     * @throws ClassNotFoundException
+     * @throws CorpusReadingException 
+     */
     public static void main(String[] args) throws IOException, ClassCastException, ClassNotFoundException, CorpusReadingException {
         AbstractSequenceClassifier<CoreLabel> classifier = CRFClassifier.getClassifier("../../data/stanford-ner-2017-06-09/classifiers/english.conll.4class.distsim.crf.ser.gz");
         
@@ -235,6 +244,11 @@ public class TestNER {
     private static Counter<Integer> datePatternMatches = new Counter<>();
     private static Counter<Integer> datePatternCorrect = new Counter<>();
     
+    /**
+     * Whether a token matches a fixed list of regular expressions for date patterns.
+     * @param token
+     * @return 
+     */
     public static int matchesDatePattern(String token) {
         for (int i = 0; i<datePatterns.size(); i++) {
             if (token.matches(datePatterns.get(i))) {

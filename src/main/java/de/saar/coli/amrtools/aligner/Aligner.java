@@ -54,7 +54,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Creates alignments for AMRs, as used in 'AMR Dependency Parsing with a Typed Semantic Algebra' (ACL 2018).
+ * Run with --help to see options.
  * @author Jonas
  */
 public class Aligner {
@@ -95,22 +96,22 @@ public class Aligner {
     
     private final Counter<String> unalignedLabelCounter;
     
-    public Aligner() {
+    private Aligner() {
         unalignedLabelCounter = new Counter<>();
     }
     
     private static boolean dual = true;
     
+    /**
+     * Creates alignments for AMRs, as used in 'AMR Dependency Parsing with a Typed Semantic Algebra' (ACL 2018).
+     * Run with --help to see options.
+     * @param args
+     * @throws IOException
+     * @throws CorpusReadingException
+     * @throws MalformedURLException
+     * @throws InterruptedException 
+     */
     public static void main(String[] args) throws IOException, CorpusReadingException, MalformedURLException, InterruptedException {
-        
-        
-        //testing + debugging
-//        SGraph graph = new IsiAmrInputCodec().read("(d<root> / date-entity  :year (explicitanon0 / 2008)  :month (explicitanon1 / 1)  :day (explicitanon2 / 1))");
-//        List<String> sent = new StringAlgebra().parseString("2008-01-01");
-//        WordnetEnumerator we = new WordnetEnumerator("../../data/wordnet/3.0/dict/");
-//        MaxentTagger tagger = new MaxentTagger("../../OtherPeoplesCode/stanford-postagger-2017-06-09/models/english-bidirectional-distsim.tagger");
-//        Aligner aligner = new Aligner();
-//        System.err.println("Result: "+aligner.probabilityAlign(graph, sent, 0, we, null, tagger));
         
         Aligner aligner = new Aligner();
         
@@ -181,121 +182,21 @@ public class Aligner {
         alignmentWriter.close();
         aligner.unalignedLabelCounter.printAllSorted();
     }
-    
-    private String strictAlign(Counter<String> nnCounter, Counter<Integer> wordCounter, Set<Alignment> alignments) {
         
-        StringJoiner sj = new StringJoiner(" ");
-        for (Alignment al : alignments) {
-            //this is strict, so add alignment only if it is a unique match
-            if (nnCounter.get(al.nodes.iterator().next()) == 1 && wordCounter.get(al.span.start) == 1) {
-                sj.add(al.toString());
-            }
-        }
-        return sj.toString();
-    }
-    
-    private String allAlign(Set<Alignment> alignments) {
-        StringJoiner sj = new StringJoiner(" ");
-        for (Alignment al : alignments) {
-            //simply collect all matches
-            sj.add(al.toString());
-        }
-        return sj.toString();
-    }
-    
-    
-    private void addAlignment(Alignment al, Set<Alignment> discardedAlignments, Set<Alignment> fixedAlignments,
-            List<Alignment> fixedAlsInOrder, Map<String, Alignment> nn2fixedAl, Set<String> unalignedNns, Map<String, Set<Alignment>> nn2als) {
-        
-        for (String nn : al.nodes) {
-            for (Alignment other : nn2als.get(nn)) {
-                if (!other.equals(al)) {
-                    discardedAlignments.add(other);
-                }
-            }
-            unalignedNns.remove(nn);
-            nn2als.get(nn).add(al);
-            nn2fixedAl.put(nn, al);
-        }
-        fixedAlignments.add(al);
-        fixedAlsInOrder.add(al);
-    }
-    
-    private void removeAlignment(Alignment al, Set<Alignment> fixedAlignments, List<Alignment> fixedAlsInOrder, Map<String, Set<Alignment>> nn2als) {
-        for (String nn : al.nodes) {
-            nn2als.get(nn).remove(al);
-        }
-        fixedAlignments.remove(al);
-        fixedAlsInOrder.remove(al);
-    }
-          
+                 
     /**
-     * 
-     * TODO: rethink whether candidateAlignments should adapt in recursivel calls
-     * to the changes made here.
-     * @param node
+     * The central function. First creates a list of candidate alignments, and then proceeds to
+     * perform the highest-scoring action (can be fixing a candidate alignment, or spreading
+     * a fixed alignment to another node). Satisfies the constraints that every word and every
+     * node can participate in at most one alignment, and tries to align as many nodes as possible.
      * @param graph
-     * @param al
      * @param sent
-     * @param nn2als
-     * @param fixedAlignments
-     * @param fixedAlsInOrder
-     * @param unalignedNns
-     * @param candidateAlignments use null for this if should spread despite candidates
+     * @param instanceIndex
+     * @param we
+     * @param tagger
+     * @return
+     * @throws IOException 
      */
-    private void spreadAlignment(SGraph graph, Alignment al, List<String> sent,
-        Map<String, Set<Alignment>> nn2als, Set<Alignment> discardedAlignments, Set<Alignment> fixedAlignments,
-        List<Alignment> fixedAlsInOrder, Map<String, Alignment> nn2fixedAl, Set<String> unalignedNns, Set<Alignment> candidateAlignments) {
-        
-        for (String nn : new HashSet<>(al.nodes)) {//copy to avoid concurrent modificaton
-            GraphNode node = graph.getNode(nn);
-            for (GraphEdge edge : graph.getGraph().edgesOf(node)) {
-                String word = null;
-                if (al.span.isSingleton()) {
-                    word = sent.get(al.span.start);
-                }
-                if (AlignmentExtender.doExtendAlignment(word, node, edge)) {
-                    GraphNode otherN = BlobUtils.otherNode(node, edge);
-                    if (unalignedNns.contains(otherN.getName())) {
-                        boolean hasCandidate = false;
-                        if (candidateAlignments != null) {
-                            for (Alignment candAl : candidateAlignments) {
-                                if (candAl.nodes.contains(otherN.getName())) {
-                                    hasCandidate = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!hasCandidate) {
-                            //then extend the alignment
-                            al.nodes.add(otherN.getName());
-                            removeAlignment(al, fixedAlignments, fixedAlsInOrder, nn2als);
-                            addAlignment(al, discardedAlignments, fixedAlignments, fixedAlsInOrder, nn2fixedAl, unalignedNns, nn2als);
-                            //now recursively spread
-                            spreadAlignment(graph, al, sent, nn2als, discardedAlignments, fixedAlignments, fixedAlsInOrder, nn2fixedAl, unalignedNns, candidateAlignments);
-                        }
-                    } else {
-                        //merge alignments if applicable
-                        if (AlignmentExtender.doMergeAlignments(word, otherN, edge)) {
-                            Set<Alignment> intersect = new HashSet(
-                                    Sets.difference(Sets.intersection(fixedAlignments, nn2als.get(otherN.getName())), Collections.singleton(al)));//copy to make sure that modifying fixedAlignments below does not interfere
-                            for (Alignment alToMerge : intersect) {
-                                al.mergeIntoThis(alToMerge);
-                                removeAlignment(alToMerge, fixedAlignments, fixedAlsInOrder, nn2als);
-                            }
-                            removeAlignment(al, fixedAlignments, fixedAlsInOrder, nn2als);
-                            addAlignment(al, discardedAlignments, fixedAlignments, fixedAlsInOrder, nn2fixedAl, unalignedNns, nn2als);
-                            //no need to recursively spread here
-                        }
-                        //else do not spread
-                    }
-                }
-            }
-        }
-    }
-        
-    
-    
     private String probabilityAlign(SGraph graph, List<String> sent, int instanceIndex,
             WordnetEnumerator we, MaxentTagger tagger) throws IOException {
         
@@ -560,7 +461,19 @@ public class Aligner {
         return sj.toString();
     }
     
-    
+    /**
+     * Same as probabilityAlign, but produces ALL possible alignments obtainable
+     * from the candidate alignments and reasonable spreads. Thus does not
+     * satisfy the constraint that every node and word can participate in at most
+     * one alignment.
+     * @param graph
+     * @param sent
+     * @param instanceIndex
+     * @param we
+     * @param tagger
+     * @return
+     * @throws IOException 
+     */
     private String allProbableAlign(SGraph graph, List<String> sent, int instanceIndex,
             WordnetEnumerator we, MaxentTagger tagger) throws IOException {
         

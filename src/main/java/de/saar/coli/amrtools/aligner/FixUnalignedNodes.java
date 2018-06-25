@@ -40,17 +40,36 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * For now, only fixes in repalignmentp.
+ * Class to more or less arbitrarily align remaining unaligned nodes.
+ * For now, only applies to repalignment and repalignmentp.
  * @author JG
  */
-public class FixUnalignedWords {
+public class FixUnalignedNodes {
     
+    /**
+     * Runs fixUnalignedWords with the first argument as the corpus path,
+     * and the second argument as maxrange.
+     * @param args
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws CorpusReadingException 
+     */
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException {
-        fixUnalignedWords(args[0], Integer.parseInt(args[1]));
+        fixUnalignedNodes(args[0], Integer.parseInt(args[1]));
     }
     
-    
-    public static void fixUnalignedWords(String corpusPath, int maxRange) throws IOException, CorpusReadingException {
+    /**
+     * Runs over all graphs in a corpus, and if a node is unaligned, aligns it
+     * to the word closest to a word that a neighboring node is aligned to.
+     * Ties for 'closest' are broken arbitrarily, and a word may not have more
+     * distance than maxRange.
+     * For now, only applies to repalignment and repalignmentp.
+     * @param corpusPath
+     * @param maxRange
+     * @throws IOException
+     * @throws CorpusReadingException 
+     */
+    public static void fixUnalignedNodes(String corpusPath, int maxRange) throws IOException, CorpusReadingException {
         Map<String, Interpretation> interps = new HashMap<>();
         
         Signature dummySig = new Signature();

@@ -6,7 +6,7 @@
 package de.saar.coli.amrtagging;
 
 import de.saar.basic.Pair;
-import de.saar.coli.amrtagging.ConstraintExtractor;
+import de.saar.coli.amrtagging.DependencyExtractor;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
@@ -31,11 +31,19 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 /**
- *
+ * Utility functions, mostly data reading.
  * @author jonas
  */
 public class Util {
     
+    /**
+     * Reads a file, where each line is supposed to be some tokens separated by a single space bar.
+     * Returns a list of lines, where each line is represented as an array of tokens.
+     * @param path
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
     public static List<String[]> readFile(String path) throws FileNotFoundException, IOException {
         BufferedReader br = new BufferedReader(new FileReader(path));
         List<String[]> ret = new ArrayList<>();
@@ -208,6 +216,11 @@ public class Util {
         return ret;
     }
     
+    /**
+     * Returns the type part of the string representation of an as-graph.
+     * @param graph
+     * @return 
+     */
     public static String getType(String graph) {
         if (graph.contains(ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP)) {
             return graph.split(ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP)[1];
@@ -216,6 +229,13 @@ public class Util {
         }
     }
     
+    /**
+     * splits the string 'input' with the separator 'sep', but other than the
+     * String#split method, returns an empty array if the string is empty.
+     * @param input
+     * @param sep
+     * @return 
+     */
     public static String[] split(String input, String sep) {
         String[] ret = input.split(sep);
         if (ret.length == 1 && ret[0].equals("")) {
@@ -232,72 +252,18 @@ public class Util {
      * @return 
      */
     public static String raw2readable(String raw) {
-        return raw.replaceAll(ConstraintExtractor.WHITESPACE_MARKER, " ").replaceAll(" +", " ");//.replaceAll("[<>/\\\"\'_]", " ") in between
+        return raw.replaceAll(DependencyExtractor.WHITESPACE_MARKER, " ").replaceAll(" +", " ");//.replaceAll("[<>/\\\"\'_]", " ") in between
     }
     
+    /**
+     * Removes all whitespace markers from rawGraph and parses it into an s-graph.
+     * @param rawGraph
+     * @return
+     * @throws ParserException 
+     */
     public static SGraph graph2graph(String rawGraph) throws ParserException {
-        return new GraphAlgebra().parseString(rawGraph.replaceAll(ConstraintExtractor.WHITESPACE_MARKER, " "));
+        return new GraphAlgebra().parseString(rawGraph.replaceAll(DependencyExtractor.WHITESPACE_MARKER, " "));
     }
-    
-    public static String frontbufferString(String string, int totalLength) {
-        String ret = "";
-        for (int i = 0; i<totalLength-string.length(); i++) {
-            ret += " ";
-        }
-        return ret+string;
-    }
-    
-    public static String backbufferString(String string, int totalLength) {
-        String ret = "";
-        for (int i = 0; i<totalLength-string.length(); i++) {
-            ret += " ";
-        }
-        return string+ret;
-    }
-
-    public static int sum(Counter c) {
-        if (c == null) {
-            return 0;
-        }
-        int ret = 0;
-        for (Object o : c.getAllSeen()) {
-            ret += c.get(o);
-        }
-        return ret;
-    }
-    
-    
-    public static void count(Map<String, Counter<String>> map, String key, String value) {
-        Counter<String> c = map.get(key);
-        if (c == null) {
-            c = new Counter<>();
-            map.put(key, c);
-        }
-        c.add(value);
-    }
-    
-    public static void write(Writer w, Map<String, Counter<String>> map, List<String> orderedKeys, Counter<String> totalKeyCounter) throws IOException {
-        for (String label : orderedKeys) {
-            w.write(label+" ("+map.get(label).sum()+"/"+totalKeyCounter.get(label)+"):   ");
-            for (Object2IntMap.Entry<String> entry : map.get(label).getAllSorted()) {
-                w.write(entry.getKey()+" ("+entry.getIntValue()+")  ");
-            }
-            w.write("\n");
-        }
-    }
-    
-    public static void write(Writer w, Map<String, Counter<String>> map1, Map<String, Counter<String>> map2, List<String> orderedKeys) throws IOException {
-        for (String label : orderedKeys) {
-            w.write(label+" ["+map1.get(label).sum()+"]:\n");
-            for (Object2IntMap.Entry<String> entry : map1.get(label).getAllSorted()) {
-                w.write(entry.getKey()+"["+entry.getIntValue()+"],  ");
-            }
-            w.write("\n");
-            for (Object2IntMap.Entry<String> entry : map2.get(label).getAllSorted()) {
-                w.write(entry.getKey()+"["+entry.getIntValue()+"],  ");
-            }
-            w.write("\n\n\n");
-        }
-    }
+        
     
 }

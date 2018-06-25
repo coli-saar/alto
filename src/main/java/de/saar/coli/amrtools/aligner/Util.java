@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Several utility functions for the aligner.
  * @author Jonas
  */
 public class Util {

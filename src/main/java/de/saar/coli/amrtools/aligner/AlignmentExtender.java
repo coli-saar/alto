@@ -17,53 +17,19 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * Contains functions that score how good extending an alignment to another node is.
  * @author Jonas
  */
 public class AlignmentExtender {
     
     private static final Set<String> DATE_EDGES = new HashSet<>(Arrays.asList(new String[]{"day", "month", "year"}));
-    
-    private static final Set<String> VERBALIZATION_ENDINGS = new HashSet<>(Arrays.asList(new String[]{"or", "ors", "er", "ers", "ee", "ees", "ant", "ants"}));
-    
+        
     private static final List<String> ALL_DATE_EDGES_ORDERED= Arrays.asList(new String[]{"timezone", "quarter", "season", "decade", "century", "calendar", "era", "dayperiod", "time", "weekday","day", "month", "year2", "year"});
     
-    /**
-     * 
-     * @param word the word associated with the alignment. Use null if there are multiple words in the alignment.
-     * @param node the aligned node we are extending the alignment from
-     * @param edge the edge along which to extend the alignment
-     * @return 
-     */
-    public static boolean doExtendAlignment(String word, GraphNode node, GraphEdge edge) {
-        if (word != null) { 
-            word = word.toLowerCase();
-        }
-        GraphNode otherNode = BlobUtils.otherNode(node, edge);
-        return ((edge.getLabel().startsWith("op") && otherNode.getLabel().equals("name"))//name parts (ops) to the name node
-                
-                || (edge.getLabel().equals("name") && edge.getTarget().equals(node))//name to the named entity
-                
-                || (DATE_EDGES.contains(edge.getLabel()) && edge.getTarget().equals(node))//date part to date-entity
-                
-                || (edge.getLabel().equals("wiki") && edge.getSource().equals(node))//entity to wiki node TODO: should be from name to wiki. or do wiki in PostProcessing
-                
-                || (edge.getSource().getLabel().equals("have-org-role-91") && edge.getLabel().equals("ARG2") && edge.getTarget().equals(node))//org role
-                
-                || (edge.getSource().getLabel().equals("have-rel-role-91") && edge.getLabel().equals("ARG2") && edge.getTarget().equals(node))//org role
-                
-                || (edge.getLabel().equals("unit") && edge.getTarget().equals(node))//unit to base node via unit edge //TODO: only extend to nodes ending with "-quantity"?
-                
-                || (edge.getLabel().equals("polarity") && otherNode.getLabel().equals("-") &&
-                    word != null && (word.startsWith("un") || word.startsWith("in") || word.startsWith("il")))//minus polarity prefixes, as in Flanigan et al Rule 13.
-                || (edge.getLabel().equals("ARG1") && otherNode.getLabel().equals("possible-01") &&
-                    word != null && (word.contains("able") || word.contains("abilit")))//words with the -able or -ability suffix
-                );
-        
-    }
     
     
     /**
+     * Scores how likely it is to perform the spread defined by the given objects.
      * returns a number between 0 and 1 (excluding 0).
      * to be used in prob model
      * @param from spread from this node
@@ -74,7 +40,7 @@ public class AlignmentExtender {
      * @param we
      * @return how badly we want to extend the alignment from "from" to "to"
      */
-    public static double scoreExtension(GraphNode from, GraphEdge edge, GraphNode to, Set<Pair<TaggedWord, Double>> wordsAndProbs, SGraph graph,
+    static double scoreExtension(GraphNode from, GraphEdge edge, GraphNode to, Set<Pair<TaggedWord, Double>> wordsAndProbs, SGraph graph,
             WordnetEnumerator we) {
         if (edge.getLabel().equals("name") && edge.getTarget().equals(from)) {
             return AlignmentScorer.SCP_EXTENSION;//name to named entity
@@ -207,30 +173,14 @@ public class AlignmentExtender {
     }
     
     /**
-     * whether to merge alignments, given that we want to extend.
-     * @param word the word associated with the alignment. Use null if there are multiple words in the alignment.
-     * @param target the candidate to spread the alignment to
-     * @param edge the edge the alignment is spread through
+     * Makes sure that the given spread does not violate blob constraints
+     * required to find an AM derivation.
+     * @param nodesOfAlignment
+     * @param nnToSpreadTo
+     * @param graph
      * @return 
      */
-    public static boolean doMergeAlignments(String word, GraphNode target, GraphEdge edge) {
-        return (edge.getLabel().startsWith("op") && target.getLabel().equals("name"))
-                || (DATE_EDGES.contains(edge.getLabel()) && target.getLabel().equals("date-entity"));
-    }
-    
-    public static double finalSpreadHeuristic(GraphNode node, GraphEdge edge, SGraph graph) {
-        double ret = Util.connectsToRoot(node, edge, graph) ? 0.0 : 1.0;
-        switch (edge.getLabel()) {
-            case "name": ret += 2;break;
-            case "unit": ret += 2;break;
-            case "polarity": ret += -1;break;
-            case "wiki": ret += -1;break;
-            case "quant": ret += 0.5;break;
-        }
-        return ret;
-    }
-    
-    public static boolean isSpreadFineWithBlobs(Set<String> nodesOfAlignment, String nnToSpreadTo, SGraph graph) {
+    static boolean isSpreadFineWithBlobs(Set<String> nodesOfAlignment, String nnToSpreadTo, SGraph graph) {
         boolean hasOutgoing = false;
         boolean hasIncoming = false;
         boolean isConnected = isConnected(nodesOfAlignment, graph);

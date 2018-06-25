@@ -21,10 +21,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * Converts raw AMR and english sentences into an alto corpus; this corpus
+ * may need to be fixed by FixAMRAltoCorpus.
  * @author Jonas
  */
 public class Stripped2Corpus {
     /**
+     * Converts raw AMR and english sentences into an alto corpus; this corpus
+     * may need to be fixed by FixAMRAltoCorpus.
      * First argument is output folder containing files raw.en and raw.amr; second
      * argument is path to stanford grammar file enlishPCFG.txt
      * @param args
@@ -44,6 +48,8 @@ public class Stripped2Corpus {
     }
     
     /**
+     * Converts raw AMR and english sentences into an alto corpus; this corpus
+     * may need to be fixed by FixAMRAltoCorpus.
      * First argument is output folder containing files raw.en and raw.amr; second
      * argument is path to stanford grammar file enlishPCFG.txt. If the latter is null,
      * a corpus without trees is created.

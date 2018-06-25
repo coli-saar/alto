@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- *
+ * The command line interface for the projective decoder of the ACL 2018 experiments; run with --help to see options.
  * @author JG
  */
 public class Parser2ExtFormat {
@@ -102,6 +102,16 @@ public class Parser2ExtFormat {
     @Parameter(names = {"--help", "-?"}, description = "displays help if this is the only command", help = true)
     private boolean help = false;
     
+    /**
+     * The command line interface for the projective decoder of the ACL 2018 experiments; run with --help to see options.
+     * @param args
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws CorpusReadingException
+     * @throws ParseException
+     * @throws ParserException
+     * @throws InterruptedException 
+     */
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParseException, ParserException, InterruptedException {
         Parser2ExtFormat p2ext = new Parser2ExtFormat();
         JCommander commander = new JCommander(p2ext);

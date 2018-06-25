@@ -40,10 +40,10 @@ import java.io.FileWriter;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Command line interface for the DependencyExtractor class; call with --help to see options.
  * @author jonas
  */
-public class ConstraintExtractorCLI {
+public class DependencyExctractorCLI {
     @Parameter(names = {"--corpusPath", "-c"}, description = "Path to the input corpus", required = true)
     private String corpusPath;
 
@@ -77,9 +77,19 @@ public class ConstraintExtractorCLI {
     @Parameter(names = {"--help", "-?"}, description = "displays help if this is the only command", help = true)
     private boolean help = false;
     
+    /**
+     * Command line interface for the DependencyExtractor class; call with --help to see options.
+     * @param args
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws CorpusReadingException
+     * @throws IllegalArgumentException
+     * @throws ParseException
+     * @throws InterruptedException 
+     */
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, IllegalArgumentException, ParseException, InterruptedException {
         
-        ConstraintExtractorCLI cli = new ConstraintExtractorCLI();
+        DependencyExctractorCLI cli = new DependencyExctractorCLI();
         JCommander commander = new JCommander(cli);
         commander.setProgramName("constraint_extractor");
 
@@ -115,7 +125,7 @@ public class ConstraintExtractorCLI {
         
         //BufferedReader alBr = new BufferedReader(new FileReader("examples/toy.align"));
         
-        ConstraintExtractor extr = (cli.vocabPath == null) ? new ConstraintExtractor(cli.outPath) : new ConstraintExtractor(cli.outPath, cli.vocabPath);
+        DependencyExtractor extr = (cli.vocabPath == null) ? new DependencyExtractor(cli.outPath) : new DependencyExtractor(cli.outPath, cli.vocabPath);
         FileWriter posWriter = new FileWriter(cli.outPath+"pos.txt");
         Set<String> allPosTags = new HashSet<>();
         FileWriter literalWriter = new FileWriter(cli.outPath+"literal.txt");

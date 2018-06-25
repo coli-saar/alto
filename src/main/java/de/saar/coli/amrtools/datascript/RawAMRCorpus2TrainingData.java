@@ -9,7 +9,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import de.saar.coli.amrtools.RareWordsAnnotator;
 import de.saar.coli.amrtools.aligner.Aligner;
-import de.saar.coli.amrtools.aligner.FixUnalignedWords;
+import de.saar.coli.amrtools.aligner.FixUnalignedNodes;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.tree.ParseException;
@@ -17,7 +17,8 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- *
+ * Converts a raw AMR corpus to a training corpus in Alto format, including pre-
+ * processing. Run with --help for options.
  * @author JG
  */
 public class RawAMRCorpus2TrainingData {
@@ -55,6 +56,16 @@ public class RawAMRCorpus2TrainingData {
     @Parameter(names = {"--help", "-?"}, description = "displays help if this is the only command", help = true)
     private boolean help = false;
     
+    /**
+     * Converts a raw AMR corpus to a training corpus in Alto format, including pre-
+     * processing. Run with --help for options.
+     * @param args
+     * @throws IOException
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws CorpusReadingException
+     * @throws ParserException 
+     */
     public static void main(String[] args) throws IOException, ParseException, InterruptedException, CorpusReadingException, ParserException {
         
         RawAMRCorpus2TrainingData r2t = new RawAMRCorpus2TrainingData();
@@ -121,7 +132,7 @@ public class RawAMRCorpus2TrainingData {
         //Step 4: fix alignments
         if (r2t.step <= 4) {
             System.err.println("Fixing unaligned words");
-            FixUnalignedWords.fixUnalignedWords(path+"namesDatesNumbers.corpus", 5);
+            FixUnalignedNodes.fixUnalignedNodes(path+"namesDatesNumbers.corpus", 5);
         }
         
         //Step 5: sort and filter corpus

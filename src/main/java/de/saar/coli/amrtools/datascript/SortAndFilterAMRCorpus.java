@@ -32,7 +32,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
+ * Sorts a corpus by node count of the graph entry, optionally removing graphs
+ * over a certain size.
  * @author Jonas
  */
 public class SortAndFilterAMRCorpus {

@@ -27,7 +27,6 @@ import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Counter;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,7 +35,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +46,7 @@ import java.util.stream.Collectors;
  * Takes as input an Alto corpus with a string, tree and AMR interpretation as
  * provided by  de.saar.coli.amrtools.datascript.FullProcess, as well as alignments as
  * created by de.saar.coli.amrtools.aligner.Aligner and annotates it
- * with rare word annotations.
+ * with rare word annotations, in particular replacing names, dates and numbers.
  * @author Jonas
  */
 public class RareWordsAnnotator {
@@ -88,6 +86,18 @@ public class RareWordsAnnotator {
     @Parameter(names = {"--help", "-?"}, description = "displays help if this is the only command", help = true)
     private boolean help = false;
     
+    /**
+     * Takes as input an Alto corpus with a string, tree and AMR interpretation as
+     * provided by  de.saar.coli.amrtools.datascript.FullProcess, as well as alignments as
+     * created by de.saar.coli.amrtools.aligner.Aligner and annotates it
+     * with rare word annotations, in particular replacing names, dates and numbers.
+     * Run with --help to get information on options.
+     * @param args
+     * @throws IOException
+     * @throws CorpusReadingException
+     * @throws MalformedURLException
+     * @throws InterruptedException 
+     */
     public static void main(String[] args) throws IOException, CorpusReadingException, MalformedURLException, InterruptedException {
         
         RareWordsAnnotator annotator = new RareWordsAnnotator();

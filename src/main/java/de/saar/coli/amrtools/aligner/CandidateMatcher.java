@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Creates candidate alignments (based on lexical rules and matches).
  * @author Jonas
  */
 public class CandidateMatcher {
@@ -34,6 +34,14 @@ public class CandidateMatcher {
     private final static Set<String> NO_LITERAL_MATCH = new HashSet(Arrays.asList(new String[]{"of", "in", "the", "for", "on", "to", "a", "an", "as", "by", "but", "as"}));
     private final static Set<String> PRONOUNS = new HashSet(Arrays.asList(new String[]{"i", "you", "he", "she", "it", "we", "they"}));
     
+    /**
+     * Creates candidate alignments (based on lexical rules and matches).
+     * @param graph
+     * @param sent
+     * @param tags
+     * @param we
+     * @return 
+     */
     static Pair<Map<String, Set<Alignment>>, Set<Alignment>> findCandidatesForProb(SGraph graph,
             List<String> sent, List<TaggedWord> tags, WordnetEnumerator we) {
         Set<Alignment> ret = new HashSet<>();

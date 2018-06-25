@@ -46,12 +46,22 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
+ * Removes reentrant edges that the AM algebra cannot handle.
  * @author JG
  */
 public class SplitCoref {
     
     
+    /**
+     * Calls splitCoref with the arguments in order.
+     * @param args
+     * @throws ParserException
+     * @throws ParseException
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws CorpusReadingException
+     * @throws InterruptedException 
+     */
     public static void main(String[] args) throws ParserException, ParseException, FileNotFoundException, IOException, CorpusReadingException, InterruptedException {
         
 //        String rawGraph = "(a / and :op1 (b / believe-01 :ARG0 (p2 / person :ARG0-of (h2 / have-org-role-91 :ARG1 (c2 / company :wiki - :name (n / name :op1 \"IM\") :mod (c3 / country :wiki \"United_States\" :name (n2 / name :op1 \"United\" :op2 \"States\"))) :ARG2 (c7 / CEO))) :ARG1 (c8 / capable-01 :ARG1 (p / person :ARG1-of (e / employ-01 :ARG0 c2) :mod (e2 / each)) :ARG2 (i / innovate-01 :ARG0 p))) :op2 (f / formulate-01 :ARG0 (c / ceo) :ARG1 (c4 / countermeasure :mod (s / strategy) :purpose (i2 / innovate-01 :prep-in (i3 / industry)))) :time (a3 / after :op1 (i4 / invent-01 :ARG0 (c5 / company :ARG0-of (c6 / compete-02 :ARG1 c2)) :ARG1 (m / machine :ARG0-of (w / wash-01) :ARG1-of (l / load-01 :mod (f2 / front))))))";
@@ -64,6 +74,19 @@ public class SplitCoref {
 
     }
     
+    /**
+     * Removes reentrant edges that the AM algebra cannot handle. Looks up the original graphs to
+     * find out which edges are reentrant in the original notation. Removes them all first,
+     * and one by one re-adds the edges that do not make the graph unparseable.
+     * @param corpusPath
+     * @param origGraphsPath
+     * @param outPath
+     * @param threads
+     * @param maxMinutes
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws CorpusReadingException 
+     */
     public static void splitCoref(String corpusPath, String origGraphsPath, String outPath, int threads, int maxMinutes) throws IOException, InterruptedException, CorpusReadingException {
         //read input data
         InterpretedTreeAutomaton dummyIrtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());

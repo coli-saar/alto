@@ -31,10 +31,11 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Extracts AM dependency trees from AMR graphs, that can be used as training data for a neural tagger.
+ * To be used via DependencyExtractorCLI.
  * @author jonas
  */
-public class ConstraintExtractor {
+public class DependencyExtractor {
     
     public static final String WHITESPACE_MARKER = "__ALTO_WS__";
     public static final String LEX_MARKER = "--LEX--";
@@ -54,7 +55,7 @@ public class ConstraintExtractor {
     private final boolean fixedVocab;
     //get tagVocab from graph2string map.
     
-    public ConstraintExtractor(String outPathPrefix) throws IOException {
+    DependencyExtractor(String outPathPrefix) throws IOException {
         sentWriter = new FileWriter(outPathPrefix+"sentences.txt");
         tagWriter = new FileWriter(outPathPrefix+"tags.txt");
         labelWriter = new FileWriter(outPathPrefix+"labels.txt");
@@ -77,7 +78,7 @@ public class ConstraintExtractor {
      * @param trainPathPrefix
      * @throws IOException 
      */
-    public ConstraintExtractor(String outPathPrefix, String trainPathPrefix) throws IOException {
+    DependencyExtractor(String outPathPrefix, String trainPathPrefix) throws IOException {
         sentWriter = new FileWriter(outPathPrefix+"sentences.txt");
         tagWriter = new FileWriter(outPathPrefix+"tags.txt");
         labelWriter = new FileWriter(outPathPrefix+"labels.txt");
@@ -256,7 +257,7 @@ public class ConstraintExtractor {
             try {
                 labelVocabWriter.write(label+"\n");
             } catch (IOException ex) {
-                Logger.getLogger(ConstraintExtractor.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(DependencyExtractor.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         sentVocab.add("UNK");
@@ -264,7 +265,7 @@ public class ConstraintExtractor {
             try {
                 sentVocabWriter.write(word+"\n");
             } catch (IOException ex) {
-                Logger.getLogger(ConstraintExtractor.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(DependencyExtractor.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         tagVocabWriter.write("NULL\n");
@@ -274,7 +275,7 @@ public class ConstraintExtractor {
                 try {
                     tagVocabWriter.write(string+"\n");
                 } catch (IOException ex) {
-                    Logger.getLogger(ConstraintExtractor.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(DependencyExtractor.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });
         });
@@ -283,7 +284,7 @@ public class ConstraintExtractor {
             try {
                 opVocabWriter.write(word+"\n");
             } catch (IOException ex) {
-                Logger.getLogger(ConstraintExtractor.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(DependencyExtractor.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }

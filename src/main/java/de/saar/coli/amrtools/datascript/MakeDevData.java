@@ -34,11 +34,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Makes the input data for the evaluation step, i.e.~ runs preprocessing on
+ * the corpus sentences, without making use of the graphs.
  * @author Jonas
  */
 public class MakeDevData {
     
+    /**
+     * Makes the input data for the evaluation step, i.e.~ runs preprocessing on
+     * the corpus sentences, without making use of the graphs.
+     * First argument is the path to folder containing the corpus,
+     * second argument is path to output folder, third is 
+     * path to stanford POS tagger model english-bidirectional-distsim.tagger and
+     * fourth is path to stanford NER model english.conll.4class.distsim.crf.ser.gz
+     * @param args
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws ClassCastException
+     * @throws ClassNotFoundException
+     * @throws CorpusReadingException 
+     */
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassCastException, ClassNotFoundException, CorpusReadingException {
         
         String path = args[0];//path to folder containing the corpus
