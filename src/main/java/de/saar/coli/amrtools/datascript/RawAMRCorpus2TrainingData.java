@@ -7,6 +7,7 @@ package de.saar.coli.amrtools.datascript;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import de.saar.coli.amrtools.MakeNETypeLookup;
 import de.saar.coli.amrtools.RareWordsAnnotator;
 import de.saar.coli.amrtools.aligner.Aligner;
 import de.saar.coli.amrtools.aligner.FixUnalignedNodes;
@@ -127,6 +128,7 @@ public class RawAMRCorpus2TrainingData {
             String rareWordsArgs = "-c "+path+corpusFileName+".corpus -o "+path+"namesDatesNumbers.corpus -a "
                     +path+corpusFileName+".align -pa "+path+corpusFileName+".palign -t 0";
             RareWordsAnnotator.main(rareWordsArgs.split(" "));
+            MakeNETypeLookup.main(new String[]{path+"namesDatesNumbers.corpus",path+"nameTypeLookup.txt"});
         }
         
         //Step 4: fix alignments

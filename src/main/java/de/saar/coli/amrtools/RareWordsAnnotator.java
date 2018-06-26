@@ -563,7 +563,7 @@ public class RareWordsAnnotator {
         
         //write and print stats
         System.err.println("no wiki: "+noWiki);
-        String pathPrefix = new File(annotator.outPath).getParent()+"/";
+        String pathPrefix = new File(annotator.outPath).getParent()+"/";//just get the folder name where the corpus will be stored in
         List<String> sortedNames = new ArrayList<>(lit2name.keySet());
         sortedNames.sort((String o1, String o2) -> -Integer.compare(lit2name.get(o1).sum(), lit2name.get(o2).sum()));
         FileWriter wikiStatsW = new FileWriter(pathPrefix+"wikiStats.txt");

@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  * Decoder and command line interface for the JAMR style baseline; call with --help to see options.
  * @author JG
  */
-public class JAMRParser2ExtFormat {
+public class BaselineParser2ExtFormat {
 
     @Parameter(names = {"--corpusPath", "-c"}, description = "Path to the input corpus", required = true)
     private String corpusPath;
@@ -103,7 +103,7 @@ public class JAMRParser2ExtFormat {
     private static int unkCount = 0;
 
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParseException, ParserException, InterruptedException {
-        JAMRParser2ExtFormat p2ext = new JAMRParser2ExtFormat();
+        BaselineParser2ExtFormat p2ext = new BaselineParser2ExtFormat();
         JCommander commander = new JCommander(p2ext);
         commander.setProgramName("constraint_extractor");
 

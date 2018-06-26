@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * Command line interface for the DependencyExtractor class; call with --help to see options.
  * @author jonas
  */
-public class DependencyExctractorCLI {
+public class DependencyExtractorCLI {
     @Parameter(names = {"--corpusPath", "-c"}, description = "Path to the input corpus", required = true)
     private String corpusPath;
 
@@ -89,7 +89,7 @@ public class DependencyExctractorCLI {
      */
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, IllegalArgumentException, ParseException, InterruptedException {
         
-        DependencyExctractorCLI cli = new DependencyExctractorCLI();
+        DependencyExtractorCLI cli = new DependencyExtractorCLI();
         JCommander commander = new JCommander(cli);
         commander.setProgramName("constraint_extractor");
 
