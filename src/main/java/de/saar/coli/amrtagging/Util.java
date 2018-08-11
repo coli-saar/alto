@@ -265,5 +265,37 @@ public class Util {
         return new GraphAlgebra().parseString(rawGraph.replaceAll(DependencyExtractor.WHITESPACE_MARKER, " "));
     }
         
+    public static void count(Map<String, Counter<String>> map, String key, String value) {
+        Counter<String> c = map.get(key);
+        if (c == null) {
+            c = new Counter<>();
+            map.put(key, c);
+        }
+        c.add(value);
+    }
+    
+    public static void write(Writer w, Map<String, Counter<String>> map, List<String> orderedKeys, Counter<String> totalKeyCounter) throws IOException {
+        for (String label : orderedKeys) {
+            w.write(label+" ("+map.get(label).sum()+"/"+totalKeyCounter.get(label)+"):   ");
+            for (Object2IntMap.Entry<String> entry : map.get(label).getAllSorted()) {
+                w.write(entry.getKey()+" ("+entry.getIntValue()+")  ");
+            }
+            w.write("\n");
+        }
+    }
+    
+    public static void write(Writer w, Map<String, Counter<String>> map1, Map<String, Counter<String>> map2, List<String> orderedKeys) throws IOException {
+        for (String label : orderedKeys) {
+            w.write(label+" ["+map1.get(label).sum()+"]:\n");
+            for (Object2IntMap.Entry<String> entry : map1.get(label).getAllSorted()) {
+                w.write(entry.getKey()+"["+entry.getIntValue()+"],  ");
+            }
+            w.write("\n");
+            for (Object2IntMap.Entry<String> entry : map2.get(label).getAllSorted()) {
+                w.write(entry.getKey()+"["+entry.getIntValue()+"],  ");
+            }
+            w.write("\n\n\n");
+        }
+    }
     
 }
