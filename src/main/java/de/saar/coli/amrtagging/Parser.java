@@ -115,7 +115,7 @@ public class Parser {
             boolean foundNull = false;
             for (int k = 0; k<Math.min(maxK, ifp.size()); k++) {
                 Pair<String, Double> fAndP = ifp.get(k);
-                if (!fAndP.left.equals("NULL")) {
+                if (fAndP.left.contains(ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP)) {
                     //i.e. we actually have a graph fragment
                     String label = "\""+LEXMARKER_OUT+i+"\"";//mark label with word position (this may be replaced in next if clause), for use in a different script.
                     if (ilp != null) {
