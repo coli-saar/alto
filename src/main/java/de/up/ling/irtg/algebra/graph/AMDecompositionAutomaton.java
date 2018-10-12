@@ -939,6 +939,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                             if (set == null) {
                                 if (maxCorefs == 0) {
                                     set = new StorageMPF();
+                                    
                                 } else {
                                     set = new DynamicMergePartnerFinder(0);
                                 }

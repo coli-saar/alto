@@ -48,7 +48,14 @@ public class SgraphAmrOutputCodec extends OutputCodec<SGraph> {
         final Set<GraphNode> visitedNodes = new HashSet<>();
         final Set<GraphEdge> visitedEdges = new HashSet<>();
 
-        GraphNode u = sgraph.getGraph().vertexSet().iterator().next();
+        GraphNode u;
+        //Addition by JG for AMR parsing: since SMATCH score cares about the root node being
+        //the first one printed, we start at the node with the literal "root" source, if there is one.
+        if (sgraph.getAllSources().contains("root")) {
+            u = sgraph.getNode(sgraph.getNodeForSource("root"));
+        } else {
+            u = sgraph.getGraph().vertexSet().iterator().next();
+        }
         toAmrVisit(u, sgraph, visitedNodes, visitedEdges, w);
         w.flush();
 

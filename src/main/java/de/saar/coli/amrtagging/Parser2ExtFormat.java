@@ -145,9 +145,10 @@ public class Parser2ExtFormat {
             tagProbs = Util.groupTagsByType(tagProbs);
         }
         List<List<List<Pair<String, Double>>>> labelProbs = null;
-        if (new File(p2ext.path+"labelProbs.txt").exists()) {
-            labelProbs = Util.readProbs(p2ext.path+"labelProbs.txt", true);
-        }
+        //currently we never use these labels directly, instead relying on a separate relabel step later. TODO: add option to label here.
+//        if (new File(p2ext.path+"labelProbs.txt").exists()) {
+//            labelProbs = Util.readProbs(p2ext.path+"labelProbs.txt", true);
+//        }
         
         
         

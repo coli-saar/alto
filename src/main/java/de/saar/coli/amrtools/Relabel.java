@@ -82,9 +82,10 @@ public class Relabel {
         String wordnetPath = args[2];
         
         int threshold = 10;
-        if (args.length >3) {
-            System.err.println("No threshold parameter given, using default "+threshold);
+        if (args.length >3) {            
             threshold = Integer.parseInt(args[3]);
+        } else {
+            System.err.println("No threshold parameter given, using default "+threshold);
         }
         
         Relabel relabel = new Relabel(wordnetPath, lookupPath, threshold, 0);
