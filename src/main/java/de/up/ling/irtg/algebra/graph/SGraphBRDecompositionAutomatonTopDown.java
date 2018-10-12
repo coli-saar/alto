@@ -6,8 +6,10 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.util.AverageLogger;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -358,4 +360,32 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
         return true; //To change body of generated methods, choose Tools | Templates.
     }
     
+    
+    public static TreeAutomaton makeExplicitDecomp(SGraph graph, int nrSources, boolean allowDisconnected) {
+        GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(graph, nrSources);
+        
+        SGraphBRDecompositionAutomatonTopDown auto = new SGraphBRDecompositionAutomatonTopDown(graph, alg);
+        System.err.println(auto.storedComponents);
+//        auto.makeAllRulesExplicit();
+//        System.err.println(auto.storedComponents.size());
+//        for (SComponent comp : auto.storedComponents.keySet()) {
+//            System.err.println(comp);
+//        }
+//        
+//        ConcreteTreeAutomaton<SComponentRepresentation> conc = new ConcreteTreeAutomaton<>(auto.signature, auto.stateInterner);
+//        for (Rule rule : auto.ruleStore.getAllRulesTopDown()) {
+//            conc.addRule(rule);
+//        }
+//        conc.getFinalStates().addAll(auto.getFinalStates());
+        
+        return auto.asConcreteTreeAutomaton();
+        
+    }
+    
+    public static void main(String[] args) {
+        SGraph graph = new IsiAmrInputCodec().read("(o2 <root> / obligate-01 :ARG1 (y / you) :ARG2 (r / return-01 :ARG1 y :ARG4 (e / engine :poss y)))");
+        TreeAutomaton auto = makeExplicitDecomp(graph, 3, true);//SGraphBRDecompositionAutomatonBottomUp.
+        System.err.println(auto.viterbi());
+        //System.err.println(auto.viterbi());
+    }
 }

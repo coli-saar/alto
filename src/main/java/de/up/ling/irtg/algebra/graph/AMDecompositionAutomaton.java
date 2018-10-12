@@ -195,7 +195,6 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                         //at this point we know that v is a role in leftGraph that will be filled later,
                         //and is not yet marked with a COREF source. So we allow the preemptive COREF merge
                         //here.
-                        //TODO: do I need to do this also for MOD?
                         leftGraph = leftGraph.addSource(addSrcHere, src);
                     }
                 }

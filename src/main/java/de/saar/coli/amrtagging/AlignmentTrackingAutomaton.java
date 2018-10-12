@@ -270,41 +270,8 @@ public class AlignmentTrackingAutomaton extends TreeAutomaton<Pair<Pair<Boundary
             consts.stream().forEach(c -> sig.addSymbol(al.span.start+SEPARATOR+c, 0));
             consts.stream().forEach(c -> plainSig.addSymbol(c, 0));
         }
-        Set<String> sources = new HashSet<>();
-        sources.add(SUBJ);
-        sources.add(OBJ);
-        sources.add(OBJ+2);
-        sources.add(OBJ+3);
-        sources.add(OBJ+4);
-        sources.add(OBJ+5);
-        sources.add(OBJ+6);
-        sources.add(OBJ+7);
-        sources.add(OBJ+8);
-        sources.add(OBJ+9);
-        sources.add(DOMAIN);
-        sources.add(POSS);
-        sources.add(MOD);
-        sources.add(SUBJ);
-        sources.add(OBJ);
-        sources.add(OBJ+2);
-        sources.add(OBJ+3);
-        sources.add(OBJ+4);
-        sources.add(OBJ+5);
-        sources.add(OBJ+6);
-        sources.add(OBJ+7);
-        sources.add(OBJ+8);
-        sources.add(OBJ+9);
-        sources.add(DOMAIN);
-        sources.add(POSS);
-        sources.add(MOD);
-        for (GraphEdge e : graph.getGraph().edgeSet()) {
-            String eSrc = AMSignatureBuilder.edge2Source(e, graph);
-            if (eSrc.startsWith("op") || eSrc.startsWith("snt")) {
-                sources.add(eSrc);
-                sources.add(eSrc);
-            }
-        }
         
+        Collection<String> sources = AMSignatureBuilder.getAllPossibleSources(graph);
         for (String s : sources) {
             plainSig.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+s, 2);
             plainSig.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+s, 2);

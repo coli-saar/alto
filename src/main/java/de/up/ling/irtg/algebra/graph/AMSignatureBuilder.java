@@ -41,6 +41,9 @@ import java.util.stream.Collectors;
  */
 public class AMSignatureBuilder {
     
+    
+    //---------------------------------------------   constants   --------------------------------------------------------
+    
     public static final String SUBJ = "s";
     public static final String OBJ = "o";
     public static final String MOD = "mod";
@@ -49,7 +52,7 @@ public class AMSignatureBuilder {
     
     private static final Collection<Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>>> lexiconSourceRemappingsMulti;
     private static final Collection<Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>>> lexiconSourceRemappingsOne;
-   private static final boolean allowOriginalSources;
+    private static final boolean allowOriginalSources;
     
     static {
         // control which source renamings are allowed
@@ -76,6 +79,12 @@ public class AMSignatureBuilder {
 //        lexiconSourceRemappingsOne.add(map -> Collections.singleton(promoteObjMax(map)));
     }
     
+    
+    
+    
+    
+    
+    //--------------------------------------------------   top level functions   ------------------------------------------------------------
     
     /**
      * Creates a signature with all relevant constants (including source annotations)
@@ -342,39 +351,10 @@ public class AMSignatureBuilder {
             
         }
         
-        
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+SUBJ, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+2, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+3, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+4, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+5, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+6, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+7, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+8, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+OBJ+9, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+DOMAIN, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+POSS, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+MOD, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+SUBJ, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+2, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+3, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+4, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+5, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+6, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+7, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+8, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+OBJ+9, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+DOMAIN, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+POSS, 2);
-        ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+MOD, 2);
-        for (GraphEdge e : graph.getGraph().edgeSet()) {
-            String eSrc = edge2Source(e, graph);
-            if (eSrc.startsWith("op") || eSrc.startsWith("snt")) {
-                ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+eSrc, 2);
-                ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+eSrc, 2);
-            }
+        Collection<String> sources = getAllPossibleSources(graph);
+        for (String source : sources) {
+            ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+source, 2);
+            ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+source, 2);
         }
         for (int i = 0; i<maxCorefs; i++) {
             ret.addSymbol(ApplyModifyGraphAlgebra.OP_COREF+i,0);
@@ -386,6 +366,8 @@ public class AMSignatureBuilder {
         return ret;
     }
     
+    
+    
     public static Signature makeDecompositionSignatureWithAlignments(SGraph graph, List<String> alignments, boolean addCoref) throws IllegalArgumentException, ParseException {
         Signature plainSig = new Signature();
         Map<Integer, Set<String>> index2nns = new HashMap();
@@ -395,40 +377,7 @@ public class AMSignatureBuilder {
             Set<String> consts = AMSignatureBuilder.getConstantsForAlignment(al, graph, addCoref);
             consts.stream().forEach(c -> plainSig.addSymbol(c, 0));
         }
-        Set<String> sources = new HashSet<>();
-        sources.add(SUBJ);
-        sources.add(OBJ);
-        sources.add(OBJ+2);
-        sources.add(OBJ+3);
-        sources.add(OBJ+4);
-        sources.add(OBJ+5);
-        sources.add(OBJ+6);
-        sources.add(OBJ+7);
-        sources.add(OBJ+8);
-        sources.add(OBJ+9);
-        sources.add(DOMAIN);
-        sources.add(POSS);
-        sources.add(MOD);
-        sources.add(SUBJ);
-        sources.add(OBJ);
-        sources.add(OBJ+2);
-        sources.add(OBJ+3);
-        sources.add(OBJ+4);
-        sources.add(OBJ+5);
-        sources.add(OBJ+6);
-        sources.add(OBJ+7);
-        sources.add(OBJ+8);
-        sources.add(OBJ+9);
-        sources.add(DOMAIN);
-        sources.add(POSS);
-        sources.add(MOD);
-        for (GraphEdge e : graph.getGraph().edgeSet()) {
-            String eSrc = AMSignatureBuilder.edge2Source(e, graph);
-            if (eSrc.startsWith("op") || eSrc.startsWith("snt")) {
-                sources.add(eSrc);
-                sources.add(eSrc);
-            }
-        }
+        Collection<String> sources = getAllPossibleSources(graph);
         
         for (String s : sources) {
             plainSig.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+s, 2);
@@ -436,6 +385,8 @@ public class AMSignatureBuilder {
         }
         return plainSig;
     }
+    
+    
     
     /**
      * TODO: this duplicates a lot of code of makeDecompositionSignature;
@@ -707,6 +658,18 @@ public class AMSignatureBuilder {
         return ret;
     }
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //----------------------------------------   helpers   ----------------------------------------------------------
+    
     private static SGraph makeConstGraph(Alignment al, SGraph graph, GraphNode root) {
         SGraph constGraph = new SGraph();
         for (String nn : al.nodes) {
@@ -727,7 +690,68 @@ public class AMSignatureBuilder {
         return constGraph;
     }
     
-    static Collection<Map<GraphEdge, String>> getSourceAssignments(Collection<GraphEdge> blobEdges, SGraph graph) {
+    private static Set<Map<GraphEdge, String>> closureUnderMult(Set<Map<GraphEdge, String>> seedSet) {
+        Queue<Map<GraphEdge, String>> agenda = new LinkedList<>(seedSet);
+        Set<Map<GraphEdge, String>> seen = new HashSet(seedSet);
+        while (!agenda.isEmpty()) {
+            Map<GraphEdge, String> map = agenda.poll();
+            for (Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>> f : lexiconSourceRemappingsMulti) {
+                Collection<Map<GraphEdge, String>> newMaps = f.apply(map);
+                for (Map<GraphEdge, String> newMap : newMaps) {
+                    if (!seen.contains(newMap)) {
+                        agenda.add(newMap);
+                    }
+                }
+                seen.addAll(newMaps);
+            }
+        }
+        return seen;
+    }
+    
+    private static boolean hasDuplicates(Map<GraphEdge, String> edge2sources) {
+        return edge2sources.keySet().size() != new HashSet(edge2sources.values()).size();
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //----------------------------------------------   source assignments based on edges   ------------------------------------------------
+    
+    public static Collection<String> getAllPossibleSources(SGraph graph) {
+        Set<String> sources = new HashSet<>();
+        sources.add(SUBJ);
+        sources.add(OBJ);
+        sources.add(OBJ+2);
+        sources.add(OBJ+3);
+        sources.add(OBJ+4);
+        sources.add(OBJ+5);
+        sources.add(OBJ+6);
+        sources.add(OBJ+7);
+        sources.add(OBJ+8);
+        sources.add(OBJ+9);
+        sources.add(DOMAIN);
+        sources.add(POSS);
+        sources.add(MOD);
+        // op and snt sources are theoretically unlimited in AMR, so we need to look at the graph to find all of them.
+        for (GraphEdge e : graph.getGraph().edgeSet()) {
+            String eSrc = AMSignatureBuilder.edge2Source(e, graph);
+            if (eSrc.startsWith("op") || eSrc.startsWith("snt")) {
+                sources.add(eSrc);
+                sources.add(eSrc);
+            }
+        }
+        return sources;
+    }
+    
+    private static Collection<Map<GraphEdge, String>> getSourceAssignments(Collection<GraphEdge> blobEdges, SGraph graph) {
         Map<GraphEdge, String> seed = new HashMap<>();
         for (GraphEdge e : blobEdges) {
             seed.put(e, edge2Source(e, graph));
@@ -749,22 +773,31 @@ public class AMSignatureBuilder {
         return ret.stream().filter(map -> !hasDuplicates(map)).collect(Collectors.toList());
     }
     
-    private static Set<Map<GraphEdge, String>> closureUnderMult(Set<Map<GraphEdge, String>> seedSet) {
-        Queue<Map<GraphEdge, String>> agenda = new LinkedList<>(seedSet);
-        Set<Map<GraphEdge, String>> seen = new HashSet(seedSet);
-        while (!agenda.isEmpty()) {
-            Map<GraphEdge, String> map = agenda.poll();
-            for (Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>> f : lexiconSourceRemappingsMulti) {
-                Collection<Map<GraphEdge, String>> newMaps = f.apply(map);
-                for (Map<GraphEdge, String> newMap : newMaps) {
-                    if (!seen.contains(newMap)) {
-                        agenda.add(newMap);
-                    }
+    private static String edge2Source(GraphEdge edge, SGraph graph) {
+        switch (edge.getLabel()) {
+            case "ARG0": return SUBJ;
+            case "ARG1": 
+                if (BlobUtils.isConjunctionNode(graph, edge.getSource())) {
+                    return "op1";
+                } else {
+                    return OBJ;
                 }
-                seen.addAll(newMaps);
-            }
+            case "poss": case "part": return POSS;
+            case "domain": return DOMAIN;
+            default:
+                if (edge.getLabel().startsWith("ARG")) {
+                    if (BlobUtils.isConjunctionNode(graph, edge.getSource())) {
+                        return "op" + edge.getLabel().substring("ARG".length());
+                    } else {
+                        return OBJ + edge.getLabel().substring("ARG".length());
+                    }
+                    
+                } else if (edge.getLabel().startsWith("op") || edge.getLabel().startsWith("snt")) {
+                    return edge.getLabel();
+                } else {
+                    return MOD;
+                }
         }
-        return seen;
     }
     
     private static Collection<Map<GraphEdge, String>> passivize(Map<GraphEdge, String> map, int objNr) {
@@ -825,15 +858,14 @@ public class AMSignatureBuilder {
         return ret;
     }
     
-    
-       /**
-     * Maximally promotes all objects
+    /**
+     * Maximally promotes all objects.
      *
      * @param map
      * @return the same map with all objects promoted as high as possible while
      * maintaining the same order
      */
-    static Map<GraphEdge, String> promoteObjMax(Map<GraphEdge, String> map) {
+    private static Map<GraphEdge, String> promoteObjMax(Map<GraphEdge, String> map) {
         Map<GraphEdge, String> ret = new HashMap<>();
         List<Pair<String, GraphEdge>> objs = new ArrayList<>();
         List<Pair<String, GraphEdge>> objsChanged = new ArrayList<>();
@@ -876,39 +908,49 @@ public class AMSignatureBuilder {
 
         return ret;
     }
-
     
-    private static boolean hasDuplicates(Map<GraphEdge, String> edge2sources) {
-        return edge2sources.keySet().size() != new HashSet(edge2sources.values()).size();
-    }
-    
-    public static String edge2Source(GraphEdge edge, SGraph graph) {
-        switch (edge.getLabel()) {
-            case "ARG0": return SUBJ;
-            case "ARG1": 
-                if (BlobUtils.isConjunctionNode(graph, edge.getSource())) {
-                    return "op1";
-                } else {
-                    return OBJ;
-                }
-            case "poss": case "part": return POSS;
-            case "domain": return DOMAIN;
-            default:
-                if (edge.getLabel().startsWith("ARG")) {
-                    if (BlobUtils.isConjunctionNode(graph, edge.getSource())) {
-                        return "op" + edge.getLabel().substring("ARG".length());
-                    } else {
-                        return OBJ + edge.getLabel().substring("ARG".length());
+    public static double scoreGraphPassiveSpecial(SGraph graph) {
+        double ret = 1.0;
+        for (String s : graph.getAllSources()) {
+            if (s.matches(OBJ+"[0-9]+")) {
+                double oNr = Integer.parseInt(s.substring(1));
+                ret /= oNr;
+            }
+            if (s.equals(SUBJ)) {
+                GraphNode n = graph.getNode(graph.getNodeForSource(s));
+                Set<GraphEdge> edges = graph.getGraph().edgesOf(n);
+                if (!edges.isEmpty()) {
+                    if (edges.size() > 1) {
+                        System.err.println("***WARNING*** more than one edge at node "+n);
+                        System.err.println(edges);
                     }
-                    
-                } else if (edge.getLabel().startsWith("op") || edge.getLabel().startsWith("snt")) {
-                    return edge.getLabel();
+                    GraphEdge e = edges.iterator().next();
+                    if (e.getLabel().equals("ARG0")) {
+                        ret *= 2.0;
+                    } else if (e.getLabel().equals("ARG1")) {
+                        ret *= 1.5;
+                    }
                 } else {
-                    return MOD;
+                    System.err.println("***WARNING*** no edges at node "+n);
                 }
+            }
         }
+        return ret;
     }
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //--------------------------------------------------   get targets   ------------------------------------------------
     
     /**
      * Essentially returns the blob-targets, except for conjunction/coordination
@@ -998,7 +1040,6 @@ public class AMSignatureBuilder {
         return ret;
     }
     
-
     /**
      * Returns maps from the common targets of the nodes coordinated by coordNode,
      * to source names. I.e. if
@@ -1116,35 +1157,14 @@ public class AMSignatureBuilder {
     }
     
     
-    public static double scoreGraphPassiveSpecial(SGraph graph) {
-        double ret = 1.0;
-        for (String s : graph.getAllSources()) {
-            if (s.matches(OBJ+"[0-9]+")) {
-                double oNr = Integer.parseInt(s.substring(1));
-                ret /= oNr;
-            }
-            if (s.equals(SUBJ)) {
-                GraphNode n = graph.getNode(graph.getNodeForSource(s));
-                Set<GraphEdge> edges = graph.getGraph().edgesOf(n);
-                if (!edges.isEmpty()) {
-                    if (edges.size() > 1) {
-                        System.err.println("***WARNING*** more than one edge at node "+n);
-                        System.err.println(edges);
-                    }
-                    GraphEdge e = edges.iterator().next();
-                    if (e.getLabel().equals("ARG0")) {
-                        ret *= 2.0;
-                    } else if (e.getLabel().equals("ARG1")) {
-                        ret *= 1.5;
-                    }
-                } else {
-                    System.err.println("***WARNING*** no edges at node "+n);
-                }
-            }
-        }
-        return ret;
-    }
     
+    
+    
+    
+    
+    
+    
+    //------------------------------------------------------------   main for testing things   ------------------------------------------------------------------
     
     
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParseException, ParserException, InterruptedException {

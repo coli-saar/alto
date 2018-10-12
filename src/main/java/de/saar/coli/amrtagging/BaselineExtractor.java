@@ -164,7 +164,7 @@ public class BaselineExtractor {
                         strRepr = lookup.get(ng);
                     } else {
                         try {
-                        strRepr = ng.toIsiAmrStringWithSources();
+                            strRepr = ng.toIsiAmrStringWithSources();
                         } catch (UnsupportedOperationException ex){
                             //throw new Exception();
                             continue outer;

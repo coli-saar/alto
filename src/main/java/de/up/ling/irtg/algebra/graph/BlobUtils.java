@@ -29,6 +29,9 @@ import org.jgrapht.DirectedGraph;
  */
 public class BlobUtils {
 
+    
+    //---------------------   handwritten heuristics   --------------------------
+    
     //TODO: replace these with regular expressions, instead of prefixes
     public static final String[] OUTBOUND_EDGEPREFIXES = new String[]{"ARG", "op", "snt", "poss", "consist", "domain", "UNKOUT"};//part goes the other way than poss //consist is actually consist-of the other direction...
     public static final String[] INBOUND_EDGEPREFIXES = new String[]{"mod", "manner", "source", "topic", "direction", "condition", "concession", "part", "frequency", "extent", "age", "duration", "location", "polarity", "time", "mode", "degree", "li", "wiki", "quant", "unit", "value", "scale", "name", "day", "month", "year", "calendar", "dayperiod", "year2", "century", "quarter", "season", "timezone", "weekday", "UNKIN"};
@@ -52,11 +55,6 @@ public class BlobUtils {
             return false;
         }
     }
-    
-    public static boolean isOutbound(String edgeLabel) {
-        return isOutboundBase(edgeLabel);//isStandalone(edgeLabel) || ;
-    }
-
 
     private static boolean isInboundBase(String edgeLabel) {
         synchronized (INBOUND_STORE) {
@@ -72,6 +70,59 @@ public class BlobUtils {
             INBOUND_STORE.put(edgeLabel, false);
             return false;
         }
+    }
+    
+    public static boolean isConjunctionNode(SGraph graph, GraphNode node) {
+        if (!CONJUNCTION_NODE_LABELS.contains(node.getLabel())) {
+            return false;
+        } else {
+            int conjEdgeCount = 0;
+            for (GraphEdge edge : getBlobEdges(graph, node)) {
+                if (edge.getLabel().equals("ARG0")) {
+                    return false;//then different use of contrast-01
+                }
+                if (isConjEdgeLabel(edge.getLabel())) {
+                    conjEdgeCount++;
+                }
+            }
+            return conjEdgeCount >= 2;
+        }
+    }
+    
+    public static boolean isConjEdgeLabel(String edgeLabel) {
+        return edgeLabel.matches("op[0-9]+") || edgeLabel.startsWith("ARG[0-9]+") || edgeLabel.startsWith("snt[0-9]+");
+    }
+    
+    public static boolean isRaisingNode(SGraph graph, GraphNode node) {
+        Set<GraphEdge> argEdges = getArgEdges(node, graph);
+        if (argEdges.size() == 1 &&
+                (argEdges.iterator().next().getLabel().equals("ARG1") || argEdges.iterator().next().getLabel().equals("ARG2"))) {
+            GraphNode other = BlobUtils.otherNode(node, argEdges.iterator().next());
+            if (!getArgEdges(other, graph).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public static Set<GraphEdge> getArgEdges(GraphNode n, SGraph graph) {
+        Set<GraphEdge> argEdges = new HashSet<>();
+        for (GraphEdge e : BlobUtils.getBlobEdges(graph, n)) {
+            if (e.getLabel().startsWith("ARG")) {
+                argEdges.add(e);
+            }
+        }
+        return argEdges;
+    }
+    
+    
+    
+    
+    
+    //---------------------   general   --------------------------------------
+    
+    public static boolean isOutbound(String edgeLabel) {
+        return isOutboundBase(edgeLabel);//isStandalone(edgeLabel) || ;
     }
     
     public static boolean isInbound(String edgeLabel) {
@@ -92,25 +143,47 @@ public class BlobUtils {
         return (edge.getSource().equals(node)) ? edge.getTarget() : edge.getSource();
     }
     
-    /**
-     * returns null if no blob edge of node goes to other.
-     * @param node
-     * @param other
-     * @param graph
-     * @return 
-     */
-    static GraphEdge getBlobEdgeTo(GraphNode node, GraphNode other, DirectedGraph<GraphNode, GraphEdge> graph) {
-        for (GraphEdge e : graph.getAllEdges(node, other)) {
-            if (isBlobEdge(node, e)) {
-                return e;
+    
+    public static Collection<GraphEdge> getBlobEdges(SGraph graph, GraphNode node) {
+        List<GraphEdge> ret = new ArrayList<>();
+        for (GraphEdge edge : graph.getGraph().edgesOf(node)) {
+            if (isBlobEdge(node, edge)) {
+                ret.add(edge);
             }
         }
-        for (GraphEdge e : graph.getAllEdges(other, node)) {
-            if (isBlobEdge(node, e)) {
-                return e;
+        return ret;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // ----------------   unused or deprecated   ------------------------
+    
+    @Deprecated
+    public static Set<GraphNode> getNestedConjunctionNodes(SGraph graph, GraphNode node) {
+        return getNestedConjunctionNodes(graph, node, false);
+    }
+    
+    @Deprecated
+    private static Set<GraphNode> getNestedConjunctionNodes(SGraph graph, GraphNode node, boolean checkConj) {
+        Set<GraphNode> ret = new HashSet<>();
+        if (!checkConj || isConjunctionNode(graph, node)) {
+            ret.add(node);
+            for (GraphEdge edge : graph.getGraph().outgoingEdgesOf(node)) {
+                if (isConjEdgeLabel(edge.getLabel())) {
+                    ret.addAll(getNestedConjunctionNodes(graph, edge.getTarget(), true));
+                }
             }
         }
-        return null;
+        return ret;
     }
     
     /**
@@ -120,6 +193,7 @@ public class BlobUtils {
      * @param sgraph
      * @return 
      */
+    @Deprecated
     static Set<Pair<List<GraphEdge>, List<GraphEdge>>> getReentrancies(int min, int max, SGraph sgraph) {
         DirectedGraph<GraphNode, GraphEdge> graph = sgraph.getGraph();
         Set<Pair<List<GraphEdge>, List<GraphEdge>>> ret = new HashSet<>();
@@ -161,9 +235,13 @@ public class BlobUtils {
      * gives list of multimods (which is a word I just came up with, meaning that
      * a node is part of an undirected cycle with the relevant adjacent edges
      * not part of the node's blob).
+     * This function is marked as deprecated since it is no longer used in
+     * ongoing research. However, it is still in the code and working when
+     * e.g. reproducing the IWCS 2017 results of Groschwitz et. al
      * @param sgraph
      * @return 
      */
+    @Deprecated
     public static Set<GraphNode> getMultimods(SGraph sgraph) {
         return getMultimods(sgraph, Collections.EMPTY_SET);
     }
@@ -177,6 +255,7 @@ public class BlobUtils {
      * @param sgraph
      * @return 
      */
+    @Deprecated
     public static Set<GraphNode> getMultimods(SGraph sgraph, Set<Set<GraphEdge>> excluded) {
         DirectedGraph<GraphNode, GraphEdge> graph = sgraph.getGraph();
         Set<GraphNode> ret = new HashSet<>();
@@ -220,77 +299,30 @@ public class BlobUtils {
         }
         return ret;
     }
-            
-            
-            
-            
-//    static Set<Pair<List<GraphEdge>, List<GraphEdge>>> getMultimods(SGraph sgraph) {
-//        DirectedGraph<GraphNode, GraphEdge> graph = sgraph.getGraph();
-//        Set<Pair<List<GraphEdge>, List<GraphEdge>>> ret = new HashSet<>();
-//        for (GraphNode node1 : graph.vertexSet()) {
-//            Map<GraphNode, List<GraphEdge>> seen2Path1 = new HashMap<>();
-//            List<GraphNode> agenda1 = new ArrayList<>();
-//            List<GraphEdge> seed1 = new ArrayList<>();
-//            seen2Path1.put(node1, seed1);
-//            agenda1.add(node1);
-//            while (!agenda1.isEmpty()) {
-//                GraphNode a = agenda1.get(0);
-//                agenda1.remove(0);
-//                for (GraphEdge edge : graph.edgesOf(a)) {
-//                    if (BlobUtils.isBlobEdge(a, edge)) {
-//                        GraphNode other = BlobUtils.otherNode(a, edge);
-//                        List<GraphEdge> newPath = new ArrayList(seen2Path1.get(a));
-//                        newPath.add(edge);
-//                        if (!seen2Path1.containsKey(other)) {
-//                            agenda1.add(other);
-//                            seen2Path1.put(other, newPath);
-//                        }
-//                    }
-//                }
-//            }
-//            for (GraphNode node2 : graph.vertexSet()) {
-//                if (!seen2Path1.containsKey(node2)) {
-//                    Set<Pair<List<GraphEdge>, List<GraphEdge>>> pathsHere = new HashSet<>();
-//                    Set<GraphNode> nodesHere = new HashSet<>();
-//                    Map<GraphNode, List<GraphEdge>> seen2Path2 = new HashMap<>();
-//                    List<GraphNode> agenda2 = new ArrayList<>();
-//                    List<GraphEdge> seed2 = new ArrayList<>();
-//                    seen2Path2.put(node2, seed2);
-//                    agenda2.add(node2);
-//                    while (!agenda2.isEmpty()) {
-//                        GraphNode a = agenda2.get(0);
-//                        agenda2.remove(0);
-//                        for (GraphEdge edge : graph.edgesOf(a)) {
-//                            if (BlobUtils.isBlobEdge(a, edge)) {
-//                                GraphNode other = BlobUtils.otherNode(a, edge);
-//                                List<GraphEdge> newPath = new ArrayList(seen2Path2.get(a));
-//                                newPath.add(edge);
-//                                seen2Path2.put(other, newPath);
-//                                //check if seen in run on node1!!
-//                                if (seen2Path1.containsKey(other)) {
-//                                    List<GraphEdge> prevPath = seen2Path1.get(other);
-//                                    nodesHere.add(other);
-//                                    pathsHere.add(new Pair(newPath, prevPath));
-//                                } else if (!seen2Path2.containsKey(other)) {
-//                                    agenda2.add(other);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    if (seen2Path2.containsKey(node1)) {
-//                        continue;
-//                    }
-//                    
-//                    if (nodesHere.size() >= 2) {
-//                        ret.addAll(pathsHere);
-//                    }
-//                }
-//                
-//            }
-//        }
-//        return ret;
-//    }
-
+    
+    /**
+     * returns null if no blob edge of node goes to other.
+     * @param node
+     * @param other
+     * @param graph
+     * @return 
+     */
+    @Deprecated
+    static GraphEdge getBlobEdgeTo(GraphNode node, GraphNode other, DirectedGraph<GraphNode, GraphEdge> graph) {
+        for (GraphEdge e : graph.getAllEdges(node, other)) {
+            if (isBlobEdge(node, e)) {
+                return e;
+            }
+        }
+        for (GraphEdge e : graph.getAllEdges(other, node)) {
+            if (isBlobEdge(node, e)) {
+                return e;
+            }
+        }
+        return null;
+    }
+    
+    @Deprecated
     public static Set<GraphNode> getConjunctionTargets(SGraph graph, GraphNode node) {
         Set<GraphNode> ret = new HashSet<>();
         if (isConjunctionNode(graph, node)) {
@@ -308,71 +340,6 @@ public class BlobUtils {
         return ret;
     }
     
-    public static boolean isConjunctionNode(SGraph graph, GraphNode node) {
-        if (!CONJUNCTION_NODE_LABELS.contains(node.getLabel())) {
-            return false;
-        } else {
-            int conjEdgeCount = 0;
-            for (GraphEdge edge : getBlobEdges(graph, node)) {
-                if (edge.getLabel().equals("ARG0")) {
-                    return false;//then different use of contrast-01
-                }
-                if (isConjEdgeLabel(edge.getLabel())) {
-                    conjEdgeCount++;
-                }
-            }
-            return conjEdgeCount >= 2;
-        }
-    }
-    
-    public static Set<GraphEdge> getArgEdges(GraphNode n, SGraph graph) {
-        Set<GraphEdge> argEdges = new HashSet<>();
-        for (GraphEdge e : BlobUtils.getBlobEdges(graph, n)) {
-            if (e.getLabel().startsWith("ARG")) {
-                argEdges.add(e);
-            }
-        }
-        return argEdges;
-    }
-    
-    public static boolean isRaisingNode(SGraph graph, GraphNode node) {
-        Set<GraphEdge> argEdges = getArgEdges(node, graph);
-        if (argEdges.size() == 1 &&
-                (argEdges.iterator().next().getLabel().equals("ARG1") || argEdges.iterator().next().getLabel().equals("ARG2"))) {
-            GraphNode other = BlobUtils.otherNode(node, argEdges.iterator().next());
-            if (!getArgEdges(other, graph).isEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    public static Set<GraphNode> getNestedConjunctionNodes(SGraph graph, GraphNode node) {
-        return getNestedConjunctionNodes(graph, node, false);
-    }
-    
-    private static Set<GraphNode> getNestedConjunctionNodes(SGraph graph, GraphNode node, boolean checkConj) {
-        Set<GraphNode> ret = new HashSet<>();
-        if (!checkConj || isConjunctionNode(graph, node)) {
-            ret.add(node);
-            for (GraphEdge edge : graph.getGraph().outgoingEdgesOf(node)) {
-                if (isConjEdgeLabel(edge.getLabel())) {
-                    ret.addAll(getNestedConjunctionNodes(graph, edge.getTarget(), true));
-                }
-            }
-        }
-        return ret;
-    }
-    
-    public static Collection<GraphEdge> getBlobEdges(SGraph graph, GraphNode node) {
-        List<GraphEdge> ret = new ArrayList<>();
-        for (GraphEdge edge : graph.getGraph().edgesOf(node)) {
-            if (isBlobEdge(node, edge)) {
-                ret.add(edge);
-            }
-        }
-        return ret;
-    }
     
     /**
      * A target here is a node that is on the other end of an edge of the input
@@ -382,6 +349,7 @@ public class BlobUtils {
      * @param node the input node of which to get the targets.
      * @return 
      */
+    @Deprecated
     public static Map<GraphNode, String> getTargets(SGraph graph, GraphNode node) {
         Map<GraphNode, String> ret = getPrimaryTargets(graph, node);
         Map<GraphNode, String> sec = getSecondaryTargets(graph, node);
@@ -391,6 +359,7 @@ public class BlobUtils {
         return ret;
     }
     
+    @Deprecated
     public static Map<GraphNode, String> getSecondaryTargets(SGraph graph, GraphNode node) {
         if (isConjunctionNode(graph, node)) {
             Map<GraphNode, String> ret = new HashMap<>();
@@ -424,16 +393,6 @@ public class BlobUtils {
                         }
                         
                     }
-//                    Set<GraphNode> remaining = ret.keySet();
-//                    for (GraphNode remap : remaining) {
-//                        if (ret.get(remap).equals("")) {
-//                            ret.put(remap, otherTargets.get(remap));
-//                        } else {
-//                            String oldLabel = ret.get(remap);
-//                            String newLabel = otherTargets.get(remap);
-//                            ret.put(remap, (oldLabel.compareTo(newLabel)<0) ? oldLabel : newLabel);
-//                        }
-//                    }
                 }
             }
             for (Counter<String> counter : target2edge2Count.values()) {
@@ -493,6 +452,7 @@ public class BlobUtils {
         }
     }
     
+    @Deprecated
     public static Map<GraphNode, String> getPrimaryTargets(SGraph graph, GraphNode node) {
         Map<GraphNode, String> ret = new HashMap<>();
         boolean isConj = isConjunctionNode(graph, node);
@@ -502,10 +462,6 @@ public class BlobUtils {
             }
         }
         return ret;
-    }
-    
-    public static boolean isConjEdgeLabel(String edgeLabel) {
-        return edgeLabel.matches("op[0-9]+") || edgeLabel.startsWith("ARG[0-9]+") || edgeLabel.startsWith("snt[0-9]+");
     }
     
 }
