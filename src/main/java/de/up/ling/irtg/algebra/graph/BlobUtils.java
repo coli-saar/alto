@@ -32,13 +32,13 @@ public class BlobUtils {
     
     //---------------------   handwritten heuristics   --------------------------
     
+    //-------------------------------   attaching edges to blobs  ----------------------------
+
     //TODO: replace these with regular expressions, instead of prefixes
     public static final String[] OUTBOUND_EDGEPREFIXES = new String[]{"ARG", "op", "snt", "poss", "consist", "domain", "UNKOUT"};//part goes the other way than poss //consist is actually consist-of the other direction...
-    public static final String[] INBOUND_EDGEPREFIXES = new String[]{"mod", "manner", "source", "topic", "direction", "condition", "concession", "part", "frequency", "extent", "age", "duration", "location", "polarity", "time", "mode", "degree", "li", "wiki", "quant", "unit", "value", "scale", "name", "day", "month", "year", "calendar", "dayperiod", "year2", "century", "quarter", "season", "timezone", "weekday", "UNKIN"};
-    private static final Object2BooleanMap<String> INBOUND_STORE = new Object2BooleanOpenHashMap<>();
+//    public static final String[] INBOUND_EDGEPREFIXES = new String[]{"mod", "manner", "source", "topic", "direction", "condition", "concession", "part", "frequency", "extent", "age", "duration", "location", "polarity", "time", "mode", "degree", "li", "wiki", "quant", "unit", "value", "scale", "name", "day", "month", "year", "calendar", "dayperiod", "year2", "century", "quarter", "season", "timezone", "weekday", "UNKIN"};
+//    private static final Object2BooleanMap<String> INBOUND_STORE = new Object2BooleanOpenHashMap<>();
     private static final Object2BooleanMap<String> OUTBUND_STORE = new Object2BooleanOpenHashMap<>();
-    public final static Set<String> CONJUNCTION_NODE_LABELS = Collections.unmodifiableSet(
-        new HashSet<String>(Arrays.asList("and", "or", "contrast-01", "either", "neither")));
     
     private static boolean isOutboundBase(String edgeLabel) {
         synchronized (OUTBUND_STORE) {
@@ -55,22 +55,43 @@ public class BlobUtils {
             return false;
         }
     }
-
-    private static boolean isInboundBase(String edgeLabel) {
-        synchronized (INBOUND_STORE) {
-            if (INBOUND_STORE.containsKey(edgeLabel)) {
-                return INBOUND_STORE.getBoolean(edgeLabel);
-            }
-            for (String pref : INBOUND_EDGEPREFIXES) {
-                if (edgeLabel.startsWith(pref)) {
-                    INBOUND_STORE.put(edgeLabel, true);
-                    return true;
-                }
-            }
-            INBOUND_STORE.put(edgeLabel, false);
-            return false;
-        }
+    
+//    private static boolean isInboundBase(String edgeLabel) {
+//        synchronized (INBOUND_STORE) {
+//            if (INBOUND_STORE.containsKey(edgeLabel)) {
+//                return INBOUND_STORE.getBoolean(edgeLabel);
+//            }
+//            for (String pref : INBOUND_EDGEPREFIXES) {
+//                if (edgeLabel.startsWith(pref)) {
+//                    INBOUND_STORE.put(edgeLabel, true);
+//                    return true;
+//                }
+//            }
+//            INBOUND_STORE.put(edgeLabel, false);
+//            return false;
+//        }
+//    }
+    
+    
+    public static boolean isOutbound(String edgeLabel) {
+        return isOutboundBase(edgeLabel);//isStandalone(edgeLabel) || ;
     }
+    
+    public static boolean isInbound(String edgeLabel) {
+        return !isOutbound(edgeLabel);
+    }
+
+    public static boolean isStandalone(String edgeLabel) {
+        return false;
+        //return !isInboundBase(edgeLabel) && !isOutboundBase(edgeLabel);
+    }
+    
+    
+    //--------------------------------------------    specific phenomena   ----------------------------
+    
+    public final static Set<String> CONJUNCTION_NODE_LABELS = Collections.unmodifiableSet(
+        new HashSet<String>(Arrays.asList("and", "or", "contrast-01", "either", "neither")));
+    
     
     public static boolean isConjunctionNode(SGraph graph, GraphNode node) {
         if (!CONJUNCTION_NODE_LABELS.contains(node.getLabel())) {
@@ -121,29 +142,34 @@ public class BlobUtils {
     
     //---------------------   general   --------------------------------------
     
-    public static boolean isOutbound(String edgeLabel) {
-        return isOutboundBase(edgeLabel);//isStandalone(edgeLabel) || ;
-    }
     
-    public static boolean isInbound(String edgeLabel) {
-        return !isOutbound(edgeLabel);
-    }
 
-    public static boolean isStandalone(String edgeLabel) {
-        return false;
-        //return !isInboundBase(edgeLabel) && !isOutboundBase(edgeLabel);
-    }
-
-
+    /**
+     * returns true if and only if the edge is in the blob of the node.
+     * @param node
+     * @param edge
+     * @return 
+     */
     public static boolean isBlobEdge(GraphNode node, GraphEdge edge) {
         return (BlobUtils.isOutbound(edge.getLabel()) && edge.getSource().equals(node)) || (BlobUtils.isInbound(edge.getLabel()) && edge.getTarget().equals(node));
     }
 
+    /**
+     * Only applicable if edge is incident to node. If so, returns the other node incident to edge.
+     * @param node
+     * @param edge
+     * @return 
+     */
     public static GraphNode otherNode(GraphNode node, GraphEdge edge) {
         return (edge.getSource().equals(node)) ? edge.getTarget() : edge.getSource();
     }
     
-    
+    /**
+     * returns all edges in the blob of node, in graph.
+     * @param graph
+     * @param node
+     * @return 
+     */
     public static Collection<GraphEdge> getBlobEdges(SGraph graph, GraphNode node) {
         List<GraphEdge> ret = new ArrayList<>();
         for (GraphEdge edge : graph.getGraph().edgesOf(node)) {

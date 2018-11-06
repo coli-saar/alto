@@ -14,7 +14,6 @@ import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_COREFMARK
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.Counter;
 import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -48,7 +47,7 @@ public class AMSignatureBuilder {
     public static final String OBJ = "o";
     public static final String MOD = "mod";
     public static final String POSS = "poss";
-    public static final String DOMAIN = "dom";//for now, maybe use s instead
+    public static final String DOMAIN = "dom";//for now, maybe use s instead -- EDIT: definitely do that (TODO)
     
     private static final Collection<Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>>> lexiconSourceRemappingsMulti;
     private static final Collection<Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>>> lexiconSourceRemappingsOne;
@@ -99,6 +98,8 @@ public class AMSignatureBuilder {
     //TODO fix coordination of raising nodes
     public static Signature makeDecompositionSignature(SGraph graph, int maxCorefs) throws ParseException {
         Signature ret = new Signature();
+        
+        //get all possible sources for each edge
         Map<GraphEdge, Set<String>> edgeSources = new HashMap<>();
         for (GraphEdge e : graph.getGraph().edgeSet()) {
             edgeSources.put(e, new HashSet<>());
@@ -114,241 +115,21 @@ public class AMSignatureBuilder {
             }
         }
         
-        Counter<Integer> typeMultCounter = new Counter<>();
+        //make the constant symbols
+        Set<String> allConstantSymbols = new HashSet<>();
         for (GraphNode node : graph.getGraph().vertexSet()) {
             Collection<GraphEdge> blobEdges = BlobUtils.getBlobEdges(graph, node);
             if (BlobUtils.isConjunctionNode(graph, node)) {
-                for (Map<GraphNode, String> conjTargets : getConjunctionTargets(graph, node)) {
-                    for (Set<GraphNode> conjNodes : Sets.powerSet(conjTargets.keySet())) {
-                        for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
-                            Set<GraphNode> nonOpNodes = blobTargets.keySet().stream()
-                                    .filter(n ->!blobTargets.get(n).matches("op[0-9]+")).collect(Collectors.toSet());
-                            
-                            Map<String,Set<String>> conjTypeStrings = new HashMap<>();//conj source to conj types
-                            
-                            
-                            for (GraphNode recNode : conjNodes) {
-                                Collection<Map<GraphNode, String>> recTargetSet = getTargets(graph, recNode);
-                                Set<String> newTypeStrings = new HashSet<>();
-                                newTypeStrings.add("()");//this is always an option
-                                for (Map<GraphNode, String> recTargets : recTargetSet) {
-                                    Set<String> newTypeStringsHere = new HashSet<>();
-                                    newTypeStringsHere.add("(");
-                                    Set<GraphNode> intersect = Sets.intersection(Sets.union(nonOpNodes, conjNodes), recTargets.keySet());
-                                    for (GraphNode recRecNode : intersect) {
-                                        Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-                                        String unifSource = conjNodes.contains(recRecNode) ? conjTargets.get(recRecNode) : blobTargets.get(recRecNode);
-                                        localTypes = Util.appendToAll(localTypes, recTargets.get(recRecNode)+"()_UNIFY_"+unifSource, false);
-                                        newTypeStringsHere.addAll(localTypes);
-                                    }
-                                    newTypeStringsHere = Util.appendToAll(newTypeStringsHere, ")", false);
-                                    newTypeStrings.addAll(newTypeStringsHere);
-                                }
-                                conjTypeStrings.put(conjTargets.get(recNode), newTypeStrings);
-                            }
-                            Iterator<String[]> conjTypeTuples;
-                            Map<String, Integer> conjSrc2Index = new HashMap<>();
-                            if (conjNodes.isEmpty()) {
-                                String[] el = new String[0];
-                                conjTypeTuples = Collections.singleton(el).iterator();
-                            } else {
-                                Set<String>[] conjTypeArray = new Set[conjNodes.size()];
-                                int k = 0;
-                                for (GraphNode conjNode : conjNodes) {
-                                    conjSrc2Index.put(conjTargets.get(conjNode), k);
-                                    conjTypeArray[k]=conjTypeStrings.get(conjTargets.get(conjNode));
-                                    k++;
-                                }
-                                conjTypeTuples = new TupleIterator<>(conjTypeArray, new String[0]);
-                            }
-                            
-                            
-                            while (conjTypeTuples.hasNext()) {
-                                String[] conjTypes = conjTypeTuples.next();
-                                String conjType = "";
-                                for (GraphNode conjNode : conjNodes) {
-                                    String conjSource = conjTargets.get(conjNode);
-                                    if (conjType.length()!=0) {
-                                        conjType += ",";
-                                    }
-                                    conjType += conjSource+"_UNIFY_"+conjSource+conjTypes[conjSrc2Index.get(conjSource)];
-                                }
-                                Set<String> typeStrings = new HashSet<>();
-                                typeStrings.add("(");
-                                int vCount = 0;
-                                String graphString = "(u<root> / "+"\""+node.getLabel()+"\"";//just add quotes all the time
-                                for (GraphEdge edge : blobEdges) {
-                                    GraphNode other = BlobUtils.otherNode(node, edge);
-
-                                    String src = blobTargets.get(other);
-
-                                    //add edge to graph and type
-                                    if (BlobUtils.isInbound(edge.getLabel())) {
-                                        graphString += " :"+edge.getLabel()+"-of (v"+vCount+" <"+src+">)";
-                                    } else {
-                                        graphString += " :"+edge.getLabel()+" (v"+vCount+" <"+src+">)";
-                                    }
-                                    vCount++;
-                                    typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
-                                    typeStrings = Util.appendToAll(typeStrings, src+"(", false);
-
-                                    if (src.matches("op[0-9]+")) {
-                                        typeStrings = Util.appendToAll(typeStrings, conjType, false);
-                                    } else {
-//                                        Collection<Map<GraphNode, String>> recTargetsSet = getTargets(graph, other);
-//                                        Set<String> newTypeStrings = new HashSet();
-//                                        for (Map<GraphNode, String> recTargets : recTargetsSet) {
-//                                            Set<String> newTypeStringsHere = new HashSet(typeStrings);
-//                                            Set<GraphNode> intersect = Sets.intersection(Sets.union(nonOpNodes, conjNodes), recTargets.keySet());
-//                                            for (GraphNode recNode : intersect) {
-//                                                Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-//                                                String unifSource = conjNodes.contains(recNode) ? conjTargets.get(recNode) : blobTargets.get(recNode);
-//                                                localTypes = Util.appendToAll(localTypes, recTargets.get(recNode)+"()_UNIFY_"+unifSource, false);
-//                                                newTypeStringsHere.addAll(localTypes);
-//                                            }
-//                                            newTypeStrings.addAll(newTypeStringsHere);
-//                                        }
-//                                        typeStrings.addAll(newTypeStrings);
-                                    }
-                                    //close bracket
-                                    typeStrings = Util.appendToAll(typeStrings, ")", false);
-                                }//finish type and graph strings, add to signature
-                                graphString +=")";
-                                typeStrings = Util.appendToAll(typeStrings, ")", false);
-                                typeMultCounter.add(typeStrings.size());
-                                for (String typeString : typeStrings) {
-                                    //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
-                                    ret.addSymbol(graphString+GRAPH_TYPE_SEP+typeString, 0);
-                                    for (int i = 0; i<maxCorefs; i++) {
-                                        String graphStringHere = graphString.replaceFirst("<root>", "<root, COREF"+i+">");
-                                        ret.addSymbol(OP_COREFMARKER+i+"_"+graphStringHere+GRAPH_TYPE_SEP+typeString, 0);
-                                    }
-                                }
-                            }
-                            
-                            
-                        }
-                    }
-                }
+                addConstantsForCoordNode(graph, node, blobEdges, maxCorefs, allConstantSymbols);
             } else if (BlobUtils.isRaisingNode(graph, node)) {
-                for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
-                    String graphString = "(u<root> / "+"\""+node.getLabel()+"\"";//just add quotes all the time
-                    Set<String> typeStrings = new HashSet<>();
-                    typeStrings.add("(");
-                    int vCount = 0;
-                    for (GraphEdge edge : blobEdges) {
-                        GraphNode other = BlobUtils.otherNode(node, edge);
-                        
-                        String src = blobTargets.get(other);
-                        
-                        //add edge to graph and type
-                        if (BlobUtils.isInbound(edge.getLabel())) {
-                            graphString += " :"+edge.getLabel()+"-of (v"+vCount+" <"+src+">)";
-                        } else {
-                            graphString += " :"+edge.getLabel()+" (v"+vCount+" <"+src+">)";
-                        }
-                        vCount++;
-                        typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
-                        typeStrings = Util.appendToAll(typeStrings, src+"(", false);
-                        
-                        
-                        
-                        //intersection of other's and node's targets
-                        Collection<Map<GraphNode, String>> recTargetsSet = getTargets(graph, other);
-                        Set<String> newTypeStrings = new HashSet();
-                        for (Map<GraphNode, String> recTargets : recTargetsSet) {
-                            Set<String> newTypeStringsHere = new HashSet(typeStrings);
-                            for (Entry<GraphNode, String> recEntry : recTargets.entrySet()) {
-                                if ((blobTargets.get(other).equals(OBJ) || blobTargets.get(other).equals(OBJ+"2"))
-                                        && recEntry.getValue().equals(SUBJ) && !blobTargets.keySet().contains(recEntry.getKey())) {
-                                    //last condition: do not want to do regular triangles with modality
-                                    Set<String> localTypes = Util.appendToAll(typeStrings, ",", false, s -> !s.endsWith("("));
-                                    newTypeStringsHere.addAll(Util.appendToAll(localTypes, SUBJ+"()_UNIFY_"+SUBJ, false));
-                                }
-                            }
-                            
-                            Set<GraphNode> intersect = Sets.intersection(blobTargets.keySet(), recTargets.keySet());
-                            for (GraphNode recNode : intersect) {
-                                Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-                                localTypes = Util.appendToAll(localTypes, recTargets.get(recNode)+"()_UNIFY_"+blobTargets.get(recNode), false);
-                                newTypeStringsHere.addAll(localTypes);
-                            }
-                            newTypeStrings.addAll(newTypeStringsHere);
-                        }
-                        
-                        typeStrings.addAll(newTypeStrings);
-                        //close bracket
-                        typeStrings = Util.appendToAll(typeStrings, ")", false);
-                    }
-//                    typeStrings = Util.appendToAll(typeStrings, ",s()", false, s -> s.contains("s()_UNIFY_s"));//always add comma if this condition holds
-                    //finish type and graph strings, add to signature
-                    graphString +=")";
-                    typeStrings = Util.appendToAll(typeStrings, ")", false);
-                    typeMultCounter.add(typeStrings.size());
-                    for (String typeString : typeStrings) {
-                        //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
-                        ret.addSymbol(graphString+GRAPH_TYPE_SEP+typeString, 0);
-                        for (int i = 0; i<maxCorefs; i++) {
-                            String graphStringHere = graphString.replaceFirst("<root>", "<root, COREF"+i+">");
-                            ret.addSymbol(OP_COREFMARKER+i+"_"+graphStringHere+GRAPH_TYPE_SEP+typeString, 0);
-                        }
-                    }
-                    
-                }
+                addConstantsForRaisingNode(graph, node, blobEdges, maxCorefs, allConstantSymbols);
             } else {
-                for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
-                    String graphString = "(u<root> / "+"\""+node.getLabel()+"\"";//just add quotes all the time
-                    Set<String> typeStrings = new HashSet<>();
-                    typeStrings.add("(");
-                    int vCount = 0;
-                    for (GraphEdge edge : blobEdges) {
-                        GraphNode other = BlobUtils.otherNode(node, edge);
-                        
-                        String src = blobTargets.get(other);
-                        
-                        //add edge to graph and type
-                        if (BlobUtils.isInbound(edge.getLabel())) {
-                            graphString += " :"+edge.getLabel()+"-of (v"+vCount+" <"+src+">)";
-                        } else {
-                            graphString += " :"+edge.getLabel()+" (v"+vCount+" <"+src+">)";
-                        }
-                        vCount++;
-                        typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
-                        typeStrings = Util.appendToAll(typeStrings, src+"(", false);
-                        
-                        //intersection of other's and node's targets
-                        Collection<Map<GraphNode, String>> recTargetsSet = getTargets(graph, other);
-                        Set<String> newTypeStrings = new HashSet();
-                        for (Map<GraphNode, String> recTargets : recTargetsSet) {
-                            Set<GraphNode> intersect = Sets.intersection(blobTargets.keySet(), recTargets.keySet());
-                            Set<String> newTypeStringsHere = new HashSet(typeStrings);
-                            for (GraphNode recNode : intersect) {
-                                Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-                                localTypes = Util.appendToAll(localTypes, recTargets.get(recNode)+"()_UNIFY_"+blobTargets.get(recNode), false);
-                                newTypeStringsHere.addAll(localTypes);
-                            }
-                            newTypeStrings.addAll(newTypeStringsHere);
-                        }
-                        typeStrings.addAll(newTypeStrings);
-                        //close bracket
-                        typeStrings = Util.appendToAll(typeStrings, ")", false);
-                    }
-                    //finish type and graph strings, add to signature
-                    graphString +=")";
-                    typeStrings = Util.appendToAll(typeStrings, ")", false);
-                    typeMultCounter.add(typeStrings.size());
-                    for (String typeString : typeStrings) {
-                        //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
-                        ret.addSymbol(graphString+GRAPH_TYPE_SEP+typeString, 0);
-                        for (int i = 0; i<maxCorefs; i++) {
-                            String graphStringHere = graphString.replaceFirst("<root>", "<root, COREF"+i+">");
-                            ret.addSymbol(OP_COREFMARKER+i+"_"+graphStringHere+GRAPH_TYPE_SEP+typeString, 0);
-                        }
-                    }
-                    
-                }
+                addConstantsForNormalNode(graph, node, blobEdges, maxCorefs, allConstantSymbols);
             }
-            
+        }
+        
+        for (String constSymb : allConstantSymbols) {
+            ret.addSymbol(constSymb, 0);
         }
         
         Collection<String> sources = getAllPossibleSources(graph);
@@ -432,7 +213,7 @@ public class AMSignatureBuilder {
         
         //if there is no node with blob edge pointing out of alignment node cluster, we are done. Otherwise continue, focussing on that one node.
         if (outNodes.isEmpty()) {
-            SGraph constGraph = makeConstGraph(al, graph, root);
+            SGraph constGraph = makeConstGraph(al.nodes, graph, root);
             return Collections.singleton(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+ApplyModifyGraphAlgebra.Type.EMPTY_TYPE.toString());
         }
         GraphNode node = outNodes.iterator().next();//at this point, there is exactly one.
@@ -440,217 +221,11 @@ public class AMSignatureBuilder {
         
         Collection<GraphEdge> blobEdges = BlobUtils.getBlobEdges(graph, node);
         if (BlobUtils.isConjunctionNode(graph, node)) {
-            for (Map<GraphNode, String> conjTargets : getConjunctionTargets(graph, node)) {
-                //conjTargets are the nested targets, i.e. w in (node :op1 (v1 :ARG1 w) :op2 (v2 :ARG1 w))
-                for (Set<GraphNode> conjNodes : Sets.powerSet(conjTargets.keySet())) {
-                    for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
-                        SGraph constGraph = makeConstGraph(al, graph, root);
-                        Set<GraphNode> nonOpNodes = blobTargets.keySet().stream()
-                                .filter(n ->!blobTargets.get(n).matches("op[0-9]+")).collect(Collectors.toSet());
-
-                        Map<String,Set<String>> conjTypeStrings = new HashMap<>();//conj source to conj types
-
-
-                        for (GraphNode recNode : conjNodes) {
-                            Collection<Map<GraphNode, String>> recTargetSet = getTargets(graph, recNode);
-                            Set<String> newTypeStrings = new HashSet<>();
-                            newTypeStrings.add("()");//this is always an option
-                            for (Map<GraphNode, String> recTargets : recTargetSet) {
-                                Set<String> newTypeStringsHere = new HashSet<>();
-                                newTypeStringsHere.add("(");
-                                Set<GraphNode> intersect = Sets.intersection(Sets.union(nonOpNodes, conjNodes), recTargets.keySet());
-                                for (GraphNode recRecNode : intersect) {
-                                    Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-                                    String unifSource = conjNodes.contains(recRecNode) ? conjTargets.get(recRecNode) : blobTargets.get(recRecNode);
-                                    localTypes = Util.appendToAll(localTypes, recTargets.get(recRecNode)+"()_UNIFY_"+unifSource, false);
-                                    newTypeStringsHere.addAll(localTypes);
-                                }
-                                newTypeStringsHere = Util.appendToAll(newTypeStringsHere, ")", false);
-                                newTypeStrings.addAll(newTypeStringsHere);
-                            }
-                            conjTypeStrings.put(conjTargets.get(recNode), newTypeStrings);
-                        }
-                        Iterator<String[]> conjTypeTuples;
-                        Map<String, Integer> conjSrc2Index = new HashMap<>();
-                        if (conjNodes.isEmpty()) {
-                            String[] el = new String[0];
-                            conjTypeTuples = Collections.singleton(el).iterator();
-                        } else {
-                            Set<String>[] conjTypeArray = new Set[conjNodes.size()];
-                            int k = 0;
-                            for (GraphNode conjNode : conjNodes) {
-                                conjSrc2Index.put(conjTargets.get(conjNode), k);
-                                conjTypeArray[k]=conjTypeStrings.get(conjTargets.get(conjNode));
-                                k++;
-                            }
-                            conjTypeTuples = new TupleIterator<>(conjTypeArray, new String[0]);
-                        }
-
-
-                        while (conjTypeTuples.hasNext()) {
-                            String[] conjTypes = conjTypeTuples.next();
-                            String conjType = "";
-                            for (GraphNode conjNode : conjNodes) {
-                                String conjSource = conjTargets.get(conjNode);
-                                if (conjType.length()!=0) {
-                                    conjType += ",";
-                                }
-                                conjType += conjSource+"_UNIFY_"+conjSource+conjTypes[conjSrc2Index.get(conjSource)];
-                            }
-                            Set<String> typeStrings = new HashSet<>();
-                            typeStrings.add("(");
-                            
-                            for (GraphEdge edge : blobEdges) {
-                                GraphNode other = BlobUtils.otherNode(node, edge);
-
-                                String src = blobTargets.get(other);
-
-                                //add source to graph
-                                constGraph.addSource(src, other.getName());
-                                
-                                //add source to type
-                                typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
-                                typeStrings = Util.appendToAll(typeStrings, src+"(", false);
-
-                                if (src.matches("op[0-9]+")) {
-                                    typeStrings = Util.appendToAll(typeStrings, conjType, false);
-                                } else {
-                                    
-                                }
-                                //close bracket
-                                typeStrings = Util.appendToAll(typeStrings, ")", false);
-                            }//finish type and graph strings, add to signature
-                            typeStrings = Util.appendToAll(typeStrings, ")", false);
-                            for (String typeString : typeStrings) {
-                                //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
-                                ret.add(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+typeString);
-                                //coref: index used is the one from alignment!
-                                if (addCoref) {
-                                    String graphString = constGraph.toIsiAmrStringWithSources();
-                                    graphString = graphString.replaceFirst("<root>", "<root, COREF"+al.span.start+">");
-                                    ret.add(OP_COREFMARKER+al.span.start+"_"+graphString+GRAPH_TYPE_SEP+typeString);
-                                }
-                            }
-                        }
-
-
-                    }
-                }
-            }
+            addConstantsForCoordNode(graph, node, al, root, blobEdges, addCoref, ret);
         } else if (BlobUtils.isRaisingNode(graph, node)) {
-            for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
-                SGraph constGraph = makeConstGraph(al, graph, root);
-                Set<String> typeStrings = new HashSet<>();
-                typeStrings.add("(");
-                for (GraphEdge edge : blobEdges) {
-                    GraphNode other = BlobUtils.otherNode(node, edge);
-                    if (al.nodes.contains(other.getName())) {
-                        continue;//do not want to add sources to nodes that are already labelled in the graph fragment for this alignment
-                    }
-                    String src = blobTargets.get(other);
-
-                    //add source to graph
-                    constGraph.addSource(src, other.getName());
-                    
-                    //add source to type
-                    typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
-                    typeStrings = Util.appendToAll(typeStrings, src+"(", false);
-
-
-
-                    //intersection of other's and node's targets
-                    Collection<Map<GraphNode, String>> recTargetsSet = getTargets(graph, other);
-                    Set<String> newTypeStrings = new HashSet();
-                    for (Map<GraphNode, String> recTargets : recTargetsSet) {
-                        Set<String> newTypeStringsHere = new HashSet(typeStrings);
-                        for (Entry<GraphNode, String> recEntry : recTargets.entrySet()) {
-                            if ((blobTargets.get(other).equals(OBJ) || blobTargets.get(other).equals(OBJ+"2"))
-                                    && recEntry.getValue().equals(SUBJ) && !blobTargets.keySet().contains(recEntry.getKey())) {
-                                //last condition: do not want to do regular triangles with modality
-                                Set<String> localTypes = Util.appendToAll(typeStrings, ",", false, s -> !s.endsWith("("));
-                                newTypeStringsHere.addAll(Util.appendToAll(localTypes, SUBJ+"()_UNIFY_"+SUBJ, false));
-                            }
-                        }
-
-                        Set<GraphNode> intersect = Sets.intersection(blobTargets.keySet(), recTargets.keySet());
-                        for (GraphNode recNode : intersect) {
-                            Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-                            localTypes = Util.appendToAll(localTypes, recTargets.get(recNode)+"()_UNIFY_"+blobTargets.get(recNode), false);
-                            newTypeStringsHere.addAll(localTypes);
-                        }
-                        newTypeStrings.addAll(newTypeStringsHere);
-                    }
-
-                    typeStrings.addAll(newTypeStrings);
-                    //close bracket
-                    typeStrings = Util.appendToAll(typeStrings, ")", false);
-                }
-                //typeStrings = Util.appendToAll(typeStrings, ",s()", false, s -> s.contains("s()_UNIFY_s"));//always add comma if this condition holds
-                //finish type and graph strings, add to signature
-                typeStrings = Util.appendToAll(typeStrings, ")", false);
-                for (String typeString : typeStrings) {
-                    //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
-                    ret.add(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+typeString);
-                    //coref: index used is the one from alignment!
-                    if (addCoref) {
-                        String graphString = constGraph.toIsiAmrStringWithSources();
-                        graphString = graphString.replaceFirst("<root>", "<root, COREF"+al.span.start+">");
-                        ret.add(OP_COREFMARKER+al.span.start+"_"+graphString+GRAPH_TYPE_SEP+typeString);
-                    }
-                }
-
-            }
+            addConstantsForRaisingNode(graph, node, al, root, blobEdges, addCoref, ret);
         } else {
-            for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
-                SGraph constGraph = makeConstGraph(al, graph, root);
-                Set<String> typeStrings = new HashSet<>();
-                typeStrings.add("(");
-                for (GraphEdge edge : blobEdges) {
-                    GraphNode other = BlobUtils.otherNode(node, edge);
-                    if (al.nodes.contains(other.getName())) {
-                        continue;//do not want to add sources to nodes that are already labelled in the graph fragment for this alignment
-                    }
-
-                    String src = blobTargets.get(other);
-
-                    //add source to graph
-                    constGraph.addSource(src, other.getName());
-                    
-                    //add source to type
-                    typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
-                    typeStrings = Util.appendToAll(typeStrings, src+"(", false);
-
-                    //intersection of other's and node's targets
-                    Collection<Map<GraphNode, String>> recTargetsSet = getTargets(graph, other);
-                    Set<String> newTypeStrings = new HashSet();
-                    for (Map<GraphNode, String> recTargets : recTargetsSet) {
-                        Set<GraphNode> intersect = Sets.intersection(blobTargets.keySet(), recTargets.keySet());
-                        Set<String> newTypeStringsHere = new HashSet(typeStrings);
-                        for (GraphNode recNode : intersect) {
-                            Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-                            localTypes = Util.appendToAll(localTypes, recTargets.get(recNode)+"()_UNIFY_"+blobTargets.get(recNode), false);
-                            newTypeStringsHere.addAll(localTypes);
-                        }
-                        newTypeStrings.addAll(newTypeStringsHere);
-                    }
-                    typeStrings.addAll(newTypeStrings);
-                    //close bracket
-                    typeStrings = Util.appendToAll(typeStrings, ")", false);
-                }
-                //finish type and graph strings, add to signature
-                typeStrings = Util.appendToAll(typeStrings, ")", false);
-                for (String typeString : typeStrings) {
-                    //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
-                    ret.add(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+typeString);
-                    //coref: index used is the one from alignment!
-                    if (addCoref) {
-                        String graphString = constGraph.toIsiAmrStringWithSources();
-                        graphString = graphString.replaceFirst("<root>", "<root, COREF"+al.span.start+">");
-                        ret.add(OP_COREFMARKER+al.span.start+"_"+graphString+GRAPH_TYPE_SEP+typeString);
-                    }
-                }
-
-            }
+            addConstantsForNormalNode(graph, node, al, root, blobEdges, addCoref, ret);
         }
         if (addCoref) {
             ret.add(ApplyModifyGraphAlgebra.OP_COREF+al.span.start);
@@ -662,25 +237,390 @@ public class AMSignatureBuilder {
     
     
     
+    // ----------------------   helper functions: making constants for the coordination, control and default cases.  --------------------------------
     
+    //TODO the following three cases (coordination, raising and normal nodes) contain some code overlap that should maybe be put in separate functions.
     
+    // ****   coordination nodes
+    /**
+     * Interface for decomposition version without alignments
+     * @param graph
+     * @param node
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param maxCoref 
+     */
+    private static void addConstantsForCoordNode(SGraph graph, GraphNode node, Collection<GraphEdge> blobEdges, int maxCoref, Set<String> ret) {
+        Set<Integer> corefIDs = new HashSet<>();
+        for (int i = 0; i<maxCoref; i++) {
+            corefIDs.add(i);
+        }
+        Set<String> nodes = new HashSet<>();
+        nodes.add(node.getName());
+        addConstantsForCoordNode(graph, node, nodes, node, blobEdges, corefIDs, ret);
+    }
     
+    /**
+     * Interface for alignment version
+     * @param graph
+     * @param node
+     * @param al
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param addCoref 
+     */
+    private static void addConstantsForCoordNode(SGraph graph, GraphNode node, Alignment al, GraphNode root, Collection<GraphEdge> blobEdges, boolean addCoref, Set<String> ret) {
+        Set<Integer> corefIDs = new HashSet<>();
+        if (addCoref) {
+            corefIDs.add(al.span.start);
+        }
+        addConstantsForCoordNode(graph, node, al.nodes, root, blobEdges, corefIDs, ret);
+    }
+    
+    /**
+     * actual function for both versions (with or without alignments)
+     * @param graph
+     * @param node
+     * @param nodes
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param corefIDs 
+     */
+    private static void addConstantsForCoordNode(SGraph graph, GraphNode node, Set<String> allNodes, GraphNode root, Collection<GraphEdge> blobEdges, Set<Integer> corefIDs, Set<String> ret) {
+        for (Map<GraphNode, String> conjTargets : getConjunctionTargets(graph, node)) {
+            //conjTargets are the nested targets, i.e. w in (node :op1 (v1 :ARG1 w) :op2 (v2 :ARG1 w))
+            for (Set<GraphNode> conjNodes : Sets.powerSet(conjTargets.keySet())) {
+                for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
+                    SGraph constGraph = makeConstGraph(allNodes, graph, root);
+                    Set<GraphNode> nonOpNodes = blobTargets.keySet().stream()
+                            .filter(n ->!blobTargets.get(n).matches("op[0-9]+")).collect(Collectors.toSet());
+
+                    Map<String,Set<String>> conjTypeStrings = new HashMap<>();//conj source to conj types
+
+
+                    for (GraphNode recNode : conjNodes) {
+                        Collection<Map<GraphNode, String>> recTargetSet = getTargets(graph, recNode);
+                        Set<String> newTypeStrings = new HashSet<>();
+                        newTypeStrings.add("()");//this is always an option
+                        for (Map<GraphNode, String> recTargets : recTargetSet) {
+                            Set<String> newTypeStringsHere = new HashSet<>();
+                            newTypeStringsHere.add("(");
+                            Set<GraphNode> intersect = Sets.intersection(Sets.union(nonOpNodes, conjNodes), recTargets.keySet());
+                            for (GraphNode recRecNode : intersect) {
+                                Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
+                                String unifSource = conjNodes.contains(recRecNode) ? conjTargets.get(recRecNode) : blobTargets.get(recRecNode);
+                                localTypes = Util.appendToAll(localTypes, recTargets.get(recRecNode)+"()_UNIFY_"+unifSource, false);
+                                newTypeStringsHere.addAll(localTypes);
+                            }
+                            newTypeStringsHere = Util.appendToAll(newTypeStringsHere, ")", false);
+                            newTypeStrings.addAll(newTypeStringsHere);
+                        }
+                        conjTypeStrings.put(conjTargets.get(recNode), newTypeStrings);
+                    }
+                    Iterator<String[]> conjTypeTuples;
+                    Map<String, Integer> conjSrc2Index = new HashMap<>();
+                    if (conjNodes.isEmpty()) {
+                        String[] el = new String[0];
+                        conjTypeTuples = Collections.singleton(el).iterator();
+                    } else {
+                        Set<String>[] conjTypeArray = new Set[conjNodes.size()];
+                        int k = 0;
+                        for (GraphNode conjNode : conjNodes) {
+                            conjSrc2Index.put(conjTargets.get(conjNode), k);
+                            conjTypeArray[k]=conjTypeStrings.get(conjTargets.get(conjNode));
+                            k++;
+                        }
+                        conjTypeTuples = new TupleIterator<>(conjTypeArray, new String[0]);
+                    }
+
+
+                    while (conjTypeTuples.hasNext()) {
+                        String[] conjTypes = conjTypeTuples.next();
+                        String conjType = "";
+                        for (GraphNode conjNode : conjNodes) {
+                            String conjSource = conjTargets.get(conjNode);
+                            if (conjType.length()!=0) {
+                                conjType += ",";
+                            }
+                            conjType += conjSource+"_UNIFY_"+conjSource+conjTypes[conjSrc2Index.get(conjSource)];
+                        }
+                        Set<String> typeStrings = new HashSet<>();
+                        typeStrings.add("(");
+
+                        for (GraphEdge edge : blobEdges) {
+                            GraphNode other = BlobUtils.otherNode(node, edge);
+
+                            String src = blobTargets.get(other);
+
+                            //add source to graph
+                            constGraph.addSource(src, other.getName());
+
+                            //add source to type
+                            typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
+                            typeStrings = Util.appendToAll(typeStrings, src+"(", false);
+
+                            if (src.matches("op[0-9]+")) {
+                                typeStrings = Util.appendToAll(typeStrings, conjType, false);
+                            } else {
+
+                            }
+                            //close bracket
+                            typeStrings = Util.appendToAll(typeStrings, ")", false);
+                        }//finish type and graph strings, add to signature
+                        typeStrings = Util.appendToAll(typeStrings, ")", false);
+                        for (String typeString : typeStrings) {
+                            //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
+                            ret.add(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+typeString);
+                            //coref: index used is the one from alignment!
+                            for (int corefID : corefIDs) {
+                                String graphString = constGraph.toIsiAmrStringWithSources();
+                                graphString = graphString.replaceFirst("<root>", "<root, COREF"+corefID+">");
+                                ret.add(OP_COREFMARKER+corefID+"_"+graphString+GRAPH_TYPE_SEP+typeString);
+                            }
+                        }
+                    }
+
+
+                }
+            }
+        }
+    }
+    
+    // ****   raising nodes
+    /**
+     * Interface for decomposition version without alignments
+     * @param graph
+     * @param node
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param maxCoref 
+     */
+    private static void addConstantsForRaisingNode(SGraph graph, GraphNode node, Collection<GraphEdge> blobEdges, int maxCoref, Set<String> ret) {
+        Set<Integer> corefIDs = new HashSet<>();
+        for (int i = 0; i<maxCoref; i++) {
+            corefIDs.add(i);
+        }
+        Set<String> nodes = new HashSet<>();
+        nodes.add(node.getName());
+        addConstantsForRaisingNode(graph, node, nodes, node, blobEdges, corefIDs, ret);
+    }
+    
+    /**
+     * Interface for alignment version
+     * @param graph
+     * @param node
+     * @param al
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param addCoref 
+     */
+    private static void addConstantsForRaisingNode(SGraph graph, GraphNode node, Alignment al, GraphNode root, Collection<GraphEdge> blobEdges, boolean addCoref, Set<String> ret) {
+        Set<Integer> corefIDs = new HashSet<>();
+        if (addCoref) {
+            corefIDs.add(al.span.start);
+        }
+        addConstantsForRaisingNode(graph, node, al.nodes, root, blobEdges, corefIDs, ret);
+    }
+    
+    /**
+     * actual function for both versions (with or without alignments)
+     * @param graph
+     * @param node
+     * @param nodes
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param corefIDs 
+     */
+    private static void addConstantsForRaisingNode(SGraph graph, GraphNode node, Set<String> allNodes, GraphNode root, Collection<GraphEdge> blobEdges, Set<Integer> corefIDs, Set<String> ret) {
+        for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
+            SGraph constGraph = makeConstGraph(allNodes, graph, root);
+            Set<String> typeStrings = new HashSet<>();
+            typeStrings.add("(");
+            for (GraphEdge edge : blobEdges) {
+                GraphNode other = BlobUtils.otherNode(node, edge);
+                if (allNodes.contains(other.getName())) {
+                    continue;//do not want to add sources to nodes that are already labelled in the graph fragment for this alignment
+                }
+                String src = blobTargets.get(other);
+
+                //add source to graph
+                constGraph.addSource(src, other.getName());
+
+                //add source to type
+                typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
+                typeStrings = Util.appendToAll(typeStrings, src+"(", false);
+
+
+
+                //intersection of other's and node's targets
+                Collection<Map<GraphNode, String>> recTargetsSet = getTargets(graph, other);
+                Set<String> newTypeStrings = new HashSet();
+                for (Map<GraphNode, String> recTargets : recTargetsSet) {
+                    Set<String> newTypeStringsHere = new HashSet(typeStrings);
+                    for (Entry<GraphNode, String> recEntry : recTargets.entrySet()) {
+                        if ((blobTargets.get(other).equals(OBJ) || blobTargets.get(other).equals(OBJ+"2"))
+                                && recEntry.getValue().equals(SUBJ) && !blobTargets.keySet().contains(recEntry.getKey())) {
+                            //last condition: do not want to do regular triangles with modality
+                            Set<String> localTypes = Util.appendToAll(typeStrings, ",", false, s -> !s.endsWith("("));
+                            newTypeStringsHere.addAll(Util.appendToAll(localTypes, SUBJ+"()_UNIFY_"+SUBJ, false));
+                        }
+                    }
+
+                    Set<GraphNode> intersect = Sets.intersection(blobTargets.keySet(), recTargets.keySet());
+                    for (GraphNode recNode : intersect) {
+                        Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
+                        localTypes = Util.appendToAll(localTypes, recTargets.get(recNode)+"()_UNIFY_"+blobTargets.get(recNode), false);
+                        newTypeStringsHere.addAll(localTypes);
+                    }
+                    newTypeStrings.addAll(newTypeStringsHere);
+                }
+
+                typeStrings.addAll(newTypeStrings);
+                //close bracket
+                typeStrings = Util.appendToAll(typeStrings, ")", false);
+            }
+            //typeStrings = Util.appendToAll(typeStrings, ",s()", false, s -> s.contains("s()_UNIFY_s"));//always add comma if this condition holds
+            //finish type and graph strings, add to signature
+            typeStrings = Util.appendToAll(typeStrings, ")", false);
+            for (String typeString : typeStrings) {
+                //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
+                ret.add(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+typeString);
+                //coref: index used is the one from alignment!
+                for (int corefID : corefIDs) {
+                    String graphString = constGraph.toIsiAmrStringWithSources();
+                    graphString = graphString.replaceFirst("<root>", "<root, COREF"+corefID+">");
+                    ret.add(OP_COREFMARKER+corefID+"_"+graphString+GRAPH_TYPE_SEP+typeString);
+                }
+            }
+
+        }
+    }
+    // ****   normal/standard nodes
+    /**
+     * Interface for decomposition version without alignments
+     * @param graph
+     * @param node
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param maxCoref 
+     */
+    private static void addConstantsForNormalNode(SGraph graph, GraphNode node, Collection<GraphEdge> blobEdges, int maxCoref, Set<String> ret) {
+        Set<Integer> corefIDs = new HashSet<>();
+        for (int i = 0; i<maxCoref; i++) {
+            corefIDs.add(i);
+        }
+        Set<String> nodes = new HashSet<>();
+        nodes.add(node.getName());
+        addConstantsForNormalNode(graph, node, nodes, node, blobEdges, corefIDs, ret);
+    }
+    
+    /**
+     * Interface for alignment version
+     * @param graph
+     * @param node
+     * @param al
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param addCoref 
+     */
+    private static void addConstantsForNormalNode(SGraph graph, GraphNode node, Alignment al, GraphNode root, Collection<GraphEdge> blobEdges, boolean addCoref, Set<String> ret) {
+        Set<Integer> corefIDs = new HashSet<>();
+        if (addCoref) {
+            corefIDs.add(al.span.start);
+        }
+        addConstantsForNormalNode(graph, node, al.nodes, root, blobEdges, corefIDs, ret);
+    }
+    
+    /**
+     * actual function for both versions (with or without alignments)
+     * @param graph
+     * @param node
+     * @param nodes
+     * @param root
+     * @param ret
+     * @param blobEdges
+     * @param corefIDs 
+     */
+    private static void addConstantsForNormalNode(SGraph graph, GraphNode node, Set<String> allNodes, GraphNode root, Collection<GraphEdge> blobEdges, Set<Integer> corefIDs, Set<String> ret) {
+        //iterate over all source assignments
+        for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
+            //start with constant graph
+            SGraph constGraph = makeConstGraph(allNodes, graph, root);
+            
+            //find source annotations, i.e. build the constant's type. There are several possibilities, so we build a set of possible types.
+            Set<String> typeStrings = new HashSet<>();
+            typeStrings.add("(");
+            for (GraphEdge edge : blobEdges) {
+                GraphNode other = BlobUtils.otherNode(node, edge);
+                if (allNodes.contains(other.getName())) {
+                    continue;//do not want to add sources to nodes that are already labelled in the graph fragment for this alignment
+                }
+
+                String src = blobTargets.get(other);
+
+                //add source to graph
+                constGraph.addSource(src, other.getName());
+
+                //add source to type
+                typeStrings = Util.appendToAll(typeStrings, ",", false, s -> s.endsWith(")"));
+                typeStrings = Util.appendToAll(typeStrings, src+"(", false);
+
+                //intersection of other's and node's targets
+                Collection<Map<GraphNode, String>> recTargetsSet = getTargets(graph, other);
+                Set<String> newTypeStrings = new HashSet();
+                for (Map<GraphNode, String> recTargets : recTargetsSet) {
+                    Set<GraphNode> intersect = Sets.intersection(blobTargets.keySet(), recTargets.keySet());
+                    Set<String> newTypeStringsHere = new HashSet(typeStrings);
+                    for (GraphNode recNode : intersect) {
+                        Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
+                        localTypes = Util.appendToAll(localTypes, recTargets.get(recNode)+"()_UNIFY_"+blobTargets.get(recNode), false);
+                        newTypeStringsHere.addAll(localTypes);
+                    }
+                    newTypeStrings.addAll(newTypeStringsHere);
+                }
+                typeStrings.addAll(newTypeStrings);
+                //close bracket
+                typeStrings = Util.appendToAll(typeStrings, ")", false);
+            }
+            //finish type and graph strings, add to returned set
+            typeStrings = Util.appendToAll(typeStrings, ")", false);
+            for (String typeString : typeStrings) {
+                //typeString = new ApplyModifyGraphAlgebra.Type(typeString).closure().toString();
+                ret.add(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+typeString);
+                //coref: index used is the one from alignment!
+                for (int corefID : corefIDs) {
+                    String graphString = constGraph.toIsiAmrStringWithSources();
+                    graphString = graphString.replaceFirst("<root>", "<root, COREF"+corefID+">");
+                    ret.add(OP_COREFMARKER+corefID+"_"+graphString+GRAPH_TYPE_SEP+typeString);
+                }
+            }
+
+        }
+    }
     
     
     
     //----------------------------------------   helpers   ----------------------------------------------------------
     
-    private static SGraph makeConstGraph(Alignment al, SGraph graph, GraphNode root) {
+    private static SGraph makeConstGraph(Set<String> nodes, SGraph graph, GraphNode root) {
         SGraph constGraph = new SGraph();
-        for (String nn : al.nodes) {
+        for (String nn : nodes) {
             GraphNode node = graph.getNode(nn);
             constGraph.addNode(nn, node.getLabel());
         }
-        for (String nn : al.nodes) {
+        for (String nn : nodes) {
             GraphNode node = graph.getNode(nn);
             for (GraphEdge e : BlobUtils.getBlobEdges(graph, node)) {
                 GraphNode other = BlobUtils.otherNode(node, e);
-                if (!al.nodes.contains(other.getName())) {
+                if (!nodes.contains(other.getName())) {
                     constGraph.addNode(other.getName(), null);
                 }
                 constGraph.addEdge(constGraph.getNode(e.getSource().getName()), constGraph.getNode(e.getTarget().getName()), e.getLabel());
@@ -690,27 +630,7 @@ public class AMSignatureBuilder {
         return constGraph;
     }
     
-    private static Set<Map<GraphEdge, String>> closureUnderMult(Set<Map<GraphEdge, String>> seedSet) {
-        Queue<Map<GraphEdge, String>> agenda = new LinkedList<>(seedSet);
-        Set<Map<GraphEdge, String>> seen = new HashSet(seedSet);
-        while (!agenda.isEmpty()) {
-            Map<GraphEdge, String> map = agenda.poll();
-            for (Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>> f : lexiconSourceRemappingsMulti) {
-                Collection<Map<GraphEdge, String>> newMaps = f.apply(map);
-                for (Map<GraphEdge, String> newMap : newMaps) {
-                    if (!seen.contains(newMap)) {
-                        agenda.add(newMap);
-                    }
-                }
-                seen.addAll(newMaps);
-            }
-        }
-        return seen;
-    }
     
-    private static boolean hasDuplicates(Map<GraphEdge, String> edge2sources) {
-        return edge2sources.keySet().size() != new HashSet(edge2sources.values()).size();
-    }
     
     
     
@@ -752,14 +672,18 @@ public class AMSignatureBuilder {
     }
     
     private static Collection<Map<GraphEdge, String>> getSourceAssignments(Collection<GraphEdge> blobEdges, SGraph graph) {
+        //first get default mapping (called seed here)
         Map<GraphEdge, String> seed = new HashMap<>();
         for (GraphEdge e : blobEdges) {
             seed.put(e, edge2Source(e, graph));
         }
+        
+        //now apply all remappings that are allowed with multiplicity
         Set<Map<GraphEdge, String>> seedSet = new HashSet();
         seedSet.add(seed);
         Set<Map<GraphEdge, String>> multClosure = closureUnderMult(seedSet);
         
+        //now apply remappings that are allowed only once
         Set<Map<GraphEdge, String>> ret = new HashSet();
         for (Map<GraphEdge, String> map : multClosure) {
             if (allowOriginalSources) {
@@ -769,10 +693,19 @@ public class AMSignatureBuilder {
                 ret.addAll(f.apply(map));
             }
         }
+        //again apply all remappings that are allowed with multiplicity
         ret = closureUnderMult(ret);
+        
+        //return all maps that don't have duplicates
         return ret.stream().filter(map -> !hasDuplicates(map)).collect(Collectors.toList());
     }
     
+    /**
+     * returns the default source name for the label of edge, in the context of graph (sometimes ARG edges get mapped to op sources, if they are of a conjunction node)
+     * @param edge
+     * @param graph
+     * @return 
+     */
     private static String edge2Source(GraphEdge edge, SGraph graph) {
         switch (edge.getLabel()) {
             case "ARG0": return SUBJ;
@@ -798,6 +731,38 @@ public class AMSignatureBuilder {
                     return MOD;
                 }
         }
+    }
+    
+    /**
+     * recursively applies all functions in lexiconSourceRemappingsMulti, keeping both original and new maps
+     * @param seedSet
+     * @return 
+     */
+    private static Set<Map<GraphEdge, String>> closureUnderMult(Set<Map<GraphEdge, String>> seedSet) {
+        Queue<Map<GraphEdge, String>> agenda = new LinkedList<>(seedSet);
+        Set<Map<GraphEdge, String>> seen = new HashSet(seedSet);
+        while (!agenda.isEmpty()) {
+            Map<GraphEdge, String> map = agenda.poll();
+            for (Function<Map<GraphEdge, String>,Collection<Map<GraphEdge, String>>> f : lexiconSourceRemappingsMulti) {
+                Collection<Map<GraphEdge, String>> newMaps = f.apply(map);
+                for (Map<GraphEdge, String> newMap : newMaps) {
+                    if (!seen.contains(newMap)) {
+                        agenda.add(newMap);
+                    }
+                }
+                seen.addAll(newMaps);
+            }
+        }
+        return seen;
+    }
+    
+    /**
+     * checks whether the map assigns the same source to multiple edges.
+     * @param edge2sources
+     * @return 
+     */
+    private static boolean hasDuplicates(Map<GraphEdge, String> edge2sources) {
+        return edge2sources.keySet().size() != new HashSet(edge2sources.values()).size();
     }
     
     private static Collection<Map<GraphEdge, String>> passivize(Map<GraphEdge, String> map, int objNr) {
@@ -957,7 +922,7 @@ public class AMSignatureBuilder {
      * and raising nodes, where the respective nested targets are added, and the
      * intermediate nodes are removed. E.g. if node is u, and we have
      * (u :op1 (v1 :ARG1 w) :op2 (v2 :ARG1 w)), then w is added and v1, v2 are
-     * removed.
+     * removed (i.e. just the set {w} is returned).
      * @param graph
      * @param node the input node of which to get the targets.
      * @return 
