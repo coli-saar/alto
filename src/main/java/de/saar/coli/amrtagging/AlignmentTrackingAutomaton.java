@@ -241,6 +241,7 @@ public class AlignmentTrackingAutomaton extends TreeAutomaton<Pair<Pair<Boundary
     /**
      * Creates a new AlignmentTrackingAutomaton, also building the signature for decomposing it,
      * using de.up.ling.irtg.algebra.graph.AMSignatureBuilder.getConstantsForAlignment.
+     * This function is similar to de.up.ling.irtg.algebra.graph.AMSignatureBuilder.makeDecompositionSignatureWithAlignments.
      * @param graph the graph to be decomposed
      * @param alignments a list of alignments in string form (see Alignment.toString())
      * @param sentLength the length of the sentence corresponding to the graph.

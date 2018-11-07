@@ -127,16 +127,18 @@ public class AMSignatureBuilder {
                 addConstantsForNormalNode(graph, node, blobEdges, maxCorefs, allConstantSymbols);
             }
         }
-        
         for (String constSymb : allConstantSymbols) {
             ret.addSymbol(constSymb, 0);
         }
         
+        // add the operations
         Collection<String> sources = getAllPossibleSources(graph);
         for (String source : sources) {
             ret.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+source, 2);
             ret.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+source, 2);
         }
+        
+        //add 'empty node' coreference constants, if applicable
         for (int i = 0; i<maxCorefs; i++) {
             ret.addSymbol(ApplyModifyGraphAlgebra.OP_COREF+i,0);
         }
@@ -148,22 +150,32 @@ public class AMSignatureBuilder {
     }
     
     
-    
+    /**
+     * Create a signature with constants for all the given alignments.
+     * @param graph
+     * @param alignments
+     * @param addCoref
+     * @return
+     * @throws IllegalArgumentException
+     * @throws ParseException 
+     */
     public static Signature makeDecompositionSignatureWithAlignments(SGraph graph, List<String> alignments, boolean addCoref) throws IllegalArgumentException, ParseException {
         Signature plainSig = new Signature();
-        Map<Integer, Set<String>> index2nns = new HashMap();
+        
+        //for each alignment, add all possible constants
         for (String alString : alignments) {
             Alignment al = Alignment.read(alString, 0);
-            index2nns.put(al.span.start, al.nodes);
             Set<String> consts = AMSignatureBuilder.getConstantsForAlignment(al, graph, addCoref);
             consts.stream().forEach(c -> plainSig.addSymbol(c, 0));
         }
         Collection<String> sources = getAllPossibleSources(graph);
         
+        //add the operations
         for (String s : sources) {
             plainSig.addSymbol(ApplyModifyGraphAlgebra.OP_APPLICATION+s, 2);
             plainSig.addSymbol(ApplyModifyGraphAlgebra.OP_MODIFICATION+s, 2);
         }
+        //TODO add coreference symbols here?
         return plainSig;
     }
     
@@ -287,31 +299,35 @@ public class AMSignatureBuilder {
      * @param root
      * @param ret
      * @param blobEdges
-     * @param corefIDs 
+     * @param corefIDs the ID's allowed for coref sources (use empty set do disallow coreference via indices, as e.g. in the ACL2018 paper)
      */
     private static void addConstantsForCoordNode(SGraph graph, GraphNode node, Set<String> allNodes, GraphNode root, Collection<GraphEdge> blobEdges, Set<Integer> corefIDs, Set<String> ret) {
         for (Map<GraphNode, String> conjTargets : getConjunctionTargets(graph, node)) {
-            //conjTargets are the nested targets, i.e. w in (node :op1 (v1 :ARG1 w) :op2 (v2 :ARG1 w))
-            for (Set<GraphNode> conjNodes : Sets.powerSet(conjTargets.keySet())) {
+            //conjTargets are the nested targets, e.g. the node w in (node :op1 (v1 :ARG1 w) :op2 (v2 :ARG1 w))
+            //now iterate over all subsets of the nested targets (i.e. conjTargetsSubset is a subset of conjTargets). The idea is that maybe only some of the reentrancies are due to coordination, others might be due to coref
+            for (Set<GraphNode> conjTargetsSubset : Sets.powerSet(conjTargets.keySet())) {
+                // blobTargets is one of the possible maps that assigns sources to the empty nodes in the constant.
                 for (Map<GraphNode, String> blobTargets : getBlobTargets(graph, node)) {
+                    //first make the basic constant graph (no sources yet)
                     SGraph constGraph = makeConstGraph(allNodes, graph, root);
+                    //the nonOpNodes are the nodes without an opX label. TODO: should the check rather use BlobUtils.isConjEdgeLabel instead?
                     Set<GraphNode> nonOpNodes = blobTargets.keySet().stream()
                             .filter(n ->!blobTargets.get(n).matches("op[0-9]+")).collect(Collectors.toSet());
 
                     Map<String,Set<String>> conjTypeStrings = new HashMap<>();//conj source to conj types
 
 
-                    for (GraphNode recNode : conjNodes) {
+                    for (GraphNode recNode : conjTargetsSubset) {
                         Collection<Map<GraphNode, String>> recTargetSet = getTargets(graph, recNode);
                         Set<String> newTypeStrings = new HashSet<>();
                         newTypeStrings.add("()");//this is always an option
                         for (Map<GraphNode, String> recTargets : recTargetSet) {
                             Set<String> newTypeStringsHere = new HashSet<>();
                             newTypeStringsHere.add("(");
-                            Set<GraphNode> intersect = Sets.intersection(Sets.union(nonOpNodes, conjNodes), recTargets.keySet());
+                            Set<GraphNode> intersect = Sets.intersection(Sets.union(nonOpNodes, conjTargetsSubset), recTargets.keySet());
                             for (GraphNode recRecNode : intersect) {
                                 Set<String> localTypes = Util.appendToAll(newTypeStringsHere, ",", false, s -> !s.endsWith("("));
-                                String unifSource = conjNodes.contains(recRecNode) ? conjTargets.get(recRecNode) : blobTargets.get(recRecNode);
+                                String unifSource = conjTargetsSubset.contains(recRecNode) ? conjTargets.get(recRecNode) : blobTargets.get(recRecNode);
                                 localTypes = Util.appendToAll(localTypes, recTargets.get(recRecNode)+"()_UNIFY_"+unifSource, false);
                                 newTypeStringsHere.addAll(localTypes);
                             }
@@ -322,13 +338,13 @@ public class AMSignatureBuilder {
                     }
                     Iterator<String[]> conjTypeTuples;
                     Map<String, Integer> conjSrc2Index = new HashMap<>();
-                    if (conjNodes.isEmpty()) {
+                    if (conjTargetsSubset.isEmpty()) {
                         String[] el = new String[0];
                         conjTypeTuples = Collections.singleton(el).iterator();
                     } else {
-                        Set<String>[] conjTypeArray = new Set[conjNodes.size()];
+                        Set<String>[] conjTypeArray = new Set[conjTargetsSubset.size()];
                         int k = 0;
-                        for (GraphNode conjNode : conjNodes) {
+                        for (GraphNode conjNode : conjTargetsSubset) {
                             conjSrc2Index.put(conjTargets.get(conjNode), k);
                             conjTypeArray[k]=conjTypeStrings.get(conjTargets.get(conjNode));
                             k++;
@@ -340,7 +356,7 @@ public class AMSignatureBuilder {
                     while (conjTypeTuples.hasNext()) {
                         String[] conjTypes = conjTypeTuples.next();
                         String conjType = "";
-                        for (GraphNode conjNode : conjNodes) {
+                        for (GraphNode conjNode : conjTargetsSubset) {
                             String conjSource = conjTargets.get(conjNode);
                             if (conjType.length()!=0) {
                                 conjType += ",";
