@@ -33,11 +33,14 @@ import java.util.function.Function;
 
 /**
  * An AM decomposition automaton that also tracks the indeces that constants
- * are aligned to across the term, creating indexed AM terms.
+ * are aligned to across the term, creating indexed AM terms. Importantly, the signature has the indeces in it too.
+ * Thus, the language of this automaton has indexed AM terms in it, such as the one in Figure 3(a) in the ACL 2018 paper.
+ * 
  * @author jonas
  */
 public class AlignmentTrackingAutomaton extends TreeAutomaton<Pair<Pair<BoundaryRepresentation, AMDecompositionAutomaton.Type>, Integer>> {
-
+    // BoundaryRepresentation = s-graph state, AMDecompositionAutomaton.Type = AM type, both together are as-graph. Integer: position in string (head index)
+    
     public static final String SEPARATOR = "__@@__";
     
     private final AMDecompositionAutomaton decomp;

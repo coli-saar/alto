@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 /**
  * Extracts AM dependency trees from AMR graphs, that can be used as training data for a neural tagger.
- * To be used via DependencyExtractorCLI.
+ * To be used via DependencyExtractorCLI. 'Constraints' in this file means the dependency tree.
  * @author jonas
  */
 public class DependencyExtractor {

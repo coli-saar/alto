@@ -182,8 +182,7 @@ public class AMSignatureBuilder {
     
     
     /**
-     * TODO: this duplicates a lot of code of makeDecompositionSignature;
-     * unify this properly!
+     * Runs heuristics to create constants that cover the nodes in Alignment al within the SGraph graph.
      * @param al
      * @param graph
      * @param addCoref
@@ -208,10 +207,12 @@ public class AMSignatureBuilder {
         if (inNodes.size() > 1) {
             throw new IllegalArgumentException("Cannot create a constant for this alignment ("+al.toString()+"): More than one node with edges from outside.");
         }
+        //TODO: outNodes could have arbitrary size, but the code is not yet compatible with that.
         if (outNodes.size() > 1) {
             throw new IllegalArgumentException("Cannot create a constant for this alignment ("+al.toString()+"): More than one node with edges to outside.");
         }
         
+        //TODO: the global root check should be done in the first pass of adding nodes to inNodes. Otherwise conflicts won't get detected.
         if (inNodes.isEmpty()) {
             String globalRootNN = graph.getNodeForSource("root");
             if (globalRootNN != null && al.nodes.contains(globalRootNN)) {
@@ -228,16 +229,16 @@ public class AMSignatureBuilder {
             SGraph constGraph = makeConstGraph(al.nodes, graph, root);
             return Collections.singleton(constGraph.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+ApplyModifyGraphAlgebra.Type.EMPTY_TYPE.toString());
         }
-        GraphNode node = outNodes.iterator().next();//at this point, there is exactly one.
+        GraphNode outNode = outNodes.iterator().next();//at this point, there is exactly one. This is the one node in the alignment with blob edges that leave the alignment. For their endpoints, we need to find sources.
         Set<String> ret = new HashSet<>();
         
-        Collection<GraphEdge> blobEdges = BlobUtils.getBlobEdges(graph, node);
-        if (BlobUtils.isConjunctionNode(graph, node)) {
-            addConstantsForCoordNode(graph, node, al, root, blobEdges, addCoref, ret);
-        } else if (BlobUtils.isRaisingNode(graph, node)) {
-            addConstantsForRaisingNode(graph, node, al, root, blobEdges, addCoref, ret);
+        Collection<GraphEdge> blobEdges = BlobUtils.getBlobEdges(graph, outNode);
+        if (BlobUtils.isConjunctionNode(graph, outNode)) {
+            addConstantsForCoordNode(graph, outNode, al, root, blobEdges, addCoref, ret);
+        } else if (BlobUtils.isRaisingNode(graph, outNode)) {
+            addConstantsForRaisingNode(graph, outNode, al, root, blobEdges, addCoref, ret);
         } else {
-            addConstantsForNormalNode(graph, node, al, root, blobEdges, addCoref, ret);
+            addConstantsForNormalNode(graph, outNode, al, root, blobEdges, addCoref, ret);
         }
         if (addCoref) {
             ret.add(ApplyModifyGraphAlgebra.OP_COREF+al.span.start);
