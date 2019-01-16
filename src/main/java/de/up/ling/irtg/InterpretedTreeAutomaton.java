@@ -350,7 +350,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         TreeAutomaton chart = parse(representations);
         TreeAutomaton outputChart = decodeToAutomaton(outputInterpretation, chart);
 
-        Set<Object> ret = new HashSet<Object>();
+        Set<Object> ret = new HashSet<>();
         Iterator<Tree<String>> it = outputChart.languageIterator();
 
         while (it.hasNext()) {

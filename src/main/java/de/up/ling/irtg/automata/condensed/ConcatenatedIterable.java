@@ -4,7 +4,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.collect.Iterators;
+import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -30,7 +30,7 @@ public class ConcatenatedIterable<E> implements Iterable<E> {
 
         public ConcatenatedIterator() {
             iterators = iterables.iterator();
-            currentIterator = Iterators.emptyIterator();
+            currentIterator = Collections.emptyIterator();
         }
 
         @Override
