@@ -25,7 +25,7 @@ import java.io.OutputStream;
  * @author koller
  */
 public class CorpusParser {
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, CodecParseException {
+    public static void main(String[] args) throws IOException, CorpusReadingException, CodecParseException {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
         OutputStream ostream = new FileOutputStream(args[2]);
         Corpus corpus = Corpus.readCorpus(new FileReader(args[1]), irtg);

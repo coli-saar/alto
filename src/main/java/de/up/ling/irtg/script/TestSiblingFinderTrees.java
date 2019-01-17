@@ -40,7 +40,7 @@ public class TestSiblingFinderTrees {
     
     //find minimal 
     
-    public static void main(String[] args) throws IOException, ParserException, FileNotFoundException, ParseException {
+    public static void main(String[] args) throws IOException, ParserException, ParseException {
 //        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.fromPath("../../experimentData/grammar_37.irtg");
 //        Object input2 = irtg.parseString("string", "There no asbestos now . ''");
         //InterpretedTreeAutomaton irtg2 = InterpretedTreeAutomaton.fromString(ASBESTOS_REDUCED_IRTG_SMALL);
@@ -60,7 +60,7 @@ public class TestSiblingFinderTrees {
 //        CoarseToFineParser.testSFParserVariations();
     }    
     
-    private static void testLanguageSize(InterpretedTreeAutomaton irtg, Object input) throws IOException, ParseException, ParserException {
+    private static void testLanguageSize(InterpretedTreeAutomaton irtg, Object input) throws ParserException {
         System.err.println("starting sf parsing..");
         TreeAutomaton sf = irtg.parseWithSiblingFinder("string", input);
         System.err.println("Language size: "+sf.countTrees());

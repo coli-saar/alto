@@ -926,9 +926,8 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * writer (this is different from previous implementations).
      * @param writer
      * @return
-     * @throws Exception 
      */
-    public boolean writeAutomatonRestricted(Writer writer) throws Exception {
+    public boolean writeAutomatonRestricted(Writer writer) {
         count = 0;
 
         boolean tempDoStore = isStoring();

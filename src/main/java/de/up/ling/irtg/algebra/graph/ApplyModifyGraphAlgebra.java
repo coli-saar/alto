@@ -217,7 +217,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             this(TreeParser.parse("TOP" + typeString.replaceAll("\\(\\)", "")));
         }
 
-        private Type(Tree<String> typeTree) throws ParseException {
+        private Type(Tree<String> typeTree) {
             this.rho = new HashMap<>();
             this.id = new HashMap<>();
             for (Tree<String> roleTree : typeTree.getChildren()) {

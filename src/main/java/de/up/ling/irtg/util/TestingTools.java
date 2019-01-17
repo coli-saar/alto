@@ -53,9 +53,8 @@ public class TestingTools {
      *
      * @param filename
      * @return
-     * @throws IOException
      */
-    public static InputStream rs(String filename) throws IOException {
+    public static InputStream rs(String filename) {
         return TestingTools.class.getClassLoader().getResourceAsStream(filename);
     }
 
@@ -85,7 +84,7 @@ public class TestingTools {
         return (new TreeAutomatonInputCodec()).read(s);
     }
 
-    public static InterpretedTreeAutomaton pi(String s) throws IOException, de.up.ling.irtg.codec.CodecParseException {
+    public static InterpretedTreeAutomaton pi(String s) throws de.up.ling.irtg.codec.CodecParseException {
         return new IrtgInputCodec().read(s);
     }
 

@@ -52,7 +52,7 @@ public class ParsingEvaluator {
 
     private static JCommander jc;
 
-    public static void main(String[] args) throws IOException, CorpusReadingException, Exception {
+    public static void main(String[] args) throws Exception {
         CmdLineParameters param = new CmdLineParameters();
         jc = new JCommander(param, args);
 
@@ -212,7 +212,7 @@ public class ParsingEvaluator {
         }
     }
     
-    private static CoarseToFineParser makeCoarseToFineParserFromFile(InterpretedTreeAutomaton irtg, String interpretation, String ftcMapFilename, double theta) throws FileNotFoundException, IOException, ParseException {
+    private static CoarseToFineParser makeCoarseToFineParserFromFile(InterpretedTreeAutomaton irtg, String interpretation, String ftcMapFilename, double theta) throws IOException, ParseException {
         FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(StringTools.slurp(new FileReader(ftcMapFilename)));
         return new CoarseToFineParser(irtg, interpretation, ftc, theta);
     }

@@ -24,7 +24,7 @@ import java.util.StringJoiner;
 public class GraphVizDotOutputCodec extends OutputCodec<SGraph> {
 
     @Override
-    public void write(SGraph graph, OutputStream ostream) throws IOException, UnsupportedOperationException {
+    public void write(SGraph graph, OutputStream ostream) throws UnsupportedOperationException {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
         w.write("digraph G {\n");
         

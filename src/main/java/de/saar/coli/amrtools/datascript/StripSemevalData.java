@@ -26,9 +26,8 @@ public class StripSemevalData {
     /**
      * calls stringSemevalData with arguments in order.
      * @param args the command line arguments
-     * @throws java.io.FileNotFoundException
      */
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws IOException {
         String inputPath = args[0];
         String outputPath = args[1];
         stripSemevalData(inputPath, outputPath);

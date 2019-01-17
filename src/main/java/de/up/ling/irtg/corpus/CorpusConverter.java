@@ -40,7 +40,7 @@ public class CorpusConverter<E> implements Consumer<E> {
     private List<Function<E, E>> transformations;
     private List<Consumer<E>> otherConsumers;
 
-    public CorpusConverter(AbstractCorpusWriter cw, Map<String, Function<E, ? extends Object>> conv) throws IOException {
+    public CorpusConverter(AbstractCorpusWriter cw, Map<String, Function<E, ? extends Object>> conv) {
         this.conv = conv;
         this.cw = cw;
         transformations = new ArrayList<>();
@@ -52,7 +52,7 @@ public class CorpusConverter<E> implements Consumer<E> {
         cw.setAnnotated(true);
     }
 
-    public void convert(Iterator<E> inputCorpus) throws IOException {
+    public void convert(Iterator<E> inputCorpus) {
         while (inputCorpus.hasNext()) {
             E element = inputCorpus.next();
             accept(element);

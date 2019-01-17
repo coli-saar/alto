@@ -167,7 +167,7 @@ public class Relabel {
     
     
     private Relabel(String wordnetPath, String mapsPath, int nnThreshold, int lookupThreshold)
-            throws IOException, MalformedURLException, InterruptedException {
+            throws IOException {
         
         URL url = new URL("file", null, wordnetPath);
         

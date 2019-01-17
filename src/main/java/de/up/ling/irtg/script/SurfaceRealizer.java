@@ -60,7 +60,7 @@ public class SurfaceRealizer {
     private static CmdLineParameters param = new CmdLineParameters();
     private static final boolean DEBUG = false;
 
-    public static void main(String[] args) throws IOException, Exception {
+    public static void main(String[] args) throws Exception {
         jc = JCommander.newBuilder().addObject(param).build();
 
         try {

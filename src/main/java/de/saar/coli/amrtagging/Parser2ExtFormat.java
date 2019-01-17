@@ -108,11 +108,9 @@ public class Parser2ExtFormat {
      * @throws FileNotFoundException
      * @throws IOException
      * @throws CorpusReadingException
-     * @throws ParseException
-     * @throws ParserException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParseException, ParserException, InterruptedException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, InterruptedException {
         Parser2ExtFormat p2ext = new Parser2ExtFormat();
         JCommander commander = new JCommander(p2ext);
         commander.setProgramName("constraint_extractor");

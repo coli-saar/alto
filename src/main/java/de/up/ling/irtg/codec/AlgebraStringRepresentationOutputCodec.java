@@ -34,7 +34,7 @@ public class AlgebraStringRepresentationOutputCodec<E> extends OutputCodec<E> {
     }
     
     @Override
-    public void write(E object, OutputStream ostream) throws IOException, UnsupportedOperationException {
+    public void write(E object, OutputStream ostream) throws UnsupportedOperationException {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
         w.write(algebra.representAsString(object));
         w.flush();

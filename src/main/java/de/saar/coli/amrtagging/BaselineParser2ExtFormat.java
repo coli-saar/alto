@@ -102,7 +102,7 @@ public class BaselineParser2ExtFormat {
 
     private static int unkCount = 0;
 
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParseException, ParserException, InterruptedException {
+    public static void main(String[] args) throws IOException, CorpusReadingException, InterruptedException {
         BaselineParser2ExtFormat p2ext = new BaselineParser2ExtFormat();
         JCommander commander = new JCommander(p2ext);
         commander.setProgramName("constraint_extractor");

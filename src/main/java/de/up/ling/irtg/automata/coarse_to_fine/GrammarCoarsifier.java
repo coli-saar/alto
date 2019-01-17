@@ -104,7 +104,7 @@ public class GrammarCoarsifier {
     }
 
     @OperationAnnotation(code = "readFtcMapping")
-    public static FineToCoarseMapping readFtcMapping(String s) throws IOException, ParseException {
+    public static FineToCoarseMapping readFtcMapping(String s) throws ParseException {
         Tree<String> t = TreeParser.parse(s); // top-level tree with "___"
         final Map<String, String> fineSymbolToCoarse = new HashMap<>();
 

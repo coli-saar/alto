@@ -46,7 +46,7 @@ import java.util.List;
 public class GrammarConverter {
     private static JCommander jc;
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws IOException {
         CmdLineParameters param = new CmdLineParameters();
         jc = new JCommander(param, args);
 

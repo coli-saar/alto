@@ -81,7 +81,7 @@ public class FixAMRAltoCorpus {
     private static final String TOKEN_NT = "TKN";
     private static final String W_PLACEHOLDER = "WHITESPACEINANGLEBRACKETSJG";
          
-    private void replaceSinglequotes(String path) throws FileNotFoundException, IOException {
+    private void replaceSinglequotes(String path) throws IOException {
         
         String corpusPath = path+"raw.corpus";//args[0];
         String targetPath = path+"NSQ.corpus";//args[1];
@@ -133,7 +133,7 @@ public class FixAMRAltoCorpus {
     
     
     
-    private void changeTreeFormatInCorpus(String path) throws IOException, FileNotFoundException {
+    private void changeTreeFormatInCorpus(String path) throws IOException {
         BufferedReader corpusReader = new BufferedReader(new FileReader(path+"ENSQ.corpus"));
         FileWriter writer = new FileWriter(path+"finalAMRstrings.corpus");
         int i = 0;
@@ -178,7 +178,7 @@ public class FixAMRAltoCorpus {
     }
     
     
-    private void makeAnonNodesExplicit(String path) throws FileNotFoundException, IOException {
+    private void makeAnonNodesExplicit(String path) throws IOException {
         
         BufferedReader corpus = new BufferedReader(new FileReader(path+"NSQ.corpus"));
         
@@ -234,7 +234,7 @@ public class FixAMRAltoCorpus {
     }
     
     
-    private void fixRefOrder(String path) throws FileNotFoundException, IOException {
+    private void fixRefOrder(String path) throws IOException {
         
         String regex = "\\(([a-z][0-9]*) /";//only need names confirming to the standard naming conventions, for now
         BufferedReader corpus = new BufferedReader(new FileReader(path+"finalAMRstrings.corpus"));
@@ -322,7 +322,7 @@ public class FixAMRAltoCorpus {
         writer.close();
     }
     
-    private void addRootSources(String path) throws FileNotFoundException, IOException {
+    private void addRootSources(String path) throws IOException {
         
         
         
@@ -364,7 +364,7 @@ public class FixAMRAltoCorpus {
      * @throws FileNotFoundException
      * @throws IOException 
      */
-    private void tokenizeTree(String path) throws IOException, ParseException {
+    private void tokenizeTree(String path) throws IOException {
         
         String corpusPath = path+"RefOrderFixed.corpus";//"C:/Users/Jonas/Documents/Work/experimentData/Corpora/semeval2017Stripped/train20.corpus";//BitBuckets/alto-experimental/corpus100Dev3.txt";//args[0];
         String targetPath = path+"tokenizedTrees.corpus";//"C:/Users/Jonas/Documents/Work/experimentData/Corpora/semeval2017Stripped/train20Rooted.corpus";//BitBuckets/alto-experimental/corpus100DevRooted.txt";//args[1];

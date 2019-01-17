@@ -30,7 +30,7 @@ class TaskCache extends AltoLabHttpCache<UnparsedTask> {
     }
 
     @Override
-    protected UnparsedTask readFromStream(String identifier, InputStream is, boolean remote) throws ValueReadingException, IOException {
+    protected UnparsedTask readFromStream(String identifier, InputStream is, boolean remote) throws IOException {
         return om.readValue(is, UnparsedTask.class);
     }
 

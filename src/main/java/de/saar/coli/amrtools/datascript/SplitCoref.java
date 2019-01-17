@@ -55,14 +55,12 @@ public class SplitCoref {
     /**
      * Calls splitCoref with the arguments in order.
      * @param args
-     * @throws ParserException
-     * @throws ParseException
      * @throws FileNotFoundException
      * @throws IOException
      * @throws CorpusReadingException
      * @throws InterruptedException 
      */
-    public static void main(String[] args) throws ParserException, ParseException, FileNotFoundException, IOException, CorpusReadingException, InterruptedException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, InterruptedException {
         
 //        String rawGraph = "(a / and :op1 (b / believe-01 :ARG0 (p2 / person :ARG0-of (h2 / have-org-role-91 :ARG1 (c2 / company :wiki - :name (n / name :op1 \"IM\") :mod (c3 / country :wiki \"United_States\" :name (n2 / name :op1 \"United\" :op2 \"States\"))) :ARG2 (c7 / CEO))) :ARG1 (c8 / capable-01 :ARG1 (p / person :ARG1-of (e / employ-01 :ARG0 c2) :mod (e2 / each)) :ARG2 (i / innovate-01 :ARG0 p))) :op2 (f / formulate-01 :ARG0 (c / ceo) :ARG1 (c4 / countermeasure :mod (s / strategy) :purpose (i2 / innovate-01 :prep-in (i3 / industry)))) :time (a3 / after :op1 (i4 / invent-01 :ARG0 (c5 / company :ARG0-of (c6 / compete-02 :ARG1 c2)) :ARG1 (m / machine :ARG0-of (w / wash-01) :ARG1-of (l / load-01 :mod (f2 / front))))))";
 //        String ourGraph = "(a <root> / and :op1 (b / believe-01 :ARG0 (p2 / person :ARG0-of (h2 / have-org-role-91 :ARG1 (c2 / company :wiki - :name (n / name :op1 \"IM\") :mod (c3 / country :wiki \"United_States\" :name (n2 / name :op1 \"United\" :op2 \"States\"))) :ARG2 (c7 / CEO))) :ARG1 (c8 / capable-01 :ARG1 (p / person :ARG1-of (e / employ-01 :ARG0 c2) :mod (e2 / each)) :ARG2 (i / innovate-01 :ARG0 p))) :op2 (f / formulate-01 :ARG0 (c / ceo) :ARG1 (c4 / countermeasure :mod (s / strategy) :purpose (i2 / innovate-01 :prep-in (i3 / industry)))) :time (a3 / after :op1 (i4 / invent-01 :ARG0 (c5 / company :ARG0-of (c6 / compete-02 :ARG1 c2)) :ARG1 (m / machine :ARG0-of (w / wash-01) :ARG1-of (l / load-01 :mod (f2 / front))))))";

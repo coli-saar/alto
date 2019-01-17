@@ -113,7 +113,7 @@ public class RdgStringAlgebra extends Algebra<List<List<String>>> {
     }
 
     @Override
-    public List<List<String>> parseString(String representation) throws ParserException {
+    public List<List<String>> parseString(String representation) {
         final List<String> words = Arrays.asList(representation.split("\\s+"));
         return Collections.singletonList(words);
     }

@@ -32,7 +32,7 @@ public class AmrbankReader extends DefaultHandler {
     StringBuilder buf = new StringBuilder();
     String id = null;
 
-    public static void main(String[] args) throws XMLStreamException, FileNotFoundException, ParserConfigurationException, SAXException, IOException {
+    public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
         SAXParserFactory parserFactor = SAXParserFactory.newInstance();
         SAXParser parser = parserFactor.newSAXParser();
 
@@ -42,7 +42,7 @@ public class AmrbankReader extends DefaultHandler {
     }
 
     @Override
-    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    public void startElement(String uri, String localName, String qName, Attributes attributes) {
         if ("sentence".equals(qName)) {
             currentlyReading = Reading.SENTENCE;
             id = attributes.getValue("id");
@@ -52,7 +52,7 @@ public class AmrbankReader extends DefaultHandler {
     }
 
     @Override
-    public void characters(char[] ch, int start, int length) throws SAXException {
+    public void characters(char[] ch, int start, int length) {
         if (currentlyReading == Reading.AMR) {
             String x = String.copyValueOf(ch, start, length);
             buf.append(x);
@@ -60,7 +60,7 @@ public class AmrbankReader extends DefaultHandler {
     }
 
     @Override
-    public void endElement(String uri, String localName, String qName) throws SAXException {
+    public void endElement(String uri, String localName, String qName) {
         if (currentlyReading == Reading.AMR) {
             String x = buf.toString().trim();
 

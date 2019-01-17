@@ -31,7 +31,7 @@ public class AltoLabHttpClient {
     private ObjectMapper mapper = new ObjectMapper();
     private HttpClient httpClient;
 
-    public AltoLabHttpClient(String altolabUrl, String username, String password) throws UnsupportedEncodingException, IOException {
+    public AltoLabHttpClient(String altolabUrl, String username, String password) throws IOException {
         this.httpClient = HttpClientBuilder.create().build();
 
         HttpPost loginRequest = new HttpPost(altolabUrl + "login?next=%2F");

@@ -133,7 +133,7 @@ class PTBConverter {
      * @throws FileNotFoundException if the file could not be found
      * @throws IOException in case of an error on reading the zipped stream
      */
-    private static Reader getReaderForFilename(final String filename) throws FileNotFoundException, IOException {
+    private static Reader getReaderForFilename(final String filename) throws IOException {
         if (filename.endsWith(".gz")) {
             return new InputStreamReader(new GZIPInputStream(new FileInputStream(filename)));
         } else {

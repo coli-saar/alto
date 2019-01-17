@@ -31,7 +31,7 @@ import java.io.PrintWriter;
 public class TikzSgraphOutputCodec extends OutputCodec<SGraph> {
 
     @Override
-    public void write(SGraph sgraph, OutputStream ostream) throws IOException {
+    public void write(SGraph sgraph, OutputStream ostream) {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
         w.println("\\begin{tikzpicture}");
         w.println(" \\begin{scope} [layered layout, level sep=1.5cm, sibling sep=1cm, rounded corners]");

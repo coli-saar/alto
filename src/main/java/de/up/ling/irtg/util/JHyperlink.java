@@ -33,7 +33,7 @@ public class JHyperlink extends JButton implements ActionListener {
         setURI("");
     }
 
-    public JHyperlink(String text, String uri) throws URISyntaxException {
+    public JHyperlink(String text, String uri) {
         super(text);
         init();
         

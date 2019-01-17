@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -259,7 +260,7 @@ public abstract class InputCodec<E> {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws FileNotFoundException, CodecParseException, IOException, Exception {
         List<InputCodec<InterpretedTreeAutomaton>> irtgCodecs = InputCodec.getInputCodecs(InterpretedTreeAutomaton.class);
         for (InputCodec i : irtgCodecs) {
             System.err.println(i.getMetadata());

@@ -461,11 +461,9 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
      * @param showViterbiTrees
      * @param icall what intersection should be used?
      * @throws FileNotFoundException
-     * @throws de.up.ling.tree.ParseException
      * @throws IOException
-     * @throws ParserException
      */
-    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, de.up.ling.tree.ParseException, IOException, ParserException, de.up.ling.irtg.codec.CodecParseException {
+    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, IOException, de.up.ling.irtg.codec.CodecParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
                     + "2. Sentences\n"

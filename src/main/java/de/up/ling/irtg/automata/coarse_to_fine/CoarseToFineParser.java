@@ -748,13 +748,9 @@ public class CoarseToFineParser {
      * most users will not need it.
      * @param inputObject
      * @return
-     * @throws ClassNotFoundException
-     * @throws InstantiationException
-     * @throws IllegalAccessException 
      */
     @OperationAnnotation(code = "parseInputObjectSizes")
-    public Combination parseInputObjectTrackSizes(Object inputObject) throws ClassNotFoundException,
-            InstantiationException, IllegalAccessException {
+    public Combination parseInputObjectTrackSizes(Object inputObject) {
         // create condensed invhom automaton
         CondensedTreeAutomaton invhom = inputInterpretation.parseToCondensed(inputObject);
 
@@ -1008,13 +1004,9 @@ public class CoarseToFineParser {
      * most users will not need it.
      * @param inputObject
      * @return
-     * @throws ClassNotFoundException
-     * @throws InstantiationException
-     * @throws IllegalAccessException 
      */
     @OperationAnnotation(code = "parseInputObjectTimes")
-    public Combination parseInputObjectTrackTimes(Object inputObject) throws ClassNotFoundException,
-            InstantiationException, IllegalAccessException {
+    public Combination parseInputObjectTrackTimes(Object inputObject) {
         // create condensed invhom automaton
         CondensedTreeAutomaton invhom = inputInterpretation.parseToCondensed(inputObject);
 

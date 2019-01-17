@@ -43,11 +43,10 @@ public class EvaluateSamplingFromRulesTest {
     }
 
     /**
-     * 
-     * @throws java.lang.Exception
+     *
      */
     @Test
-    public void testMakeInside() throws Exception {
+    public void testMakeInside() {
         Function<TreeAutomaton,RuleWeighting> make = (TreeAutomaton t) -> {
             AdaGrad ada = new AdaGrad(1.0);
             AutomatonWeighted aw = new AutomatonWeighted(t, 2, 1000, ada);

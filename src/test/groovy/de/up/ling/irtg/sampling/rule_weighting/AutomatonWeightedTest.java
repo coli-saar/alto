@@ -61,10 +61,9 @@ public class AutomatonWeightedTest {
 
     /**
      * Test of getLogTargetProbability method, of class AutomatonWeighted.
-     * @throws java.lang.Exception
      */
     @Test
-    public void testGetLogProbability() throws Exception {
+    public void testGetLogProbability() {
         auw.prepareStartProbability();
         
         Rule r = tr.getLabel();

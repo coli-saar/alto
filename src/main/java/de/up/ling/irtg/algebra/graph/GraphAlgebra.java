@@ -539,11 +539,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * less spurious constants).
      * @param graph
      * @param nrSources
-     * @throws Exception
      * @return
      */
     @Deprecated
-    public static GraphAlgebra makeCompleteDecompositionAlgebra(SGraph graph, int nrSources) throws Exception//only add empty algebra!!
+    public static GraphAlgebra makeCompleteDecompositionAlgebra(SGraph graph, int nrSources) //only add empty algebra!!
     {
         Signature sig = new Signature();
         Set<String> sources = new HashSet<>();
@@ -658,11 +657,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * @param alg empty GraphAlgebra, carries the result.
      * @param graph
      * @param nrSources
-     * @throws Exception
      */
     // @todo Keep this only until a more elegant solution based on
     // makeIncompleteDecompositionAlgebra is found.
-    public static void writeIncompleteDecompositionIRTG(GraphAlgebra alg, SGraph graph, int nrSources, PrintWriter writer) throws Exception//only add empty algebra!!
+    public static void writeIncompleteDecompositionIRTG(GraphAlgebra alg, SGraph graph, int nrSources, PrintWriter writer) //only add empty algebra!!
     {
         String terminal = "S!";
         String nonterminal = "X";

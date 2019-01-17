@@ -42,14 +42,14 @@ public class WordnetEnumerator {
 //            , Pointer.DERIVATIONALLY_RELATED, Pointer.DERIVED_FROM_ADJ};
 //    public static final Pointer[] ALLOWED_SYNSET_RELATIONS = new Pointer[]{Pointer.SIMILAR_TO, Pointer.ATTRIBUTE};//Pointer.HYPERNYM};
     
-    public static final Set<Pointer> GOOD_POINTERS = new HashSet<>(Arrays.asList(new Pointer[]{Pointer.PERTAINYM, Pointer.PARTICIPLE
-            , Pointer.DERIVATIONALLY_RELATED, Pointer.DERIVED_FROM_ADJ, Pointer.SIMILAR_TO, Pointer.ATTRIBUTE}));
+    public static final Set<Pointer> GOOD_POINTERS = new HashSet<>(Arrays.asList(Pointer.PERTAINYM, Pointer.PARTICIPLE
+            , Pointer.DERIVATIONALLY_RELATED, Pointer.DERIVED_FROM_ADJ, Pointer.SIMILAR_TO, Pointer.ATTRIBUTE));
     
     private final WordnetStemmer stemmer;
     private final RAMDictionary dict;
     private final Map<String, Object2DoubleMap<String>> wordPairScores;
     
-    WordnetEnumerator(String dictPath) throws MalformedURLException, IOException, InterruptedException {
+    WordnetEnumerator(String dictPath) throws IOException {
         this.wordPairScores = new HashMap<>();
         URL url = new URL("file", null, dictPath);
         
@@ -181,11 +181,10 @@ public class WordnetEnumerator {
      * third a second word. Prints near neighbors of the first word and, if applicable, shortest paths to the second word.
      * @param args
      * @throws IOException
-     * @throws CorpusReadingException
      * @throws MalformedURLException
      * @throws InterruptedException 
      */
-    public static void main(String[] args) throws IOException, CorpusReadingException, MalformedURLException, InterruptedException {
+    public static void main(String[] args) throws IOException, MalformedURLException, InterruptedException {
         
         
         

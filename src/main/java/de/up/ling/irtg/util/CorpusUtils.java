@@ -47,7 +47,7 @@ public class CorpusUtils {
 	public static final Pattern startsWithSemevalSNT = Pattern.compile("\\s*#\\s*(::snt ).*");
 	
 	@SuppressWarnings({ "rawtypes" })
-	public static Corpus retrieveAltoCorpus(String corpusFile, List<Pair<String, Algebra>> interpretations) throws FileNotFoundException, IOException, CorpusReadingException {
+	public static Corpus retrieveAltoCorpus(String corpusFile, List<Pair<String, Algebra>> interpretations) throws IOException, CorpusReadingException {
 		InterpretedTreeAutomaton dull = new InterpretedTreeAutomaton(null);
 		
 		addInterpretations(interpretations, dull);

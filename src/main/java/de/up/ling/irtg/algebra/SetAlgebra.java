@@ -98,10 +98,9 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
      *
      * @see #readOptions(java.io.Reader)
      * @param optionWriter
-     * @throws Exception
      */
     @Override
-    public void writeOptions(Writer optionWriter) throws Exception {
+    public void writeOptions(Writer optionWriter) {
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 

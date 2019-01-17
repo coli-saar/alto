@@ -19,12 +19,12 @@ public class UtfStringCodec implements StringCodec {
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
 
-    public UtfStringCodec(ObjectInputStream ois) throws IOException {
+    public UtfStringCodec(ObjectInputStream ois) {
         this.ois = ois;
         oos = null;
     }
 
-    public UtfStringCodec(ObjectOutputStream oos) throws IOException {
+    public UtfStringCodec(ObjectOutputStream oos) {
         this.oos = oos;
         ois = null;
     }

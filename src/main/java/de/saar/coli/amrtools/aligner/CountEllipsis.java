@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class CountEllipsis {
     
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException {
+    public static void main(String[] args) throws IOException, CorpusReadingException {
         InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySig = new Signature();
         loaderIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "repalignment"));

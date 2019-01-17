@@ -20,7 +20,7 @@ import java.io.PrintWriter;
 @CodecMetadata(name = "toString", description = "encodes an object using its toString method", type = Object.class, displayInPopup = false)
 public class ToStringOutputCodec extends OutputCodec<Object> {
     @Override
-    public void write(Object object, OutputStream ostream) throws IOException {
+    public void write(Object object, OutputStream ostream) {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
         w.write(object.toString());
         w.flush();

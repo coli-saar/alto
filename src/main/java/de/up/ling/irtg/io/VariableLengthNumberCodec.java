@@ -17,12 +17,12 @@ public class VariableLengthNumberCodec implements NumberCodec {
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
 
-    public VariableLengthNumberCodec(ObjectInputStream ois) throws IOException {
+    public VariableLengthNumberCodec(ObjectInputStream ois) {
         this.ois = ois;
         oos = null;
     }
 
-    public VariableLengthNumberCodec(ObjectOutputStream oos) throws IOException {
+    public VariableLengthNumberCodec(ObjectOutputStream oos) {
         this.oos = oos;
         ois = null;
     }

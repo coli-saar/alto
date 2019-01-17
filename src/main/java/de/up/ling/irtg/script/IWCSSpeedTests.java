@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  */
 public class IWCSSpeedTests {
     
-    public static void main(String[] args) throws ParseException, FileNotFoundException, IOException, CorpusReadingException, ParserException {
+    public static void main(String[] args) throws ParseException, IOException, CorpusReadingException {
 
         //loading corpus
         Signature sig = new Signature();

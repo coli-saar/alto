@@ -193,7 +193,7 @@ public class SortAndFilterAMRCorpus {
         String align;
         int size;
         
-        public Instance(String corpusEntry, int size, String align) throws ParserException {
+        public Instance(String corpusEntry, int size, String align) {
             this.corpusEntry = corpusEntry;
             this.size = size;
             this.align = align;
@@ -201,7 +201,7 @@ public class SortAndFilterAMRCorpus {
         
     }
     
-    private static int countCorpusInterpretations(String path) throws FileNotFoundException, CorpusReadingException, IOException {
+    private static int countCorpusInterpretations(String path) throws CorpusReadingException, IOException {
         BufferedReader br = new BufferedReader(new FileReader(path));
         List<String> interpretationOrder = new ArrayList<>();
         Map<String, Object> currentInputs = new HashMap<>();

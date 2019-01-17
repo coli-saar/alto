@@ -252,10 +252,9 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param input
      * @return a tree automaton containing all possible derivation trees that
      * are mapped to the input by the interpretation.
-     * @throws ParserException
      */
     @OperationAnnotation(code = "parseSimple")
-    public TreeAutomaton parseSimple(String interpretationName, Object input) throws ParserException {
+    public TreeAutomaton<?> parseSimple(String interpretationName, Object input) {
         Map<String, Object> inputs = new HashMap<>();
         inputs.put(interpretationName, input);
         return parseInputObjects(inputs);

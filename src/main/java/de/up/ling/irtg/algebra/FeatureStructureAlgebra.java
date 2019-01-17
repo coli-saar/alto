@@ -161,7 +161,7 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
         };
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException, ParserException {
+    public static void main(String[] args) throws IOException, ParserException {
         Logging.get().setLevel(Level.INFO);
 
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/fcfg.irtg"));

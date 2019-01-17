@@ -19,7 +19,7 @@ import java.io.PrintWriter;
 @CodecMetadata(name = "ptb-out", description = "encodes a tree as a PTB-style Lisp string", type = Tree.class)
 public class PtbTreeOutputCodec extends OutputCodec<Tree> {
     @Override
-    public void write(Tree tree, OutputStream ostream) throws IOException, UnsupportedOperationException {
+    public void write(Tree tree, OutputStream ostream) throws UnsupportedOperationException {
         if( hasTrueOption("top")) {
             tree = Tree.create("TOP", tree);
         }

@@ -41,9 +41,8 @@ public class CorpusWriter extends AbstractCorpusWriter {
      * prefixed; set to null to suppress comments in output
      * @param printingPolicy
      * @param writer
-     * @throws IOException
      */
-    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) throws IOException {
+    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) {
         super(printingPolicy, false);
 
         this.writer = writer;

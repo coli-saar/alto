@@ -42,7 +42,7 @@ public class RdgParser {
     private static JCommander jc;
     private static CmdLineParameters param = new CmdLineParameters();
 
-    private static void reloadGrammar() throws IOException, Exception {
+    private static void reloadGrammar() throws Exception {
         System.err.printf("Reading grammar from %s ...\n", filename);
 
         long start = System.nanoTime();
@@ -103,7 +103,7 @@ public class RdgParser {
         }
     }
 
-    public static void main(String[] args) throws IOException, Exception {
+    public static void main(String[] args) throws Exception {
         jc = new JCommander(param, args);
 
         if (param.help) {

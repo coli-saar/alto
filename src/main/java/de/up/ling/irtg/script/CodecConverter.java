@@ -38,7 +38,7 @@ import java.util.Map;
 public class CodecConverter {
     private static JCommander jc;
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws IOException {
         CmdLineParameters param = new CmdLineParameters();
         jc = new JCommander(param, args);
 
@@ -201,7 +201,7 @@ public class CodecConverter {
     @CodecMetadata(name = "blank", description = "Prints a blank line", type = Object.class)
     private static class BlankLineOutputCodec extends OutputCodec<Object> {
         @Override
-        public void write(Object object, OutputStream ostream) throws IOException, UnsupportedOperationException {
+        public void write(Object object, OutputStream ostream) throws UnsupportedOperationException {
 
         }
     }

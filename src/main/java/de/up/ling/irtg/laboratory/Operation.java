@@ -270,7 +270,7 @@ public interface Operation {
         }
         
         @Override
-        public Object apply(List<Object> input) throws IllegalAccessException, InvocationTargetException {
+        public Object apply(List<Object> input) {
             return computedObjectsTracker[index];
         }
 
@@ -303,7 +303,7 @@ public interface Operation {
     public static class NullOperation implements Operation {
 
         @Override
-        public Object apply(List<Object> input) throws IllegalAccessException, InvocationTargetException {
+        public Object apply(List<Object> input) {
             return null;
         }
 
@@ -335,7 +335,7 @@ public interface Operation {
         }
         
         @Override
-        public Object apply(List<Object> input) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        public Object apply(List<Object> input) {
             throw new UnsupportedOperationException("This Operation is for storage only, use StringOperation for execution."); //To change body of generated methods, choose Tools | Templates.
         }
 

@@ -96,9 +96,8 @@ public class RareWordsAnnotator {
      * @throws IOException
      * @throws CorpusReadingException
      * @throws MalformedURLException
-     * @throws InterruptedException 
      */
-    public static void main(String[] args) throws IOException, CorpusReadingException, MalformedURLException, InterruptedException {
+    public static void main(String[] args) throws IOException, CorpusReadingException, MalformedURLException {
         
         RareWordsAnnotator annotator = new RareWordsAnnotator();
         

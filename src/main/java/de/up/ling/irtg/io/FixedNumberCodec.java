@@ -17,12 +17,12 @@ public class FixedNumberCodec implements NumberCodec {
     ObjectInputStream ois;
     ObjectOutputStream oos;
 
-    public FixedNumberCodec(ObjectInputStream ois) throws IOException {
+    public FixedNumberCodec(ObjectInputStream ois) {
         this.ois = ois;
         oos = null;
     }
 
-    public FixedNumberCodec(ObjectOutputStream oos) throws IOException {
+    public FixedNumberCodec(ObjectOutputStream oos) {
         this.oos = oos;
         ois = null;
     }

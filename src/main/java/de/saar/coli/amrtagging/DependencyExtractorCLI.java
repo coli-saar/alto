@@ -84,10 +84,9 @@ public class DependencyExtractorCLI {
      * @throws IOException
      * @throws CorpusReadingException
      * @throws IllegalArgumentException
-     * @throws ParseException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, IllegalArgumentException, ParseException, InterruptedException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, IllegalArgumentException, InterruptedException {
         
         DependencyExtractorCLI cli = new DependencyExtractorCLI();
         JCommander commander = new JCommander(cli);

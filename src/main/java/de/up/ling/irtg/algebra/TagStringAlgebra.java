@@ -591,7 +591,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     }
 
     @Override
-    public Pair<List<String>, List<String>> parseString(String representation) throws ParserException {
+    public Pair<List<String>, List<String>> parseString(String representation) {
         List<String> words = Arrays.asList(representation.split("\\s+"));
 
         for (String word : words) {

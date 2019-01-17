@@ -23,7 +23,7 @@ import java.util.Map;
  */
 public class ConstraintStats {
     
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws IOException {
         if (args.length == 0) {
             args = new String[]{"../../experimentData/amrtagging/constraints/LDC2015E86/02-17/train/"};
         }

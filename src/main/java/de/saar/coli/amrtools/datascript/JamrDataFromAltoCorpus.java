@@ -42,7 +42,7 @@ public class JamrDataFromAltoCorpus {
     }
 
     @SuppressWarnings("unchecked")
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException {
+    public static void main(String[] args) throws IOException, CorpusReadingException {
         CommandLineParameters param = new CommandLineParameters();
         JCommander commander = new JCommander(param, args);
 

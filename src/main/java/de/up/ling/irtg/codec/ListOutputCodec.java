@@ -27,7 +27,7 @@ import java.util.List;
 @CodecMetadata(name = "list", description = "space-separated (e.g. words)", type = List.class)
 public class ListOutputCodec extends OutputCodec<List> {
     @Override
-    public void write(List list, OutputStream ostream) throws IOException, UnsupportedOperationException {
+    public void write(List list, OutputStream ostream) throws UnsupportedOperationException {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
         w.write(StringTools.join(Util.mapToList(list, x -> x.toString()), " "));
         w.flush();

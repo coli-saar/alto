@@ -65,9 +65,8 @@ public class SGraphParsingEvaluation {
      * Benchmarks the s-graph parsing algorithm. Execute without arguments to get more detailed instructions.
      * The interpretation corresponding to the s-graph algebra must be named <i>int</i>.
      * @param args
-     * @throws Exception
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         
         
        
@@ -243,7 +242,7 @@ public class SGraphParsingEvaluation {
 //        
 //    }
     
-    private static InterpretedTreeAutomaton loadIrtg(String filename) throws FileNotFoundException, IOException {
+    private static InterpretedTreeAutomaton loadIrtg(String filename) throws IOException {
         return InterpretedTreeAutomaton.read(new FileInputStream(filename));
     }
 
@@ -331,7 +330,7 @@ public class SGraphParsingEvaluation {
 //        return resultWriter;
 //    }
     
-    private static void printHeader() throws Exception {
+    private static void printHeader() {
         StringJoiner sj = new StringJoiner(",");
         sj.add("Original number");
         sj.add("Ordering number");

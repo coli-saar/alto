@@ -18,7 +18,7 @@ import java.io.InputStream;
 public class SGraphInputCodec extends InputCodec<SGraph>{
 
     @Override
-    public SGraph read(InputStream is) throws CodecParseException, IOException {
+    public SGraph read(InputStream is) throws CodecParseException {
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
         try {
             return graphFromString(s.hasNext() ? s.next() : "");

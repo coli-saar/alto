@@ -422,11 +422,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
      * @param showViterbiTrees
      * @param icall what intersection should be used?
      * @throws FileNotFoundException
-     * @throws ParseException
      * @throws IOException
-     * @throws ParserException
      */
-    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.codec.CodecParseException {
+    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, IOException, de.up.ling.irtg.codec.CodecParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
                     + "2. Sentences\n"

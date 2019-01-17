@@ -110,9 +110,8 @@ public class Corpus implements Iterable<Instance> {
      * Reads charts from a file and attaches them to this corpus.
      *
      * @param filename
-     * @throws IOException
      */
-    public void attachCharts(String filename) throws IOException {
+    public void attachCharts(String filename) {
         attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
     }
 

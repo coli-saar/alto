@@ -22,7 +22,7 @@ import java.io.PrintWriter;
 @CodecMetadata(name = "tree-yield", description = "Converts a tree to its yield string", type = Tree.class)
 public class TreeYieldOutputCodec extends OutputCodec<Tree> {
     @Override
-    public void write(Tree tree, OutputStream ostream) throws IOException, UnsupportedOperationException {
+    public void write(Tree tree, OutputStream ostream) throws UnsupportedOperationException {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
         w.write(String.join(" ", tree.getLeafLabels()));
         w.flush();

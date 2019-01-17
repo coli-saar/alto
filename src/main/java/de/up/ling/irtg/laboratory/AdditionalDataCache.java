@@ -31,7 +31,7 @@ public class AdditionalDataCache extends AltoLabHttpCache<String> {
     }
 
     @Override
-    protected String readFromStream(String identifier, InputStream is, boolean remote) throws ValueReadingException, IOException {
+    protected String readFromStream(String identifier, InputStream is, boolean remote) throws IOException {
         String ret = StringTools.slurp(new InputStreamReader(is));
         return ret;
     }

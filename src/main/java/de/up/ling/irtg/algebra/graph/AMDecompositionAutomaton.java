@@ -627,7 +627,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
         
         //  (ARG0, ARG1(ARG2_UNIFY_ARG0, ARG1_UNIFY_ARG2), ARG2(ARG0_UNIFY_ARG0))
         // allow only this depth, unify argument is always top level
-        private Type(Tree<String> typeTree, GraphInfo graphInfo) throws ParseException {
+        private Type(Tree<String> typeTree, GraphInfo graphInfo) {
             this.role2nestedRole2Unif = new Int2ObjectOpenHashMap<>();
             this.role2Type = new Int2ObjectOpenHashMap<>();
             for (Tree<String> roleTree : typeTree.getChildren()) {

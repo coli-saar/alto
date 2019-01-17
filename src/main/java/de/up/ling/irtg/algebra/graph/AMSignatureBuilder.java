@@ -189,7 +189,7 @@ public class AMSignatureBuilder {
      * @return
      * @throws IllegalArgumentException 
      */
-    public static Set<String> getConstantsForAlignment(Alignment al, SGraph graph, boolean addCoref) throws IllegalArgumentException, ParseException {
+    public static Set<String> getConstantsForAlignment(Alignment al, SGraph graph, boolean addCoref) throws IllegalArgumentException {
         Set<GraphNode> outNodes = new HashSet<>();//should contain the one node that has edges leaving this constant.
         Set<GraphNode> inNodes = new HashSet<>();//should contain the one node that becomes the root of the constant.
         for (String nn : al.nodes) {
@@ -1149,7 +1149,7 @@ public class AMSignatureBuilder {
     //------------------------------------------------------------   main for testing things   ------------------------------------------------------------------
     
     
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParseException, ParserException, InterruptedException {
+    public static void main(String[] args) throws ParseException, ParserException, InterruptedException {
         SGraph g = new GraphAlgebra().parseString("(l <root> / love :ARG0 (p / prince) :ARG1 (r/rose))");
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(AMSignatureBuilder.makeDecompositionSignature(g, 0));
         System.err.println(alg.getSignature());
