@@ -154,7 +154,7 @@ public class CorpusUtils {
 		for(Instance i: in){
 			
 			if(k > index && indicesIt.hasNext()){
-				index = indicesIt.next(); 
+				index = indicesIt.nextInt();
 			}
 			
 			if(k == index){

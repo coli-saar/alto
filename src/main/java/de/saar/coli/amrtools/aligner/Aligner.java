@@ -7,7 +7,6 @@ package de.saar.coli.amrtools.aligner;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.google.common.collect.Sets;
 import de.saar.basic.Pair;
 import de.saar.coli.amrtagging.Alignment;
 import de.up.ling.irtg.Interpretation;
