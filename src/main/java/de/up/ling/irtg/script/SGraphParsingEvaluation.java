@@ -142,10 +142,10 @@ public class SGraphParsingEvaluation {
     
     private static Corpus readCorpus() throws Exception {
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(null);
-        Interpretation graphInt = new Interpretation(new GraphAlgebra(), null);
-        Interpretation stringInt = new Interpretation(new StringAlgebra(), null);
-        irtg.addInterpretation("graph", graphInt);
-        irtg.addInterpretation("string", stringInt);
+        Interpretation graphInt = new Interpretation(new GraphAlgebra(), null, "graph");
+        Interpretation stringInt = new Interpretation(new StringAlgebra(), null, "string");
+        irtg.addInterpretation(graphInt);
+        irtg.addInterpretation(stringInt);
 
         Corpus ret = Corpus.readCorpus(new FileReader(corpusPath), irtg);
         

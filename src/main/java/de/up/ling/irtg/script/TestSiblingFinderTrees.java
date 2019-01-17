@@ -135,8 +135,8 @@ public class TestSiblingFinderTrees {
         irtg = irtg.filterForAppearingConstants("string", input);
         System.err.println(irtg.getInterpretation("string").getAlgebra().getSignature());
         System.err.println("IRTG rules after filtering: "+Iterables.size(irtg.getAutomaton().getRuleSet()));
-        decompBU = irtg.getInterpretation("string").getAlgebra().decompose(input).asConcreteTreeAutomatonBottomUp();
-        decompTD = irtg.getInterpretation("string").getAlgebra().decompose(input).asConcreteTreeAutomaton();
+        decompBU = ((Interpretation<Object>)irtg.getInterpretation("string")).getAlgebra().decompose(input).asConcreteTreeAutomatonBottomUp();
+        decompTD = ((Interpretation<Object>)irtg.getInterpretation("string")).getAlgebra().decompose(input).asConcreteTreeAutomaton();
         System.err.println("bottom-up: "+decompBU.countTrees());
         System.err.println("top-down: "+decompTD.countTrees());
         
@@ -175,7 +175,7 @@ public class TestSiblingFinderTrees {
 //        }
 //        irtg.getAutomaton().getFinalStates().stream().forEach(state -> newG.addFinalState(state));
 //        InterpretedTreeAutomaton newIRTG = new InterpretedTreeAutomaton(newG);
-//        newIRTG.addInterpretation("string", irtg.getInterpretation("string"));
+//        newIRTG.addInterpretation(irtg.getInterpretation("string", "string"));
 //        //System.err.println(newIRTG);
 //        //irtg = newIRTG;
 //        

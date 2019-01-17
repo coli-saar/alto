@@ -113,9 +113,9 @@ public class BinaryIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             String className = sc.readString();
             Algebra alg = (Algebra) getClass().getClassLoader().loadClass(className).newInstance();
             Homomorphism hom = new Homomorphism(irtg.getAutomaton().getSignature(), alg.getSignature());
-            Interpretation intp = new Interpretation(alg, hom);
+            Interpretation intp = new Interpretation(alg, hom, name);
 
-            irtg.addInterpretation(name, intp);
+            irtg.addInterpretation(intp);
             ret.add(name);
         }
 

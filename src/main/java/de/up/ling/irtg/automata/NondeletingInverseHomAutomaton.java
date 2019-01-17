@@ -30,7 +30,7 @@ import java.util.function.ToIntFunction;
  *
  * @author koller
  */
-public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object> {
+public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> {
 
     private final boolean debug = false;
 
@@ -51,7 +51,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 
         remappingHomSymbolToIntFunction = f -> labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().applyAsInt(f)]; // TODO replace by sig mapper
 
-        this.stateInterner = (Interner) rhsAutomaton.stateInterner;
+        this.stateInterner = rhsAutomaton.stateInterner;
 
         assert hom.isNonDeleting();
 

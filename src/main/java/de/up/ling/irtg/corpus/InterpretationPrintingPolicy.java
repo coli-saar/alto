@@ -43,7 +43,7 @@ public class InterpretationPrintingPolicy {
     
     public static InterpretationPrintingPolicy fromIrtg(InterpretedTreeAutomaton irtg) {
         List<Pair<String, OutputCodec>> interps = new ArrayList<>();
-        Map<String,Interpretation> interpMap = irtg.getInterpretations();
+        Map<String,Interpretation<?>> interpMap = irtg.getInterpretations();
         
         for( String key : interpMap.keySet() ) {
             Algebra alg = interpMap.get(key).getAlgebra();

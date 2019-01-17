@@ -29,7 +29,7 @@ public class CountEllipsis {
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException {
         InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySig = new Signature();
-        loaderIRTG.addInterpretation("repalignment", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
+        loaderIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "repalignment"));
         Corpus corpus = Corpus.readCorpusWithStrictFormatting(new FileReader(args[0]), loaderIRTG);
         
         int totalGraphs = 0;

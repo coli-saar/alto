@@ -67,7 +67,7 @@ public class CorpusUtils {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void addInterpretations(List<Pair<String, Algebra>> interpretations, InterpretedTreeAutomaton dull){
 		for(Pair<String, Algebra> e : interpretations){
-			dull.addInterpretation(e.getLeft(), new Interpretation(e.getRight(), null));
+			dull.addInterpretation(new Interpretation(e.getRight(), null, e.getLeft()));
 
 		}
 	}
@@ -184,8 +184,9 @@ public class CorpusUtils {
 		TreeAutomaton<String> originalA = g.getAutomaton();
 		ConcreteTreeAutomaton<String> finiteA = new ConcreteTreeAutomaton<>(new Signature());
 		
-		Map<String, Interpretation> interpretations = new Object2ObjectArrayMap<String, Interpretation>(g.getInterpretations().size());
-		for(Entry<String, Interpretation> entry : g.getInterpretations().entrySet()) interpretations.put(entry.getKey(), new Interpretation(entry.getValue().getAlgebra(), new Homomorphism(finiteA.getSignature(), entry.getValue().getHomomorphism().getTargetSignature())));
+		Map<String, Interpretation<?>> interpretations = new Object2ObjectArrayMap<String, Interpretation<?>>(g.getInterpretations().size());
+		for(Interpretation<?> interpretation : g.getInterpretations().values())
+			interpretations.put(interpretation.name, new Interpretation(interpretation.getAlgebra(), new Homomorphism(finiteA.getSignature(), interpretation.getHomomorphism().getTargetSignature()), interpretation.name));
 		
 		int derivationIndex = 0;
 		
@@ -233,7 +234,7 @@ public class CorpusUtils {
 				finiteA.addRule(specific);	
 				
 				//update interpretations
-				for(Entry<String, Interpretation> entry :interpretations.entrySet()) entry.getValue().getHomomorphism().add(specific.getLabel(), g.getInterpretation(entry.getKey()).getHomomorphism().get(top.getLabel()));
+				for(Entry<String, Interpretation<?>> entry :interpretations.entrySet()) entry.getValue().getHomomorphism().add(specific.getLabel(), g.getInterpretation(entry.getKey()).getHomomorphism().get(top.getLabel()));
 				
 				//mark parent nonterminal as sarting nomterminal if needed
 				if(makeTerminal.test(originalA.getStateForId(top.getParent()))){

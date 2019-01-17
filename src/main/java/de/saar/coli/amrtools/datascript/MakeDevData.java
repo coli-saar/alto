@@ -64,8 +64,8 @@ public class MakeDevData {
         
         InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySig = new Signature();
-        loaderIRTG.addInterpretation("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        loaderIRTG.addInterpretation("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
+        loaderIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "string"));
+        loaderIRTG.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig), "graph"));
         Corpus corpus = Corpus.readCorpus(new FileReader(path+"finalAlto.corpus"), loaderIRTG);
         //BufferedReader graphBR = new BufferedReader(new FileReader(path+"raw.amr"));
         
@@ -199,9 +199,9 @@ public class MakeDevData {
         literalW.close();
         //goldW.close();
         
-        loaderIRTG.addInterpretation("pos", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        loaderIRTG.addInterpretation("literal", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        loaderIRTG.addInterpretation("repstring", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
+        loaderIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "pos"));
+        loaderIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "literal"));
+        loaderIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "repstring"));
         
         new CorpusWriter(loaderIRTG, "evaluation input", "///###", new FileWriter(outPath+"evalInput.corpus"))
                 .writeCorpus(corpus);

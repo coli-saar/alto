@@ -52,7 +52,7 @@ public class IWCSSpeedTests {
         Signature sig = new Signature();
         InterpretedTreeAutomaton dummyIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>(sig));
         GraphAlgebra graphAlg = new GraphAlgebra();
-        dummyIRTG.addInterpretation("graph", new Interpretation<>(graphAlg, new Homomorphism(sig, new Signature())));
+        dummyIRTG.addInterpretation(new Interpretation<>(graphAlg, new Homomorphism(sig, new Signature()), "graph"));
         Corpus corpus = Corpus.readCorpus(new FileReader(args[0]), dummyIRTG);
         Writer csvWriter = new FileWriter(args[1]);
         

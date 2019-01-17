@@ -118,10 +118,10 @@ public class BolinasGraphOutputCodec extends OutputCodec<SGraph> {
     public static void main(String[] args) throws IOException, CorpusReadingException {
         Reader corpusReader = new FileReader(args[1]);
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(null);
-        Interpretation graphInt = new Interpretation(new GraphAlgebra(), null);
-        Interpretation stringInt = new Interpretation(new StringAlgebra(), null);
-        irtg.addInterpretation("graph", graphInt);
-        irtg.addInterpretation("string", stringInt);
+        Interpretation<SGraph> graphInt = new Interpretation<>(new GraphAlgebra(), null, "graph");
+        Interpretation<List<String>> stringInt = new Interpretation<>(new StringAlgebra(), null, "string");
+        irtg.addInterpretation(graphInt);
+        irtg.addInterpretation(stringInt);
         Corpus corpus = Corpus.readCorpus(corpusReader, irtg);
         
         BolinasGraphOutputCodec oc = new BolinasGraphOutputCodec();

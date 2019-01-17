@@ -38,6 +38,7 @@ public class Interpretation<E> implements Serializable {
 
     private Algebra<E> algebra;
     private Homomorphism hom;
+    public final String name;
     private PatternMatchingInvhomAutomatonFactory pmFactory;
 
     /**
@@ -46,9 +47,25 @@ public class Interpretation<E> implements Serializable {
      * @param algebra
      * @param hom 
      */
+	@Deprecated
     public Interpretation(Algebra<E> algebra, Homomorphism hom) {
         this.algebra = algebra;
         this.hom = hom;
+        this.name = "<unnamed>";
+        pmFactory = null;
+    }
+
+    /**
+     * Constructs  new instance with the given algebra, homomorphism and name.
+     *
+     * @param algebra
+     * @param hom
+     * @param name
+     */
+    public Interpretation(Algebra<E> algebra, Homomorphism hom, String name) {
+        this.algebra = algebra;
+        this.hom = hom;
+        this.name = name;
         pmFactory = null;
     }
 
@@ -144,8 +161,8 @@ public class Interpretation<E> implements Serializable {
      * @return 
      */
     @OperationAnnotation(code = "basicNonDelInvHom")
-    public TreeAutomaton basicNonDelInvHom(TreeAutomaton auto) {
-        return new NondeletingInverseHomAutomaton(auto, hom);
+    public <T> TreeAutomaton<T> basicNonDelInvHom(TreeAutomaton<T> auto) {
+        return new NondeletingInverseHomAutomaton<T>(auto, hom);
     }
 
     /**
@@ -158,8 +175,8 @@ public class Interpretation<E> implements Serializable {
      * @param object
      * @return 
      */
-    public Intersectable parse(E object) {
-        TreeAutomaton decompositionAutomaton = algebra.decompose(object);
+    public Intersectable<E> parse(E object) {
+        TreeAutomaton<E> decompositionAutomaton = algebra.decompose(object);
         // It is much preferable to return a condensed automaton for the
         // inverse homomorphism, if that is possible. Pattern matching works for both top down
         // and bottom up queries.

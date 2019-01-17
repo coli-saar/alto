@@ -45,8 +45,8 @@ public class JoshuaInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         Homomorphism hLeft = new Homomorphism(cta.getSignature(), left.getSignature());
         Homomorphism hRight = new Homomorphism(cta.getSignature(), right.getSignature());
 
-        ret.addInterpretation("left", new Interpretation(left, hLeft));
-        ret.addInterpretation("right", new Interpretation(right, hRight));
+        ret.addInterpretation(new Interpretation(left, hLeft, "left"));
+        ret.addInterpretation(new Interpretation(right, hRight, "right"));
 
         while ((line = r.readLine()) != null) {
             String[] parts = line.split("\\s*\\|\\|\\|\\s*");

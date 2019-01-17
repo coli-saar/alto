@@ -45,7 +45,7 @@ class InterpretedTreeAutomatonTest {
             ], rtg.getSignature(), algebra.getSignature());
 
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(rtg);
-        irtg.addInterpretation("string", new Interpretation(algebra, h));
+        irtg.addInterpretation(new Interpretation(algebra, h, "string"));
 
         List words = irtg.parseString("string", string);
 

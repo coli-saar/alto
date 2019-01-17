@@ -134,8 +134,8 @@ public class Parser2ExtFormat {
         String graphInterp = p2ext.useRepGraph ? "repgraph" : "graph";
         
         InterpretedTreeAutomaton dummyIrtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
-        dummyIrtg.addInterpretation("repstring", new Interpretation(new StringAlgebra(), new Homomorphism(new Signature(), new Signature())));
-        dummyIrtg.addInterpretation(graphInterp, new Interpretation(new GraphAlgebra(), new Homomorphism(new Signature(), new Signature())));
+        dummyIrtg.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(new Signature(), new Signature()), "repstring"));
+        dummyIrtg.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(new Signature(), new Signature()), graphInterp));
         
         Corpus corpus = Corpus.readCorpus(new FileReader(p2ext.corpusPath), dummyIrtg);
         
@@ -257,7 +257,7 @@ public class Parser2ExtFormat {
                         } else {
                             edgeProbsHere = edgeLabel2pos2pos2prob.get(i);
                         }
-                        Algebra stringAlg = new StringAlgebra();
+                        StringAlgebra stringAlg = new StringAlgebra();
                         Parser parser = new Parser(tagProb, labelProb, edgeProbsHere,
                                 sent, p2ext.k, p2ext.edgeExponent, p2ext.edgeFactor, p2ext.tagExponent,
                                 p2ext.addNull, p2ext.addEdges, stringAlg);

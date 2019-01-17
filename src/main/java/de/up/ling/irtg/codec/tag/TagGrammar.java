@@ -108,11 +108,11 @@ public class TagGrammar {
 
         TagStringAlgebra tsa = new TagStringAlgebra();
         Homomorphism sh = new Homomorphism(auto.getSignature(), tsa.getSignature());
-        irtg.addInterpretation("string", new Interpretation(tsa, sh));
+        irtg.addInterpretation(new Interpretation(tsa, sh, "string"));
 
         TagTreeAlgebra tta = new TagTreeAlgebra();
         Homomorphism th = new Homomorphism(auto.getSignature(), tta.getSignature());
-        irtg.addInterpretation("tree", new Interpretation(tta, th));
+        irtg.addInterpretation(new Interpretation(tta, th, "tree"));
 
         FeatureStructureAlgebra fsa = null;
         Homomorphism fh = null;
@@ -120,7 +120,7 @@ public class TagGrammar {
         if (hasFeatureStructures) {
             fsa = new FeatureStructureAlgebra();
             fh = new Homomorphism(auto.getSignature(), fsa.getSignature());
-            irtg.addInterpretation("ft", new Interpretation(fsa, fh));
+            irtg.addInterpretation(new Interpretation(fsa, fh, "ft"));
         }
 
         auto.addFinalState(auto.addState(makeS(startSymbol)));

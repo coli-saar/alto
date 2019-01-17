@@ -76,8 +76,8 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             pcfg(result, auto, stringHom, treeHom);
 
             InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(auto);
-            irtg.addInterpretation("string", new Interpretation(stringAlgebra, stringHom));
-            irtg.addInterpretation("tree", new Interpretation(treeAlgebra, treeHom));
+            irtg.addInterpretation(new Interpretation(stringAlgebra, stringHom, "string"));
+            irtg.addInterpretation(new Interpretation(treeAlgebra, treeHom, "tree"));
             return irtg;
         } catch (RecognitionException e) {
             throw new CodecParseException(e.getMessage());

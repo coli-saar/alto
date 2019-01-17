@@ -126,7 +126,7 @@ public class SortAndFilterAMRCorpus {
         
         InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySig = new Signature();
-        loaderIRTG.addInterpretation(sorter.graphInterp, new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
+        loaderIRTG.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig), sorter.graphInterp));
         Corpus corpus = Corpus.readCorpusWithStrictFormatting(new FileReader(sorter.corpusPath.get(0)), loaderIRTG);
         
         int interpCount = countCorpusInterpretations(sorter.corpusPath.get(0));

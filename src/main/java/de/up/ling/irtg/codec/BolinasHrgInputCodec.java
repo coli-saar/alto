@@ -306,8 +306,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         // now we can turn the automaton and its interpretation into a complete
         // IRTG and return it
         InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
-        Interpretation in = new Interpretation(ga, hom);
-        ita.addInterpretation("Graph", in);
+        Interpretation in = new Interpretation(ga, hom, "Graph");
+        ita.addInterpretation(in);
 
         return ita;
     }

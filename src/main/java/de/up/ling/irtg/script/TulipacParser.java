@@ -240,7 +240,7 @@ public class TulipacParser {
     }
 
     private static void debugAnalysis(Tree<String> dt, InterpretedTreeAutomaton irtg) {
-        Interpretation<FeatureStructure> fsi = irtg.getInterpretation("ft");
+        Interpretation<FeatureStructure> fsi = (Interpretation<FeatureStructure>)irtg.getInterpretation("ft");
         List<Tree<String>> failureNodes = new ArrayList<>(); // collect all nodes of dt where unification failed
 
         // node: subtree of dt at this point

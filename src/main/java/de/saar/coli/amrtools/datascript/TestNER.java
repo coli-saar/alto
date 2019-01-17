@@ -53,9 +53,9 @@ public class TestNER {
         
         InterpretedTreeAutomaton dummyIrtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySignature = new Signature();
-        dummyIrtg.addInterpretation("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature)));
-        dummyIrtg.addInterpretation("repstring", new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature)));
-        dummyIrtg.addInterpretation("spanmap", new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature)));
+        dummyIrtg.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature), "string"));
+        dummyIrtg.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature), "repstring"));
+        dummyIrtg.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature), "spanmap"));
         Corpus corpus = Corpus.readCorpusWithStrictFormatting(new FileReader("../../experimentData/Corpora/LDC2015E86/corefSplitNDN.corpus"), dummyIrtg);
         
         int match = 0;

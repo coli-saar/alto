@@ -133,7 +133,7 @@ public class TemplateInterpretedTreeAutomaton {
      */
     public InterpretedTreeAutomaton instantiate(FirstOrderModel model) throws ClassNotFoundException, InstantiationException, IllegalAccessException, CodecParseException {
         ConcreteTreeAutomaton<String> auto = new ConcreteTreeAutomaton<>();
-        Map<String, Interpretation> interps = new HashMap<>();
+        Map<String, Interpretation<?>> interps = new HashMap<>();
 
         // initialize interpretations
         for (String interp : getAlgebraClasses().keySet()) {

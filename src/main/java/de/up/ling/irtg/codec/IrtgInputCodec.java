@@ -61,7 +61,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
     private Map<String, Homomorphism> homomorphisms = new HashMap<String, Homomorphism>();
-    private Map<String, Interpretation> interpretations = new HashMap<String, Interpretation>();
+    private Map<String, Interpretation<?>> interpretations = new HashMap<>();
     private Map<String, FeatureFunction> features = new HashMap<String, FeatureFunction>();
 
     @Override
@@ -73,7 +73,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         automaton = new ConcreteTreeAutomaton<String>();
         homomorphisms = new HashMap<String, Homomorphism>();
-        interpretations = new HashMap<String, Interpretation>();
+        interpretations = new HashMap<String, Interpretation<?>>();
         features = new HashMap<String, FeatureFunction>();
 
         try {

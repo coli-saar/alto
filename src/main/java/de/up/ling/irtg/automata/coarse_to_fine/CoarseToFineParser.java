@@ -8,6 +8,7 @@ package de.up.ling.irtg.automata.coarse_to_fine;
 import com.google.common.io.Files;
 import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -60,7 +61,7 @@ public class CoarseToFineParser {
 
     private final InterpretedTreeAutomaton irtg;
     private final RuleRefinementTree rrt;
-    private final String inputInterpretation;
+	private final Interpretation<Object> inputInterpretation;
     private final FineToCoarseMapping ftc;
     private final double theta;
     
@@ -99,7 +100,7 @@ public class CoarseToFineParser {
      */
     public CoarseToFineParser(InterpretedTreeAutomaton irtg, String inputInterpretation, FineToCoarseMapping ftc, double theta) {
         this.irtg = irtg;
-        this.inputInterpretation = inputInterpretation;
+		this.inputInterpretation = (Interpretation<Object>)irtg.getInterpretation(inputInterpretation);
         this.ftc = ftc;
         this.theta = theta;
 
@@ -201,7 +202,7 @@ public class CoarseToFineParser {
         Logging.get().info("Using basic coarse-to-fine parsing.");
         
         // create condensed invhom automaton
-        CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
+        CondensedTreeAutomaton invhom = inputInterpretation.parseToCondensed(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
@@ -271,7 +272,7 @@ public class CoarseToFineParser {
         Logging.get().info("Using coarse-to-fine parsing with sibling finders.");
         
         // create condensed invhom automaton
-        TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
+        TreeAutomaton decomp = inputInterpretation.getAlgebra().decompose(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
@@ -378,7 +379,7 @@ public class CoarseToFineParser {
     @OperationAnnotation(code = "parseInputObjectWithSFSizes")
     public Combination parseInputObjectWithSFTrackSizes(Object inputObject) {
         // create condensed invhom automaton
-        TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
+        TreeAutomaton decomp = inputInterpretation.getAlgebra().decompose(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
@@ -638,7 +639,7 @@ public class CoarseToFineParser {
     @OperationAnnotation(code = "parseInputObjectWithSFTimes")
     public Combination parseInputObjectWithSFTrackTimes(Object inputObject) {
         // create condensed invhom automaton
-        TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
+        TreeAutomaton decomp = inputInterpretation.getAlgebra().decompose(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
@@ -755,7 +756,7 @@ public class CoarseToFineParser {
     public Combination parseInputObjectTrackSizes(Object inputObject) throws ClassNotFoundException,
             InstantiationException, IllegalAccessException {
         // create condensed invhom automaton
-        CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
+        CondensedTreeAutomaton invhom = inputInterpretation.parseToCondensed(inputObject);
 
         CpuTimeStopwatch cts = new CpuTimeStopwatch();
         double initialTime;
@@ -1015,7 +1016,7 @@ public class CoarseToFineParser {
     public Combination parseInputObjectTrackTimes(Object inputObject) throws ClassNotFoundException,
             InstantiationException, IllegalAccessException {
         // create condensed invhom automaton
-        CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
+        CondensedTreeAutomaton invhom = inputInterpretation.parseToCondensed(inputObject);
 
         CpuTimeStopwatch cts = new CpuTimeStopwatch();
         double initialTime;

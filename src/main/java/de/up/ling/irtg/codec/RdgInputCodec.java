@@ -68,7 +68,7 @@ public class RdgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         
         // assemble IRTG object and return it
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(auto);
-        irtg.addInterpretation("string", new Interpretation(alg, hom));
+        irtg.addInterpretation(new Interpretation(alg, hom, "string"));
         return irtg;
     }
 

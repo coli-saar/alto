@@ -1162,7 +1162,7 @@ public class AMSignatureBuilder {
 //        Signature sig = new Signature();
 //        InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>(sig));
 //        GraphAlgebra graphAlg = new GraphAlgebra();
-//        irtg.addInterpretation("graph", new Interpretation(graphAlg, new Homomorphism(sig, graphAlg.getSignature())));
+//        irtg.addInterpretation(new Interpretation(graphAlg, new Homomorphism(sig, graphAlg.getSignature()), "graph"));
 //        
 //        Corpus corp = Corpus.readCorpus(new FileReader("../../experimentData/Corpora/iwcsTest.corpus"), irtg);
 //        

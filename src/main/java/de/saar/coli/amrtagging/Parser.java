@@ -54,6 +54,8 @@ public class Parser {
     private final InterpretedTreeAutomaton irtg;
     private final List<String> sentInternal;
     private final Map<String, String> ruleLabel2tag;
+	private Interpretation<List<String>> stringInterpretation;
+	private Interpretation<Pair<SGraph, ApplyModifyGraphAlgebra.Type>> graphInterpretation;
     
     /**
      * 
@@ -73,7 +75,7 @@ public class Parser {
     Parser(List<List<Pair<String, Double>>> fragmentProbs, List<List<Pair<String, Double>>> labelProbs,
             Map<String, Int2ObjectMap<Int2DoubleMap>> edgeLabel2pos2pos2prob, List<String> sent, int maxK,
             double edgeExponent, double edgeFactor, double tagExponent,
-            boolean addNull, boolean addEdges, Algebra stringAlg) throws ParseException {
+            boolean addNull, boolean addEdges, StringAlgebra stringAlg) throws ParseException {
         //add index tags to the sentence
         sentInternal = new ArrayList<>();
         for (int i = 0; i<sent.size(); i++) {
@@ -294,8 +296,10 @@ public class Parser {
         }
         
         irtg = new InterpretedTreeAutomaton(grammarAuto);
-        irtg.addInterpretation("string", new Interpretation(stringAlg, stringHom));
-        irtg.addInterpretation("graph", new Interpretation(graphAlg, graphHom));
+		stringInterpretation = new Interpretation(stringAlg, stringHom, "string");
+        irtg.addInterpretation(stringInterpretation);
+		graphInterpretation = new Interpretation(graphAlg, graphHom, "graph");
+        irtg.addInterpretation(graphInterpretation);
     }
     
     private static void addOp(Homomorphism stringHom, Homomorphism graphHom, int h1, int h2, String s, String nt,
@@ -332,8 +336,8 @@ public class Parser {
     }
     
     Pair<SGraph, Tree<String>> run() throws ParserException {
-        Object input = irtg.getInterpretation("string").getAlgebra().parseString(sentInternal.stream().collect(Collectors.joining(" ")));
-        TreeAutomaton<String> auto = irtg.parseSimple("string", input);
+		List<String> input = stringInterpretation.getAlgebra().parseString(sentInternal.stream().collect(Collectors.joining(" ")));
+        TreeAutomaton<Pair<String, List<String>>> auto = irtg.parseSimple(stringInterpretation, input);
         auto.makeAllRulesExplicit();
         //System.err.println(auto);
         Tree<String> vit = auto.viterbi();
@@ -341,7 +345,7 @@ public class Parser {
             return new Pair(UNPARSEABLE_GRAPH, null);
         } else {
             try {
-                SGraph ret = ((Pair<SGraph, Type>)irtg.getInterpretation("graph").interpret(vit)).left;
+                SGraph ret = graphInterpretation.interpret(vit).left;
                 return new Pair(ret, vit);
             } catch (java.lang.Exception ex) {
                 System.err.println("Evaluation in algebra failed!");
@@ -363,7 +367,7 @@ public class Parser {
         String[] tags = new String[sentLength];
         Arrays.fill(tags, "NULL");
         List<String> ops = new ArrayList<>();
-        Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism();
+        Homomorphism hom = graphInterpretation.getHomomorphism();
         tree.dfs(new TreeBottomUpVisitor<String, Void>() {
             @Override
             public Void combine(Tree<String> node, List<Void> childrenValues) {

@@ -187,12 +187,12 @@ class PTBConverter {
         // set up string interpretation
         StringAlgebra stringAlgebra = new StringAlgebra();
         hStr = new Homomorphism(irtg.getAutomaton().getSignature(), stringAlgebra.getSignature());
-        irtg.addInterpretation("i", new Interpretation(stringAlgebra, hStr));
+        irtg.addInterpretation(new Interpretation(stringAlgebra, hStr, "i"));
 
         // set up PTB-tree interpretation
         PtbTreeAlgebra ptbAlgebra = new PtbTreeAlgebra(PARENT_ANNOTATION);
         hPtb = new Homomorphism(irtg.getAutomaton().getSignature(), ptbAlgebra.getSignature());
-        irtg.addInterpretation("ptb", new Interpretation(ptbAlgebra, hPtb));
+        irtg.addInterpretation(new Interpretation(ptbAlgebra, hPtb, "ptb"));
     }
 
     /**

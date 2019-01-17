@@ -91,9 +91,9 @@ public class SplitCoref {
         //read input data
         InterpretedTreeAutomaton dummyIrtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySignature = new Signature();
-        dummyIrtg.addInterpretation("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature)));
-        dummyIrtg.addInterpretation("tree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySignature, dummySignature)));
-        dummyIrtg.addInterpretation("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySignature, dummySignature)));
+        dummyIrtg.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySignature, dummySignature), "string"));
+        dummyIrtg.addInterpretation(new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySignature, dummySignature), "tree"));
+        dummyIrtg.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(dummySignature, dummySignature), "graph"));
         Corpus corpus = Corpus.readCorpus(new FileReader(corpusPath), dummyIrtg);
         BufferedReader origBR = new BufferedReader(new FileReader(origGraphsPath));
         
@@ -180,7 +180,7 @@ public class SplitCoref {
         System.err.println("total edges removed: "+totalEdgesRemoved.getValue());
         
         //write corpus
-        //dummyIrtg.addInterpretation("graphSplit", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySignature, dummySignature)));
+        //dummyIrtg.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(dummySignature, dummySignature), "graphSplit"));
         new CorpusWriter(dummyIrtg, " all (most) non-AM COREF split", "///###", new FileWriter(outPath)).writeCorpus(corpus);
         
         //old test stuff

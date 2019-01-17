@@ -100,7 +100,7 @@ public class BkvBinarizer {
             // assemble output IRTG
             InterpretedTreeAutomaton binarizedIrtg = new InterpretedTreeAutomaton(binarizedRtg);
             for (String interp : interpretationNames) {
-                binarizedIrtg.addInterpretation(interp, new Interpretation(newAlgebras.get(interp), binarizedHom.get(interp)));
+                binarizedIrtg.addInterpretation(new Interpretation(newAlgebras.get(interp), binarizedHom.get(interp), interp));
             }
 
             BinaryRuleFactory ruleFactory = ruleFactoryFactory.apply(binarizedIrtg);

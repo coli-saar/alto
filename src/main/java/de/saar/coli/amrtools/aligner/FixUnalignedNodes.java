@@ -70,7 +70,7 @@ public class FixUnalignedNodes {
      * @throws CorpusReadingException 
      */
     public static void fixUnalignedNodes(String corpusPath, int maxRange) throws IOException, CorpusReadingException {
-        Map<String, Interpretation> interps = new HashMap<>();
+        Map<String, Interpretation<?>> interps = new HashMap<>();
         
         Signature dummySig = new Signature();
         interps.put("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));

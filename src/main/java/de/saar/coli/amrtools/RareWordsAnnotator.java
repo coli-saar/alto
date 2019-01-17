@@ -121,9 +121,9 @@ public class RareWordsAnnotator {
         
         InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         Signature dummySig = new Signature();
-        loaderIRTG.addInterpretation("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
-        loaderIRTG.addInterpretation("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        loaderIRTG.addInterpretation("tree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig)));
+        loaderIRTG.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig), "graph"));
+        loaderIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "string"));
+        loaderIRTG.addInterpretation(new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig), "tree"));
         Corpus corpus = Corpus.readCorpus(new FileReader(annotator.corpusPath), loaderIRTG);
         
         BufferedReader alBr = new BufferedReader(new FileReader(annotator.alignmentPath));
@@ -544,18 +544,18 @@ public class RareWordsAnnotator {
         
         //write corpus
         InterpretedTreeAutomaton writerIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
-        writerIRTG.addInterpretation("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("tree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("repgraph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("repstring", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("reptree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("spanmap", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("alignment", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        writerIRTG.addInterpretation("repalignment", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
+        writerIRTG.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig), "graph"));
+        writerIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "string"));
+        writerIRTG.addInterpretation(new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig), "tree"));
+        writerIRTG.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig), "repgraph"));
+        writerIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "repstring"));
+        writerIRTG.addInterpretation(new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig), "reptree"));
+        writerIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "spanmap"));
+        writerIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "alignment"));
+        writerIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "repalignment"));
         if (annotator.palignmentPath != null) {
-            writerIRTG.addInterpretation("alignmentp", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-            writerIRTG.addInterpretation("repalignmentp", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
+            writerIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "alignmentp"));
+            writerIRTG.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), "repalignmentp"));
         }
         try (FileWriter w = new FileWriter(annotator.outPath)) {
             new CorpusWriter(writerIRTG, annotator.comment + " Replaced all words with frequency <= "+annotator.threshold, "///###", w).writeCorpus(outC);

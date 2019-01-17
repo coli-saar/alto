@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.automata.coarse_to_fine;
 
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -35,9 +36,13 @@ public class SiblingFinderCoarserstParser {
     private final SiblingFinderInvhom invhom;
     
     public SiblingFinderCoarserstParser(RuleRefinementTree rrt, InterpretedTreeAutomaton irtg, TreeAutomaton decomp, String interpretation) {
+		this(rrt, irtg, decomp, irtg.getInterpretation(interpretation));
+    }
+
+	public SiblingFinderCoarserstParser(RuleRefinementTree rrt, InterpretedTreeAutomaton irtg, TreeAutomaton decomp, Interpretation<?> interpretation) {
         this.rrt = rrt;
         this.coarsestIRTG = rrt.makeIrtgWithCoarsestAutomaton(irtg);
-        invhom = new SiblingFinderInvhom(decomp, irtg.getInterpretation(interpretation).getHomomorphism());
+        invhom = new SiblingFinderInvhom(decomp, interpretation.getHomomorphism());
         intersect = new SiblingFinderIntersection(irtg.getAutomaton(), invhom);
     }
     

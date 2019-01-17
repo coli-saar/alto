@@ -49,7 +49,7 @@ public class NoSignatureBinaryIrtgInputCodec extends BinaryIrtgInputCodec {
             gAuto.addFinalState(finalState);
         }
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(gAuto);
-        for (Map.Entry<String, Interpretation> interp : in.getInterpretations().entrySet()) {
+        for (Map.Entry<String, Interpretation<?>> interp : in.getInterpretations().entrySet()) {
             Homomorphism hom = new Homomorphism(gAuto.getSignature(), referenceIRTG.getInterpretation(interp.getKey()).getHomomorphism().getTargetSignature());
             for (int i = 1; i<=gAuto.getSignature().getMaxSymbolId(); i++) {
                 Tree<HomomorphismSymbol> term = interp.getValue().getHomomorphism().get(i);
@@ -57,7 +57,7 @@ public class NoSignatureBinaryIrtgInputCodec extends BinaryIrtgInputCodec {
                     hom.add(i, term);
                 }
             }
-            ret.addInterpretation(interp.getKey(), new Interpretation(referenceIRTG.getInterpretation(interp.getKey()).getAlgebra(), hom));
+            ret.addInterpretation(new Interpretation(referenceIRTG.getInterpretation(interp.getKey()).getAlgebra(), hom, interp.getKey()));
         }
         return ret;
     }

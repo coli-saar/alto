@@ -124,8 +124,8 @@ public class BaselineParser2ExtFormat {
         String graphInterp = p2ext.useRepGraph ? "repgraph" : "graph";
 
         InterpretedTreeAutomaton dummyIrtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
-        dummyIrtg.addInterpretation("repstring", new Interpretation(new StringAlgebra(), new Homomorphism(new Signature(), new Signature())));
-        dummyIrtg.addInterpretation(graphInterp, new Interpretation(new GraphAlgebra(), new Homomorphism(new Signature(), new Signature())));
+        dummyIrtg.addInterpretation(new Interpretation(new StringAlgebra(), new Homomorphism(new Signature(), new Signature()), "repstring"));
+        dummyIrtg.addInterpretation(new Interpretation(new GraphAlgebra(), new Homomorphism(new Signature(), new Signature()), graphInterp));
 
         Corpus corpus = Corpus.readCorpus(new FileReader(p2ext.corpusPath), dummyIrtg);
 

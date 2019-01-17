@@ -1243,10 +1243,10 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
         Reader corpusReader = new FileReader(corpusPath);
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(null);
-        Interpretation graphInt = new Interpretation(new GraphAlgebra(), null);
-        Interpretation stringInt = new Interpretation(new StringAlgebra(), null);
-        irtg.addInterpretation("graph", graphInt);
-        irtg.addInterpretation("string", stringInt);
+        Interpretation graphInt = new Interpretation(new GraphAlgebra(), null, "graph");
+        Interpretation stringInt = new Interpretation(new StringAlgebra(), null, "graph");
+        irtg.addInterpretation(graphInt);
+        irtg.addInterpretation(stringInt);
         Corpus corpus = Corpus.readCorpus(corpusReader, irtg);
         writeDecompositionAutomata(targetPath, corpus, start, stop, sourceCount, maxNodes, maxPerNodeCount, onlyBolinas);
     }
