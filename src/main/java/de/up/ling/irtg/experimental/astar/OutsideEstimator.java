@@ -5,8 +5,6 @@
  */
 package de.up.ling.irtg.experimental.astar;
 
-import java.util.Arrays;
-
 /**
  *
  * @author koller

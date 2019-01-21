@@ -144,18 +144,10 @@ public class JGrammarFromWebSelector extends javax.swing.JDialog {
         cbGrammars.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         bOk.setText("Ok");
-        bOk.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bOkActionPerformed(evt);
-            }
-        });
+        bOk.addActionListener(evt -> bOkActionPerformed(evt));
 
         bCancel.setText("Cancel");
-        bCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bCancelActionPerformed(evt);
-            }
-        });
+        bCancel.addActionListener(evt -> bCancelActionPerformed(evt));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

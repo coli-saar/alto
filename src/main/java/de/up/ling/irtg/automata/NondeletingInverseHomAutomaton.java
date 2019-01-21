@@ -7,7 +7,6 @@ package de.up.ling.irtg.automata;
 import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -55,8 +54,8 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
 
         assert hom.isNonDeleting();
 
-        termIDCache = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
-        parentToTermID = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
+        termIDCache = new Int2ObjectOpenHashMap<>();
+        parentToTermID = new Int2ObjectOpenHashMap<>();
     }
 
     @Override
@@ -196,7 +195,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
         
         
         else {
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
 
             IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, f -> {
                 if (f.getLabel().isVariable()) {                      // variable ?i
@@ -255,7 +254,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
             return getRulesTopDownFromExplicitWithTermID(termID, parentState);
         } else {
             Tree<HomomorphismSymbol> rhs = hom.get(label);
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
 
             for (List<Integer> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
                 if (isCompleteSubstitutionTuple(substitutionTuple)) {
@@ -317,18 +316,18 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
     }
 
     private Set<List<Integer>> grtdDfs(Tree<HomomorphismSymbol> rhs, int state, int rhsArity) {
-        Set<List<Integer>> ret = new HashSet<List<Integer>>();
+        Set<List<Integer>> ret = new HashSet<>();
 
         switch (rhs.getLabel().getType()) {
             case CONSTANT:
                 for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap[rhs.getLabel().getValue()], state)) {
-                    List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<Set<List<Integer>>>(); // len = #children
+                    List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<>(); // len = #children
 
                     for (int i = 0; i < rhsRule.getArity(); i++) {
                         childrenSubstitutions.add(grtdDfs(rhs.getChildren().get(i), rhsRule.getChildren()[i], rhsArity));
                     }
 
-                    CartesianIterator<List<Integer>> it = new CartesianIterator<List<Integer>>(childrenSubstitutions);
+                    CartesianIterator<List<Integer>> it = new CartesianIterator<>(childrenSubstitutions);
                     while (it.hasNext()) {
                         List<List<Integer>> tuples = it.next();  // len = # children x # variables
                         List<Integer> merged = mergeSubstitutions(tuples, rhsArity);
@@ -340,7 +339,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
                 break;
 
             case VARIABLE:
-                List<Integer> rret = new ArrayList<Integer>(rhsArity);
+                List<Integer> rret = new ArrayList<>(rhsArity);
                 int varnum = rhs.getLabel().getValue();
 
                 for (int i = 0; i < rhsArity; i++) {
@@ -362,7 +361,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
     // n is number of children, and m is number of variables in homomorphism
     // If n = 0, the method returns [null, ..., null]
     private List<Integer> mergeSubstitutions(List<List<Integer>> tuples, int rhsArity) {
-        List<Integer> merged = new ArrayList<Integer>();  // one entry per variable
+        List<Integer> merged = new ArrayList<>();  // one entry per variable
 
 //        System.err.println("    merge: " + tuples);
         for (int i = 0; i < rhsArity; i++) {

@@ -1,6 +1,5 @@
 package de.up.ling.irtg.util;
 
-import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 

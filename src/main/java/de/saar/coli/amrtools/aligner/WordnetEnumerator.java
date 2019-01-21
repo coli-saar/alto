@@ -6,7 +6,6 @@
 package de.saar.coli.amrtools.aligner;
 
 import com.google.common.collect.Sets;
-import de.up.ling.irtg.corpus.CorpusReadingException;
 import edu.mit.jwi.RAMDictionary;
 import edu.mit.jwi.data.ILoadPolicy;
 import edu.mit.jwi.item.IIndexWord;

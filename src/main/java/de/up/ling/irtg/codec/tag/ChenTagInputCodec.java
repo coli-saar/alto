@@ -283,8 +283,8 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * positions are 0-based, and represent exit times in a DFS.
      */
     static class NodePosToChildrenPos {
-        private Map<String, Int2IntMap> map = new HashMap<String, Int2IntMap>();
-        private Object2IntMap<String> etreeNumChildren = new Object2IntOpenHashMap<String>();
+        private Map<String, Int2IntMap> map = new HashMap<>();
+        private Object2IntMap<String> etreeNumChildren = new Object2IntOpenHashMap<>();
         private TagGrammar tagg;
         private static final boolean DEBUG = false;
 

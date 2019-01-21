@@ -51,7 +51,7 @@ class HomAutomaton extends TreeAutomaton<Object> {
         if (!ruleStore.isExplicit()) {
             Iterable<Rule> baseRuleSet = base.getRuleSet();
             SetMultimap<Integer, Integer> chainRules = HashMultimap.create();  // maps base state IDs to sets of base state IDs
-            final Set<Integer> labels = new HashSet<Integer>();
+            final Set<Integer> labels = new HashSet<>();
 
             for (final Rule rule : baseRuleSet) {
                 final Tree<HomomorphismSymbol> homImage = hom.get(rule.getLabel());

@@ -45,7 +45,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -294,11 +293,8 @@ public class Aligner {
 //                    nnsAndBestAndScore.add(new Pair(new Pair(nn, objsAndScores.get(0).left), objsAndScores.get(0).right*objsAndScores.get(0).right/totalSum));//
 //                }
                 nn2objsAndScores.put(nn, objsAndScores);
-                nn2objsAndProbs.put(nn, objsAndScores.stream().map(new Function<Pair<Object, Double>, Pair<Object, Double>>() {
-                    @Override
-                    public Pair<Object, Double> apply(Pair<Object, Double> p) {
-                        return new Pair(p.left, p.right/totalSum);//TODO maybe use softmax instead? would allow use of negative scores
-                    }
+                nn2objsAndProbs.put(nn, objsAndScores.stream().map((Function<Pair<Object, Double>, Pair<Object, Double>>) p -> {
+                    return new Pair(p.left, p.right/totalSum);//TODO maybe use softmax instead? would allow use of negative scores
                 }).collect(Collectors.toList()));
             }
             
@@ -379,11 +375,8 @@ public class Aligner {
                     nnsAndBestAndScore.add(new Pair(new Pair(nn, objsAndScores.get(0).left), objsAndScores.get(0).right*(objsAndScores.get(0).right/totalSum)));
                 }
                 debug_nn2objsAndScores.put(nn, objsAndScores);
-                debug_nn2objsAndProbs.put(nn, objsAndScores.stream().map(new Function<Pair<Object, Double>, Pair<Object, Double>>() {
-                    @Override
-                    public Pair<Object, Double> apply(Pair<Object, Double> p) {
-                        return new Pair(p.left, p.right/totalSum);//TODO maybe use softmax instead? would allow use of negative scores
-                    }
+                debug_nn2objsAndProbs.put(nn, objsAndScores.stream().map((Function<Pair<Object, Double>, Pair<Object, Double>>) p -> {
+                    return new Pair(p.left, p.right/totalSum);//TODO maybe use softmax instead? would allow use of negative scores
                 }).collect(Collectors.toList()));
             }
             

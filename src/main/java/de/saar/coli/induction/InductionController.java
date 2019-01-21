@@ -7,7 +7,6 @@ package de.saar.coli.induction;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.util.TupleIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.FileInputStream;
 import java.io.IOException;

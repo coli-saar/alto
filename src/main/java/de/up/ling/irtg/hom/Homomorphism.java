@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.hom;
 
-import de.up.ling.irtg.TreeWithInterpretations;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
@@ -55,10 +54,10 @@ public class Homomorphism implements Serializable {
         srcSignature = src;
         tgtSignature = tgt;
 
-        terms = new ArrayList<Tree<HomomorphismSymbol>>();
-        termToId = new Object2IntOpenHashMap<Tree<HomomorphismSymbol>>();
+        terms = new ArrayList<>();
+        termToId = new Object2IntOpenHashMap<>();
         labelToLabelSet = new Int2IntOpenHashMap();
-        labelSetList = new ArrayList<IntSet>();
+        labelSetList = new ArrayList<>();
 
         srcSymbolToRhsSymbols = new Int2ObjectOpenHashMap<>();
 
@@ -440,7 +439,7 @@ public class Homomorphism implements Serializable {
 
     public boolean isNonDeleting() {
         checkNondeleting();
-        return nondeleting.booleanValue();
+        return nondeleting;
     }
 
     /**

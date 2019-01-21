@@ -69,7 +69,7 @@ public class BinarizingAlgebraSeed extends RegularSeed {
     }
 
     private Tree<String> labelWithVarChildren(String label) {
-        List<Tree<String>> children = new ArrayList<Tree<String>>();
+        List<Tree<String>> children = new ArrayList<>();
         for (int i = 1; i <= sourceSignature.getArityForLabel(label); i++) {
             children.add(Tree.create("?" + i));
         }

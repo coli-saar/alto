@@ -20,7 +20,6 @@ import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.IntAgenda;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
-import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;

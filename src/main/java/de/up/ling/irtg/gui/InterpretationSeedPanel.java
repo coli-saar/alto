@@ -72,11 +72,7 @@ public class InterpretationSeedPanel extends javax.swing.JPanel {
         jLabel1.setText("Algebra:");
 
         cbAlgebra.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cbAlgebra.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cbAlgebraActionPerformed(evt);
-            }
-        });
+        cbAlgebra.addActionListener(evt -> cbAlgebraActionPerformed(evt));
 
         jLabel3.setText("Regular seed:");
 

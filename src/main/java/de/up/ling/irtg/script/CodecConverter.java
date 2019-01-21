@@ -14,7 +14,6 @@ import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.util.Util;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;

@@ -8,7 +8,7 @@ package de.up.ling.irtg.codec;
 
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.util.Util;
-import java.io.IOException;
+
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;

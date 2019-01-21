@@ -67,7 +67,7 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializ
 
         if (knownRules == null) {
             // no rules known at all for this RHS => always return true
-            knownRules = new HashSet<Rule>();
+            knownRules = new HashSet<>();
             rulesHere.put(rule.getLabel(), knownRules);
             knownRules.add(rule);
         } else {
@@ -108,7 +108,7 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializ
 
     @Override
     public Iterable<Rule> getAllRules() {
-        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
+        List<Iterable<Rule>> ruleSets = new ArrayList<>();
 
         storedRules.foreach(entry -> {
             ruleSets.addAll(entry.values());

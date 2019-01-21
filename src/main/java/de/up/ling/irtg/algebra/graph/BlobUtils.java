@@ -90,7 +90,7 @@ public class BlobUtils {
     //--------------------------------------------    specific phenomena   ----------------------------
     
     public final static Set<String> CONJUNCTION_NODE_LABELS = Collections.unmodifiableSet(
-        new HashSet<String>(Arrays.asList("and", "or", "contrast-01", "either", "neither")));
+            new HashSet<>(Arrays.asList("and", "or", "contrast-01", "either", "neither")));
     
     
     public static boolean isConjunctionNode(SGraph graph, GraphNode node) {
@@ -446,24 +446,21 @@ public class BlobUtils {
                         totalCounts.add(l, temp.get(l));
                     }
                 }
-                candidates.sort(new Comparator<GraphNode>() {
-                    @Override
-                    public int compare(GraphNode o1, GraphNode o2) {
-                        //return negative if o1 should win
-                        try {
-                            int min1 = totalCounts.getAllSeen().stream()
-                                    .mapToInt(l -> totalCounts.get(l)-target2edge2Count.get(o1).get(l)).min().getAsInt();
-                            int min2 = totalCounts.getAllSeen().stream()
-                                    .mapToInt(l -> totalCounts.get(l)-target2edge2Count.get(o2).get(l)).min().getAsInt();
-                            if (min1 != min2) {
-                                return min2-min1;
-                            } else {
-                                return target2edge2minRealizer.get(o1).get(label).compareTo(target2edge2minRealizer.get(o2).get(label));
-                            }
-                        } catch (java.util.NoSuchElementException ex) {
-                            System.err.println("WARNING no counts left when finding targets: "+graph.toIsiAmrString());
-                            return 0;
+                candidates.sort((o1, o2) -> {
+                    //return negative if o1 should win
+                    try {
+                        int min1 = totalCounts.getAllSeen().stream()
+                                .mapToInt(l -> totalCounts.get(l)-target2edge2Count.get(o1).get(l)).min().getAsInt();
+                        int min2 = totalCounts.getAllSeen().stream()
+                                .mapToInt(l -> totalCounts.get(l)-target2edge2Count.get(o2).get(l)).min().getAsInt();
+                        if (min1 != min2) {
+                            return min2-min1;
+                        } else {
+                            return target2edge2minRealizer.get(o1).get(label).compareTo(target2edge2minRealizer.get(o2).get(label));
                         }
+                    } catch (java.util.NoSuchElementException ex) {
+                        System.err.println("WARNING no counts left when finding targets: "+graph.toIsiAmrString());
+                        return 0;
                     }
                 });
                 GraphNode winner = candidates.get(0);

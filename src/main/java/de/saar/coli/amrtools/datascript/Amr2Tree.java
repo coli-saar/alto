@@ -5,13 +5,10 @@
  */
 package de.saar.coli.amrtools.datascript;
 
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+
 import java.util.List;
 
 /**

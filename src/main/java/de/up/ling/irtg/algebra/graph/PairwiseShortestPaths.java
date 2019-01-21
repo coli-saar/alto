@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DirectedMultigraph;
 
 /**

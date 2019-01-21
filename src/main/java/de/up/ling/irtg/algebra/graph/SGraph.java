@@ -1061,7 +1061,7 @@ public class SGraph{
 
         // iterate over all combinations
         List<String> nodesInOrder = new ArrayList<>(possibleNodeRenamings.keySet());
-        _foreachMatchingSubgraph(nodesInOrder, 0, possibleNodeRenamings, new HashMap<String, String>(), subgraph, fn);
+        _foreachMatchingSubgraph(nodesInOrder, 0, possibleNodeRenamings, new HashMap<>(), subgraph, fn);
     }
 
     private void _foreachMatchingSubgraph(List<String> nodes, int pos, Map<String, Collection<String>> possibleRenamings, Map<String, String> selectedRenaming, SGraph subgraph, Consumer<SGraph> fn) {

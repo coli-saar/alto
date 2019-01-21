@@ -1,6 +1,5 @@
 package de.saar.coli.amrtools.datascript;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +51,7 @@ public class JamrDataFromAltoCorpus {
         }
 
         @SuppressWarnings("rawtypes")
-        ArrayList<Pair<String, Algebra>> l = new ArrayList<Pair<String, Algebra>>(3);
+        ArrayList<Pair<String, Algebra>> l = new ArrayList<>(3);
 
         CorpusUtils.addInt(l, "graph", CorpusUtils.IntTypes.GRAPH);
         CorpusUtils.addInt(l, "string", CorpusUtils.IntTypes.STRING);

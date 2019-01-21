@@ -8,7 +8,7 @@ package de.up.ling.irtg.codec;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import java.io.IOException;
+
 import java.io.InputStream;
 
 /**

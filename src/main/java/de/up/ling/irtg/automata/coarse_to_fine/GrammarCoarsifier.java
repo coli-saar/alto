@@ -20,7 +20,7 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

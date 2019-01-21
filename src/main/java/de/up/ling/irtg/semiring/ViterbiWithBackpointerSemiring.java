@@ -32,13 +32,13 @@ public class ViterbiWithBackpointerSemiring implements Semiring<Pair<Double, Rul
             // otherwise could get zero * zero = +Infinity
             return new Pair(ZERO, x.right);
         } else {
-            return new Pair<Double, Rule>(x.left * y.left, x.right);
+            return new Pair<>(x.left * y.left, x.right);
         }
     }
 
     @Override
     public Pair<Double, Rule> zero() {
-        return new Pair<Double, Rule>(ZERO, null);
+        return new Pair<>(ZERO, null);
     }
 
 }

@@ -16,7 +16,7 @@ public class Either<A,B> {
     private B second;
 
     public static <A,B> Either<A,B> makeFirst(A first) {
-        Either<A,B> ret = new Either<A,B>();
+        Either<A,B> ret = new Either<>();
         ret.first = first;
         ret.second = null;
         ret.isFirst = true;
@@ -24,7 +24,7 @@ public class Either<A,B> {
     }
 
     public static <A,B> Either<A,B> makeSecond(B second) {
-        Either<A,B> ret = new Either<A,B>();
+        Either<A,B> ret = new Either<>();
         ret.first = null;
         ret.second = second;
         ret.isFirst = false;

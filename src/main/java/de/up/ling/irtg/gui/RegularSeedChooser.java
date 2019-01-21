@@ -39,17 +39,17 @@ public class RegularSeedChooser extends javax.swing.JDialog {
 
         ispContainer.setLayout(new BoxLayout(ispContainer, BoxLayout.Y_AXIS));
 
-        List<Class> algebraClasses = new ArrayList<Class>();
+        List<Class> algebraClasses = new ArrayList<>();
         Iterators.addAll(algebraClasses, Algebra.getAllAlgebraClasses());
         Collections.sort(algebraClasses, new ClassByNameComparator());
 
-        List<Class> regularSeedClasses = new ArrayList<Class>();
+        List<Class> regularSeedClasses = new ArrayList<>();
         Iterators.addAll(regularSeedClasses, RegularSeed.getAllRegularSeedClasses());
         Collections.sort(regularSeedClasses, new ClassByNameComparator());
 
         this.irtg = irtg;
 
-        isPanels = new HashMap<String, InterpretationSeedPanel>();
+        isPanels = new HashMap<>();
 
         for (String interp : irtg.getInterpretations().keySet()) {
             InterpretationSeedPanel isp = new InterpretationSeedPanel(interp, algebraClasses, regularSeedClasses);
@@ -103,18 +103,10 @@ public class RegularSeedChooser extends javax.swing.JDialog {
         );
 
         okButton.setText("Ok");
-        okButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                okButtonActionPerformed(evt);
-            }
-        });
+        okButton.addActionListener(evt -> okButtonActionPerformed(evt));
 
         cancelButton.setText("Cancel");
-        cancelButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancelButtonActionPerformed(evt);
-            }
-        });
+        cancelButton.addActionListener(evt -> cancelButtonActionPerformed(evt));
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -146,8 +138,8 @@ public class RegularSeedChooser extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        selectedAlgebras = new HashMap<String, Algebra>();
-        selectedSeeds = new HashMap<String, RegularSeed>();
+        selectedAlgebras = new HashMap<>();
+        selectedSeeds = new HashMap<>();
 
         for (String interp : irtg.getInterpretations().keySet()) {
             try {

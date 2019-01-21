@@ -1031,7 +1031,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         }
 
         public Set<Rule> makeBottomUpRules(int[] children, int n, TreeAutomaton<Pair<Span, Span>> auto) {
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
             Pair parent = null;
 
             if (children.length != 2) {
@@ -1053,7 +1053,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         }
 
         public static List<String> concat(List<String> x, List<String> y) {
-            List<String> ret = new ArrayList<String>(x);
+            List<String> ret = new ArrayList<>(x);
             ret.addAll(y);
             return ret;
         }

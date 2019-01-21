@@ -178,7 +178,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         if (derivationTree == null) {
             return null;
         } else {
-            Map<String, Object> ret = new HashMap<String, Object>();
+            Map<String, Object> ret = new HashMap<>();
 			interpretations.forEach((k,v) -> {ret.put(k, interpret(derivationTree, v));});
             return ret;
         }
@@ -573,7 +573,7 @@ public class InterpretedTreeAutomaton implements Serializable {
             }
 
             // sum over rules with same parent state to obtain state counts
-            Map<Integer, Double> globalStateCount = new HashMap<Integer, Double>();
+            Map<Integer, Double> globalStateCount = new HashMap<>();
             for (int state : automaton.getAllStates()) {
                 globalStateCount.put(state, 0.0);
             }
@@ -1010,7 +1010,7 @@ public class InterpretedTreeAutomaton implements Serializable {
     public String toString() {
         StringWriter buf = new StringWriter();
         PrintWriter pw = new PrintWriter(buf);
-        List<String> interpretationOrder = new ArrayList<String>(interpretations.keySet());
+        List<String> interpretationOrder = new ArrayList<>(interpretations.keySet());
 
         for (String interp : interpretationOrder) {
             pw.println("interpretation " + interp + ": " + interpretations.get(interp).getAlgebra().getClass().getName());
@@ -1179,15 +1179,11 @@ public class InterpretedTreeAutomaton implements Serializable {
             //now the signatures in the algebras
             getInterpretations().entrySet().stream().forEach((entry) -> {
                 Algebra algebraHere = filteredAlgebras.get(entry.getKey());
-                entry.getValue().getHomomorphism().get(matchingRule.getLabel()).dfs(new TreeBottomUpVisitor<HomomorphismSymbol, Void>() {
-
-                    @Override
-                    public Void combine(Tree<HomomorphismSymbol> tree, List<Void> list) {
-                        if (!tree.getLabel().isVariable()) {
-                            algebraHere.getSignature().addSymbol(entry.getValue().getHomomorphism().getTargetSignature().resolveSymbolId(tree.getLabel().getValue()), list.size());
-                        }
-                        return null;
+                entry.getValue().getHomomorphism().get(matchingRule.getLabel()).dfs((TreeBottomUpVisitor<HomomorphismSymbol, Void>) (tree, list) -> {
+                    if (!tree.getLabel().isVariable()) {
+                        algebraHere.getSignature().addSymbol(entry.getValue().getHomomorphism().getTargetSignature().resolveSymbolId(tree.getLabel().getValue()), list.size());
                     }
+                    return null;
                 });
             });
         }

@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.codec;
 
-import com.google.common.io.Files;
 import de.saar.coli.featstruct.AvmFeatureStructure;
 import de.saar.coli.featstruct.FeatureStructure;
 import de.saar.coli.featstruct.PlaceholderFeatureStructure;
@@ -28,9 +27,8 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import static de.up.ling.irtg.codec.tulipac.TulipacParser.*;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
-import java.io.File;
+
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

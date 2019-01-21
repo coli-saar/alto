@@ -27,7 +27,7 @@ public class SingletonAutomaton extends TreeAutomaton<String> {
 
         treeWithIntLabels = getSignature().addAllSymbols(tree);
         
-        labels = new HashSet<Integer>();
+        labels = new HashSet<>();
         leafLabelsToStateIds = ArrayListMultimap.create();
 
         collectStatesAndLabels(treeWithIntLabels, "q");
@@ -40,7 +40,7 @@ public class SingletonAutomaton extends TreeAutomaton<String> {
 
     @Override
     public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
-        Set<Rule> ret = new HashSet<Rule>();
+        Set<Rule> ret = new HashSet<>();
 
         if (childStates.length == 0) {
             for (int state : leafLabelsToStateIds.get(label)) {
@@ -83,7 +83,7 @@ public class SingletonAutomaton extends TreeAutomaton<String> {
 
     @Override
     public Set<Rule> getRulesTopDown(int label, int parentState) {
-        Set<Rule> ret = new HashSet<Rule>();
+        Set<Rule> ret = new HashSet<>();
         String parentPath = getStateForId(parentState);
         Tree<Integer> t = treeWithIntLabels.selectWithSeparators(parentPath, 1, SEPARATOR);
 

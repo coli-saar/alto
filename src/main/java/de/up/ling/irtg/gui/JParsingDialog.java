@@ -177,33 +177,17 @@ public class JParsingDialog extends javax.swing.JDialog {
 
         jLabel1.setText("Algorithm");
 
-        cbAlgorithm.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cbAlgorithmActionPerformed(evt);
-            }
-        });
+        cbAlgorithm.addActionListener(evt -> cbAlgorithmActionPerformed(evt));
 
         jLabel2.setText("Lexical filtering");
 
-        chFiltering.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chFilteringActionPerformed(evt);
-            }
-        });
+        chFiltering.addActionListener(evt -> chFilteringActionPerformed(evt));
 
-        cbFiltering.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cbFilteringActionPerformed(evt);
-            }
-        });
+        cbFiltering.addActionListener(evt -> cbFilteringActionPerformed(evt));
 
         jLabel4.setText("Non-null filtering");
 
-        chNullFiltering.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chNullFilteringActionPerformed(evt);
-            }
-        });
+        chNullFiltering.addActionListener(evt -> chNullFilteringActionPerformed(evt));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -255,27 +239,15 @@ public class JParsingDialog extends javax.swing.JDialog {
         buttonGroup1.add(rbNone);
         rbNone.setSelected(true);
         rbNone.setText("none");
-        rbNone.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rbNoneActionPerformed(evt);
-            }
-        });
+        rbNone.addActionListener(evt -> rbNoneActionPerformed(evt));
 
         buttonGroup1.add(rbBeamSearch);
         rbBeamSearch.setText("beam search");
-        rbBeamSearch.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rbBeamSearchActionPerformed(evt);
-            }
-        });
+        rbBeamSearch.addActionListener(evt -> rbBeamSearchActionPerformed(evt));
 
         buttonGroup1.add(rbCoarseToFine);
         rbCoarseToFine.setText("coarse-to-fine");
-        rbCoarseToFine.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rbCoarseToFineActionPerformed(evt);
-            }
-        });
+        rbCoarseToFine.addActionListener(evt -> rbCoarseToFineActionPerformed(evt));
 
         lbThreshold.setText("Threshold");
 
@@ -284,11 +256,7 @@ public class JParsingDialog extends javax.swing.JDialog {
         lbFtcMap.setText("Fine-to-coarse map");
 
         bFtcMapFileChooser.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/open-16x16.png"))); // NOI18N
-        bFtcMapFileChooser.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bFtcMapFileChooserActionPerformed(evt);
-            }
-        });
+        bFtcMapFileChooser.addActionListener(evt -> bFtcMapFileChooserActionPerformed(evt));
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -340,18 +308,10 @@ public class JParsingDialog extends javax.swing.JDialog {
         );
 
         bOk.setText("Ok");
-        bOk.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bOkActionPerformed(evt);
-            }
-        });
+        bOk.addActionListener(evt -> bOkActionPerformed(evt));
 
         bCancel.setText("Cancel");
-        bCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bCancelActionPerformed(evt);
-            }
-        });
+        bCancel.addActionListener(evt -> bCancelActionPerformed(evt));
 
         pDummy.setBackground(new java.awt.Color(255, 0, 204));
 

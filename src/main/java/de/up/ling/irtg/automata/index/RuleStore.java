@@ -51,7 +51,7 @@ public class RuleStore implements Serializable {
         this.topDown = topDown;
         this.bottomUp = bottomUp;
 
-        unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
+        unprocessedUpdatesForRulesForRhsState = new ArrayList<>();
         unprocessedUpdatesForBottomUp = new ArrayList<>();
 
         explicit = false;
@@ -167,29 +167,26 @@ public class RuleStore implements Serializable {
 
     public void processNewRulesForRhs() {
         if (rulesForRhsState == null) {
-            rulesForRhsState = new Int2ObjectOpenHashMap<List<Iterable<Rule>>>();
+            rulesForRhsState = new Int2ObjectOpenHashMap<>();
             final IntSet visitedInEntry = new IntOpenHashSet(); //new BitSet(getStateInterner().getNextIndex());
 
-            getTrie().foreachWithKeys(new IntTrie.EntryVisitor<Int2ObjectMap<Collection<Rule>>>() {
+            getTrie().foreachWithKeys((keys, value) -> {
+                visitedInEntry.clear();
 
-                public void visit(IntList keys, Int2ObjectMap<Collection<Rule>> value) {
-                    visitedInEntry.clear();
+                for (int state : keys) {
+                    if (!visitedInEntry.contains(state)) {
+                        // don't count a rule twice just because two of its
+                        // children are the same
+                        visitedInEntry.add(state);
 
-                    for (int state : keys) {
-                        if (!visitedInEntry.contains(state)) {
-                            // don't count a rule twice just because two of its
-                            // children are the same
-                            visitedInEntry.add(state);
+                        List<Iterable<Rule>> rulesHere = rulesForRhsState.get(state);
 
-                            List<Iterable<Rule>> rulesHere = rulesForRhsState.get(state);
-
-                            if (rulesHere == null) {
-                                rulesHere = new ArrayList<Iterable<Rule>>();
-                                rulesForRhsState.put(state, rulesHere);
-                            }
-
-                            rulesHere.add(Iterables.concat(value.values()));
+                        if (rulesHere == null) {
+                            rulesHere = new ArrayList<>();
+                            rulesForRhsState.put(state, rulesHere);
                         }
+
+                        rulesHere.add(Iterables.concat(value.values()));
                     }
                 }
             });

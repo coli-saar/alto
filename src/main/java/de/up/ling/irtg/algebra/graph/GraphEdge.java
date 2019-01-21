@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.util.Util;
 import java.util.Objects;
 import java.util.function.Function;
 import org.jgrapht.Graph;
@@ -58,18 +57,10 @@ public class GraphEdge{
     }
     
     static final Function<GraphEdge,String> reprF =
-        new Function<GraphEdge, String>() {
-            public String apply(GraphEdge f) {
-                return f.repr();
-            }
-        };
+            f -> f.repr();
     
     public static final Function<GraphEdge,String> labelF =
-        new Function<GraphEdge, String>() {
-            public String apply(GraphEdge f) {
-                return f.getLabel();
-            }
-        };
+            f -> f.getLabel();
     
     @Override
     public String toString() {

@@ -27,11 +27,11 @@ public class JInputForm extends javax.swing.JDialog {
     private Map<String, JTextField> optionFields;
 
     public static void main(String[] args) {
-        List<String> interps = new ArrayList<String>();
+        List<String> interps = new ArrayList<>();
         interps.add("string");
         interps.add("tree");
 
-        List<Boolean> hasOptions = new ArrayList<Boolean>();
+        List<Boolean> hasOptions = new ArrayList<>();
         hasOptions.add(false);
         hasOptions.add(true);
 
@@ -83,7 +83,7 @@ public class JInputForm extends javax.swing.JDialog {
         GridBagLayout gridbag = new GridBagLayout();
         jif.inputPanel.setLayout(gridbag);
 
-        jif.inputFields = new HashMap<String, JTextField>();
+        jif.inputFields = new HashMap<>();
 
         int nextY = 0;
 
@@ -127,7 +127,7 @@ public class JInputForm extends javax.swing.JDialog {
         gridbag = new GridBagLayout();
         jif.optionsPanel.setLayout(gridbag);
 
-        jif.optionFields = new HashMap<String, JTextField>();
+        jif.optionFields = new HashMap<>();
 
         nextY = 0;
 
@@ -182,7 +182,7 @@ public class JInputForm extends javax.swing.JDialog {
         GridBagLayout gridbag = new GridBagLayout();
         jif.inputPanel.setLayout(gridbag);
 
-        jif.inputFields = new HashMap<String, JTextField>();
+        jif.inputFields = new HashMap<>();
 
         int nextY = 0;
 
@@ -287,18 +287,10 @@ public class JInputForm extends javax.swing.JDialog {
         );
 
         okButton.setText("OK");
-        okButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                okButtonActionPerformed(evt);
-            }
-        });
+        okButton.addActionListener(evt -> okButtonActionPerformed(evt));
 
         cancelButton.setText("Cancel");
-        cancelButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancelButtonActionPerformed(evt);
-            }
-        });
+        cancelButton.addActionListener(evt -> cancelButtonActionPerformed(evt));
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -335,8 +327,8 @@ public class JInputForm extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
-        inputValues = new HashMap<String, String>();
-        optionValues = new HashMap<String, String>();
+        inputValues = new HashMap<>();
+        optionValues = new HashMap<>();
 
         for (String intp : inputFields.keySet()) {
             if (!"".equals(inputFields.get(intp).getText())) {

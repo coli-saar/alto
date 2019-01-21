@@ -31,11 +31,7 @@ public class MaxentWeightsFrame extends JTableDialog<JTreeAutomaton.FtWeight> {
 
         JMenuItem miSaveWeights = new JMenuItem("Save Weights ...");
         miSaveWeights.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, keymask));
-        miSaveWeights.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miSaveActionPerformed(evt);
-            }
-        });
+        miSaveWeights.addActionListener(evt -> miSaveActionPerformed(evt));
         
         fileMenu.insert(miSaveWeights, 0);
         fileMenu.insertSeparator(1);

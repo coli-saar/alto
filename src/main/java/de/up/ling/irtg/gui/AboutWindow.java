@@ -8,7 +8,6 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.util.BuildProperties;
 import de.up.ling.irtg.util.Logging;
 import java.awt.Desktop;
-import java.io.IOException;
 import java.net.URI;
 
 /**
@@ -58,22 +57,14 @@ public class AboutWindow extends javax.swing.JDialog {
         jLabel2.setText("<html>Alto is being developed at the<br/>University of Potsdam</html>");
 
         bOk.setText("Ok");
-        bOk.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bOkActionPerformed(evt);
-            }
-        });
+        bOk.addActionListener(evt -> bOkActionPerformed(evt));
 
         lVersion.setText("Version");
 
         lBuild.setText("Build");
 
         bWebsite.setText("Visit Alto Website");
-        bWebsite.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bWebsiteActionPerformed(evt);
-            }
-        });
+        bWebsite.addActionListener(evt -> bWebsiteActionPerformed(evt));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

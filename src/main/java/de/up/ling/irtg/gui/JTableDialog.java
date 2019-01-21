@@ -39,7 +39,7 @@ public class JTableDialog<E> extends javax.swing.JFrame {
         if (data != null && !data.isEmpty()) {
             E first = data.get(0);
 
-            Vector<String> columnIdentifiers = new Vector<String>();
+            Vector<String> columnIdentifiers = new Vector<>();
             Field[] fields = first.getClass().getDeclaredFields();
             for (int i = 0; i < fields.length; i++) {
                 columnIdentifiers.add(fields[i].getName());
@@ -50,7 +50,7 @@ public class JTableDialog<E> extends javax.swing.JFrame {
             model.setColumnIdentifiers(columnIdentifiers);
 
             for (E element : data) {
-                Vector<String> row = new Vector<String>();
+                Vector<String> row = new Vector<>();
                 for (int i = 0; i < fields.length; i++) {
                     try {
                         row.add(fields[i].get(element).toString());
@@ -106,30 +106,18 @@ public class JTableDialog<E> extends javax.swing.JFrame {
 
         miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.META_MASK));
         miCloseWindow.setText("Close Window");
-        miCloseWindow.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCloseWindowActionPerformed(evt);
-            }
-        });
+        miCloseWindow.addActionListener(evt -> miCloseWindowActionPerformed(evt));
         fileMenu.add(miCloseWindow);
 
         miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miCloseAllWindows.setText("Close All Windows");
-        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCloseAllWindowsActionPerformed(evt);
-            }
-        });
+        miCloseAllWindows.addActionListener(evt -> miCloseAllWindowsActionPerformed(evt));
         fileMenu.add(miCloseAllWindows);
         fileMenu.add(jSeparator1);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
         miQuit.setText("Quit");
-        miQuit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miQuitActionPerformed(evt);
-            }
-        });
+        miQuit.addActionListener(evt -> miQuitActionPerformed(evt));
         fileMenu.add(miQuit);
 
         jMenuBar1.add(fileMenu);

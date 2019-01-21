@@ -68,18 +68,10 @@ public class TextInputDialog extends javax.swing.JDialog {
         jScrollPane1.setViewportView(textArea);
 
         bOk.setText("Ok");
-        bOk.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bOkActionPerformed(evt);
-            }
-        });
+        bOk.addActionListener(evt -> bOkActionPerformed(evt));
 
         bCancel.setText("Cancel");
-        bCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bCancelActionPerformed(evt);
-            }
-        });
+        bCancel.addActionListener(evt -> bCancelActionPerformed(evt));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

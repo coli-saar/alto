@@ -7,7 +7,6 @@ package de.up.ling.irtg.codec.tag;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import de.saar.coli.featstruct.AvmFeatureStructure;
@@ -19,17 +18,13 @@ import de.up.ling.irtg.algebra.FeatureStructureAlgebra;
 import de.up.ling.irtg.algebra.TagStringAlgebra;
 import de.up.ling.irtg.algebra.TagTreeAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecParseException;
-import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.codec.TulipacInputCodec;
-import de.up.ling.irtg.codec.tulipac.TulipacLexer;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
-import java.io.FileInputStream;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

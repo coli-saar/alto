@@ -10,18 +10,10 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.corpus.Corpus;
-import de.up.ling.irtg.corpus.CorpusReadingException;
-import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.siblingfinder.SiblingFinderIntersection;
 import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
-import de.up.ling.tree.ParseException;
-import de.up.ling.tree.Tree;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashSet;
+
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 /**

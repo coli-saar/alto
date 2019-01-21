@@ -87,7 +87,7 @@ class PTBConverter {
         int tokenSize = (args.length > 2) ? Integer.valueOf(args[2]) : TOKEN_SIZE;
         boolean convert = (args.length > 3) ? (!args[3].equals("noconversion")) : CONVERT;
 
-        List<String> interpretationOrder = new ArrayList<String>();
+        List<String> interpretationOrder = new ArrayList<>();
         interpretationOrder.add("i");
         interpretationOrder.add("ptb");
 
@@ -170,8 +170,8 @@ class PTBConverter {
 
         // init members
         corpus = new Corpus();
-        ptbTrees = new ArrayList<Tree<String>>();
-        ruleMap = new HashMap<String, Integer>();
+        ptbTrees = new ArrayList<>();
+        ruleMap = new HashMap<>();
 
         log.setLevel(Level.ALL);
     }
@@ -227,10 +227,10 @@ class PTBConverter {
     private void convert(final String sortByInterpretation) {
         ConcreteTreeAutomaton c = (ConcreteTreeAutomaton) irtg.getAutomaton();
         PtbTreeAlgebra pta = new PtbTreeAlgebra(PARENT_ANNOTATION);
-        List<Instance> instances = new ArrayList<Instance>();
+        List<Instance> instances = new ArrayList<>();
 
         for (Tree<String> ptbTree : ptbTrees) {
-            Map<String, Object> inputObjectsMap = new HashMap<String, Object>();
+            Map<String, Object> inputObjectsMap = new HashMap<>();
             inputObjectsMap.put("ptb", ptbTree);
 
             // extract grammar rules and remember derivation tree
@@ -250,11 +250,7 @@ class PTBConverter {
 
         // if requested, sort instances by length in interpretation sortByInterpretation
         if (sortByInterpretation != null) {
-            Collections.sort(instances, new Comparator<Instance>() {
-                public int compare(Instance t, Instance t1) {
-                    return t.getInputObjects().get(sortByInterpretation).toString().length() - t1.getInputObjects().get(sortByInterpretation).toString().length();
-                }
-            });
+            Collections.sort(instances, (t, t1) -> t.getInputObjects().get(sortByInterpretation).toString().length() - t1.getInputObjects().get(sortByInterpretation).toString().length());
         }
 
         // add instance to corpus
@@ -290,9 +286,9 @@ class PTBConverter {
                     ruleMap.put(ruleString, ruleNameId);
                 }
 
-                List<Tree<HomomorphismSymbol>> ptbChildren = new ArrayList<Tree<HomomorphismSymbol>>();  // children of hom RHS in PTB interpretation
-                List<Tree<Integer>> derivTreeChildren = new ArrayList<Tree<Integer>>();                  // children of node in derivation tree
-                List<String> childStates = new ArrayList<String>();                                      // child states in the grammar rule
+                List<Tree<HomomorphismSymbol>> ptbChildren = new ArrayList<>();  // children of hom RHS in PTB interpretation
+                List<Tree<Integer>> derivTreeChildren = new ArrayList<>();                  // children of node in derivation tree
+                List<String> childStates = new ArrayList<>();                                      // child states in the grammar rule
 
                 if (childrenValues.get(0) == null) {
                     // (only) child was a leaf => nullary terminal symbol
@@ -386,7 +382,7 @@ class PTBConverter {
             return null;
         }
 
-        List<Tree<HomomorphismSymbol>> strChildren = new ArrayList<Tree<HomomorphismSymbol>>();
+        List<Tree<HomomorphismSymbol>> strChildren = new ArrayList<>();
 
         // create a variable name
         String startLabel = "?" + String.valueOf(start);
@@ -494,7 +490,7 @@ class PTBConverter {
             return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
                 @Override
                 public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                    List<Tree<String>> newChildValues = new ArrayList<Tree<String>>();
+                    List<Tree<String>> newChildValues = new ArrayList<>();
                     String labelAsString = node.getLabel();
 
                 // remove the effects of the binarization
@@ -680,7 +676,7 @@ class PTBConverter {
         private Tree<String> parseTree(final Reader reader) throws IOException {
             String label = "";
             StringBuffer buffer = new StringBuffer();
-            List<Tree<String>> children = new ArrayList<Tree<String>>();
+            List<Tree<String>> children = new ArrayList<>();
 
             for (int c; (c = reader.read()) != -1;) {
 
@@ -809,7 +805,7 @@ class PTBConverter {
                     }
 
                     // binarize nodes with children > 2
-                    List<Tree<String>> newChildrenValues = new ArrayList<Tree<String>>();
+                    List<Tree<String>> newChildrenValues = new ArrayList<>();
                     newChildrenValues.add(childrenValues.get(0));
                     newChildrenValues.add(binarize(childrenValues, 1));
 
@@ -826,7 +822,7 @@ class PTBConverter {
          * @return the binarized list
          */
         public Tree<String> binarize(final List<Tree<String>> children, final int index) {
-            List<Tree<String>> newChildren = new ArrayList<Tree<String>>();
+            List<Tree<String>> newChildren = new ArrayList<>();
 
             // add the first child to the list
             newChildren.add(children.get(index));

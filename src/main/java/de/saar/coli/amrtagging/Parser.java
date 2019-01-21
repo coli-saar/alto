@@ -8,7 +8,6 @@ package de.saar.coli.amrtagging;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra;
@@ -24,10 +23,8 @@ import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeBottomUpVisitor;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
-import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -368,26 +365,23 @@ public class Parser {
         Arrays.fill(tags, "NULL");
         List<String> ops = new ArrayList<>();
         Homomorphism hom = graphInterpretation.getHomomorphism();
-        tree.dfs(new TreeBottomUpVisitor<String, Void>() {
-            @Override
-            public Void combine(Tree<String> node, List<Void> childrenValues) {
-                String[] parts = node.getLabel().split("_");
-                if (parts[0].equals("const")) {
-                    tags[Integer.parseInt(parts[1])] = ruleLabel2tag.get(node.getLabel());
-                } else if (parts[0].startsWith("MOD") || parts[0].startsWith("APP")) {
-                    int first;
-                    int second;
-                    if (parts[2].equals("lr")) {
-                        first = Integer.parseInt(parts[4]);
-                        second = Integer.parseInt(parts[5]);
-                    } else {
-                        first = Integer.parseInt(parts[5]);
-                        second = Integer.parseInt(parts[4]);
-                    }
-                    ops.add(hom.get(node.getLabel()).getLabel()+"["+first+","+second+"]");
+        tree.dfs((TreeBottomUpVisitor<String, Void>) (node, childrenValues) -> {
+            String[] parts = node.getLabel().split("_");
+            if (parts[0].equals("const")) {
+                tags[Integer.parseInt(parts[1])] = ruleLabel2tag.get(node.getLabel());
+            } else if (parts[0].startsWith("MOD") || parts[0].startsWith("APP")) {
+                int first;
+                int second;
+                if (parts[2].equals("lr")) {
+                    first = Integer.parseInt(parts[4]);
+                    second = Integer.parseInt(parts[5]);
+                } else {
+                    first = Integer.parseInt(parts[5]);
+                    second = Integer.parseInt(parts[4]);
                 }
-                return null;
+                ops.add(hom.get(node.getLabel()).getLabel()+"["+first+","+second+"]");
             }
+            return null;
         });
         return new Pair<>(tags, ops);
     }

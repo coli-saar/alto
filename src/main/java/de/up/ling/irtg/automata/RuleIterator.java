@@ -32,7 +32,7 @@ class RuleIterator implements Iterator<Iterator<Rule>> {
     
     public RuleIterator(TreeAutomaton automaton) {
         this.automaton = automaton;
-        stateAgenda = new LinkedList<Integer>();
+        stateAgenda = new LinkedList<>();
         visitedStates = new IntOpenHashSet();
 
         stateAgenda.addAll(automaton.getFinalStates());
@@ -47,16 +47,14 @@ class RuleIterator implements Iterator<Iterator<Rule>> {
         int state = stateAgenda.remove();
         Iterable<Rule> rules = automaton.getRulesTopDown(state);
 
-        return Iterators.transform(rules.iterator(), new Function<Rule, Rule>() {
-            public Rule apply(Rule rule) {
-                for (int child : rule.getChildren()) {
-                    if (!visitedStates.contains(child)) {
-                        stateAgenda.add(child);
-                        visitedStates.add(child);
-                    }
+        return Iterators.transform(rules.iterator(), rule -> {
+            for (int child : rule.getChildren()) {
+                if (!visitedStates.contains(child)) {
+                    stateAgenda.add(child);
+                    visitedStates.add(child);
                 }
-                return rule;
             }
+            return rule;
         });
     }
 

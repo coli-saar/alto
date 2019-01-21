@@ -93,7 +93,7 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
             }
 
             // iterate until agenda is empty
-            List<IntSet> remappedChildren = new ArrayList<IntSet>();
+            List<IntSet> remappedChildren = new ArrayList<>();
             int listenerCount = 0;
 
             while (!agenda.isEmpty()) {

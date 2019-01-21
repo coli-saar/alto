@@ -22,7 +22,6 @@ import de.up.ling.irtg.codec.BinaryIrtgInputCodec;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;

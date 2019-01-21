@@ -29,7 +29,6 @@ import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

@@ -162,7 +162,7 @@ public class Interpretation<E> implements Serializable {
      */
     @OperationAnnotation(code = "basicNonDelInvHom")
     public <T> TreeAutomaton<T> basicNonDelInvHom(TreeAutomaton<T> auto) {
-        return new NondeletingInverseHomAutomaton<T>(auto, hom);
+        return new NondeletingInverseHomAutomaton<>(auto, hom);
     }
 
     /**

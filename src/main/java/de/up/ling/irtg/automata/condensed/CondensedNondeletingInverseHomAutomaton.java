@@ -20,13 +20,11 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * A tree automaton that describes the homomorphic pre-image of the language of
@@ -81,7 +79,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         // bottom-up queries of the rhsAutomaton. If the rhsAutomaton does not support
         // such queries, we skip this step, and simply re-run the rhsAutomaton top-down,
         // even on the homomorphic images of constants.
-        statesToNullaryLabelSets = new Int2ObjectOpenHashMap<IntSet>();
+        statesToNullaryLabelSets = new Int2ObjectOpenHashMap<>();
         labelSetsWithVariables = new IntOpenHashSet(validLabelSetIDs);
 
         if (rhsAutomaton.supportsBottomUpQueries()) {
@@ -130,7 +128,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     @Override
     public Iterable<CondensedRule> getCondensedRulesByParentState(int parentState) {
 //        Set<CondensedRule> ret = new HashSet<CondensedRule>();
-        List<CondensedRule> ret = new ArrayList<CondensedRule>();
+        List<CondensedRule> ret = new ArrayList<>();
 
         // It seems wasteful to add the rule to the set here, and then again when we storeRule it
         // in the condensed rule trie. Also, it is probably less frequent that we discover
@@ -289,18 +287,18 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     }
 
     private Set<List<Integer>> grtdDfs(Tree<HomomorphismSymbol> rhs, int state, int rhsArity) {
-        Set<List<Integer>> ret = new HashSet<List<Integer>>();
+        Set<List<Integer>> ret = new HashSet<>();
 
         switch (rhs.getLabel().getType()) {
             case CONSTANT:
                 for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap.remapForward(rhs.getLabel().getValue()), state)) {
-                    List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<Set<List<Integer>>>(); // len = #children
+                    List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<>(); // len = #children
 
                     for (int i = 0; i < rhsRule.getArity(); i++) {
                         childrenSubstitutions.add(grtdDfs(rhs.getChildren().get(i), rhsRule.getChildren()[i], rhsArity));
                     }
 
-                    CartesianIterator<List<Integer>> it = new CartesianIterator<List<Integer>>(childrenSubstitutions);
+                    CartesianIterator<List<Integer>> it = new CartesianIterator<>(childrenSubstitutions);
                     while (it.hasNext()) {
                         List<List<Integer>> tuples = it.next();  // len = # children x # variables
                         List<Integer> merged = mergeSubstitutions(tuples, rhsArity);
@@ -312,7 +310,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
                 break;
 
             case VARIABLE:
-                List<Integer> rret = new ArrayList<Integer>(rhsArity);
+                List<Integer> rret = new ArrayList<>(rhsArity);
                 int varnum = rhs.getLabel().getValue();
 
                 for (int i = 0; i < rhsArity; i++) {
@@ -346,7 +344,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     // n is number of children, and m is number of variables in homomorphism
     // If n = 0, the method returns [null, ..., null]
     private List<Integer> mergeSubstitutions(List<List<Integer>> tuples, int rhsArity) {
-        List<Integer> merged = new ArrayList<Integer>();  // one entry per variable
+        List<Integer> merged = new ArrayList<>();  // one entry per variable
 
 //        System.err.println("    merge: " + tuples);
         for (int i = 0; i < rhsArity; i++) {

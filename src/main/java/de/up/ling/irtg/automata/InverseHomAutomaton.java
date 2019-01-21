@@ -80,7 +80,7 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         if (useCachedRuleBottomUp(label, childStates)) {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
 
             // run RHS automaton on given child states
             IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, tree -> {
@@ -146,13 +146,13 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
     private void makeFailRulesExplicit(int label) {
         int arity = signature.getArity(label);
-        List<Set<Integer>> listOfStateSets = new ArrayList<Set<Integer>>();
+        List<Set<Integer>> listOfStateSets = new ArrayList<>();
 
         for (int i = 0; i < arity; i++) {
             listOfStateSets.add(provisionalStateSet);
         }
 
-        CartesianIterator<Integer> it = new CartesianIterator<Integer>(listOfStateSets);
+        CartesianIterator<Integer> it = new CartesianIterator<>(listOfStateSets);
         while (it.hasNext()) {
             List<Integer> children = it.next();
             // TODO: weight??
@@ -167,7 +167,7 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
             Set<Item> rootItems = rhsTree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Set<Item>>() {
                 @Override
                 public Set<Item> combine(Tree<HomomorphismSymbol> node, List<Set<Item>> childrenValues) {
-                    Set<Item> ret = new HashSet<Item>();
+                    Set<Item> ret = new HashSet<>();
 
                     // BUG - not all states are necessarily known at this point, so
                     // some rules are not found
@@ -176,12 +176,12 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
                             ret.add(new Item(state, subst(node.getLabel(), state)));
                         }
                     } else {
-                        CartesianIterator<Item> it = new CartesianIterator<Item>(childrenValues);
+                        CartesianIterator<Item> it = new CartesianIterator<>(childrenValues);
 
                         while (it.hasNext()) {
                             List<Item> childItems = it.next();
-                            List<Integer> childStates = new ArrayList<Integer>();
-                            List<Map<HomomorphismSymbol, Integer>> childSubsts = new ArrayList<Map<HomomorphismSymbol, Integer>>();
+                            List<Integer> childStates = new ArrayList<>();
+                            List<Map<HomomorphismSymbol, Integer>> childSubsts = new ArrayList<>();
 
                             for (Item item : childItems) {
                                 childStates.add(item.state);
@@ -204,11 +204,11 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
             });
 
             for (Item rootItem : rootItems) {
-                List<List<Integer>> optionsForEachChild = new ArrayList<List<Integer>>();
+                List<List<Integer>> optionsForEachChild = new ArrayList<>();
 
                 for (int i = 0; i < signature.getArity(label); i++) {
                     HomomorphismSymbol sov = HomomorphismSymbol.createVariable("?" + (i + 1));
-                    List<Integer> optionsForThisChild = new ArrayList<Integer>();
+                    List<Integer> optionsForThisChild = new ArrayList<>();
 
                     if (rootItem.substitution.containsKey(sov)) {
                         optionsForThisChild.add(rootItem.substitution.get(sov));
@@ -221,7 +221,7 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
                     optionsForEachChild.add(optionsForThisChild);
                 }
 
-                CartesianIterator<Integer> optionsIterator = new CartesianIterator<Integer>(optionsForEachChild);
+                CartesianIterator<Integer> optionsIterator = new CartesianIterator<>(optionsForEachChild);
                 while (optionsIterator.hasNext()) {
                     // TODO weights
                     storeRuleTopDown(createRule(rootItem.state, label, optionsIterator.next(), 1));
@@ -255,13 +255,13 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
     }
 
     private Map<HomomorphismSymbol, Integer> subst(HomomorphismSymbol sov, int state) {
-        Map<HomomorphismSymbol, Integer> ret = new HashMap<HomomorphismSymbol, Integer>();
+        Map<HomomorphismSymbol, Integer> ret = new HashMap<>();
         ret.put(sov, state);
         return ret;
     }
 
     private Map<HomomorphismSymbol, Integer> mergeSubstitutions(List<Map<HomomorphismSymbol, Integer>> substs) {
-        Map<HomomorphismSymbol, Integer> ret = new HashMap<HomomorphismSymbol, Integer>();
+        Map<HomomorphismSymbol, Integer> ret = new HashMap<>();
 
         for (Map<HomomorphismSymbol, Integer> subst : substs) {
             for (HomomorphismSymbol key : subst.keySet()) {

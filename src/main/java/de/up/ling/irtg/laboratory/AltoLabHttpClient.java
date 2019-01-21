@@ -7,7 +7,6 @@ package de.up.ling.irtg.laboratory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import static org.apache.http.HttpHeaders.USER_AGENT;
@@ -37,7 +36,7 @@ public class AltoLabHttpClient {
         HttpPost loginRequest = new HttpPost(altolabUrl + "login?next=%2F");
         loginRequest.setHeader("User-Agent", USER_AGENT);
 
-        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+        List<NameValuePair> urlParameters = new ArrayList<>();
 
         urlParameters.add(new BasicNameValuePair("name", username));
         urlParameters.add(new BasicNameValuePair("passwd", password));

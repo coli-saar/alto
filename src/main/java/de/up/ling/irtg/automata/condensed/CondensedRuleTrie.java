@@ -25,9 +25,9 @@ public class CondensedRuleTrie {
     private final Int2ObjectMap<IntSet> labelSetIDToParentStateSet;
 
     public CondensedRuleTrie() {
-        map = new Int2ObjectOpenHashMap<CondensedRuleTrie>();
-        labelSetIDToRules = new Int2ObjectOpenHashMap<Set<CondensedRule>>();
-        labelSetIDToParentStateSet = new Int2ObjectOpenHashMap<IntSet>();
+        map = new Int2ObjectOpenHashMap<>();
+        labelSetIDToRules = new Int2ObjectOpenHashMap<>();
+        labelSetIDToParentStateSet = new Int2ObjectOpenHashMap<>();
     }
 
     /**
@@ -62,7 +62,7 @@ public class CondensedRuleTrie {
             if (labelSetIDToRules.containsKey(labelSetID)) {
                 labelSetIDToRules.get(labelSetID).add(rule);
             } else {
-                Set<CondensedRule> internalSet = new HashSet<CondensedRule>();
+                Set<CondensedRule> internalSet = new HashSet<>();
                 internalSet.add(rule);
                 labelSetIDToRules.put(labelSetID, internalSet);
             }
@@ -93,13 +93,13 @@ public class CondensedRuleTrie {
         if( index == childstates.length) {
             if (labelSetIDToRules.containsKey(labelSetID)) {
                 return labelSetIDToRules.get(labelSetID);
-            } else return new HashSet<CondensedRule>();
+            } else return new HashSet<>();
         } else {
             int keyHere = childstates[index];
             CondensedRuleTrie nextTrie = map.get(keyHere);
             
             if( nextTrie == null ) {
-                return new HashSet<CondensedRule>();
+                return new HashSet<>();
             } else {
                 return nextTrie.get(childstates, labelSetID, index+1);
             }

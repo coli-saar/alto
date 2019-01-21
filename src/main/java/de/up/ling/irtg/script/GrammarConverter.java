@@ -7,7 +7,6 @@ package de.up.ling.irtg.script;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.codec.ToStringOutputCodec;
@@ -15,7 +14,6 @@ import static de.up.ling.irtg.script.CodecConverter.listInputCodecs;
 import static de.up.ling.irtg.script.CodecConverter.listOutputCodecs;
 import de.up.ling.irtg.util.Util;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

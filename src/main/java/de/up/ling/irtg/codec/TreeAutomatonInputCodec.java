@@ -76,7 +76,7 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     }
 
     private List<String> statelist(TreeAutomatonParser.State_listContext rule_args) {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
 
         if (rule_args != null) {
             for (TreeAutomatonParser.StateContext sc : rule_args.state()) {

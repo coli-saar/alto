@@ -22,7 +22,6 @@ import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.MutableInteger;
-import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import java.io.FileNotFoundException;
 import java.io.FileReader;

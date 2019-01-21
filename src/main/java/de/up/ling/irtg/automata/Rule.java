@@ -136,7 +136,7 @@ public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
     }
     
     public static List<String> rulesToStrings(Collection<Rule> rules, TreeAutomaton auto) {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
         for( Rule rule : rules ) {
             ret.add(rule.toString(auto));
         }

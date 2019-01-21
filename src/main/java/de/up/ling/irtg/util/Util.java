@@ -7,7 +7,6 @@ package de.up.ling.irtg.util;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -21,7 +20,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -155,7 +153,7 @@ public class Util {
         } else if (timeInNs < 1000000000) {
             return timeInNs / 1000000 + " ms";
         } else {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
 
             if (timeInNs > 60000000000L) {
                 buf.append(timeInNs / 60000000000L + "m ");
@@ -196,13 +194,7 @@ public class Util {
     }
 
     public static <E, F> com.google.common.base.Function<E, F> gfun(Function<E, F> javafun) {
-        return new com.google.common.base.Function<E, F>() {
-            @Override
-            public F apply(E x) {
-                return javafun.apply(x);
-            }
-
-        };
+        return x -> javafun.apply(x);
     }
 
     public static <E> List<E> makeList(int n, Supplier<E> sup) {

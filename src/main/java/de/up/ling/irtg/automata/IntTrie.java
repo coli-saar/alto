@@ -123,7 +123,7 @@ public class IntTrie<E> implements Serializable {
         } else {
             IntTrie<E> next = nextStep.get(key[depth]);
             if (next == null) {
-                next = new IntTrie<E>(depth + 1, factory);
+                next = new IntTrie<>(depth + 1, factory);
                 next.setValueCounter(valueCounter);
                 nextStep.put(key[depth], next);
             }

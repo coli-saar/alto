@@ -82,7 +82,7 @@ public class StringAlgebraSeed extends RegularSeed {
         public OneSymbolAutomaton(String symbol, Signature signature) {
             this.signature = signature;
             
-            addRule(createRule("q", symbol, new ArrayList<String>()));
+            addRule(createRule("q", symbol, new ArrayList<>()));
             addFinalState(getIdForState("q"));
         }        
     }
@@ -91,8 +91,8 @@ public class StringAlgebraSeed extends RegularSeed {
         public SingletonAutomaton(String symbol) {
             signature = targetSignature;
             int arity = sourceSignature.getArityForLabel(symbol);
-            List<String> childStates = new ArrayList<String>();
-            List<String> empty = new ArrayList<String>();
+            List<String> childStates = new ArrayList<>();
+            List<String> empty = new ArrayList<>();
 
             for (int i = 1; i <= arity; i++) {
                 String childState = "q" + i;
@@ -114,7 +114,7 @@ public class StringAlgebraSeed extends RegularSeed {
 
         @Override
         public Set<Rule> getRulesBottomUp(int labelId, int[] childStateIds) {
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
             String label = signature.resolveSymbolId(labelId);
 
             Span[] childStates = new Span[childStateIds.length];
@@ -139,7 +139,7 @@ public class StringAlgebraSeed extends RegularSeed {
 
         @Override
         public Set<Rule> getRulesTopDown(int labelId, int parentStateId) {
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
             String label = signature.resolveSymbolId(labelId);
             Span parentState = getStateForId(parentStateId);
 

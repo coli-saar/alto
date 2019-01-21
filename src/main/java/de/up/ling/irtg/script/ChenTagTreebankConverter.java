@@ -14,7 +14,6 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.BinarizingTagTreeAlgebra;
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.TagStringAlgebra;
 import de.up.ling.irtg.algebra.TagTreeAlgebra;
 import de.up.ling.irtg.binarization.BinarizingAlgebraSeed;
@@ -31,7 +30,7 @@ import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.tree.Tree;
-import java.io.FileNotFoundException;
+
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;

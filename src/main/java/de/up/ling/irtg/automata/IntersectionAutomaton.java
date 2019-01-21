@@ -843,7 +843,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         }
 
         public List<Integer> getRightChildren() {
-            List<Integer> children = new ArrayList<Integer>();
+            List<Integer> children = new ArrayList<>();
             collect(children);
             Collections.reverse(children);
             return children;

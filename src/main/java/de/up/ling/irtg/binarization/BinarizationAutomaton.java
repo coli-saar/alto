@@ -27,7 +27,7 @@ class BinarizationAutomaton extends TreeAutomaton<StringAlgebra.Span> {
 
     @Override
     public Set<Rule> getRulesBottomUp(int labelId, int[] childStateIds) {
-        Set<Rule> ret = new HashSet<Rule>();
+        Set<Rule> ret = new HashSet<>();
         String label = signature.resolveSymbolId(labelId);
 
         StringAlgebra.Span[] childStates = new StringAlgebra.Span[childStateIds.length];
@@ -52,7 +52,7 @@ class BinarizationAutomaton extends TreeAutomaton<StringAlgebra.Span> {
 
     @Override
     public Set<Rule> getRulesTopDown(int labelId, int parentStateId) {
-        Set<Rule> ret = new HashSet<Rule>();
+        Set<Rule> ret = new HashSet<>();
         String label = signature.resolveSymbolId(labelId);
         StringAlgebra.Span parentState = getStateForId(parentStateId);
 

@@ -8,7 +8,6 @@ package de.up.ling.irtg.codec;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.io.FixedNumberCodec;
 import de.up.ling.irtg.io.NumberCodec;
 import de.up.ling.irtg.io.StringCodec;
 import de.up.ling.irtg.io.UtfStringCodec;
@@ -48,7 +47,7 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         NumberCodec nc = new VariableLengthNumberCodec(oos);
         StringCodec sc = new UtfStringCodec(oos);
         
-        List<String> interpNamesInOrder = new ArrayList<String>(irtg.getInterpretations().keySet());
+        List<String> interpNamesInOrder = new ArrayList<>(irtg.getInterpretations().keySet());
         TableOfContents toc = new TableOfContents();
 
         Header header = new Header();

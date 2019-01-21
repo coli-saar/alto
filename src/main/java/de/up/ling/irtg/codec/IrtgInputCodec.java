@@ -59,10 +59,10 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 @CodecMetadata(name = "irtg", description = "IRTG grammar", extension = "irtg", type = InterpretedTreeAutomaton.class)
 public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
-    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
-    private Map<String, Homomorphism> homomorphisms = new HashMap<String, Homomorphism>();
+    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<>();
+    private Map<String, Homomorphism> homomorphisms = new HashMap<>();
     private Map<String, Interpretation<?>> interpretations = new HashMap<>();
-    private Map<String, FeatureFunction> features = new HashMap<String, FeatureFunction>();
+    private Map<String, FeatureFunction> features = new HashMap<>();
 
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws IOException, CodecParseException {
@@ -71,10 +71,10 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
-        automaton = new ConcreteTreeAutomaton<String>();
-        homomorphisms = new HashMap<String, Homomorphism>();
-        interpretations = new HashMap<String, Interpretation<?>>();
-        features = new HashMap<String, FeatureFunction>();
+        automaton = new ConcreteTreeAutomaton<>();
+        homomorphisms = new HashMap<>();
+        interpretations = new HashMap<>();
+        features = new HashMap<>();
 
         try {
             IrtgParser.IrtgContext result = p.irtg();
@@ -188,11 +188,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             throw new CodecParseException("Could not find feature factory class " + classname + " for feature " + id + ": " + e.toString());
         } catch (NoSuchMethodException e) {
             throw new CodecParseException("Could not find feature factory method " + methodname + " in class " + classname + " for feature " + id + ": " + e.toString());
-        } catch (IllegalAccessException e) {
-            throw new CodecParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
-        } catch (IllegalArgumentException e) {
-            throw new CodecParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
-        } catch (InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
             throw new CodecParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
         }
     }
@@ -249,7 +245,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             return Tree.create(vt.variable().VARIABLE().getText());
         } else {
             IrtgParser.CONSTANT_TERMContext ct = (IrtgParser.CONSTANT_TERMContext) t;
-            List<Tree<String>> subtrees = new ArrayList<Tree<String>>();
+            List<Tree<String>> subtrees = new ArrayList<>();
 
             for (IrtgParser.TermContext sub : ct.term()) {
                 subtrees.add(term(sub));

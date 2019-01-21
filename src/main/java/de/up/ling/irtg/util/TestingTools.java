@@ -143,7 +143,7 @@ public class TestingTools {
             childStates[i] = auto.getIdForState(children.get(i));
         }
 
-        Set<Rule> ret = new HashSet<Rule>();
+        Set<Rule> ret = new HashSet<>();
         Iterables.addAll(ret, auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), childStates));
 
         return ret;

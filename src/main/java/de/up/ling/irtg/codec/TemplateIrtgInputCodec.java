@@ -186,7 +186,7 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
             return Tree.create(vt.variable().VARIABLE().getText());
         } else {
             TemplateIrtgParser.CONSTANT_TERMContext ct = (TemplateIrtgParser.CONSTANT_TERMContext) t;
-            List<Tree<String>> subtrees = new ArrayList<Tree<String>>();
+            List<Tree<String>> subtrees = new ArrayList<>();
 
             for (TemplateIrtgParser.TermContext sub : ct.term()) {
                 subtrees.add(term(sub));

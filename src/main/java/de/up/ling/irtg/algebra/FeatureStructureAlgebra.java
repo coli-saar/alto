@@ -16,7 +16,6 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.Logging;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;

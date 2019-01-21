@@ -203,10 +203,10 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     }
 
     private Set<List<String>> project(Set<List<String>> tupleSet, int pos) {
-        Set<List<String>> ret = new HashSet<List<String>>();
+        Set<List<String>> ret = new HashSet<>();
 
         for (List<String> tuple : tupleSet) {
-            List<String> l = new ArrayList<String>();
+            List<String> l = new ArrayList<>();
 
             if (pos < tuple.size()) {
                 l.add(tuple.get(pos));
@@ -218,8 +218,8 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     }
 
     private Set<List<String>> intersect(Set<List<String>> tupleSet, Set<List<String>> filterSet, int pos) {
-        Set<String> filter = new HashSet<String>();
-        Set<List<String>> ret = new HashSet<List<String>>();
+        Set<String> filter = new HashSet<>();
+        Set<List<String>> ret = new HashSet<>();
 
         for (List<String> f : filterSet) {
             filter.add(f.get(0));
@@ -246,11 +246,11 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
      * @return
      */
     private Set<List<String>> member(Set<List<String>> tupleSet, String value) {
-        List<String> memberValue = new ArrayList<String>();
+        List<String> memberValue = new ArrayList<>();
         
         memberValue.add(value);
 
-        Set<List<String>> ret = new HashSet<List<String>>();
+        Set<List<String>> ret = new HashSet<>();
 
         if (tupleSet.contains(memberValue)) {
             ret.add(memberValue);
@@ -260,14 +260,14 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     }
 
     private Set<List<String>> uniq(Set<List<String>> tupleSet, String value) {
-        List<String> uniqArg = new ArrayList<String>();
+        List<String> uniqArg = new ArrayList<>();
 
         uniqArg.add(value);
 
         if (tupleSet.size() == 1 && tupleSet.iterator().next().equals(uniqArg)) {
             return tupleSet;
         } else {
-            return new HashSet<List<String>>();
+            return new HashSet<>();
         }
     }
 

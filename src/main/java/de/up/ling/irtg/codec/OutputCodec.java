@@ -6,7 +6,6 @@
 package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.algebra.graph.SGraph;
-import static de.up.ling.irtg.codec.InputCodec.getAllInputCodecs;
 import de.up.ling.tree.Tree;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

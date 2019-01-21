@@ -51,13 +51,13 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         this.ruleRefiner = ruleRefiner;
         this.itemEvaluator = itemEvaluator;
 
-        streamForState = new Int2ObjectOpenHashMap<StreamForState>();
+        streamForState = new Int2ObjectOpenHashMap<>();
 
         this.progress = 0;
 
         // combine streams for the different start symbols
-        visitedStates = new HashSet<Integer>();
-        globalStream = new SortedMergedStream<EvaluatedItem>(EvaluatedItemComparator.INSTANCE);
+        visitedStates = new HashSet<>();
+        globalStream = new SortedMergedStream<>(EvaluatedItemComparator.INSTANCE);
         for (int q : auto.getFinalStates()) {
             StreamForState sq = getStreamForState(q);
             ((SortedMergedStream<EvaluatedItem>) globalStream).addStream(sq);
@@ -176,10 +176,10 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
         public StreamForState(int state) {
             known = new SortedList<>();
-            ruleStreams = new ArrayList<StreamForRule>();
+            ruleStreams = new ArrayList<>();
             this.state = state;
             nextItemInStream = 0;
-            mergedRuleStream = new SortedMergedStream<EvaluatedItem>(EvaluatedItemComparator.INSTANCE);
+            mergedRuleStream = new SortedMergedStream<>(EvaluatedItemComparator.INSTANCE);
         }
 
         public void addEntryForRule(Rule rule) {
@@ -237,7 +237,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
 
         private List<String> formatKnownTrees() {
-            List<String> ret = new ArrayList<String>();
+            List<String> ret = new ArrayList<>();
             for (EvaluatedItem wt : known) {
                 ret.add(WeightedTree.formatWeightedTree(wt.getWeightedTree(), auto.getSignature()));
             }
@@ -342,14 +342,14 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             this.rule = rule;
             this.refinedRules = ruleRefiner.refine(rule);
 
-            evaluatedItems = new PriorityQueue<EvaluatedItem>();
-            unevaluatedItems = new ArrayList<UnevaluatedItem>();
-            previouslyDiscoveredItem = new HashSet<UnevaluatedItem>();
+            evaluatedItems = new PriorityQueue<>();
+            unevaluatedItems = new ArrayList<>();
+            previouslyDiscoveredItem = new HashSet<>();
 
             // initalize the stream by adding an unevaluated item
             // <0, ..., 0>, indicating that the 1-best tree for this rule
             // can be built from the 1-best trees of the child states
-            List<Integer> listOfZeroes = new ArrayList<Integer>();
+            List<Integer> listOfZeroes = new ArrayList<>();
             for (int i = 0; i < rule.getArity() + 1; i++) {
                 listOfZeroes.add(0);
             }

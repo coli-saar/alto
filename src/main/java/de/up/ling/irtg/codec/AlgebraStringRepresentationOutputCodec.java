@@ -8,7 +8,7 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import java.io.IOException;
+
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;

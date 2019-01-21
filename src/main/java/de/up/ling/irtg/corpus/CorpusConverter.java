@@ -7,7 +7,7 @@ package de.up.ling.irtg.corpus;
 
 import com.google.common.collect.Maps;
 import de.up.ling.tree.Tree;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

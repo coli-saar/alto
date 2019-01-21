@@ -31,7 +31,7 @@ public class PtbParsingEvaluator {
         int i = 1;
 
         for (Instance inst : corpus) {
-            Map<String, Object> input = new HashMap<String, Object>();
+            Map<String, Object> input = new HashMap<>();
             List<String> sentence = (List<String>) inst.getInputObjects().get("i");
             input.put("i", sentence);
 

@@ -32,7 +32,7 @@ public class DecompositionDialog extends javax.swing.JDialog {
         setTitle("Compute decomposition automaton");
         getRootPane().setDefaultButton(okButton);
 
-        algebras = new ArrayList<Algebra>();
+        algebras = new ArrayList<>();
 
         try {
             Iterator<Class> it = Algebra.getAllAlgebraClasses();
@@ -41,9 +41,7 @@ public class DecompositionDialog extends javax.swing.JDialog {
                 Algebra alg = (Algebra) c.newInstance();
                 algebras.add(alg);
             }
-        } catch (InstantiationException ex) {
-            Logger.getLogger(DecompositionDialog.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
+        } catch (InstantiationException | IllegalAccessException ex) {
             Logger.getLogger(DecompositionDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -94,35 +92,19 @@ public class DecompositionDialog extends javax.swing.JDialog {
         jLabel2.setText("Algebra");
 
         cbAlgebra.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cbAlgebra.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cbAlgebraActionPerformed(evt);
-            }
-        });
+        cbAlgebra.addActionListener(evt -> cbAlgebraActionPerformed(evt));
 
         jLabel3.setText("Value");
 
         okButton.setText("Ok");
-        okButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                okButtonActionPerformed(evt);
-            }
-        });
+        okButton.addActionListener(evt -> okButtonActionPerformed(evt));
 
         cancelButton.setText("Cancel");
-        cancelButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancelButtonActionPerformed(evt);
-            }
-        });
+        cancelButton.addActionListener(evt -> cancelButtonActionPerformed(evt));
 
         jLabel1.setText("Options");
 
-        tfOptions.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                tfOptionsActionPerformed(evt);
-            }
-        });
+        tfOptions.addActionListener(evt -> tfOptionsActionPerformed(evt));
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -222,29 +204,21 @@ public class DecompositionDialog extends javax.swing.JDialog {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(DecompositionDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(DecompositionDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(DecompositionDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | javax.swing.UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ex) {
             java.util.logging.Logger.getLogger(DecompositionDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                DecompositionDialog dialog = new DecompositionDialog(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            DecompositionDialog dialog = new DecompositionDialog(new javax.swing.JFrame(), true);
+            dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    System.exit(0);
+                }
+            });
+            dialog.setVisible(true);
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables

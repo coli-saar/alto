@@ -85,7 +85,7 @@ public class FirstOrderModel {
         FirstOrderModel model = new FirstOrderModel();
         
         String optionString = StringTools.slurp(optionReader);
-        Map<String, Set<List<String>>> atomicInterpretations = new HashMap<String, Set<List<String>>>();
+        Map<String, Set<List<String>>> atomicInterpretations = new HashMap<>();
 
         if (!optionString.trim().equals("")) {
 
@@ -99,7 +99,7 @@ public class FirstOrderModel {
 
                 while (preds.hasNext()) {
                     String pred = preds.next();
-                    Set<List<String>> tuples = new HashSet<List<String>>();
+                    Set<List<String>> tuples = new HashSet<>();
                     JsonNode child = root.get(pred);
 
                     if (!child.isArray()) {
@@ -107,7 +107,7 @@ public class FirstOrderModel {
                     } else {
                         int childIndex = 0;
                         for (JsonNode tuple : child) {
-                            List<String> tupleElements = new ArrayList<String>();
+                            List<String> tupleElements = new ArrayList<>();
                             childIndex++;
 
                             if (!tuple.isArray()) {
@@ -144,7 +144,7 @@ public class FirstOrderModel {
                 maxArity = Math.max(maxArity, ls.size());
 
                 for (String x : ls) {
-                    List<String> tuple = new ArrayList<String>();
+                    List<String> tuple = new ArrayList<>();
                     tuple.add(x);
                     allIndividualsAsTuples.add(tuple);
                 }

@@ -8,7 +8,6 @@ package de.up.ling.irtg.script;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.AMDecompositionAutomaton;
 import de.up.ling.irtg.algebra.graph.AMSignatureBuilder;
@@ -28,7 +27,7 @@ import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
-import java.io.FileNotFoundException;
+
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -90,8 +89,6 @@ public class IWCSSpeedTests {
             }
             try {
                 decomp.processAllRulesBottomUp(null, 60000);
-            } catch (InterruptedException ex) {
-                //do nothing
             } catch (java.lang.Throwable ex) {
                 //do nothing
             }

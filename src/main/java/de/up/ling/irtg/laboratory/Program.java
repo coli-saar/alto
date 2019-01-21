@@ -16,7 +16,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.io.FileNotFoundException;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -38,7 +38,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import com.google.common.reflect.ClassPath;
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
@@ -46,7 +45,7 @@ import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import it.unimi.dsi.fastutil.longs.LongIterator;
-import java.util.Comparator;
+
 import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;

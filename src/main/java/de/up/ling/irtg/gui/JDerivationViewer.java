@@ -33,7 +33,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
     private NodeSelectionListener nsl;
     private TreeWithInterpretations twi;
     
-    private Map<Tree<String>,Color> markedNodesInDerivationTree = new IdentityHashMap<Tree<String>, Color>(); // node of dt -> non-null color object => should be marked up in displayables
+    private Map<Tree<String>,Color> markedNodesInDerivationTree = new IdentityHashMap<>(); // node of dt -> non-null color object => should be marked up in displayables
 
 
     /**
@@ -44,10 +44,10 @@ public class JDerivationViewer extends javax.swing.JPanel {
         
         this.nsl = nsl;
 
-        viewsInOrder = new ArrayList<String>();
+        viewsInOrder = new ArrayList<>();
         viewsInOrder.add(DT_KEY);
 
-        displayables = new HashMap<String, JDerivationDisplayable>();
+        displayables = new HashMap<>();
         addDerivationTree();
 
         String[] possibleViews = new String[1];
@@ -74,7 +74,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
             N = irtg.getInterpretations().size() + 1;
         }
 
-        displayables = new HashMap<String, JDerivationDisplayable>();
+        displayables = new HashMap<>();
         String[] possibleViews = new String[N];
         interpretationForSelection = new Interpretation[N - 1];
 
@@ -166,11 +166,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
         jLabel1.setText("View:");
 
-        componentSelector.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                componentSelectorActionPerformed(evt);
-            }
-        });
+        componentSelector.addActionListener(evt -> componentSelectorActionPerformed(evt));
 
         content.setLayout(new java.awt.BorderLayout());
 

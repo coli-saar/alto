@@ -1031,6 +1031,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                     foundO(writer, parent);
                 }
             } else {
+                // FIXME: Is this recursive structure intended?
                 rule2Parent.putAll(rule2Parent);
             }
 

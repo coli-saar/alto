@@ -156,7 +156,7 @@ public class RdgStringAlgebra extends Algebra<List<List<String>>> {
 
             // automaton becomes nondeterministic if the same word
             // occurs twice in the string
-            isBottomUpDeterministic = new HashSet<String>(value.get(0)).size() == n;
+            isBottomUpDeterministic = new HashSet<>(value.get(0)).size() == n;
 
             // find word positions
             Set<String> knownWords = collectKnownWords();
@@ -216,7 +216,7 @@ public class RdgStringAlgebra extends Algebra<List<List<String>>> {
                 }
 
                 List<Integer> wordPositions = positionsOfWordInString.get(word);
-                List<Rule> ret = new ArrayList<Rule>();
+                List<Rule> ret = new ArrayList<>();
 
                 if (DEBUG) {
                     System.err.printf("grbu %s : %s %s\n", word, orderAnnotation, Arrays.toString(children));

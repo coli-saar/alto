@@ -12,13 +12,11 @@ import de.up.ling.irtg.algebra.ParserException;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_COREFMARKER;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -855,7 +853,7 @@ public class AMSignatureBuilder {
         // get all the objects. We put the value first because we want to sort alphabetically by source name
         for (Entry<GraphEdge, String> entryO : map.entrySet()) {
             if (entryO.getValue().matches(OBJ+"[0-9]*")) {
-                objs.add(new Pair<String, GraphEdge>(entryO.getValue(), entryO.getKey()));
+                objs.add(new Pair<>(entryO.getValue(), entryO.getKey()));
             } else {
                 // non-objects can go straight into the retern map
                 ret.put(entryO.getKey(), entryO.getValue());

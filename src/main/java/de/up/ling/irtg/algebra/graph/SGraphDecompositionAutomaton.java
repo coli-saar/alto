@@ -18,7 +18,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -167,7 +166,7 @@ class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                     return memoize(sing(result, labelId, childStates), labelId, childStates);
                 }
             } else {
-                List<Rule> rules = new ArrayList<Rule>();
+                List<Rule> rules = new ArrayList<>();
                 SGraph sgraph = (new IsiAmrInputCodec()).read(new ByteArrayInputStream(label.getBytes()));
 
                 if (sgraph == null) {
@@ -246,7 +245,7 @@ class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
 
     public static void main(String[] args) throws Exception {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/coref.irtg"));
-        Map<String, String> input = new HashMap<String, String>();
+        Map<String, String> input = new HashMap<>();
         input.put("graph", "(u91<root> / want-01    :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01      :ARG0 (u94 / girl)  	  :ARG1 u92)   :dummy u94)");
         for (int i = 0; i < 10; i++) {
             long start = System.nanoTime();

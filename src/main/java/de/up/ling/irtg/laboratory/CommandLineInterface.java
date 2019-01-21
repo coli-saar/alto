@@ -8,7 +8,6 @@ package de.up.ling.irtg.laboratory;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.converters.IParameterSplitter;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.corpus.Corpus;
@@ -25,7 +24,6 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -311,10 +309,7 @@ public class CommandLineInterface {
         }
     }
 
-    private static final ProgressListener dummyListener = new ProgressListener() {
-        @Override
-        public void accept(int currentValue, int maxValue, String string) {
-        }
+    private static final ProgressListener dummyListener = (currentValue, maxValue, string) -> {
     };
 
     private static <E> void withProgressbar(boolean verbose, int width, PrintStream strm, ProgressBarWorker<E> worker) throws Exception {

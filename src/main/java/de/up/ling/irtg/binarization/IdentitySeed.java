@@ -55,7 +55,7 @@ public class IdentitySeed extends RegularSeed {
             assert arity <= 2 : "symbol " + symbol + " has arity " + arity + " > 2";
             assert arity >= 0 : "symbol " + symbol + " has negative arity " + arity;
 
-            ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
+            ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();
 
             String[] varStates = new String[arity];
             for (int i = 0; i < arity; i++) {

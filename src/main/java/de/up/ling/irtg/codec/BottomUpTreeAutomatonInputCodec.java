@@ -49,7 +49,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  */
 @CodecMetadata(name="bu-fta", description="Bottom-up tree automata (Hanneforth style)", extension = "fta", type = TreeAutomaton.class)
 public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
-    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
+    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<>();
 
     @Override
     public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
@@ -58,7 +58,7 @@ public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         
-        automaton = new ConcreteTreeAutomaton<String>();
+        automaton = new ConcreteTreeAutomaton<>();
 
         try {
             BottomUpTreeAutomatonParser.FtaContext result = p.fta();
@@ -90,7 +90,7 @@ public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
     }
 
     private List<String> statelist(BottomUpTreeAutomatonParser.State_listContext rule_args) {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
 
         if (rule_args != null) {
             for (BottomUpTreeAutomatonParser.StateContext sc : rule_args.state()) {

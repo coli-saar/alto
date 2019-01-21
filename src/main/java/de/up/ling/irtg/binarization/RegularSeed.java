@@ -34,7 +34,7 @@ import java.util.ServiceLoader;
  */
 public abstract class RegularSeed {
 
-    private Map<String, TreeAutomaton> binarizationCache = new HashMap<String, TreeAutomaton>();
+    private Map<String, TreeAutomaton> binarizationCache = new HashMap<>();
 
     /**
      * Computes an automaton for all binarizations of a given symbol. If f is a
@@ -72,7 +72,7 @@ public abstract class RegularSeed {
      * @return
      */
     public TreeAutomaton<String> binarize(Tree<String> term) {
-        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
+        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();
         int finalState = binarize(term, ret, "q");
         ret.addFinalState(finalState);
         return ret;
@@ -187,11 +187,7 @@ public abstract class RegularSeed {
      */
     public static Iterator<Class> getAllRegularSeedClasses() {
         ServiceLoader<RegularSeed> rsLoader = ServiceLoader.load(RegularSeed.class);
-        return Iterators.transform(rsLoader.iterator(), new Function<RegularSeed, Class>() {
-            public Class apply(RegularSeed f) {
-                return f.getClass();
-            }
-        });
+        return Iterators.transform(rsLoader.iterator(), f -> f.getClass());
     }
 
     public void printStats() {

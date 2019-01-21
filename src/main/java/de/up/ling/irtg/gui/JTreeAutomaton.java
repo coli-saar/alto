@@ -54,8 +54,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -101,13 +99,13 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             miShowLanguage.setEnabled(false);
         }
 
-        Vector<String> columnIdentifiers = new Vector<String>();
+        Vector<String> columnIdentifiers = new Vector<>();
         columnIdentifiers.add("");
         columnIdentifiers.add("");
         columnIdentifiers.add("");
         columnIdentifiers.add("weight");
 
-        annotationsInOrder = new ArrayList<String>();
+        annotationsInOrder = new ArrayList<>();
         if (annotator != null) {
             annotationsInOrder.addAll(annotator.getAnnotationIdentifiers());
             columnIdentifiers.addAll(annotationsInOrder);
@@ -118,7 +116,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         fillEntries(automaton, annotator);
 
         String type = "Tree automaton";
-        if (annotator != null && annotator instanceof IrtgTreeAutomatonAnnotator) {
+        if (annotator instanceof IrtgTreeAutomatonAnnotator) {
             type = "IRTG";
         }
 
@@ -148,7 +146,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void fillEntries(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         IntSet allStates = new IntOpenHashSet();
 
-        rulesInOrder = new ArrayList<Rule>();
+        rulesInOrder = new ArrayList<>();
         Iterables.addAll(rulesInOrder, T.t("ruleSet", () -> automaton.getRuleSet()));
 
         maxRuleRank = 0;
@@ -156,11 +154,11 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         for (Rule rule : rulesInOrder) {
             allStates.add(rule.getParent());
 
-            Vector<String> row = new Vector<String>();
+            Vector<String> row = new Vector<>();
             row.add(automaton.getStateForId(rule.getParent()).toString() + (automaton.getFinalStates().contains(rule.getParent()) ? "!" : ""));
             row.add("->");
 
-            List<String> resolvedRhsStates = new ArrayList<String>();
+            List<String> resolvedRhsStates = new ArrayList<>();
             for (int childState : rule.getChildren()) {
                 resolvedRhsStates.add(automaton.getStateForId(childState).toString());
                 allStates.add(childState);
@@ -305,67 +303,39 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
         miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
         miOpenIrtg.setText("Open IRTG ...");
-        miOpenIrtg.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miOpenIrtgActionPerformed(evt);
-            }
-        });
+        miOpenIrtg.addActionListener(evt -> miOpenIrtgActionPerformed(evt));
         jMenu3.add(miOpenIrtg);
 
         miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miOpenAutomaton.setText("Open Tree Automaton ...");
-        miOpenAutomaton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miOpenAutomatonActionPerformed(evt);
-            }
-        });
+        miOpenAutomaton.addActionListener(evt -> miOpenAutomatonActionPerformed(evt));
         jMenu3.add(miOpenAutomaton);
         jMenu3.add(jSeparator1);
 
         miSaveIrtg.setText("Save IRTG ...");
         miSaveIrtg.setEnabled(false);
-        miSaveIrtg.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miSaveIrtgActionPerformed(evt);
-            }
-        });
+        miSaveIrtg.addActionListener(evt -> miSaveIrtgActionPerformed(evt));
         jMenu3.add(miSaveIrtg);
 
         miSaveAutomaton.setText("Save Tree Automaton ...");
-        miSaveAutomaton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miSaveAutomatonActionPerformed(evt);
-            }
-        });
+        miSaveAutomaton.addActionListener(evt -> miSaveAutomatonActionPerformed(evt));
         jMenu3.add(miSaveAutomaton);
         jMenu3.add(jSeparator4);
 
         miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.META_MASK));
         miCloseWindow.setText("Close Window");
-        miCloseWindow.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCloseWindowActionPerformed(evt);
-            }
-        });
+        miCloseWindow.addActionListener(evt -> miCloseWindowActionPerformed(evt));
         jMenu3.add(miCloseWindow);
 
         miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miCloseAllWindows.setText("Close All Windows");
-        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCloseAllWindowsActionPerformed(evt);
-            }
-        });
+        miCloseAllWindows.addActionListener(evt -> miCloseAllWindowsActionPerformed(evt));
         jMenu3.add(miCloseAllWindows);
         jMenu3.add(jSeparator2);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
         miQuit.setText("Quit");
-        miQuit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miQuitActionPerformed(evt);
-            }
-        });
+        miQuit.addActionListener(evt -> miQuitActionPerformed(evt));
         jMenu3.add(miQuit);
 
         jMenuBar2.add(jMenu3);
@@ -374,106 +344,62 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
         miShowLanguage.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.META_MASK));
         miShowLanguage.setText("Show Language ...");
-        miShowLanguage.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miShowLanguageActionPerformed(evt);
-            }
-        });
+        miShowLanguage.addActionListener(evt -> miShowLanguageActionPerformed(evt));
         jMenu4.add(miShowLanguage);
 
         miParse.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.META_MASK));
         miParse.setText("Parse ...");
         miParse.setEnabled(false);
-        miParse.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miParseActionPerformed(evt);
-            }
-        });
+        miParse.addActionListener(evt -> miParseActionPerformed(evt));
         jMenu4.add(miParse);
 
         miBulkParse.setText("Bulk Parse ...");
         miBulkParse.setEnabled(false);
-        miBulkParse.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miBulkParseActionPerformed(evt);
-            }
-        });
+        miBulkParse.addActionListener(evt -> miBulkParseActionPerformed(evt));
         jMenu4.add(miBulkParse);
 
         miBinarize.setText("Binarize ...");
         miBinarize.setEnabled(false);
-        miBinarize.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miBinarizeActionPerformed(evt);
-            }
-        });
+        miBinarize.addActionListener(evt -> miBinarizeActionPerformed(evt));
         jMenu4.add(miBinarize);
         jMenu4.add(jSeparator3);
 
         miTrainML.setText("Maximum Likelihood Training ...");
         miTrainML.setEnabled(false);
-        miTrainML.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miTrainMLActionPerformed(evt);
-            }
-        });
+        miTrainML.addActionListener(evt -> miTrainMLActionPerformed(evt));
         jMenu4.add(miTrainML);
 
         miTrainEM.setText("EM Training ...");
         miTrainEM.setEnabled(false);
-        miTrainEM.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miTrainEMActionPerformed(evt);
-            }
-        });
+        miTrainEM.addActionListener(evt -> miTrainEMActionPerformed(evt));
         jMenu4.add(miTrainEM);
 
         miTrainVB.setText("Variational Bayes Training ...");
         miTrainVB.setEnabled(false);
-        miTrainVB.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miTrainVBActionPerformed(evt);
-            }
-        });
+        miTrainVB.addActionListener(evt -> miTrainVBActionPerformed(evt));
         jMenu4.add(miTrainVB);
 
         miMaxent.setText("Maximum Entropy");
         miMaxent.setEnabled(false);
 
         miLoadMaxentWeights.setText("Load Weights ...");
-        miLoadMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miLoadMaxentWeightsActionPerformed(evt);
-            }
-        });
+        miLoadMaxentWeights.addActionListener(evt -> miLoadMaxentWeightsActionPerformed(evt));
         miMaxent.add(miLoadMaxentWeights);
 
         miShowMaxentWeights.setText("Show Weights ...");
         miShowMaxentWeights.setEnabled(false);
-        miShowMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miShowMaxentWeightsActionPerformed(evt);
-            }
-        });
+        miShowMaxentWeights.addActionListener(evt -> miShowMaxentWeightsActionPerformed(evt));
         miMaxent.add(miShowMaxentWeights);
 
         miTrainMaxent.setText("Train ...");
-        miTrainMaxent.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miTrainMaxentActionPerformed(evt);
-            }
-        });
+        miTrainMaxent.addActionListener(evt -> miTrainMaxentActionPerformed(evt));
         miMaxent.add(miTrainMaxent);
 
         jMenu4.add(miMaxent);
         jMenu4.add(jSeparator5);
 
         jMenuItem1.setText("Compute decomposition automaton ...");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
-            }
-        });
+        jMenuItem1.addActionListener(evt -> jMenuItem1ActionPerformed(evt));
         jMenu4.add(jMenuItem1);
 
         jMenuBar2.add(jMenu4);
@@ -781,7 +707,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miShowMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miShowMaxentWeightsActionPerformed
         if (irtg instanceof MaximumEntropyIrtg) {
             MaximumEntropyIrtg mirtg = (MaximumEntropyIrtg) irtg;
-            List<FtWeight> fts = new ArrayList<FtWeight>();
+            List<FtWeight> fts = new ArrayList<>();
             List<String> ftNames = mirtg.getFeatureNames();
 
             for (int i = 0; i < mirtg.getNumFeatures(); i++) {
@@ -863,7 +789,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
         // derivation tree
         List<OutputCodec> outputCodecs = collectOutputCodecs(new TreeAlgebra());
-        ConcreteListDataPanelEntry<OutputCodec> dpeList = new ConcreteListDataPanelEntry<OutputCodec>("derivation tree", "Output codec for derivation tree:", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
+        ConcreteListDataPanelEntry<OutputCodec> dpeList = new ConcreteListDataPanelEntry<>("derivation tree", "Output codec for derivation tree:", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
 
         DataPanelEntry<Boolean> dpeCheck = new ConcreteBooleanDataPanelEntry("derivation tree_use", "Generate output for derivation tree:");
         ret.addEntry(dpeCheck);
@@ -884,7 +810,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             outputCodecs.add(new AlgebraStringRepresentationOutputCodec(alg));
             outputCodecs.addAll(OutputCodec.getOutputCodecs(classOfValues));
 
-            dpeList = new ConcreteListDataPanelEntry<OutputCodec>(interpName, "Output codec for interpretation '" + interpName + "':", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
+            dpeList = new ConcreteListDataPanelEntry<>(interpName, "Output codec for interpretation '" + interpName + "':", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
             dpeCheck = new ConcreteBooleanDataPanelEntry(interpName + "_use", "Generate output for interpretation '" + interpName + "':");
 
             ret.addEntry(dpeCheck);

@@ -7,7 +7,6 @@ package de.up.ling.irtg.corpus;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.codec.OutputCodec;
-import static de.up.ling.irtg.corpus.CorpusWriter.NULL;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import java.io.IOException;

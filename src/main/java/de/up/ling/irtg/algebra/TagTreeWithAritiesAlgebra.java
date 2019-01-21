@@ -5,16 +5,13 @@
  */
 package de.up.ling.irtg.algebra;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import de.up.ling.tree.TreeVisitor;
-import java.io.IOException;
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

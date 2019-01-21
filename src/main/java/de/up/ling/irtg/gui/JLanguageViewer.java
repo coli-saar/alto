@@ -88,7 +88,7 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
 
         this.languageIterator = (SortedLanguageIterator) automaton.sortedLanguageIterator();
 
-        cachedTrees = new ArrayList<WeightedTree>();
+        cachedTrees = new ArrayList<>();
 
         if (automaton.isCyclic()) {
             numTrees = -1;
@@ -280,26 +280,14 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
         jLabel1.setText("Derivation #");
 
         leftButton.setText("<");
-        leftButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                leftButtonActionPerformed(evt);
-            }
-        });
+        leftButton.addActionListener(evt -> leftButtonActionPerformed(evt));
 
         treeIndex.setText("jTextField1");
         treeIndex.setMinimumSize(new java.awt.Dimension(84, 28));
-        treeIndex.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                treeIndexActionPerformed(evt);
-            }
-        });
+        treeIndex.addActionListener(evt -> treeIndexActionPerformed(evt));
 
         rightButton.setText(">");
-        rightButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rightButtonActionPerformed(evt);
-            }
-        });
+        rightButton.addActionListener(evt -> rightButtonActionPerformed(evt));
 
         languageSizeLabel.setText("of INFINITY");
 
@@ -345,49 +333,29 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
 
         miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
         miOpenIrtg.setText("Open IRTG ...");
-        miOpenIrtg.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miOpenIrtgActionPerformed(evt);
-            }
-        });
+        miOpenIrtg.addActionListener(evt -> miOpenIrtgActionPerformed(evt));
         jMenu1.add(miOpenIrtg);
 
         miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miOpenAutomaton.setText("Open Tree Automaton ...");
-        miOpenAutomaton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miOpenAutomatonActionPerformed(evt);
-            }
-        });
+        miOpenAutomaton.addActionListener(evt -> miOpenAutomatonActionPerformed(evt));
         jMenu1.add(miOpenAutomaton);
         jMenu1.add(jSeparator1);
 
         miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.META_MASK));
         miCloseWindow.setText("Close Window");
-        miCloseWindow.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCloseWindowActionPerformed(evt);
-            }
-        });
+        miCloseWindow.addActionListener(evt -> miCloseWindowActionPerformed(evt));
         jMenu1.add(miCloseWindow);
 
         miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miCloseAllWindows.setText("Close All Windows");
-        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCloseAllWindowsActionPerformed(evt);
-            }
-        });
+        miCloseAllWindows.addActionListener(evt -> miCloseAllWindowsActionPerformed(evt));
         jMenu1.add(miCloseAllWindows);
         jMenu1.add(jSeparator4);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
         miQuit.setText("Quit");
-        miQuit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miQuitActionPerformed(evt);
-            }
-        });
+        miQuit.addActionListener(evt -> miQuitActionPerformed(evt));
         jMenu1.add(miQuit);
 
         jMenuBar1.add(jMenu1);
@@ -395,11 +363,7 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
         jMenu3.setText("Tools");
 
         jMenuItem1.setText("Compute decomposition automaton ...");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
-            }
-        });
+        jMenuItem1.addActionListener(evt -> jMenuItem1ActionPerformed(evt));
         jMenu3.add(jMenuItem1);
 
         jMenuBar1.add(jMenu3);
@@ -408,39 +372,23 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
 
         miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.META_MASK));
         miNextTree.setText("Go to Next Derivation");
-        miNextTree.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miNextTreeActionPerformed(evt);
-            }
-        });
+        miNextTree.addActionListener(evt -> miNextTreeActionPerformed(evt));
         jMenu2.add(miNextTree);
 
         miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.META_MASK));
         miPreviousTree.setText("Go to Previous Derivation");
-        miPreviousTree.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miPreviousTreeActionPerformed(evt);
-            }
-        });
+        miPreviousTree.addActionListener(evt -> miPreviousTreeActionPerformed(evt));
         jMenu2.add(miPreviousTree);
         jMenu2.add(jSeparator2);
 
         miAddView.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_2, java.awt.event.InputEvent.META_MASK));
         miAddView.setText("Add View");
-        miAddView.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miAddViewActionPerformed(evt);
-            }
-        });
+        miAddView.addActionListener(evt -> miAddViewActionPerformed(evt));
         jMenu2.add(miAddView);
 
         miRemoveView.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_1, java.awt.event.InputEvent.META_MASK));
         miRemoveView.setText("Remove View");
-        miRemoveView.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miRemoveViewActionPerformed(evt);
-            }
-        });
+        miRemoveView.addActionListener(evt -> miRemoveViewActionPerformed(evt));
         jMenu2.add(miRemoveView);
 
         jMenuBar1.add(jMenu2);
@@ -448,11 +396,7 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
         mAdvanced.setText("Advanced");
 
         miCopyTestCase.setText("Copy test case");
-        miCopyTestCase.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCopyTestCaseActionPerformed(evt);
-            }
-        });
+        miCopyTestCase.addActionListener(evt -> miCopyTestCaseActionPerformed(evt));
         mAdvanced.add(miCopyTestCase);
 
         jMenuBar1.add(mAdvanced);

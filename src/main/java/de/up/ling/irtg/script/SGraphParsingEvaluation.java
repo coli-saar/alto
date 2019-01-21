@@ -22,7 +22,6 @@ import de.up.ling.irtg.util.CpuTimeStopwatch;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;

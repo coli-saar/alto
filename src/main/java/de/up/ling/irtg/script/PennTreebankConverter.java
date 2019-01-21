@@ -24,7 +24,6 @@ import de.up.ling.irtg.binarization.*;
 import de.up.ling.irtg.codec.PtbTreeInputCodec;
 import de.up.ling.irtg.codec.PtbTreeOutputCodec;
 import de.up.ling.irtg.corpus.AbstractCorpusWriter;
-import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusConverter;
 import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -83,7 +82,7 @@ public class PennTreebankConverter {
 
     public static void convert(AbstractCorpusWriter cw, CmdLineParameters param) throws Exception {
         PtbTreeInputCodec codec = new PtbTreeInputCodec();
-        CorpusConverter<Tree<String>> converter = new CorpusConverter<Tree<String>>(cw,
+        CorpusConverter<Tree<String>> converter = new CorpusConverter<>(cw,
                 ImmutableMap.of("string", (Tree<String> tree) -> tree.getLeafLabels(), "tree", x -> x));
 
         // if leaves removed, can't skip leaves in DT construction

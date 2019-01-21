@@ -36,7 +36,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -344,7 +343,7 @@ public class SurfaceRealizer {
     }
 
     private static FloydWarshallShortestPaths computeShortestPaths(FirstOrderModel model) {
-        UndirectedGraph<String, DefaultEdge> g = new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
+        UndirectedGraph<String, DefaultEdge> g = new SimpleGraph<>(DefaultEdge.class);
 
         for (String a : model.getUniverse()) {
             g.addVertex(a);

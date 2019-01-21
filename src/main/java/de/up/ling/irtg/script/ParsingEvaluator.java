@@ -21,10 +21,8 @@ import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
-import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.laboratory.BasicOperations;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
@@ -33,7 +31,6 @@ import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -251,7 +248,7 @@ public class ParsingEvaluator {
         public String outCorpusFilename = "out.txt";
 
         @DynamicParameter(names = "-O", description = "Output interpretations with their output codecs (e.g. -Ostring=toString). As special case, use -Ostring=alg to use the algebra's default string representation.")
-        public Map<String, String> outputCodecs = new HashMap<String, String>();
+        public Map<String, String> outputCodecs = new HashMap<>();
 
         @Parameter(names = {"--blank-lines", "-b"}, description = "Insert a blank line between any two output instances.")
         public boolean blankLinkes = false;

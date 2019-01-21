@@ -31,9 +31,9 @@ public class UnevaluatedItem {
     }
 
     public List<UnevaluatedItem> makeVariations() {
-        List<UnevaluatedItem> ret = new ArrayList<UnevaluatedItem>();
+        List<UnevaluatedItem> ret = new ArrayList<>();
         for (int pos = 0; pos < tuple.size(); pos++) {
-            List<Integer> newPositions = new ArrayList<Integer>(tuple);
+            List<Integer> newPositions = new ArrayList<>(tuple);
             newPositions.set(pos, newPositions.get(pos) + 1);
             ret.add(new UnevaluatedItem(newPositions));
         }

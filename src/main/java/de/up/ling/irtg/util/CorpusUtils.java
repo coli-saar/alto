@@ -1,7 +1,6 @@
 package de.up.ling.irtg.util;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -11,9 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.saar.basic.Pair;
@@ -26,7 +23,6 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
@@ -34,11 +30,9 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 
 import de.up.ling.tree.Tree;
-import edu.stanford.nlp.process.Tokenizer;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import nu.xom.ParsingException;
 
 
 public class CorpusUtils {
@@ -184,7 +178,7 @@ public class CorpusUtils {
 		TreeAutomaton<String> originalA = g.getAutomaton();
 		ConcreteTreeAutomaton<String> finiteA = new ConcreteTreeAutomaton<>(new Signature());
 		
-		Map<String, Interpretation<?>> interpretations = new Object2ObjectArrayMap<String, Interpretation<?>>(g.getInterpretations().size());
+		Map<String, Interpretation<?>> interpretations = new Object2ObjectArrayMap<>(g.getInterpretations().size());
 		for(Interpretation<?> interpretation : g.getInterpretations().values())
 			interpretations.put(interpretation.name, new Interpretation(interpretation.getAlgebra(), new Homomorphism(finiteA.getSignature(), interpretation.getHomomorphism().getTargetSignature()), interpretation.name));
 		

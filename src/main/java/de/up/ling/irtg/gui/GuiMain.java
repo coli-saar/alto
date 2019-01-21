@@ -19,7 +19,6 @@ import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.GuiUtils;
-import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ValueAndTimeConsumer;
 import de.up.ling.irtg.util.ProgressBarWorker;
@@ -138,73 +137,41 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
         miLoadIrtg.setText("Load IRTG ...");
-        miLoadIrtg.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miLoadIrtgActionPerformed(evt);
-            }
-        });
+        miLoadIrtg.addActionListener(evt -> miLoadIrtgActionPerformed(evt));
         jMenu1.add(miLoadIrtg);
 
         miLoadIrtgFromURL.setText("Load IRTG from URL ...");
-        miLoadIrtgFromURL.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miLoadIrtgFromURLActionPerformed(evt);
-            }
-        });
+        miLoadIrtgFromURL.addActionListener(evt -> miLoadIrtgFromURLActionPerformed(evt));
         jMenu1.add(miLoadIrtgFromURL);
 
         miLoadIrtgFromWebDirectory.setText("Load IRTG from web directory ...");
-        miLoadIrtgFromWebDirectory.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miLoadIrtgFromWebDirectoryActionPerformed(evt);
-            }
-        });
+        miLoadIrtgFromWebDirectory.addActionListener(evt -> miLoadIrtgFromWebDirectoryActionPerformed(evt));
         jMenu1.add(miLoadIrtgFromWebDirectory);
 
         miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miLoadAutomaton.setText("Load Tree Automaton ...");
-        miLoadAutomaton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miLoadAutomatonActionPerformed(evt);
-            }
-        });
+        miLoadAutomaton.addActionListener(evt -> miLoadAutomatonActionPerformed(evt));
         jMenu1.add(miLoadAutomaton);
 
         miLoadTemplateIrtg.setText("Load Template IRTG ...");
-        miLoadTemplateIrtg.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miLoadTemplateIrtgActionPerformed(evt);
-            }
-        });
+        miLoadTemplateIrtg.addActionListener(evt -> miLoadTemplateIrtgActionPerformed(evt));
         jMenu1.add(miLoadTemplateIrtg);
         jMenu1.add(jSeparator1);
 
         miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miCloseAllWindows.setText("Close All Windows");
-        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miCloseAllWindowsActionPerformed(evt);
-            }
-        });
+        miCloseAllWindows.addActionListener(evt -> miCloseAllWindowsActionPerformed(evt));
         jMenu1.add(miCloseAllWindows);
         jMenu1.add(jSeparator2);
 
         miAbout.setText("About Alto ...");
-        miAbout.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miAboutActionPerformed(evt);
-            }
-        });
+        miAbout.addActionListener(evt -> miAboutActionPerformed(evt));
         jMenu1.add(miAbout);
         jMenu1.add(jSeparator3);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
         miQuit.setText("Quit");
-        miQuit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miQuitActionPerformed(evt);
-            }
-        });
+        miQuit.addActionListener(evt -> miQuitActionPerformed(evt));
         jMenu1.add(miQuit);
 
         jMenuBar1.add(jMenu1);
@@ -212,19 +179,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenu2.setText("Tools");
 
         miComputeDecompositionAutomaton.setText("Compute decomposition automaton ...");
-        miComputeDecompositionAutomaton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miComputeDecompositionAutomatonActionPerformed(evt);
-            }
-        });
+        miComputeDecompositionAutomaton.addActionListener(evt -> miComputeDecompositionAutomatonActionPerformed(evt));
         jMenu2.add(miComputeDecompositionAutomaton);
 
         miVisualizeInput.setText("Visualize object of algebra ...");
-        miVisualizeInput.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miVisualizeInputActionPerformed(evt);
-            }
-        });
+        miVisualizeInput.addActionListener(evt -> miVisualizeInputActionPerformed(evt));
         jMenu2.add(miVisualizeInput);
 
         jMenuBar1.add(jMenu2);
@@ -540,7 +499,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                         throw new Exception("Error while reading from URL " + urlString);
                     }
 
-                    return new LoadingResult<T>(result, urlString);
+                    return new LoadingResult<>(result, urlString);
                 };
 
                 GuiUtils.withProgressBar(parent, "Grammar reading progress", description, worker, andThen);
@@ -732,11 +691,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             }
         });
 
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                guiMain.setVisible(true);
-            }
-        });
+        java.awt.EventQueue.invokeLater(() -> guiMain.setVisible(true));
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu jMenu1;

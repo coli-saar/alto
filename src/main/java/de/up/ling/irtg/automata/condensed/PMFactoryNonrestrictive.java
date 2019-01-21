@@ -52,7 +52,7 @@ class PMFactoryNonrestrictive<State> extends PatternMatchingInvhomAutomatonFacto
 
     @Override
     protected void computeMatcherFromHomomorphism() {
-        nondetMatcher = new ConcreteTreeAutomaton<String>(hom.getTargetSignature());
+        nondetMatcher = new ConcreteTreeAutomaton<>(hom.getTargetSignature());
         matcherParentToChildren = new ArrayInt2ObjectMap<>();
         startStateIdToLabelSetID = new ArrayInt2IntMap();
 

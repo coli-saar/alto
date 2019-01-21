@@ -3,7 +3,6 @@ package de.up.ling.irtg.util;
 import java.util.Collection;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntStack;
 

@@ -8,7 +8,6 @@ package de.saar.coli.amrtools.datascript;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.TreeWithAritiesAlgebra;
 import de.up.ling.irtg.algebra.graph.AMSignatureBuilder;

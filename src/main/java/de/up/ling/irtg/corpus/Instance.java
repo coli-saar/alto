@@ -94,7 +94,7 @@ public class Instance {
     }
 
     public String toString(TreeAutomaton auto) {
-        StringBuffer ret = new StringBuffer("Instance{" + "inputObjects=" + inputObjects);
+        StringBuilder ret = new StringBuilder("Instance{" + "inputObjects=" + inputObjects);
 
         if (derivationTree != null) {
             if (auto == null) {

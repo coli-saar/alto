@@ -76,7 +76,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public MaximumEntropyIrtg(TreeAutomaton<String> automaton, final Map<String, FeatureFunction> featureMap) {
         super(automaton);
 
-        f = new HashMap<Integer, double[]>();
+        f = new HashMap<>();
 
         // store the features
         setFeatures(featureMap);
@@ -94,7 +94,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             weights = null;
         } else {
             // the names of the feature functions are the keys of featureMap
-            featureNames = new ArrayList<String>();
+            featureNames = new ArrayList<>();
             featureNames.addAll(featureMap.keySet());
 
             // the size of the names list is used to initialize the arrays for the feature functions

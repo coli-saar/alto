@@ -48,7 +48,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  */
 @CodecMetadata(name = "tiburon", description = "Top-down tree automata (Tiburon style)", extension = "rtg", type = TreeAutomaton.class)
 public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
-    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
+    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<>();
     private CodecUtilities util = new CodecUtilities();
 
     @Override
@@ -58,7 +58,7 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         
-        automaton = new ConcreteTreeAutomaton<String>();
+        automaton = new ConcreteTreeAutomaton<>();
 
         try {
             TiburonTreeAutomatonParser.FtaContext result = p.fta();
@@ -100,7 +100,7 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     }
 
     private List<String> statelist(TiburonTreeAutomatonParser.State_listContext rule_args) {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
 
         if (rule_args != null) {
             for (TiburonTreeAutomatonParser.StateContext sc : rule_args.state()) {

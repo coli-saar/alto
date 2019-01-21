@@ -6,7 +6,6 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;

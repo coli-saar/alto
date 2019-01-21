@@ -38,9 +38,9 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
     private List<Rule> unprocessedUpdatesForTopDown;
 
     public MapTopDownIndex(TreeAutomaton auto) {
-        explicitRulesTopDown = new ArrayMap<Int2ObjectMap<Set<Rule>>>();
+        explicitRulesTopDown = new ArrayMap<>();
         explicitRulesTopDownByParent = new ArrayMap<>();
-        unprocessedUpdatesForTopDown = new ArrayList<Rule>();
+        unprocessedUpdatesForTopDown = new ArrayList<>();
         this.auto = auto;
     }
 
@@ -54,13 +54,13 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
             unprocessedUpdatesForTopDown.forEach(rule -> {
                 Int2ObjectMap<Set<Rule>> topdownHere = explicitRulesTopDown.get(rule.getParent());
                 if (topdownHere == null) {
-                    topdownHere = new Int2ObjectOpenHashMap<Set<Rule>>();
+                    topdownHere = new Int2ObjectOpenHashMap<>();
                     explicitRulesTopDown.put(rule.getParent(), topdownHere);
                 }
 
                 Set<Rule> rulesHere = topdownHere.get(rule.getLabel());
                 if (rulesHere == null) {
-                    rulesHere = new HashSet<Rule>();
+                    rulesHere = new HashSet<>();
                     topdownHere.put(rule.getLabel(), rulesHere);
                 }
 

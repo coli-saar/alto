@@ -120,11 +120,11 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
             if (useCachedRuleBottomUp(labelId, childStates)) {
                 return getRulesBottomUpFromExplicit(labelId, childStates);
             } else {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
 
                 if (signature.getArity(labelId) == childStates.length) {
 
-                    List<E> childValues = new ArrayList<E>();
+                    List<E> childValues = new ArrayList<>();
                     for (int childState : childStates) {
                         childValues.add(getStateForId(childState));
                     }
