@@ -1299,7 +1299,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 }
 
                 while (!agenda.isEmpty()) {
-                    int state = agenda.dequeue();
+                    int state = agenda.dequeueInt();
 
                     for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
                         Iterable<Rule> rules = getRulesTopDown(label, state);
@@ -1866,7 +1866,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         int[] children = new int[stateSetsPerChild.size()];
 
         for (int i = 0; i < stateSetsPerChild.size(); i++) {
-            children[i] = stateSetsPerChild.get(i).get(0);
+            children[i] = stateSetsPerChild.get(i).getInt(0);
         }
         for (Rule rule : getRulesBottomUp(labelIdSource.applyAsInt(f), children)) {
             states.add(rule.getParent());
@@ -1943,7 +1943,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                     empty = true;
                     break;
                 } else {
-                    ret.add(lists.get(i).get(0));
+                    ret.add(lists.get(i).getInt(0));
                 }
             }
         }
@@ -1972,11 +1972,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 for (int i = 0; i < N; i++) {
                     if (indices[i] < lengths[i] - 1) {
                         indices[i]++;
-                        ret.set(i, lists.get(i).get(indices[i]));
+                        ret.set(i, lists.get(i).getInt(indices[i]));
                         return ret;
                     } else {
                         indices[i] = 0;
-                        ret.set(i, lists.get(i).get(indices[i]));
+                        ret.set(i, lists.get(i).getInt(indices[i]));
                     }
                 }
 
@@ -2111,7 +2111,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
         double ret = 0;
         for (Pair<Integer, Double> w : weights) {
-            if (getFinalStates().contains(w.left)) {
+            if (getFinalStates().contains(w.left.intValue())) {
                 ret += w.right;
             }
         }
@@ -2939,7 +2939,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
 
         while (!agenda.isEmpty()) {
-            int state = agenda.dequeue();
+            int state = agenda.dequeueInt();
 
             for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
                 Iterable<Rule> rules = getRulesTopDown(label, state);
@@ -3036,7 +3036,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             if (Thread.interrupted()) {
                 return ret;
             }
-            int a = agenda.get(i);
+            int a = agenda.getInt(i);
             if (getFinalStates().contains(a)) {
                 ret = true;
             }

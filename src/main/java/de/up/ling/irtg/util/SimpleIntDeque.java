@@ -1,6 +1,6 @@
 package de.up.ling.irtg.util;
 
-import it.unimi.dsi.fastutil.ints.AbstractIntListIterator;
+import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 
@@ -136,7 +136,7 @@ public class SimpleIntDeque extends AbstractIntDeque {
 
 
 	
-	private class CellIterator extends AbstractIntListIterator{
+	private class CellIterator implements IntListIterator{
 
 		private Cell current;
 		private boolean forward;

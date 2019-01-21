@@ -140,9 +140,9 @@ public class GraphInfo {
         edgeTargets = new int[edgeList.size()];
         allEdges = new int[edgeList.size()];
         for (int j = 0; j<edgeList.size(); j++) {
-            edgeSources[j] = edgeSourceList.get(j);
-            edgeTargets[j] = edgeTargetList.get(j);
-            allEdges[j] = edgeList.get(j);
+            edgeSources[j] = edgeSourceList.getInt(j);
+            edgeTargets[j] = edgeTargetList.getInt(j);
+            allEdges[j] = edgeList.getInt(j);
         }
         idToEdge = new GraphEdge[edgeList.size()];
         for (GraphEdge e : graph.getGraph().edgeSet()) {
@@ -351,7 +351,7 @@ public class GraphInfo {
      * @return
      */
     public int getEdgeId(GraphEdge edge) {
-        return edgeToId.get(edge);
+        return edgeToId.getInt(edge);
     }
     
     /**

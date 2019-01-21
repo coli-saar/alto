@@ -12,6 +12,8 @@ import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -215,10 +217,10 @@ public class Signature implements Serializable {
      */
     public Map<String, Integer> getSymbolsWithArities() {
         Map<String, Integer> ret = new HashMap<>();
-        Map<String, Integer> symbolTable = interner.getSymbolTable();
+        Object2IntMap<String> symbolTable = interner.getSymbolTable();
 
         for (String sym : symbolTable.keySet()) {
-            ret.put(sym, arities.get(symbolTable.get(sym)));
+            ret.put(sym, arities.get(symbolTable.getInt(sym)));
         }
 
         return ret;

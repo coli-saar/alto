@@ -258,7 +258,7 @@ public class Interner<E> implements Serializable, Cloneable {
      * 
      * @return 
      */
-    public Map<E, Integer> getSymbolTable() {
+    public Object2IntMap<E> getSymbolTable() {
         processUncachedObjects();
         return objectToInt;
     }
@@ -322,7 +322,7 @@ public class Interner<E> implements Serializable, Cloneable {
         
         FastutilUtils.forEach(toRemove, rem -> {
            E object = intToObject.remove(rem);
-           objectToInt.remove(object);
+           objectToInt.removeInt(object);
         });
     }
 
