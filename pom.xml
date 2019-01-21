@@ -19,9 +19,9 @@
   
   <dependencies>
     <dependency>
-      <groupId>de.saar.coli</groupId>
+      <groupId>com.github.coli-saar</groupId>
       <artifactId>basics</artifactId>
-      <version>1.2.41-SNAPSHOT</version>
+      <version>2909d4b20d9a9cb47efdabb3c12c3e70177b330e</version>
     </dependency>
 <!--  -->
 <dependency>
@@ -486,8 +486,10 @@
         <name>maven-central</name>
         <url>http://central.maven.org/maven2</url>
     </repository>
-    
-    
+	<repository>
+	  <id>jitpack.io</id>
+	  <url>https://jitpack.io</url>
+	</repository>
     <repository>
       <snapshots>
         <enabled>false</enabled>
