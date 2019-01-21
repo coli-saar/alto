@@ -185,10 +185,7 @@ public class RuleRefinementNode {
         if (!Arrays.equals(this.children, other.children)) {
             return false;
         }
-        if (this.termId != other.termId) {
-            return false;
-        }
-        return true;
+        return this.termId == other.termId;
     }
     
 }

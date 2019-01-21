@@ -306,7 +306,7 @@ public class TemplateInterpretedTreeAutomaton {
         featureWeights[index] = weight;
     }
 
-    private static interface RuleConsumer {
+    private interface RuleConsumer {
 
         void accept(String parent, String label, List<String> children, double weight, Map<String, String> variableAssignment);
     }
@@ -348,7 +348,7 @@ public class TemplateInterpretedTreeAutomaton {
 
     public interface Guard {
 
-        abstract boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model);
+        boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model);
     }
 
     public static class AtomicGuard implements Guard {

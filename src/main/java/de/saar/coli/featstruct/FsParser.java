@@ -140,7 +140,7 @@ class FsParser {
                 FeatureStructure f = afs.get(attr);
 
                 if (f instanceof PlaceholderFeatureStructure) {
-                    String index = ((PlaceholderFeatureStructure) f).getIndex();
+                    String index = f.getIndex();
                     FeatureStructure replacement = indexToFs.get(index);
 
                     if (replacement == null) {

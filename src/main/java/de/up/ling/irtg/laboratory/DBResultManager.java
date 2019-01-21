@@ -56,7 +56,7 @@ class DBResultManager implements ResultManager {
     public synchronized void acceptTime(long time, int instanceID, String name, boolean isGlobal) {
         try {
             //note that the long will be converted to double, possibly lossy, but no too large values are expected here.
-            dbLoader.uploadExperimentResult((Long)time, name+" [ms]", instanceID, experimentID, isGlobal, true);
+            dbLoader.uploadExperimentResult(time, name+" [ms]", instanceID, experimentID, isGlobal, true);
         } catch (SQLException ex) {
             sqlErrorHandler.accept(ex);
         }

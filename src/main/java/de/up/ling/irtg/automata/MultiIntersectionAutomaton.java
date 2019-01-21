@@ -518,12 +518,12 @@ public class MultiIntersectionAutomaton extends TreeAutomaton<List> {
         this.stopWhenFinalStateFound = stopWhenFinalStateFound;
     }
 
-    static interface AgendaI {
-        public void enqueue(int newState, int leftState, int[] rightStates);
+    interface AgendaI {
+        void enqueue(int newState, int leftState, int[] rightStates);
 
-        public int dequeue();
+        int dequeue();
 
-        public boolean isEmpty();
+        boolean isEmpty();
     }
 
     static class QueueAgenda implements AgendaI {

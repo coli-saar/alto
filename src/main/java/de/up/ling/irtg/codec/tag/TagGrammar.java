@@ -183,16 +183,16 @@ public class TagGrammar {
     private static final String ADJ_PREFIX = "?" + ADJ_VARTYPE;
     private static final String SUBST_PREFIX = "?" + SUBST_VARTYPE;
 
-    public static interface ElementaryTreeVisitor<E> {
-        public E makeAdjTree(Node node, List<E> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals);
+    public interface ElementaryTreeVisitor<E> {
+        E makeAdjTree(Node node, List<E> children, MutableInteger nextVar, Homomorphism th, List<String> childStates, Set<String> adjunctionNonterminals);
 
-        public E makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates);
+        E makeSubstTree(Node node, MutableInteger nextVar, Homomorphism th, List<String> childStates);
 
-        public E makeNoAdjTree(Node node, List<E> children, Homomorphism th);
+        E makeNoAdjTree(Node node, List<E> children, Homomorphism th);
 
-        public E makeWordTree(String s, Homomorphism th);
+        E makeWordTree(String s, Homomorphism th);
 
-        public E makeFootTree(Homomorphism th);
+        E makeFootTree(Homomorphism th);
     }
 
     private static class HomConstructingEtreeVisitor implements ElementaryTreeVisitor<Tree<HomomorphismSymbol>> {

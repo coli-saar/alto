@@ -12,5 +12,5 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  * @author koller
  */
 public interface NullFilterAlgebra {
-    public TreeAutomaton nullFilter();
+    TreeAutomaton nullFilter();
 }

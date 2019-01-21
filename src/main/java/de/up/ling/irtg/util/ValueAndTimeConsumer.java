@@ -12,5 +12,5 @@ package de.up.ling.irtg.util;
  */
 @FunctionalInterface
 public interface ValueAndTimeConsumer<E> {
-    public void accept(E result, long time);    
+    void accept(E result, long time);
 }

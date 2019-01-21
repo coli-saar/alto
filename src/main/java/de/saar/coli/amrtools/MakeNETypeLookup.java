@@ -60,8 +60,8 @@ public class MakeNETypeLookup {
         Counter<String> debug = new Counter<>();
         for (Instance inst : corpus) {
             debug.add("instances");
-            List<String> repsent = (List)inst.getInputObjects().get("repstring");
-            List<String> sent = (List)inst.getInputObjects().get("string");
+            List<String> repsent = (List<String>)inst.getInputObjects().get("repstring");
+            List<String> sent = (List<String>)inst.getInputObjects().get("string");
             List<String> als = (List)inst.getInputObjects().get("repalignment");
             List<String> spanmap = (List)inst.getInputObjects().get("spanmap");
             SGraph graph = (SGraph)inst.getInputObjects().get("repgraph");

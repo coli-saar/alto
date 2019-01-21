@@ -87,7 +87,7 @@ public class BkvBinarizer {
             List<String> interpretationNames = new ArrayList<>(irtg.getInterpretations().keySet());
             TreeAutomaton rtg = irtg.getAutomaton();
             int numRules = Iterables.size(irtg.getAutomaton().getRuleSet());
-            int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
+            int max = (numRules < Integer.MAX_VALUE) ? numRules : Integer.MAX_VALUE;
 
             // initialize output homs
             for (String interp : interpretationNames) {
@@ -203,8 +203,8 @@ public class BkvBinarizer {
         });
     }
     
-    public static interface TreeWithPathVisitor<E,F> {
-        public E combine(Tree<F> tree, Tree<F> node, List<E> childrenValues, String path);
+    public interface TreeWithPathVisitor<E,F> {
+        E combine(Tree<F> tree, Tree<F> node, List<E> childrenValues, String path);
     }
 
     private static <E,F> E dfsWithPaths(Tree<F> tree, TreeWithPathVisitor<E,F> visitor) {

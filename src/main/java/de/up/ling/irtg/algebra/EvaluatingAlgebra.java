@@ -89,7 +89,7 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
 
     @Override
     public E evaluate(Tree<String> t) {
-        return (E) t.dfs(new TreeVisitor<String, Void, E>() {
+        return t.dfs(new TreeVisitor<String, Void, E>() {
             @Override
             public E combine(Tree<String> node, List<E> childrenValues) {
                 return evaluate(node.getLabel(), childrenValues);

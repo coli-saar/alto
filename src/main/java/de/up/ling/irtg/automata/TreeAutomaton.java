@@ -1837,7 +1837,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     enum D1aResult {
 
         OK, EMPTY, NON_SINGLETON
-    };
+    }
 
     private <TreeLabels> D1aResult runD1a(Tree<TreeLabels> node, final ToIntFunction<TreeLabels> labelIdSource, final ToIntFunction<Tree<TreeLabels>> subst, List<IntList> stateSetsPerChild) {
         D1aResult ret = null;
@@ -2076,7 +2076,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public double getWeightRaw(final Tree<Integer> tree) {
         final List<Integer> children = new ArrayList<>();
 
-        Set<Pair<Integer, Double>> weights = (Set<Pair<Integer, Double>>) tree.dfs(new TreeVisitor<Integer, Void, Set<Pair<Integer, Double>>>() {
+        Set<Pair<Integer, Double>> weights = tree.dfs(new TreeVisitor<Integer, Void, Set<Pair<Integer, Double>>>() {
             @Override
             public Set<Pair<Integer, Double>> combine(Tree<Integer> node, List<Set<Pair<Integer, Double>>> childrenValues) {
                 int f = node.getLabel();
@@ -2203,9 +2203,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     @FunctionalInterface
-    public static interface BottomUpStateVisitor {
+    public interface BottomUpStateVisitor {
 
-        public void visit(int state, Iterable<Rule> rulesTopDown);
+        void visit(int state, Iterable<Rule> rulesTopDown);
     }
 
     public void foreachStateInBottomUpOrder(BottomUpStateVisitor visitor) {

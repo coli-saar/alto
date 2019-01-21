@@ -22,9 +22,9 @@ import java.util.Set;
  */
 public class AlignmentExtender {
     
-    private static final Set<String> DATE_EDGES = new HashSet<>(Arrays.asList(new String[]{"day", "month", "year"}));
+    private static final Set<String> DATE_EDGES = new HashSet<>(Arrays.asList("day", "month", "year"));
         
-    private static final List<String> ALL_DATE_EDGES_ORDERED= Arrays.asList(new String[]{"timezone", "quarter", "season", "decade", "century", "calendar", "era", "dayperiod", "time", "weekday","day", "month", "year2", "year"});
+    private static final List<String> ALL_DATE_EDGES_ORDERED= Arrays.asList("timezone", "quarter", "season", "decade", "century", "calendar", "era", "dayperiod", "time", "weekday","day", "month", "year2", "year");
     
     
     

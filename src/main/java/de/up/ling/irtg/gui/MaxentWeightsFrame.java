@@ -48,7 +48,7 @@ public class MaxentWeightsFrame extends JTableDialog<JTreeAutomaton.FtWeight> {
             long start = System.nanoTime();
 
             try {
-                ((MaximumEntropyIrtg) irtg).writeWeights(new FileWriter(file));
+                irtg.writeWeights(new FileWriter(file));
                 GuiMain.log("Saved maxent weights, " + Util.formatTimeSince(start));
             } catch (IOException e) {
                 showError(new Exception("An error occurred while saving the maxent weights to " + file.getName(), e));

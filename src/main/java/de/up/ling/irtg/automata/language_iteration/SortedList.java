@@ -31,11 +31,7 @@ public class SortedList<E extends Comparable> implements Iterable<E> {
         values.add(value);
         
         int N = values.size();
-        if( N > 1 && values.get(N-2).compareTo(value) > 0 ) {
-            sortingRequired = true;
-        } else {
-            sortingRequired = false;
-        }
+        sortingRequired = N > 1 && values.get(N - 2).compareTo(value) > 0;
     }
     
     private void ensureSorted() {

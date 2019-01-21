@@ -12,5 +12,5 @@ package de.up.ling.irtg.util;
  */
 @FunctionalInterface
 public interface ProgressBarWorker<E> {
-    public E compute(ProgressListener dialog) throws Exception;    
+    E compute(ProgressListener dialog) throws Exception;
 }

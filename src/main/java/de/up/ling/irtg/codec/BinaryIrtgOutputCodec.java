@@ -185,7 +185,7 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         return bytes;
     }
     
-    static enum Blocks {
+    enum Blocks {
         HEADER, TOC, INTERPRETATIONS, SIGNATURES, RULES
     }
 

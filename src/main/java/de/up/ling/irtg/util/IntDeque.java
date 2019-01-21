@@ -6,16 +6,16 @@ import it.unimi.dsi.fastutil.ints.IntIterable;
 
 public interface IntDeque extends Deque<Integer>, IntIterable {
 	
-	public void addFirst(int x);
-	public boolean offerFirst(int x);
+	void addFirst(int x);
+	boolean offerFirst(int x);
 	
-	public int removeFirstInt();
-	public int getFirstInt();
+	int removeFirstInt();
+	int getFirstInt();
 	
 	
-	public void addLast(int x);
-	public boolean offerLast(int x);
+	void addLast(int x);
+	boolean offerLast(int x);
 
-	public int removeLastInt();
-	public int getLastInt();
+	int removeLastInt();
+	int getLastInt();
 }

@@ -23,7 +23,7 @@ public interface EdgeEvaluator {
      * 
      * @param rule 
      */
-    public default void ruleAdded(Rule rule) {
+    default void ruleAdded(Rule rule) {
         
     }
     
@@ -43,5 +43,5 @@ public interface EdgeEvaluator {
      * @param auto
      * @return 
      */
-    public abstract double evaluate(int outputState, IntersectionAutomaton auto);
+    double evaluate(int outputState, IntersectionAutomaton auto);
 }

@@ -26,19 +26,19 @@ public interface Operation {
      * @throws InvocationTargetException
      * @throws InstantiationException 
      */
-    public Object apply(List<Object> input) throws IllegalAccessException, InvocationTargetException, InstantiationException;
+    Object apply(List<Object> input) throws IllegalAccessException, InvocationTargetException, InstantiationException;
     
     /**
      * Returns the Class of the object this operation returns.
      * @return 
      */
-    public Class getReturnType();
+    Class getReturnType();
     
     
     /**
      * This operation executes a given java method.
      */
-    public static class MethodOperation implements Operation {
+    class MethodOperation implements Operation {
 
         private final Method m;
         private final Class returnType;
@@ -103,7 +103,7 @@ public interface Operation {
     /**
      * This operation creates a new object with a given java constructor.
      */
-    public static class ConstructorOperation implements Operation {
+    class ConstructorOperation implements Operation {
 
         private final Constructor m;
         private final Class returnType;
@@ -138,7 +138,7 @@ public interface Operation {
     /**
      * Creates an operation that always returns a given constant (Number or boolean).
      */
-    public static class PrimitiveTypeOperation implements Operation {
+    class PrimitiveTypeOperation implements Operation {
 
         private Object ret;
         private Class returnType;
@@ -212,7 +212,7 @@ public interface Operation {
     /**
      * An operation that returns a given constant string.
      */
-    public static class StringOperation implements Operation {
+    class StringOperation implements Operation {
 
         private final String s;
         
@@ -245,7 +245,7 @@ public interface Operation {
      * An operation that looks up a variable that was defined in a previous line of the
      * program / task.
      */
-    public static class LookupVariableOperation implements Operation {
+    class LookupVariableOperation implements Operation {
         
         private final Object[] computedObjectsTracker;
         private final Class[] resultsTypeTracker;
@@ -300,7 +300,7 @@ public interface Operation {
     /**
      * Returns always null.
      */
-    public static class NullOperation implements Operation {
+    class NullOperation implements Operation {
 
         @Override
         public Object apply(List<Object> input) {
@@ -317,7 +317,7 @@ public interface Operation {
         }
     }
     
-    public static class StringByLineStorageOperation implements Operation {
+    class StringByLineStorageOperation implements Operation {
 
         private final String[] lines;
         
@@ -354,7 +354,7 @@ public interface Operation {
      * @return
      * @throws Throwable 
      */
-    public static Object executeTree(Tree<Operation> tree) throws Throwable {
+    static Object executeTree(Tree<Operation> tree) throws Throwable {
         try {
             return tree.dfs((Tree<Operation> node, List<Object> childrenValues) -> {
                 try {
@@ -373,7 +373,7 @@ public interface Operation {
         }
     }
     
-    static class WrapperException extends RuntimeException {
+    class WrapperException extends RuntimeException {
 
         public WrapperException(String message, Throwable cause) {
             super(message, cause);

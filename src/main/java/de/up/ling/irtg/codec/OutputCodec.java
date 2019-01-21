@@ -178,7 +178,7 @@ public abstract class OutputCodec<E> {
      * @return
      */
     public CodecMetadata getMetadata() {
-        return (CodecMetadata) getClass().getAnnotation(CodecMetadata.class);
+        return getClass().getAnnotation(CodecMetadata.class);
     }
 
     public void addOptions(String options) {
@@ -195,10 +195,6 @@ public abstract class OutputCodec<E> {
     public boolean hasTrueOption(String key) {
         String val = getOption(key);
 
-        if (val != null && val.toLowerCase().equals("true")) {
-            return true;
-        } else {
-            return false;
-        }
+        return val != null && val.toLowerCase().equals("true");
     }
 }

@@ -29,7 +29,7 @@ public interface RuleWeighting {
      * @param number
      * @return 
      */
-    public double getLogProbability(int state, int number);
+    double getLogProbability(int state, int number);
     
     /**
      * Tells the class to recompute the proposal probabilities for the rules of the given state.
@@ -38,7 +38,7 @@ public interface RuleWeighting {
      * 
      * @param state
      */
-    public void prepareProbability(int state);
+    void prepareProbability(int state);
     
     /**
      * Returns the number of the first rule such that the cumulative probability of
@@ -50,7 +50,7 @@ public interface RuleWeighting {
      * @param choicePoint
      * @return 
      */
-    public int getRuleNumber(int state, double choicePoint);
+    int getRuleNumber(int state, double choicePoint);
     
     /**
      * Returns the rule identified by the given state and number.
@@ -61,7 +61,7 @@ public interface RuleWeighting {
      * @param number
      * @return 
      */
-    public Rule getRuleByNumber(int state, int number);
+    Rule getRuleByNumber(int state, int number);
     
     
     /**
@@ -73,7 +73,7 @@ public interface RuleWeighting {
      * @param number
      * @return 
      */
-    public double getStateStartLogProbability(int number);
+    double getStateStartLogProbability(int number);
 
     /**
      * Returns the start state with the given number.
@@ -83,7 +83,7 @@ public interface RuleWeighting {
      * @param number
      * @return 
      */
-    public int getStartStateByNumber(int number);
+    int getStartStateByNumber(int number);
     
     /**
      * Returns the start first start state such that the cumulative probability
@@ -94,7 +94,7 @@ public interface RuleWeighting {
      * @param choicePoint
      * @return 
      */
-    public int getStartStateNumber(double choicePoint);
+    int getStartStateNumber(double choicePoint);
     
     /**
      * Recomputes the proposal probabilities for the start states.
@@ -102,19 +102,19 @@ public interface RuleWeighting {
      * If they are guaranteed to be unchanged, then this step can be skipped
      * by the implementing class.
      */
-    public void prepareStartProbability();
+    void prepareStartProbability();
 
     /**
      * Returns the overall number of start states available.
      * 
      * @return 
      */
-    public int getNumberOfStartStates();
+    int getNumberOfStartStates();
     
     /**
      * Resets any adaption of the proposal distribution.
      */
-    public void reset();
+    void reset();
     
     /**
      * Adapts the proposal distribution with the assumption that
@@ -125,7 +125,7 @@ public interface RuleWeighting {
      * @param deterministic  indicates whether we can assume the underlying
      * automaton to be unambiguous.
      */
-    public void adapt(TreeSample<Rule> treSamp, boolean deterministic);
+    void adapt(TreeSample<Rule> treSamp, boolean deterministic);
     
     /**
      * Returns the underlying tree automaton from which the rules and start
@@ -133,7 +133,7 @@ public interface RuleWeighting {
      * 
      * @return 
      */
-    public TreeAutomaton getAutomaton();
+    TreeAutomaton getAutomaton();
     
     /**
      * Returns the unnormalized probability of the given tree in the target
@@ -142,7 +142,7 @@ public interface RuleWeighting {
      * @param sample
      * @return 
      */
-    public double getLogTargetProbability(Tree<Rule> sample);
+    double getLogTargetProbability(Tree<Rule> sample);
 
     /**
      * Returns the proposal probability of the given rule given its parent.
@@ -150,5 +150,5 @@ public interface RuleWeighting {
      * @param r
      * @return 
      */
-    public double getLogProbability(Rule r);
+    double getLogProbability(Rule r);
 }

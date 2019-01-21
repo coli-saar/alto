@@ -15,12 +15,12 @@ import de.up.ling.irtg.laboratory.OperationAnnotation;
  * @author koller
  */
 public interface PruningPolicy {
-    public void foreachPrunedRulePair(int rightParent, RulePairConsumer consumer);
-    public void collect(int rightParent, Rule left, CondensedRule right);
+    void foreachPrunedRulePair(int rightParent, RulePairConsumer consumer);
+    void collect(int rightParent, Rule left, CondensedRule right);
     
     @OperationAnnotation(code = "numIteratedRules")
-    public long numIteratedRules();
+    long numIteratedRules();
     
     @OperationAnnotation(code = "numCollectedRules")
-    public long numCollectedRules();
+    long numCollectedRules();
 }

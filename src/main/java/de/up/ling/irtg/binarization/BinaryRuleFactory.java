@@ -28,5 +28,5 @@ public interface BinaryRuleFactory {
      * @param binarizedIrtg - the binarized IRTG whose rules we are currently creating
      * @return - the created binarized rule
      */
-    public Rule generateBinarizedRule(Tree<String> nodeInVartree, List<String> binarizedChildStates, String pathToNode, Rule originalRule, Tree<String> vartree, InterpretedTreeAutomaton originalIrtg, InterpretedTreeAutomaton binarizedIrtg);
+    Rule generateBinarizedRule(Tree<String> nodeInVartree, List<String> binarizedChildStates, String pathToNode, Rule originalRule, Tree<String> vartree, InterpretedTreeAutomaton originalIrtg, InterpretedTreeAutomaton binarizedIrtg);
 }

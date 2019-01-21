@@ -60,7 +60,7 @@ public abstract class FeatureFunction<State, V> {
         if (state instanceof Pair) {
             Pair s = (Pair) state;
             if (s.left instanceof Pair) {
-                return this.getLabelFor((Pair) s.left);
+                return this.getLabelFor(s.left);
             }
             return (State) s.left;
         }

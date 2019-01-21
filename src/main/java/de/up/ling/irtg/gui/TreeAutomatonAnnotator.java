@@ -12,6 +12,6 @@ import java.util.Collection;
  * @author koller
  */
 public interface TreeAutomatonAnnotator {
-    public Collection<String> getAnnotationIdentifiers();
-    public String getAnnotation(Rule rule, String annotationIdentifier);
+    Collection<String> getAnnotationIdentifiers();
+    String getAnnotation(Rule rule, String annotationIdentifier);
 }

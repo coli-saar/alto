@@ -12,5 +12,5 @@ package de.up.ling.irtg.util;
  */
 @FunctionalInterface
 public interface ProgressListener {
-    public void accept(int currentValue, int maxValue, String string);    
+    void accept(int currentValue, int maxValue, String string);
 }

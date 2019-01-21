@@ -102,9 +102,9 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
     }
 
     @FunctionalInterface
-    public static interface IntersectionCall {
+    public interface IntersectionCall {
 
-        public TreeAutomaton intersect(TreeAutomaton left, CondensedTreeAutomaton right);
+        TreeAutomaton intersect(TreeAutomaton left, CondensedTreeAutomaton right);
     }
 
     public NonCondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {

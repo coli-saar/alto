@@ -13,5 +13,5 @@ import java.util.function.IntConsumer;
  * @author koller
  */
 public interface IntForEach {
-    public void forEach(IntConsumer consumer);
+    void forEach(IntConsumer consumer);
 }

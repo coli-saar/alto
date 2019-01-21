@@ -230,9 +230,9 @@ public class IntTrie<E> implements Serializable {
      * trie together with the value they are associated with.
      * @param <E> 
      */
-    public static interface EntryVisitor<E> {
+    public interface EntryVisitor<E> {
 
-        public void visit(IntList keys, E value);
+        void visit(IntList keys, E value);
     }
 
     /**

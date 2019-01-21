@@ -643,8 +643,8 @@ public class SGraph{
     }
     
     
-    static interface NodeRepresentationAppender {
-        public void append(GraphNode node, Set<String> visitedNodes, StringBuilder buf);
+    interface NodeRepresentationAppender {
+        void append(GraphNode node, Set<String> visitedNodes, StringBuilder buf);
     }
     
     /**
@@ -791,11 +791,7 @@ public class SGraph{
             return true;
         } else if (!isIdenticalExceptSources(other)) {
             return false;
-        } else if (!sourceToNodename.equals(other.sourceToNodename)) {
-            return false;
-        } else {
-            return true;
-        }
+        } else return sourceToNodename.equals(other.sourceToNodename);
     }
 
     /**
@@ -826,12 +822,9 @@ public class SGraph{
                 }
             }
 
-            if (!other.graph.edgeSet().equals(graph.edgeSet())) {
-                return false;
-            }
+            return other.graph.edgeSet().equals(graph.edgeSet());
         }
 
-        return true;
     }
 
     /**

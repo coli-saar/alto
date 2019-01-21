@@ -14,5 +14,5 @@ import java.util.List;
  * @author koller
  */
 public interface ItemEvaluator<Q> {
-    public EvaluatedItem<Q> evaluate(Rule refinedRule, List<EvaluatedItem<Q>> children, UnevaluatedItem unevaluatedItem);
+    EvaluatedItem<Q> evaluate(Rule refinedRule, List<EvaluatedItem<Q>> children, UnevaluatedItem unevaluatedItem);
 }

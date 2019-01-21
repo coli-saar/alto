@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
  */
 public class CandidateMatcher {
     
-    private final static Set<String> NAME_FILLERS = new HashSet(Arrays.asList(new String[]{"of", "and", "the", "for", "new", "on"}));
-    private final static Set<String> NO_LITERAL_MATCH = new HashSet(Arrays.asList(new String[]{"of", "in", "the", "for", "on", "to", "a", "an", "as", "by", "but", "as"}));
-    private final static Set<String> PRONOUNS = new HashSet(Arrays.asList(new String[]{"i", "you", "he", "she", "it", "we", "they"}));
+    private final static Set<String> NAME_FILLERS = new HashSet(Arrays.asList("of", "and", "the", "for", "new", "on"));
+    private final static Set<String> NO_LITERAL_MATCH = new HashSet(Arrays.asList("of", "in", "the", "for", "on", "to", "a", "an", "as", "by", "but", "as"));
+    private final static Set<String> PRONOUNS = new HashSet(Arrays.asList("i", "you", "he", "she", "it", "we", "they"));
     
     /**
      * Creates candidate alignments (based on lexical rules and matches).

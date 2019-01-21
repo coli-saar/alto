@@ -138,10 +138,7 @@ public class Alignment {
         if (!Objects.equals(this.span, other.span)) {
             return false;
         }
-        if (!Objects.equals(this.lexNodes, other.lexNodes)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.lexNodes, other.lexNodes);
     }
     
     /**
@@ -316,10 +313,7 @@ public class Alignment {
             if (this.start != other.start) {
                 return false;
             }
-            if (this.end != other.end) {
-                return false;
-            }
-            return true;
+            return this.end == other.end;
         }
         
         

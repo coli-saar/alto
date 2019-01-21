@@ -25,9 +25,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -84,7 +82,7 @@ public class Homomorphism implements Serializable {
                 System.err.println("-> " + mapping + " is already known.");
             }
 
-            int labelSetID = termToId.get(mapping);  // get existing termID
+            int labelSetID = termToId.getInt(mapping);  // get existing termID
             addToLabelSet(label, labelSetID);           // put the current label in the labelSet for this term.
             labelToLabelSet.put(label, labelSetID);     // Add the mapping from the label to the corresponding labelSet
         } else {
@@ -294,6 +292,7 @@ public class Homomorphism implements Serializable {
                 return applyRaw(subtrees.get(label.getValue()));
             case CONSTANT:
                 int size = tree.getChildren().size();
+				@SuppressWarnings("unchecked")
                 Tree<Integer>[] children = new Tree[size];
 
                 for (int i = 0; i < size; ++i) {

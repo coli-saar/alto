@@ -207,7 +207,7 @@ public class CodecUtilities {
      * @throws NoSuchMethodException  no method with this name of parameter list could be found
      */
     public static Method findStaticFeatureFactory(String className, String methodName, int n) throws ClassNotFoundException, NoSuchMethodException {
-        Class cl = (Class) Class.forName(className);
+        Class cl = Class.forName(className);
         
         Class[] args = new Class[n];
         Arrays.fill(args, String.class);

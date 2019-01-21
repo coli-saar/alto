@@ -10,7 +10,7 @@ package de.up.ling.irtg.semiring;
  * @author koller
  */
 public interface Semiring<E> {
-    public E add(E x, E y);
-    public E multiply(E x, E y);
-    public E zero();     // a value such that zero + x = x for all x
+    E add(E x, E y);
+    E multiply(E x, E y);
+    E zero();     // a value such that zero + x = x for all x
 }

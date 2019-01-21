@@ -101,7 +101,7 @@ public abstract class Algebra<E> implements Serializable {
         if (t == null) {
             return null;
         } else {
-            return (E) t.dfs(new TreeVisitor<String, Void, E>() {
+            return t.dfs(new TreeVisitor<String, Void, E>() {
                 @Override
                 public E combine(Tree<String> node, List<E> childrenValues) {
                     try {

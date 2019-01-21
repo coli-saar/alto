@@ -60,7 +60,7 @@ public class InterpretationPrintingPolicy {
         
         for( int i = 0; i < args.length; i += 2 ) {
             OutputCodec oc = new AlgebraStringRepresentationOutputCodec((Algebra) args[i+1]);
-            interpretationToAlgebra.add(new Pair((String) args[i], oc));
+            interpretationToAlgebra.add(new Pair(args[i], oc));
         }
         
         return new InterpretationPrintingPolicy(interpretationToAlgebra, algebraForDerivationTree);

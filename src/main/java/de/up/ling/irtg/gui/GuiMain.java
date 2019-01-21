@@ -720,7 +720,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                     str = "SEVERE: " + str;
                 }
 
-                guiMain.log(str);
+                log(str);
             }
 
             @Override

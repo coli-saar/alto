@@ -24,7 +24,7 @@ public interface ResultManager {
      * @param isGlobal 
      * @param isNumeric whether the result is of numeric value (double, int,... or the wrapper class). Relevant mostly if result is null.
      */
-    public void acceptResult(Object result, int instanceID, String name, boolean doExport, boolean isGlobal, boolean isNumeric);
+    void acceptResult(Object result, int instanceID, String name, boolean doExport, boolean isGlobal, boolean isNumeric);
     
     /**
      * Accepts a runtime for the watch with the given name, for the given instance.
@@ -34,7 +34,7 @@ public interface ResultManager {
      * @param name 
      * @param isGlobal 
      */
-    public void acceptTime(long time, int instanceID, String name, boolean isGlobal);
+    void acceptTime(long time, int instanceID, String name, boolean isGlobal);
     
     /**
      * If an error occurred during the computation of the variable with the given name,
@@ -45,7 +45,7 @@ public interface ResultManager {
      * @param doExport
      * @param isGlobal 
      */
-    public void acceptError(Throwable error, int instanceID, String name, boolean doExport, boolean isGlobal);
+    void acceptError(Throwable error, int instanceID, String name, boolean doExport, boolean isGlobal);
     
     /**
      * Send data to the persistent storage. For efficiency reasons, a ResultManager
@@ -56,25 +56,25 @@ public interface ResultManager {
      * data.
      * 
      */
-    public void flush() throws IOException;
+    void flush() throws IOException;
     
     /**
      * Returns the experiment ID in this result manager.
      * 
      * @return 
      */
-    public int getExperimentID();
+    int getExperimentID();
     
     /**
      * Marks the experiment as finished.
      */
-    public void finish() throws Exception;
+    void finish() throws Exception;
     
     
     /**
      * Does literally nothing.
      */
-    public static class DummyManager implements ResultManager {
+    class DummyManager implements ResultManager {
 
         @Override
         public void acceptResult(Object result, int instanceID, String name, boolean doExport, boolean isGlobal, boolean isNumeric) {
@@ -115,7 +115,7 @@ public interface ResultManager {
     /**
      * prints the results to System.err.
      */
-    public static class PrintingManager implements ResultManager {
+    class PrintingManager implements ResultManager {
         private StringBuilder buf = new StringBuilder();
 
         @Override

@@ -25,7 +25,7 @@ public interface TopDownRuleIndex {
      * 
      * @param rule 
      */
-    public void add(Rule rule);
+    void add(Rule rule);
     
     /**
      * Retrieves the rules for a given parent state. That is,
@@ -36,7 +36,7 @@ public interface TopDownRuleIndex {
      * @param parentState
      * @return 
      */
-    public Iterable<Rule> getRules(final int parentState);
+    Iterable<Rule> getRules(final int parentState);
     
     /**
      * Retrieves the terminal symbols such that rules for
@@ -48,7 +48,7 @@ public interface TopDownRuleIndex {
      * @param parentState
      * @return 
      */
-    public IntIterable getLabelsTopDown(int parentState);
+    IntIterable getLabelsTopDown(int parentState);
     
     /**
      * Retrieves the rules for a given parent state and terminal
@@ -59,8 +59,8 @@ public interface TopDownRuleIndex {
      * @param labelId
      * @param parentState
      * @return 
-     */    
-    public Iterable<Rule> getRules(final int labelId, final int parentState);
+     */
+    Iterable<Rule> getRules(final int labelId, final int parentState);
     
     /**
      * Checks whether top-down rules for this parent state and label
@@ -75,9 +75,9 @@ public interface TopDownRuleIndex {
      * @param parent
      * @return 
      */
-    public boolean useCachedRule(int label, int parent);
+    boolean useCachedRule(int label, int parent);
 
-    public abstract Iterable<Rule> getAllRules();
+    Iterable<Rule> getAllRules();
 
-    public abstract void foreachRule(int parentState, Consumer<Rule> fn);
+    void foreachRule(int parentState, Consumer<Rule> fn);
 }

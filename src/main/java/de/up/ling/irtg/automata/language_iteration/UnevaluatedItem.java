@@ -56,10 +56,7 @@ public class UnevaluatedItem {
             return false;
         }
         final UnevaluatedItem other = (UnevaluatedItem) obj;
-        if (this.tuple != other.tuple && (this.tuple == null || !this.tuple.equals(other.tuple))) {
-            return false;
-        }
-        return true;
+        return this.tuple == other.tuple || (this.tuple != null && this.tuple.equals(other.tuple));
     }
 
     @Override

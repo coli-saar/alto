@@ -16,40 +16,40 @@ import java.util.function.IntConsumer;
  * There are implementations using Bytes and shorts instead of integers in an effort to save memory.
  * @author groschwitz
  */
-abstract interface IdBasedEdgeSet {
+interface IdBasedEdgeSet {
     
     /**
      * Adds the edge.
      * @param edge
      */
-    public abstract void add(int edge);
+    void add(int edge);
 
     /**
      * Returns true iff this set contains the given edge.
      * @param edge
      * @return
      */
-    public abstract boolean contains(int edge);
+    boolean contains(int edge);
 
     /**
      * Returns true iff this set and the other set are disjoint. 
      * @param other
      * @return
      */
-    public abstract boolean disjunt(IdBasedEdgeSet other);
+    boolean disjunt(IdBasedEdgeSet other);
 
     /**
      * Adds all edges of other to this set.
      * @param other
      */
-    public abstract void addAll(IdBasedEdgeSet other);
+    void addAll(IdBasedEdgeSet other);
 
     /**
      * Adds the given edge to this set.
      * @param edge
      * @param graphInfo
      */
-    public abstract void add(GraphEdge edge, GraphInfo graphInfo);
+    void add(GraphEdge edge, GraphInfo graphInfo);
 
     /**
      * Returns true iff this set contains the given edge
@@ -57,14 +57,14 @@ abstract interface IdBasedEdgeSet {
      * @param graphInfo
      * @return
      */
-    public abstract boolean contains(GraphEdge edge, GraphInfo graphInfo);
+    boolean contains(GraphEdge edge, GraphInfo graphInfo);
 
     /**
      * Returns true iff this set contains all the edges in the array
      * @param other
      * @return
      */
-    public abstract boolean containsAll(int[] other);
+    boolean containsAll(int[] other);
 
     
     /**
@@ -78,21 +78,21 @@ abstract interface IdBasedEdgeSet {
      * @param graphInfo
      * @return
      */
-    public abstract IntList smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
+    IntList smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
     
     
     /**
      * Clones the set.
      * @return 
      */
-    public abstract IdBasedEdgeSet clone();
+    IdBasedEdgeSet clone();
     
     /**
      * appends all edge names to the stringBuilder
      * @param result
      * @param graphInfo
      */
-    public abstract void appendAll(StringBuilder result, GraphInfo graphInfo);
+    void appendAll(StringBuilder result, GraphInfo graphInfo);
 
 
     /**
@@ -100,31 +100,31 @@ abstract interface IdBasedEdgeSet {
      * @param map
      * @return 
      */
-    public abstract List<BitSet> getCorrespondingBitSets(Int2ObjectMap<BitSet> map);
+    List<BitSet> getCorrespondingBitSets(Int2ObjectMap<BitSet> map);
     
     /**
      * returns the number of edges in this set.
      * @return
      */
-    public abstract int size();
+    int size();
    
     /**
      * returns the first edge in this set (no particular order, but the same while the set is unchanged).
      * @return
      */
-    public abstract int getFirst();
+    int getFirst();
     
     /**
      * returns true iff no edge is in this set.
      * @return
      */
-    public abstract boolean isEmpty();
+    boolean isEmpty();
     
     /**
      * applies the action to all edges in this set.
      * @param action
      */
-    public abstract void forEach(IntConsumer action);
+    void forEach(IntConsumer action);
     
     
 }

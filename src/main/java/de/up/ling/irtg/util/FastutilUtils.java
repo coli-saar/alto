@@ -156,8 +156,8 @@ public class FastutilUtils {
         }
     }
 
-    public static interface Int2ObjectEntryConsumer<E> {
-        public void accept(int key, E value);
+    public interface Int2ObjectEntryConsumer<E> {
+        void accept(int key, E value);
     }
 
     /**

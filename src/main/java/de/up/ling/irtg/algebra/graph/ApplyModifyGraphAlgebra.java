@@ -263,10 +263,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (!Objects.equals(this.rho, other.rho)) {
                 return false;
             }
-            if (!Objects.equals(this.id, other.id)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(this.id, other.id);
         }
 
         public Set<String> keySet() {

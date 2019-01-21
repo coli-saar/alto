@@ -843,10 +843,7 @@ public class BoundaryRepresentation {
         if (!Arrays.equals(this.sourceToNode, other.sourceToNode)) {
             return false;
         }
-        if (!Objects.equals(this.isInBoundaryEdge, other.isInBoundaryEdge)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.isInBoundaryEdge, other.isInBoundaryEdge);
     }
 
     

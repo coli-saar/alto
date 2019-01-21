@@ -26,10 +26,10 @@ public interface LearningRate {
      * @param gradient
      * @return 
      */
-    public double getLearningRate(int group, int number, double gradient);
+    double getLearningRate(int group, int number, double gradient);
     
     /**
      * Resets the learning rate sequence to its initial state.
      */
-    public void reset();
+    void reset();
 }

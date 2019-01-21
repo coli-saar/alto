@@ -127,10 +127,7 @@ public class Item implements Comparable<Item> {
         if (this.root != other.root) {
             return false;
         }
-        if (!Objects.equals(this.type, other.type)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.type, other.type);
     }
     
     

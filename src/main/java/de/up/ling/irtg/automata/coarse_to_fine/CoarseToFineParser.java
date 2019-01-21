@@ -144,15 +144,15 @@ public class CoarseToFineParser {
     }
 
 
-    private static interface IIntInt2DoubleMap {
+    private interface IIntInt2DoubleMap {
 
-        public void put(int x, int y, double value);
+        void put(int x, int y, double value);
 
-        public double get(int x, int y);
+        double get(int x, int y);
 
-        public void clear();
+        void clear();
 
-        public void setDefaultReturnValue(double value);
+        void setDefaultReturnValue(double value);
     }
 
     private static class MyIntInt2DoubleMap implements IIntInt2DoubleMap {

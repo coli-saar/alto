@@ -12,15 +12,15 @@ import java.io.IOException;
  * @author koller
  */
 public interface NumberCodec {
-    public int readInt() throws IOException;
-    public int readSignedInt() throws IOException;
-    public long readLong() throws IOException;
-    public long readSignedLong() throws IOException;
-    public double readDouble() throws IOException;
+    int readInt() throws IOException;
+    int readSignedInt() throws IOException;
+    long readLong() throws IOException;
+    long readSignedLong() throws IOException;
+    double readDouble() throws IOException;
     
-    public long writeInt(int value) throws IOException;
-    public long writeSignedInt(int value) throws IOException;
-    public long writeLong(long value) throws IOException;
-    public long writeSignedLong(long value) throws IOException;
-    public long writeDouble(double value) throws IOException;    
+    long writeInt(int value) throws IOException;
+    long writeSignedInt(int value) throws IOException;
+    long writeLong(long value) throws IOException;
+    long writeSignedLong(long value) throws IOException;
+    long writeDouble(double value) throws IOException;
 }

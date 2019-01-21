@@ -89,10 +89,7 @@ public class LexiconEntry {
         if (!Objects.equals(this.features, other.features)) {
             return false;
         }
-        if (!Objects.equals(this.getSecondaryLex(), other.getSecondaryLex())) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.getSecondaryLex(), other.getSecondaryLex());
     }
 
     

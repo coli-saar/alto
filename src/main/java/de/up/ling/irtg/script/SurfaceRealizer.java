@@ -106,7 +106,7 @@ public class SurfaceRealizer {
 
         // put inputs here
         Set<List<String>> refInput = ref.parseString(param.ref);
-        BitSet semInput = (BitSet) sem.parseString(param.sem);
+        BitSet semInput = sem.parseString(param.sem);
 
         // for FOM calculation
         FloydWarshallShortestPaths fw = computeShortestPaths(model);

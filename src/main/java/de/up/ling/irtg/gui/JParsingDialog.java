@@ -23,7 +23,7 @@ import javax.swing.SwingUtilities;
  * @author koller
  */
 public class JParsingDialog extends javax.swing.JDialog {
-    public static enum Algorithm {
+    public enum Algorithm {
         DEFAULT("Default"),
         CONDENSED_BOTTOM_UP("Condensed bottom-up"),
         SIBLING_FINDER("Sibling finder");
@@ -40,7 +40,7 @@ public class JParsingDialog extends javax.swing.JDialog {
         }
     }
 
-    public static enum Filtering {
+    public enum Filtering {
         BASIC("Basic"),
         BINARIZED("Binarized");
 
@@ -56,7 +56,7 @@ public class JParsingDialog extends javax.swing.JDialog {
         }
     }
 
-    public static enum Pruning {
+    public enum Pruning {
         NONE, BEAM_SEARCH, CTF
     }
 

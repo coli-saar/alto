@@ -98,10 +98,7 @@ public class GraphNode {
             return false;
         }
         final GraphNode other = (GraphNode) obj;
-        if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
-            return false;
-        }
-        return true;
+        return (this.name == null) ? (other.name == null) : this.name.equals(other.name);
     }
 
     static class NodeLabelEquivalenceComparator implements EquivalenceComparator<GraphNode, Graph<GraphNode, GraphEdge>> {

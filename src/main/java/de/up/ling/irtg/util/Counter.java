@@ -131,7 +131,7 @@ public class Counter<E> {
         List<Object2IntMap.Entry<E>> list = getAllSorted();
         for (Object2IntMap.Entry<E> o : list) {
             w.write(o.getKey().toString()+": "+o.getIntValue()+"\n");
-        };
+        }
         w.flush();
     }
     

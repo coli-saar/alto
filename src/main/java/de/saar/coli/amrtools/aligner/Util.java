@@ -180,25 +180,23 @@ public class Util {
     }
     
     static boolean matchesDatePattern(GraphNode node, SGraph graph) {
-        if (node.getLabel().equals("date-entity")) {
-            boolean month = false;
-            boolean day = false;
-            boolean year = false;
-            boolean other = false;
-            for (GraphEdge e : graph.getGraph().outgoingEdgesOf(node)) {
-                switch (e.getLabel()) {
-                    case "month": month = true; break;
-                    case "day": day = true; break;
-                    case "year": year = true; break;
-                    default: other = true; break;
-                }
-            }
-            if (day || month || year) {
-                return true;
-            }
-        }
-        return false;
-    }
+        if (! node.getLabel().equals("date-entity")) {
+			return false;
+		}
+		boolean month = false;
+		boolean day = false;
+		boolean year = false;
+		boolean other = false;
+		for (GraphEdge e : graph.getGraph().outgoingEdgesOf(node)) {
+			switch (e.getLabel()) {
+			case "month": month = true; break;
+			case "day": day = true; break;
+			case "year": year = true; break;
+			default: other = true; break;
+			}
+		}
+		return day || month || year;
+	}
     
     static Set<String> datePatterns(GraphNode node, SGraph graph) {
         if (!matchesDatePattern(node, graph)) {

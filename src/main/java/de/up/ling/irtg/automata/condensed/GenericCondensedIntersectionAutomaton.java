@@ -80,9 +80,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     abstract protected void addAllOutputRules();
 
     @FunctionalInterface
-    public static interface IntersectionCall {
+    public interface IntersectionCall {
 
-        public TreeAutomaton intersect(TreeAutomaton left, CondensedTreeAutomaton right);
+        TreeAutomaton intersect(TreeAutomaton left, CondensedTreeAutomaton right);
     }
 
     public GenericCondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {

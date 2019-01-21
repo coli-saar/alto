@@ -158,12 +158,7 @@ class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
                     if (pos >= originalSize) {
 //                        System.err.println("it done #");
                         return false;
-                    } else if (endTest.test(rules.get(pos))) {
-//                        System.err.println("it done !=");
-                        return false;
-                    } else {
-                        return true;
-                    }
+                    } else return !endTest.test(rules.get(pos));
                 }
 
                 @Override
@@ -241,7 +236,7 @@ class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
         } else {
 //            System.err.println("\n\n** getRules(" + labelId + "," + parentState + "), start at " + start);
             assert rules.get(start).getParent() == parentState : "rule(" + parentState + "," + labelId + ") has wrong parent, is " + rules.get(start);
-            assert rules.get(start).getLabel() == labelId : "rule(" + parentState + "," + labelId + ") has wrong label, is " + rules.get(start);;
+            assert rules.get(start).getLabel() == labelId : "rule(" + parentState + "," + labelId + ") has wrong label, is " + rules.get(start);
             return new RuleUntilIterable(start, rule -> rule.getParent() != parentState || rule.getLabel() != labelId);
         }
     }

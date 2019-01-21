@@ -12,6 +12,6 @@ import java.io.IOException;
  * @author koller
  */
 public interface StringCodec {
-    public long writeString(String s) throws IOException;
-    public String readString() throws IOException;
+    long writeString(String s) throws IOException;
+    String readString() throws IOException;
 }

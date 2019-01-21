@@ -22,7 +22,7 @@ public interface FineToCoarseMapping {
      * @param symbol
      * @return 
      */
-    public String coarsify(String symbol);
+    String coarsify(String symbol);
     
     /**
      * Returns the number of coarse to fine levels.
@@ -32,5 +32,5 @@ public interface FineToCoarseMapping {
      * 
      * @return 
      */
-    public int numLevels();
+    int numLevels();
 }

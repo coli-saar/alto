@@ -24,5 +24,5 @@ public interface ChartAttacher {
      * @param source
      * @return 
      */
-    public Iterator<Instance> attach(Iterator<Instance> source);    
+    Iterator<Instance> attach(Iterator<Instance> source);
 }

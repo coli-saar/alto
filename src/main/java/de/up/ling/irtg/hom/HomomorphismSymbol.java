@@ -23,7 +23,8 @@ public class HomomorphismSymbol implements Serializable {
     public enum Type {
         CONSTANT, VARIABLE
         // GENSYM
-    };
+    }
+
     private final Type type;
     private final int value;
 
@@ -214,8 +215,8 @@ public class HomomorphismSymbol implements Serializable {
     */
     public static ToIntFunction<HomomorphismSymbol> getRemappingSymbolToIntFunction(final SignatureMapper mapper) {
         return f -> mapper.remapForward(f.getValue());
-    };
-    
+    }
+
     @Override
     public int hashCode() {
         int hash = 5;
@@ -236,9 +237,6 @@ public class HomomorphismSymbol implements Serializable {
         if (this.type != other.type) {
             return false;
         }
-        if (this.value != other.value) {
-            return false;
-        }
-        return true;
+        return this.value == other.value;
     }
 }

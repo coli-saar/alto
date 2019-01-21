@@ -98,7 +98,7 @@ public abstract class InputCodec<E> {
      * @return 
      */
     public CodecMetadata getMetadata() {
-        return (CodecMetadata) getClass().getAnnotation(CodecMetadata.class);
+        return getClass().getAnnotation(CodecMetadata.class);
     }
 
     /**
@@ -252,12 +252,8 @@ public abstract class InputCodec<E> {
     
     public boolean hasTrueOption(String key) {
         String val = getOption(key);
-        
-        if( val != null && val.toLowerCase().equals("true")) {
-            return true;
-        } else {
-            return false;
-        }
+
+        return val != null && val.toLowerCase().equals("true");
     }
 
     public static void main(String[] args) throws FileNotFoundException, CodecParseException, IOException, Exception {

@@ -869,8 +869,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * intersection construction.
      */
     @FunctionalInterface
-    public static interface StateDiscoveryListener {
-        public void accept(int state);
+    public interface StateDiscoveryListener {
+        void accept(int state);
     }
 
     /**
@@ -911,12 +911,12 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         this.stopWhenFinalStateFound = stopWhenFinalStateFound;
     }
 
-    static interface AgendaI {
-        public void enqueue(int newState, int leftState, int rightState);
+    interface AgendaI {
+        void enqueue(int newState, int leftState, int rightState);
 
-        public int dequeue();
+        int dequeue();
 
-        public boolean isEmpty();
+        boolean isEmpty();
     }
 
     static class QueueAgenda implements AgendaI {

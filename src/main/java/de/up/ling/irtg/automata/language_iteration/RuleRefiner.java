@@ -14,5 +14,5 @@ import java.util.List;
  * @author koller
  */
 public interface RuleRefiner {
-    public List<Rule> refine(Rule rule);
+    List<Rule> refine(Rule rule);
 }

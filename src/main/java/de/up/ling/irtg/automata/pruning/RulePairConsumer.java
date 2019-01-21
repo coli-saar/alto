@@ -15,5 +15,5 @@ import de.up.ling.irtg.automata.condensed.CondensedRule;
  */
 @FunctionalInterface
 public interface RulePairConsumer {
-    public void accept(Rule left, CondensedRule right, double value);
+    void accept(Rule left, CondensedRule right, double value);
 }

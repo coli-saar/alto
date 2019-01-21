@@ -135,8 +135,8 @@ public class Parser {
                     ruleLabel2tag.put(ruleLabel, fAndP.left);
                     grammarAuto.addRule(grammarAuto.createRule(nt, ruleLabel, new String[0], Math.pow(fAndP.right, tagExponent)));
                     min = Math.min(min, Math.pow(fAndP.right, tagExponent));
-                    graphHom.add(ruleLabel, Tree.create(fullGraphString, new Tree[0]));
-                    stringHom.add(ruleLabel, Tree.create(sentInternal.get(i), new Tree[0]));
+                    graphHom.add(ruleLabel, Tree.create(fullGraphString));
+                    stringHom.add(ruleLabel, Tree.create(sentInternal.get(i)));
                 } else {
                     //then we add an IGNORE rule
                     foundNull = true;
@@ -146,16 +146,16 @@ public class Parser {
                                 String nt = head+"|"+type;
                                 String ruleLabel = gensym("NULL_"+i+"__");
                                 grammarAuto.addRule(grammarAuto.createRule(nt, ruleLabel, new String[]{nt}, Math.pow(fAndP.right, tagExponent)));
-                                Tree tNull = Tree.create(sentInternal.get(i), new Tree[0]);
-                                Tree tVar = Tree.create("?1", new Tree[0]);
+                                Tree tNull = Tree.create(sentInternal.get(i));
+                                Tree tVar = Tree.create("?1");
                                 Tree<String> stringOp;
                                 if (head < i) {
-                                    stringOp = Tree.create(concatSymbol, new Tree[]{tVar, tNull});
+                                    stringOp = Tree.create(concatSymbol, tVar, tNull);
                                 } else {
-                                    stringOp = Tree.create(concatSymbol, new Tree[]{tNull, tVar});
+                                    stringOp = Tree.create(concatSymbol, tNull, tVar);
                                 }
                                 stringHom.add(ruleLabel, stringOp);
-                                graphHom.add(ruleLabel, Tree.create("?1", new Tree[0]));
+                                graphHom.add(ruleLabel, Tree.create("?1"));
                             }
                         }
                     }
@@ -169,16 +169,16 @@ public class Parser {
                             String nt = head+"|"+type;
                             String ruleLabel = gensym("NULL_"+i+"__");
                             grammarAuto.addRule(grammarAuto.createRule(nt, ruleLabel, new String[]{nt}, min*0.00001));
-                            Tree tNull = Tree.create(sentInternal.get(i), new Tree[0]);
-                            Tree tVar = Tree.create("?1", new Tree[0]);
+                            Tree tNull = Tree.create(sentInternal.get(i));
+                            Tree tVar = Tree.create("?1");
                             Tree<String> stringOp;
                             if (head < i) {
-                                stringOp = Tree.create(concatSymbol, new Tree[]{tVar, tNull});
+                                stringOp = Tree.create(concatSymbol, tVar, tNull);
                             } else {
-                                stringOp = Tree.create(concatSymbol, new Tree[]{tNull, tVar});
+                                stringOp = Tree.create(concatSymbol, tNull, tVar);
                             }
                             stringHom.add(ruleLabel, stringOp);
-                            graphHom.add(ruleLabel, Tree.create("?1", new Tree[0]));
+                            graphHom.add(ruleLabel, Tree.create("?1"));
                         }
                     }
                 }
@@ -192,9 +192,9 @@ public class Parser {
         for (int id = 1; id <= stringAlg.getSignature().getMaxSymbolId(); id++) {
             if (stringAlg.getSignature().getArity(id) == 2) {
                 String label = stringAlg.getSignature().resolveSymbolId(id);
-                Tree<String> tree = Tree.create(label, new Tree[]{Tree.create("?1", new Tree[0]), Tree.create("?2", new Tree[0])});
+                Tree<String> tree = Tree.create(label, Tree.create("?1"), Tree.create("?2"));
                 stringTrees.add(tree);
-                Tree<String> reverseTree = Tree.create(label, new Tree[]{Tree.create("?2", new Tree[0]), Tree.create("?1", new Tree[0])});
+                Tree<String> reverseTree = Tree.create(label, Tree.create("?2"), Tree.create("?1"));
                 reverseStringTrees.add(reverseTree);
             }
         }
@@ -282,8 +282,8 @@ public class Parser {
                     String label = stringAlg.getSignature().resolveSymbolId(sigID);
                     String ruleLabel = gensym("unary_"+label);
                     grammarAuto.addRule(grammarAuto.createRule(state, ruleLabel, new String[]{state}, 1.0));
-                    stringHom.add(ruleLabel, Tree.create(label, new Tree[]{Tree.create("?1", new Tree[0])}));
-                    graphHom.add(ruleLabel, Tree.create("?1", new Tree[0]));
+                    stringHom.add(ruleLabel, Tree.create(label, Tree.create("?1")));
+                    graphHom.add(ruleLabel, Tree.create("?1"));
                 }
             }
         }
@@ -315,7 +315,7 @@ public class Parser {
         if (weightAndSuccess.right || addUnmentionedEdges) {
             grammarAuto.addRule(grammarAuto.createRule(nt, ruleLabel, nonterminals, weightAndSuccess.left));
             stringHom.add(ruleLabel, concatTree);
-            graphHom.add(ruleLabel, Tree.create(graphOp, new Tree[]{Tree.create("?1", new Tree[0]), Tree.create("?2", new Tree[0])}));
+            graphHom.add(ruleLabel, Tree.create(graphOp, Tree.create("?1"), Tree.create("?2")));
         }
     }
     

@@ -185,10 +185,7 @@ public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
         if (this.label != other.label) {
             return false;
         }
-        if (!Arrays.equals(this.children, other.children)) {
-            return false;
-        }
-        return true;
+        return Arrays.equals(this.children, other.children);
     }
 
     @Override

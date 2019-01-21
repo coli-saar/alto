@@ -119,9 +119,7 @@ public class BlobUtils {
         if (argEdges.size() == 1 &&
                 (argEdges.iterator().next().getLabel().equals("ARG1") || argEdges.iterator().next().getLabel().equals("ARG2"))) {
             GraphNode other = BlobUtils.otherNode(node, argEdges.iterator().next());
-            if (!getArgEdges(other, graph).isEmpty()) {
-                return true;
-            }
+            return !getArgEdges(other, graph).isEmpty();
         }
         return false;
     }

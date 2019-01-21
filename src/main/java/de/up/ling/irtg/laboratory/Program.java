@@ -155,7 +155,7 @@ public class Program {
 
     static Method getGetAlgMethod() {
         try {
-            return Interpretation.class.getMethod("getAlgebra", new Class[0]);
+            return Interpretation.class.getMethod("getAlgebra");
         } catch (NoSuchMethodException | SecurityException ex) {
             throw new RuntimeException(ex);
         }

@@ -73,7 +73,7 @@ public class GraphEdge{
     
     @Override
     public String toString() {
-        return label.toString();
+        return label;
     }
 
     /**
@@ -114,10 +114,7 @@ public class GraphEdge{
         if (!Objects.equals(this.source, other.source)) {
             return false;
         }
-        if (!Objects.equals(this.target, other.target)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.target, other.target);
     }
 
     /**

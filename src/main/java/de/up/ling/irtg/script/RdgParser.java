@@ -66,9 +66,9 @@ public class RdgParser {
         }
     }
 
-    private static interface CommandAction {
+    private interface CommandAction {
 
-        public void perform() throws Exception;
+        void perform() throws Exception;
     }
 
     private static List<Command> commands = Arrays.asList(

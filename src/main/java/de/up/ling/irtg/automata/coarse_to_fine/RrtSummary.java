@@ -57,10 +57,7 @@ class RrtSummary {
         if (this.termId != other.termId) {
             return false;
         }
-        if (!Arrays.equals(this.coarseChildren, other.coarseChildren)) {
-            return false;
-        }
-        return true;
+        return Arrays.equals(this.coarseChildren, other.coarseChildren);
     }
     
         

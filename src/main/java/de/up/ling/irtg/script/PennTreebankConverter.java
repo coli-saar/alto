@@ -550,10 +550,7 @@ public class PennTreebankConverter {
             if (!Objects.equals(this.lhs, other.lhs)) {
                 return false;
             }
-            if (!Objects.equals(this.rhs, other.rhs)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(this.rhs, other.rhs);
         }
 
         @Override

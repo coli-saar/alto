@@ -674,10 +674,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             if (!Objects.equals(this.role2nestedRole2Unif, other.role2nestedRole2Unif)) {
                 return false;
             }
-            if (!Objects.equals(this.role2Type, other.role2Type)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(this.role2Type, other.role2Type);
         }
 
         /**
@@ -1059,26 +1056,26 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
         }
     }
     
-    private static interface SinglesideMergePartnerFinder {
+    private interface SinglesideMergePartnerFinder {
         /**
          * stores the graph state represented by the int, for future reference
          * @param graph
          */
-        public abstract void insert(int graph);
+        void insert(int graph);
 
         /**
          * returns all graph states that are potential merge partners for the parameter graph.
          * @param graph
          * @return
          */
-        public abstract IntList getAllMergePartners(int graph);
+        IntList getAllMergePartners(int graph);
 
         /**
          * prints all stored graphs, and the structure how they are stored, via System.out
          * @param prefix
          * @param indent
          */
-        public abstract void print(String prefix, int indent);
+        void print(String prefix, int indent);
 
     }
     

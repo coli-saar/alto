@@ -31,12 +31,12 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
         this.printingPolicy = printingPolicy;
     }
 
-    public static interface ExConsumer<E> {
-        public void accept(E x) throws IOException;
+    public interface ExConsumer<E> {
+        void accept(E x) throws IOException;
     }
 
-    public static interface ExBiConsumer<E, F> {
-        public void accept(E x, F y) throws IOException;
+    public interface ExBiConsumer<E, F> {
+        void accept(E x, F y) throws IOException;
     }
 
     protected void withDerivationTree(Instance inst, Signature derivationTreeSignature, ExConsumer<String> fn) throws IOException {

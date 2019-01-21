@@ -57,7 +57,7 @@ public class CorpusUtils {
 	}
 	
 	
-	public static enum IntTypes{
+	public enum IntTypes{
 		STRING,
 		GRAPH,
 		TREE
@@ -131,9 +131,9 @@ public class CorpusUtils {
 		
 		br.lines().forEach( (String line) -> list.add(Integer.parseInt(line.trim())) );
 		
-		br.close();;
-		
-		return list;
+		br.close();
+
+        return list;
 		
 		
 	}

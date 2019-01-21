@@ -41,6 +41,7 @@ import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -381,8 +382,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * Decodes a map of input representations to a set of objects of the
      * specified output algebra. This first computes a parse chart for the input
      * representations, as per {@link #parse(java.util.Map) }. It then decodes
-     * the parse chart into an output term chart (see {@link #decodeToAutomaton(java.lang.String, de.up.ling.irtg.automata.TreeAutomaton)
-     * }
+     * the parse chart into an output term chart (see {@link #decodeToAutomaton(java.lang.String, de.up.ling.irtg.automata.TreeAutomaton)}
      * and evaluates each term in the language of the term chart to an object in
      * the output algebra. The method returns the set of all of these objects.
      *
@@ -772,7 +772,7 @@ public class InterpretedTreeAutomaton implements Serializable {
                 for (Integer r : outside.keySet()) {
                     System.out.println("Outside: " + parse.getStateForId(r) + " | " + outside.get(r));
                 }
-                System.out.println("");
+                System.out.println();
             }
 
             double likelihoodHere = 0;
@@ -1094,7 +1094,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      */
     @OperationAnnotation(code = "irtgFromString")
     public static InterpretedTreeAutomaton fromString(String s) throws IOException, CodecParseException {
-        return read(new ByteArrayInputStream(s.getBytes("UTF-8")));
+        return read(new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8)));
     }
 
     /**

@@ -59,7 +59,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
      * This includes their corresponding string label. When saying that an operation
      * takes a string argument we mean a pair consisting of some string and null.
      */
-    public static enum Operation {
+    public enum Operation {
 
         //
         //

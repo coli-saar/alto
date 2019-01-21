@@ -229,10 +229,7 @@ public class Interpretation<E> implements Serializable {
         if (this.algebra.getClass() != other.algebra.getClass() && (this.algebra == null || !this.algebra.getClass().equals(other.algebra.getClass()))) {
             return false;
         }
-        if (this.hom != other.hom && (this.hom == null || !this.hom.equals(other.hom))) {
-            return false;
-        }
-        return true;
+        return this.hom == other.hom || (this.hom != null && this.hom.equals(other.hom));
     }
 
     /**

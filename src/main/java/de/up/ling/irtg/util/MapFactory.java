@@ -13,5 +13,5 @@ import java.io.Serializable;
  * @author koller
  */
 public interface MapFactory extends Serializable {
-    public Int2ObjectMap createMap(int depth);
+    Int2ObjectMap createMap(int depth);
 }

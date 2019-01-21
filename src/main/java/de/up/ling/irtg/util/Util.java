@@ -72,7 +72,7 @@ public class Util {
         } else {
             Tree<String> left = Tree.create(leaves.get(pos));
             Tree<String> right = makeBinaryTree(symbol, leaves, pos + 1);
-            return Tree.create(symbol, new Tree[]{left, right});
+            return Tree.create(symbol, left, right);
         }
     }
 
@@ -178,9 +178,9 @@ public class Util {
         return NAMEDATEFORMAT.format(new Date());
     }
 
-    public static interface BottomUpTreeVisitor<L, V> {
+    public interface BottomUpTreeVisitor<L, V> {
 
-        public V combine(Tree<L> node, List<V> childValues);
+        V combine(Tree<L> node, List<V> childValues);
     }
 
     public static <L, V> V dfs(Tree<L> tree, BottomUpTreeVisitor<L, V> visitor) {
