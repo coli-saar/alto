@@ -322,17 +322,17 @@ public class Parser {
     private static Pair<Double, Boolean> getProb(int first, int second, String graphOp, double exponent,
             double factor, Map<String, Int2ObjectMap<Int2DoubleMap>> edgeLabel2pos2pos2prob) {
         if (edgeLabel2pos2pos2prob == null) {
-            return new Pair(Math.pow(DEFAULT_EDGE_SCORE, exponent)*factor, false);
+            return new Pair<>(Math.pow(DEFAULT_EDGE_SCORE, exponent)*factor, false);
         }
         Int2ObjectMap<Int2DoubleMap> pos2pos2prob = edgeLabel2pos2pos2prob.get(graphOp);
         if (pos2pos2prob == null) {
-            return new Pair(Math.pow(DEFAULT_EDGE_SCORE, exponent)*factor, false);
+            return new Pair<>(Math.pow(DEFAULT_EDGE_SCORE, exponent)*factor, false);
         }
         Int2DoubleMap pos2prob = pos2pos2prob.get(first);
         if (pos2prob == null || !pos2prob.containsKey(second)) {
-            return new Pair(Math.pow(DEFAULT_EDGE_SCORE, exponent*factor), false);
+            return new Pair<>(Math.pow(DEFAULT_EDGE_SCORE, exponent*factor), false);
         }
-        return new Pair(Math.pow(pos2prob.get(second), exponent)*factor, true);
+        return new Pair<>(Math.pow(pos2prob.get(second), exponent)*factor, true);
     }
     
     Pair<SGraph, Tree<String>> run() throws ParserException {
@@ -342,17 +342,17 @@ public class Parser {
         //System.err.println(auto);
         Tree<String> vit = auto.viterbi();
         if (vit == null) {
-            return new Pair(UNPARSEABLE_GRAPH, null);
+            return new Pair<>(UNPARSEABLE_GRAPH, null);
         } else {
             try {
                 SGraph ret = graphInterpretation.interpret(vit).left;
-                return new Pair(ret, vit);
+                return new Pair<>(ret, vit);
             } catch (java.lang.Exception ex) {
                 System.err.println("Evaluation in algebra failed!");
                 System.err.println(de.up.ling.irtg.util.Util.getStackTrace(ex));
                 System.err.println(vit);
                 //System.err.println(irtg); // probably not smart to always print the full IRTG
-                return new Pair(FAILED_EVAL_GRAPH, null);
+                return new Pair<>(FAILED_EVAL_GRAPH, null);
             }
         }
     }
@@ -389,7 +389,7 @@ public class Parser {
                 return null;
             }
         });
-        return new Pair(tags, ops);
+        return new Pair<>(tags, ops);
     }
     
     
