@@ -50,9 +50,10 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
     private static final String UNIQ = "uniq_";
+	private static final String SIZE = "size_";
     private static final String MEMBER = "member_";
     private static final String TOP = "T";
-    private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ, MEMBER};
+    private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ, SIZE, MEMBER};
     
     private FirstOrderModel model;
     
@@ -191,6 +192,8 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
             ret = intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(UNIQ)) {
             ret = uniq(childrenValues.get(0), arg(label));
+		} else if (label.startsWith(SIZE)) {
+            ret = size(childrenValues.get(0), arg(label));
         } else if (label.startsWith(MEMBER)) {
             ret = member(childrenValues.get(0), arg(label));
         } else if (label.equals(TOP)) {
@@ -268,6 +271,14 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
             return tupleSet;
         } else {
             return new HashSet<>();
+        }
+    }
+
+    private Set<List<String>> size(Set<List<String>> tupleSet, String value) {
+        if (tupleSet.size() == Integer.parseInt(value)) {
+            return tupleSet;
+        } else {
+            return new HashSet<List<String>>();
         }
     }
 
