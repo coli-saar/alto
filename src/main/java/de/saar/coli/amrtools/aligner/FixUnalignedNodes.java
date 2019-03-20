@@ -73,17 +73,17 @@ public class FixUnalignedNodes {
         Map<String, Interpretation<?>> interps = new HashMap<>();
         
         Signature dummySig = new Signature();
-        interps.put("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("tree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("repgraph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("reptree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("repstring", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("alignment", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("repalignment", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("alignmentp", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("repalignmentp", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
-        interps.put("spanmap", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig)));
+        interps.put("graph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("tree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("string", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("repgraph", new Interpretation(new GraphAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("reptree", new Interpretation(new TreeWithAritiesAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("repstring", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("alignment", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("repalignment", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("alignmentp", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("repalignmentp", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), ""));
+        interps.put("spanmap", new Interpretation(new StringAlgebra(), new Homomorphism(dummySig, dummySig), ""));
         
         InterpretedTreeAutomaton loaderIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
         loaderIRTG.addAllInterpretations(interps);

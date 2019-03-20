@@ -99,7 +99,7 @@ public class TreeSample<Type> {
      * @return 
      */
     public double getLogPropWeight(int entry) {
-        return this.proposalWeight.get(entry);
+        return this.proposalWeight.getDouble(entry);
     }
     
     /**
@@ -110,7 +110,7 @@ public class TreeSample<Type> {
      * @return 
      */
     public double getLogSumWeight(int entry) {
-        return this.sumProposalWeight.get(entry);
+        return this.sumProposalWeight.getDouble(entry);
     }
     
     /**
@@ -120,7 +120,7 @@ public class TreeSample<Type> {
      * @return 
      */
     public double getLogTargetWeight(int entry) {
-        return this.targetWeights.get(entry);
+        return this.targetWeights.getDouble(entry);
     }
     
     /**
@@ -130,7 +130,7 @@ public class TreeSample<Type> {
      * @return 
      */
     public double getSelfNormalizedWeight(int entry) {
-        return this.selfNormalizedWeight.get(entry);
+        return this.selfNormalizedWeight.getDouble(entry);
     }
     
     /**
@@ -175,7 +175,7 @@ public class TreeSample<Type> {
         }
         
         for(int i=0;i<this.populationSize();++i) {
-            this.selfNormalizedWeight.set(i, this.selfNormalizedWeight.get(i)/sum);
+            this.selfNormalizedWeight.set(i, this.selfNormalizedWeight.getDouble(i)/sum);
         }
     }
 
@@ -321,7 +321,7 @@ public class TreeSample<Type> {
         }
         
         for(int i=0;i<this.populationSize();++i) {
-            double d = Math.exp(this.selfNormalizedWeight.get(i)-max);
+            double d = Math.exp(this.selfNormalizedWeight.getDouble(i)-max);
             if(!Double.isFinite(d)) {
                 d = 0.0;
             }            

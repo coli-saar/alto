@@ -400,7 +400,7 @@ public class SurfaceRealizer {
             if( atom.getChildren().size() == 1 ) {
                 int count = atomCounts.count(atom.getLabel());
                 String x = atom.getChildren().get(0).getLabel();
-                if( count < ret.get(x) ) {
+                if( count < ret.getInt(x) ) {
                     ret.put(x, count);
                 }
             }

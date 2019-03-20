@@ -397,7 +397,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                 
                 @Override
                 public int[] next() {
-                    resArray[otherPos]= intIter.next();
+                    resArray[otherPos]= intIter.nextInt();
                     return resArray;
                 }
             };

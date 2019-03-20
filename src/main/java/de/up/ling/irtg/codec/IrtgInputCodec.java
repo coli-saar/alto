@@ -135,7 +135,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             Algebra algebra = (Algebra) algebraClass.newInstance();
             Homomorphism hom = new Homomorphism(automaton.getSignature(), algebra.getSignature());
 
-            interpretations.put(id, new Interpretation(algebra, hom));
+            interpretations.put(id, new Interpretation(algebra, hom, "<unnamed>"));
             homomorphisms.put(id, hom);
         } catch (Exception e) {
             throw new CodecParseException("Could not instantiate algebra class " + classname + " for interpretation " + id + ": " + e.toString());
@@ -168,7 +168,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             String[] args = new String[arguments.size()];
             arguments.toArray(args);
 
-            FeatureFunction feature = con.newInstance(args);
+            FeatureFunction feature = con.newInstance((Object[])args);
             features.put(id, feature);
         } catch (Exception e) {
             throw new CodecParseException("Could not instantiate FeatureFunction class " + classname + " for feature " + id + ": " + e.toString());

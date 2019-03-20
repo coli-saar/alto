@@ -242,7 +242,7 @@ public class SimpleIntDeque extends AbstractIntDeque {
 			while(it.hasNext()){
 				int next = it.nextInt();
 				if(e < next){
-					it.previous();
+					it.previousInt();
 					break;
 				}
 			}

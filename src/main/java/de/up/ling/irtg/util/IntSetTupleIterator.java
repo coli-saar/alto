@@ -34,7 +34,7 @@ public class IntSetTupleIterator implements Iterator{
             iterators[i] = set.iterator();
             
             if (i != 0 && iterators[i].hasNext()) {
-                currentValues[i] = iterators[i].next();// need i != 0 to get proper behavior when first next() is called.
+                currentValues[i] = iterators[i].nextInt();// need i != 0 to get proper behavior when first next() is called.
             }
             if (set.isEmpty()) {
                 tempIsEmpty = true;
@@ -61,12 +61,12 @@ public class IntSetTupleIterator implements Iterator{
         for (int i = 0; i < iterators.length; i++) {
             IntIterator it = iterators[i];
             if (it.hasNext()) {
-                currentValues[i] = it.next();
+                currentValues[i] = it.nextInt();
                 break;
             } else {
                 it = setTuple[i].iterator();
                 iterators[i] = it;
-                currentValues[i] = it.next();
+                currentValues[i] = it.nextInt();
             }
         }
         

@@ -141,7 +141,7 @@ public class AlignmentScorer {
     
     private double nonrelScore(Alignment al) {
         if (scoreBuffer.containsKey(al)) {
-            return scoreBuffer.get(al);
+            return scoreBuffer.getDouble(al);
         } else {
             double max = 0;
             for (int index = al.span.start; index<al.span.end; index++) {

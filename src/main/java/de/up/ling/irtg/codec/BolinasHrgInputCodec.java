@@ -212,7 +212,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             // this set will now contain all the nodes that must be tracked
             SortedSet<String> uncertainOuter = new TreeSet<>();
             for (String s : counts.keySet()) {
-                if (1 < counts.get(s)) {
+                if (1 < counts.getInt(s)) {
                     uncertainOuter.add(s);
                 }
             }
@@ -248,7 +248,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 }
 
                 for (String s : counts.keySet()) {
-                    if (2 < counts.get(s)) {
+                    if (2 < counts.getInt(s)) {
                         uncertainOuter.add(s);
                     }
                 }

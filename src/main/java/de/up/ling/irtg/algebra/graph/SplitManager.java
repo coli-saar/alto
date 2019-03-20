@@ -90,7 +90,7 @@ class SplitManager {
                 addToAgenda(e, c, agenda);
             }
             if (c.edgeSet().isEmpty()) {
-                cutVertex2BcgNode.put(c.vertexSet().iterator().next(), c);
+                cutVertex2BcgNode.put(c.vertexSet().iterator().next().intValue(), c);
             }
         }
         
@@ -113,9 +113,9 @@ class SplitManager {
                 putIntoEdgeMaps(e, inBEdgesThere, incidentEdges, bVertices, graphInfo);
 
             } else if (bcg.degreeOf(origin) == 1) { //then we are at a leaf, which must be either a single boundary edge, or not contain an edge at all.
-                if (origin.edgeSet().size() == 1 && inBEdges.contains(origin.edgeSet().iterator().next())) { // here we use that every boundary edge must be in its own block
+                if (origin.edgeSet().size() == 1 && inBEdges.contains(origin.edgeSet().iterator().next().intValue())) { // here we use that every boundary edge must be in its own block
                     IntSet inBEdgesHere = new IntOpenHashSet();
-                    inBEdgesHere.add(origin.edgeSet().iterator().next());
+                    inBEdgesHere.add(origin.edgeSet().iterator().next().intValue());
                     putIntoEdgeMaps(e, inBEdgesHere, new IntOpenHashSet(), bVertices, graphInfo);//do not need to count this one boundary edge twice, so we leave the incident edges empty.
                 } else {
                     IntSet incidentEdges = new IntOpenHashSet(origin.edgesOf(next.vertexSet().iterator().next()));

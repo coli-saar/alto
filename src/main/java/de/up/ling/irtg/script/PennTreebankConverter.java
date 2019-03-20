@@ -65,7 +65,9 @@ public class PennTreebankConverter {
 
     public static void main(String[] args) throws Exception {
         CmdLineParameters param = new CmdLineParameters();
-        jc = new JCommander(param, args);
+
+        jc = new JCommander(param);
+        jc.parse(args);
 
         if (param.help) {
             usage(null);

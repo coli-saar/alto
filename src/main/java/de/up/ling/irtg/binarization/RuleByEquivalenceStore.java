@@ -23,7 +23,7 @@ class RuleByEquivalenceStore {
     private final ToIntBiFunction<Integer, String> interpToId; // rule_label_id x interpretation_name -> labelSetID
 
     public RuleByEquivalenceStore(InterpretedTreeAutomaton irtg) {
-        this.interpToId = (labelId, interpretation) -> irtg.getInterpretation(interpretation).getHomomorphism().getLabelSetID(labelId);
+        this.interpToId = (labelId, interpretation) -> irtg.getInterpretation(interpretation).getHomomorphism().getTermID(labelId);
         ruleTrie = new IntTrie<>();
         interpsInOrder = new ArrayList<>(irtg.getInterpretations().keySet());
     }

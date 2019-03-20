@@ -1309,7 +1309,7 @@ public class InterpretedTreeAutomaton implements Serializable {
             for (Rule rule : filteredIRTG.automaton.getRuleSet()) {
                 newHom.add(rule.getLabel(), interp.getHomomorphism().get(rule.getLabel()));
             }
-            newInterps.put(nameAndInterp.getKey(), new Interpretation(interp.getAlgebra(), newHom));
+            newInterps.put(nameAndInterp.getKey(), new Interpretation(interp.getAlgebra(), newHom, "<unnamed>"));
         }
 
         //add interpretations

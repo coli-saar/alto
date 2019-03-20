@@ -27,6 +27,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         throw e;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void reportInputMismatch(Parser recognizer, InputMismatchException e) throws RecognitionException {
         String msg = getTokenPosition(e.getOffendingToken()) + ": mismatched input " + getTokenErrorDisplay(e.getOffendingToken());
@@ -36,6 +37,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         throw ex;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void reportMissingToken(Parser recognizer) {
         beginErrorCondition(recognizer);
@@ -45,6 +47,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         throw new RecognitionException(msg, recognizer, recognizer.getInputStream(), recognizer.getContext());
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void reportNoViableAlternative(Parser parser, NoViableAltException nvae) {
         Token t = parser.getCurrentToken();
@@ -53,6 +56,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         throw new RecognitionException(msg, parser, parser.getInputStream(), parser.getContext());
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void reportError(Parser parser, RecognitionException e) {
         if (e.getMessage() != null) {
@@ -81,6 +85,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void reportFailedPredicate(Parser parser, FailedPredicateException fpe) {
         Token t = parser.getCurrentToken();
@@ -89,6 +94,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         throw new RecognitionException(msg, parser, parser.getInputStream(), parser.getContext());
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void reportUnwantedToken(Parser parser) {
         Token t = parser.getCurrentToken();

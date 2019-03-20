@@ -66,7 +66,8 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
     private final Object2IntMap<String> label2SourceID;
     private final Int2DoubleMap nodeID2CorefWeight;
     private final BitSet allowedCorefNodes;
-    
+
+    @SuppressWarnings("deprecation")
     public AMDecompositionAutomaton(ApplyModifyGraphAlgebra alg, Map<String, Double> node2CorefWeight, SGraph input) {
         super(alg.getSignature());
         ruleStore = new RuleStore(this, new MapTopDownIndex(this), new BinaryBottomUpRuleIndex(this));
@@ -151,7 +152,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 if (src == rootSrcID) {
                     target = target.rename(graphInfo.getIntForSource("temp"+i), appSource, false);
                 } else {
-                    target = target.rename(graphInfo.getIntForSource("temp"+i), nestedRole2Unif.get(orderedSources.get(i)), false);
+                    target = target.rename(graphInfo.getIntForSource("temp"+i), nestedRole2Unif.get(orderedSources.getInt(i)), false);
                 }
             }
             

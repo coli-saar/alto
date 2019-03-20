@@ -180,7 +180,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
 
         for (int i = 0; i < children.size(); i++) {
-            int child = children.get(i);
+            int child = children.getInt(i);
 
             if (child < 0) {
                 // no explicit child specified => put *NOP* of appropriate type here
@@ -303,7 +303,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 // side-effect of computeNodeMapping: etreeNumChildren is set to num children of this etree
 
                 if (DEBUG) {
-                    System.err.println("# children: " + etreeNumChildren.get(etreeName));
+                    System.err.println("# children: " + etreeNumChildren.getInt(etreeName));
                 }
             }
         }
@@ -317,7 +317,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         public int getNumChildren(String etreeName) {
             ensureEtreeCalculated(etreeName);
-            return etreeNumChildren.get(etreeName);
+            return etreeNumChildren.getInt(etreeName);
         }
 
         // use only for testing

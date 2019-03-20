@@ -95,11 +95,6 @@ public class StatewiseHistogramPruningPolicy implements PruningPolicy {
             public int compare(int i1, int i2) {
                 return -Double.compare(partnerValues[i1], partnerValues[i2]);
             }
-
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return compare(o1.intValue(), o2.intValue());
-            }
         };
 
         Swapper sortingSwapper = (int i1, int i2) -> {

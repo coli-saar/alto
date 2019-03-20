@@ -117,7 +117,7 @@ public class EvaluateSamplingFromRules {
                         if(round != 0) {
                             out.write(";");
                         }
-                        out.write(""+single.get(rep).get(round));
+                        out.write(""+single.get(rep).getDouble(round));
                     }
                 }
             }

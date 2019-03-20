@@ -210,14 +210,14 @@ public class JFeatureStructurePanel extends JPanel {
         public int getWidth() {
             int width = 0;
             for (int i = 0; i < maxWidthPerDepth.size(); i++) {
-                width += maxWidthPerDepth.get(i);
+                width += maxWidthPerDepth.getInt(i);
             }
             
             return width + PADX;
         }
         
         public int getMaxWidth(int depth) {
-            return maxWidthPerDepth.get(depth);
+            return maxWidthPerDepth.getInt(depth);
         }
 
         public int getHeight() {
@@ -227,7 +227,7 @@ public class JFeatureStructurePanel extends JPanel {
         public int getX(int depth) {
             int x = 0;
             for (int i = 0; i < depth; i++) {
-                x += maxWidthPerDepth.get(i);
+                x += maxWidthPerDepth.getInt(i);
             }
             return x;
         }
@@ -270,7 +270,7 @@ public class JFeatureStructurePanel extends JPanel {
                 maxWidthPerDepth.add(0);
             }
 
-            if (componentWidth > maxWidthPerDepth.get(depth)) {
+            if (componentWidth > maxWidthPerDepth.getInt(depth)) {
                 maxWidthPerDepth.set(depth, componentWidth);
             }
         }

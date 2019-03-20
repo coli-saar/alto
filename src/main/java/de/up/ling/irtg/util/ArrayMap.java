@@ -6,11 +6,9 @@
 package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.ints.AbstractInt2ObjectMap;
-import it.unimi.dsi.fastutil.ints.AbstractIntIterator;
 import it.unimi.dsi.fastutil.ints.AbstractIntSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.AbstractObjectIterator;
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
@@ -139,7 +137,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     
     
 
-    private class KeyIterator extends AbstractIntIterator {
+    private class KeyIterator implements IntIterator {
 
         private final int arraySize = ArrayMap.this.arraySize();
         private int pos = 0;
@@ -214,7 +212,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
         return new AbstractObjectSet<Entry<E>>() {
             @Override
             public ObjectIterator<Entry<E>> iterator() {
-                return new AbstractObjectIterator<Entry<E>>() {
+                return new ObjectIterator<Entry<E>>() {
                     IntIterator keyIt = new KeyIterator();
 
                     @Override

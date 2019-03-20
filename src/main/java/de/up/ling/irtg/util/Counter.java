@@ -90,7 +90,7 @@ public class Counter<E> {
         }
         E ret = ct.keySet().iterator().next();
         for (E c : ct.keySet()) {
-            if (ct.get(c) > ct.get(ret)) {
+            if (ct.getInt(c) > ct.getInt(ret)) {
                 ret = c;
             }
         }
@@ -102,7 +102,7 @@ public class Counter<E> {
      * @param candidate 
      */
     public void reset(E candidate) {
-        ct.remove(candidate);
+        ct.removeInt(candidate);
     }
     
     @Override

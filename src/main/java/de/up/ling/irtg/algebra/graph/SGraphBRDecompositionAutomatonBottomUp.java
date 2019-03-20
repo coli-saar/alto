@@ -843,7 +843,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                         foundR(writer, -recState);
                     }
                 }
-                rule2Parent.remove(rule);
+                rule2Parent.removeInt(rule);
             }
             needO.remove(state);
         }
@@ -885,7 +885,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                         foundR(writer, -recState);
                     }
                 }
-                rule2Parent.remove(rule);
+                rule2Parent.removeInt(rule);
             }
             needR.remove(state);
         }

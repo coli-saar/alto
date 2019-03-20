@@ -43,7 +43,8 @@ public class JamrDataFromAltoCorpus {
     @SuppressWarnings("unchecked")
     public static void main(String[] args) throws IOException, CorpusReadingException {
         CommandLineParameters param = new CommandLineParameters();
-        JCommander commander = new JCommander(param, args);
+        JCommander commander = new JCommander(param);
+        commander.parse(args);
 
         if (param.pathToCorpus == null) {
             usage("no input corpus specified", commander);

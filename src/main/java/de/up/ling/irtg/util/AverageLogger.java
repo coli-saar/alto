@@ -125,7 +125,7 @@ public class AverageLogger {
         public void increaseValue(String label) {
             int value = 0;
             if (values.containsKey(label)) {
-                value = values.get(label);
+                value = values.getInt(label);
             }
             value++;
             values.put(label, value);
@@ -134,7 +134,7 @@ public class AverageLogger {
         public void increaseValueBy(String label, int increase) {
             int value = 0;
             if (values.containsKey(label)) {
-                value = values.get(label);
+                value = values.getInt(label);
             }
             value += increase;
             values.put(label, value);
@@ -143,7 +143,7 @@ public class AverageLogger {
         public void increaseCount(String label) {
             int count = 0;
             if (counts.containsKey(label)) {
-                count = counts.get(label);
+                count = counts.getInt(label);
             }
             count++;
             counts.put(label, count);
@@ -152,7 +152,7 @@ public class AverageLogger {
         public void increaseCountBy(String label, int increase) {
             int count = 0;
             if (counts.containsKey(label)) {
-                count = counts.get(label);
+                count = counts.getInt(label);
             }
             count += increase;
             counts.put(label, count);
@@ -164,10 +164,10 @@ public class AverageLogger {
 
         public void printAveragesAsError() {
             values.keySet().stream().forEach((label) -> {
-                float value = values.get(label);
+                float value = values.getInt(label);
                 float count;
                 if (counts.containsKey(label)) {
-                    count = counts.get(label);
+                    count = counts.getInt(label);
                 } else {
                     count = defaultCount;
                 }

@@ -39,7 +39,8 @@ public class CodecConverter {
 
     public static void main(String[] args) throws IOException {
         CmdLineParameters param = new CmdLineParameters();
-        jc = new JCommander(param, args);
+        jc = new JCommander(param);
+        jc.parse(args);
 
         if (param.help) {
             usage(null);

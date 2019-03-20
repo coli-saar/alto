@@ -726,7 +726,7 @@ public class BkvBinarizer {
                         }
                     }
 
-                    ret.put(state, s);
+                    ret.put(state.intValue(), s);
                     continue stateLoop;
                 }
             }

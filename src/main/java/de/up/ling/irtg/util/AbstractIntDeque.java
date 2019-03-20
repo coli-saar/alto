@@ -109,11 +109,7 @@ public abstract class AbstractIntDeque implements IntDeque, IntStack{
 		return (!this.isEmpty()) ? this.getFirstInt() : null;
 	}
 	
-	@Override 
-	public Integer peek(int arg0){
-		return this.peekInt(arg0);
-	}
-	
+
 	@Override
 	public int peekInt(int arg0) {
 		IntIterator it = this.iterator();
@@ -123,19 +119,15 @@ public abstract class AbstractIntDeque implements IntDeque, IntStack{
 		return it.nextInt();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void push(Integer e) {
 		this.addFirst(e.intValue());
 	}
-	
+
 	@Override
 	public void push(int x){
 		this.addFirst(x);
-	}
-	
-	@Override
-	public Integer top() {
-		return this.topInt();
 	}
 	
 	@Override
@@ -143,11 +135,12 @@ public abstract class AbstractIntDeque implements IntDeque, IntStack{
 		return this.getFirstInt();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public Integer pop() {
 		return this.removeFirstInt();
 	}
-	
+
 	@Override
 	public int popInt(){
 		return this.removeFirstInt();

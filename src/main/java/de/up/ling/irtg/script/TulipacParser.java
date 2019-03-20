@@ -163,7 +163,8 @@ public class TulipacParser {
     }
 
     public static void main(String[] args) throws Exception {
-        jc = new JCommander(param, args);
+        jc = new JCommander(param);
+        jc.parse(args);
 
         if (param.help) {
             cmdlineUsage(null);

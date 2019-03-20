@@ -32,7 +32,7 @@ public class IntSetInterner extends Interner<it.unimi.dsi.fastutil.ints.IntSet>{
         
         if (toChange != null) {
             // remove set from the map where it is the key
-            objectToInt.remove(toChange); 
+            objectToInt.removeInt(toChange);
             
             // change the set by adding the new value
             toChange.add(newValue);

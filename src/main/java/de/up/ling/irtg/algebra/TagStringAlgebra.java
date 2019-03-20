@@ -820,7 +820,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                 
                 @Override
                 public int[] next() {
-                    resArray[otherPos]= intIter.next();
+                    resArray[otherPos]= intIter.nextInt();
                     return resArray;
                 }
             };
@@ -916,7 +916,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                 
                 @Override
                 public int[] next() {
-                    resArray[otherPos]= intIter.next();
+                    resArray[otherPos]= intIter.nextInt();
                     return resArray;
                 }
             };

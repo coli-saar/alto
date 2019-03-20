@@ -63,13 +63,6 @@ public class BestFirstIntersectionAutomaton<LeftState, RightState> extends Inter
             double eval2 = -evaluator.evaluate(outstate2, BestFirstIntersectionAutomaton.this);
             return Double.compare(eval1, eval2);
         }
-
-        @Override
-        @SuppressWarnings("UnnecessaryUnboxing")
-        public int compare(Integer o1, Integer o2) {
-            return compare(o1.intValue(), o2.intValue());
-        }
-
     }
 
     /**

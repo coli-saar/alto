@@ -254,7 +254,7 @@ public class IntTrie<E> implements Serializable {
             int size = keys.size();
             keys.add(key);
             nextStep.get(key).foreach(keys, visitor);
-            keys.remove(size);
+            keys.removeInt(size);
         });
 
 //  // this might be faster, but fails if nextStep is an ArrayMap (because that doesn't have a fast iterator):

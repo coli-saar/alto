@@ -2635,7 +2635,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Iterable<Tree<String>> languageIterable() {
-        return () -> languageIterator();
+        return this::languageIterator;
     }
 
     /**

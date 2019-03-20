@@ -140,7 +140,7 @@ public class TemplateInterpretedTreeAutomaton {
             Class algebraClass = Class.forName(getAlgebraClasses().get(interp));
             Algebra algebra = (Algebra) algebraClass.newInstance();
             Homomorphism hom = new Homomorphism(auto.getSignature(), algebra.getSignature());
-            Interpretation intp = new Interpretation(algebra, hom);
+            Interpretation intp = new Interpretation(algebra, hom, "<unnamed>");
             interps.put(interp, intp);
         }
 

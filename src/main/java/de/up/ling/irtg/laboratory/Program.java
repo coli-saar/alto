@@ -476,7 +476,7 @@ public class Program {
                                     retLabel = new Operation.MethodOperation(allAnnotatedStaticMethods.get(code), true);
                                 } else {
                                     try {
-                                        int lookupIndex = shiftIndex(varName2Index.get(code));
+                                        int lookupIndex = shiftIndex(varName2Index.getInt(code));
                                         if (lineIsGlobal) {
                                             retLabel = new Operation.LookupVariableOperation(globalVariableTracker, variableTypeTracker, lookupIndex, "global");//no need to modify neededForGlobal here, since this is global itself
                                             neededForGlobal[lookupIndex] = true;
@@ -598,7 +598,7 @@ public class Program {
     private Int2ObjectMap<Throwable> run(Instance instance, Tree<Operation>[] localProgram, Object[] localVariableTracker, Map<String, CpuTimeStopwatch> name2Watch) {
 
         for (String interpName : interp2Index.keySet()) {
-            localVariableTracker[interp2Index.get(interpName)] = instance.getInputObjects().get(interpName);
+            localVariableTracker[interp2Index.getInt(interpName)] = instance.getInputObjects().get(interpName);
         }
 
         Int2ObjectMap<Throwable> ret = new Int2ObjectOpenHashMap<>();

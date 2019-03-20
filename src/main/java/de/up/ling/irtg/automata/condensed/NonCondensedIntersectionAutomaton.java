@@ -250,7 +250,7 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
 
                 // now go through to-do list and add all state pairs to partner sets
                 for (int i = 0; i < foundPartners.size(); i += 2) {
-                    addPartner(foundPartners.get(i), foundPartners.get(i + 1), partners);
+                    addPartner(foundPartners.getInt(i), foundPartners.getInt(i + 1), partners);
                 }
 
                 if (GuiUtils.getGlobalListener() != null) {
@@ -421,7 +421,7 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
             rightStates.stream().map((rightState) -> getStateMapping(leftState, rightState))
                     .filter((state) ->
                             (state != 0)).forEach((state) -> {
-                pairStates.add(state);
+                pairStates.add(state.intValue());
             });
         });
     }

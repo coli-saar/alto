@@ -952,11 +952,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                 public int compare(int newState1, int newState2) {
                     return Double.compare(foms.get(newState1), foms.get(newState2));
                 }
-
-                @Override
-                public int compare(Integer o1, Integer o2) {
-                    return compare((int) o1, (int) o2);
-                }
             };
 
             agenda = new IntHeapPriorityQueue(comp);
