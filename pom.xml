@@ -10,8 +10,8 @@
   <url>http://maven.apache.org</url>
 
   <properties>
-    <antlr.version>4.5.1</antlr.version>
-    <assembly.version>2.4</assembly.version>
+    <antlr.version>4.7.2</antlr.version>
+    <assembly.version>3.1.1</assembly.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <additionalparam>-Xdoclint:none</additionalparam>
@@ -76,7 +76,7 @@
     <dependency>
       <groupId>it.unimi.dsi</groupId>
       <artifactId>fastutil</artifactId>
-      <version>8.1.0</version>
+      <version>8.2.2</version>
     </dependency>
 
     <dependency>
@@ -94,13 +94,13 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>2.2.3</version>
+      <version>2.9.8</version>
     </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.2.3</version>
+      <version>2.9.8</version>
     </dependency>
 
     <dependency>
@@ -175,7 +175,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
 
@@ -214,7 +214,7 @@
       <!-- use more recent version of compiler plugin so we can do incremental compilation despite filtering -->
       <plugin>
 	<artifactId>maven-compiler-plugin</artifactId>
-	<version>3.1</version>
+	<version>3.8.0</version>
 	<configuration>
 	  <source>1.8</source>
 	  <target>1.8</target>
@@ -222,7 +222,7 @@
 	</configuration>
       </plugin>
 
-      <!-- buildnumber plugin: add hg revision to a properties file -->
+      <!-- buildnumber plugin: add git revision to a properties file -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
@@ -367,39 +367,6 @@
           <detectLinks>false</detectLinks>
         </configuration>
       </plugin>
-
-      <!-- Scala plugin -->
-<!--      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>3.1.5</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <scalaVersion>2.10.2</scalaVersion>
-          <compileOrder>JavaThenScala</compileOrder>
-          <excludes>
-            <exclude>**/*.java</exclude>
-          </excludes>
-          <recompileMode>modified-only</recompileMode>
-          <jvmArgs>
-            <jvmArg>-Xms64m</jvmArg>
-            <jvmArg>-Xmx1024m</jvmArg>
-          </jvmArgs>
-          <javacArgs>
-            <javacArg>-Xlint:unchecked</javacArg>
-            <javacArg>-Xlint:deprecation</javacArg>
-            <javacArg>-XX:MaxPermSize=128M</javacArg>
-          </javacArgs>
-        </configuration>
-	</plugin>
-	-->
 
       <!-- Findbugs plugin configuration for Jenkins -->
       <plugin>
@@ -563,7 +530,7 @@
 
 
       <scm>
-      <developerConnection>scm:hg:https://bitbucket.org/tclup/alto</developerConnection>
+      <developerConnection>scm:git:https://github.com/akoehn/alto</developerConnection>
         <tag>HEAD</tag>
   </scm>
 </project>
