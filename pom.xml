@@ -23,18 +23,17 @@
       <artifactId>basics</artifactId>
       <version>2909d4b20d9a9cb47efdabb3c12c3e70177b330e</version>
     </dependency>
-<!--  -->
-<dependency>
-    
-	<groupId>org.springframework</groupId>
-	<artifactId>spring-jdbc</artifactId>
-	<version>4.2.2.RELEASE</version>
+
+	<dependency>
+	  <groupId>org.springframework</groupId>
+	  <artifactId>spring-jdbc</artifactId>
+	  <version>4.2.2.RELEASE</version>
     </dependency>
     
     <dependency>
-	<groupId>mysql</groupId>
-	<artifactId>mysql-connector-java</artifactId>
-	<version>5.1.37</version>
+	  <groupId>mysql</groupId>
+	  <artifactId>mysql-connector-java</artifactId>
+	  <version>5.1.37</version>
     </dependency>
     
     <dependency>
@@ -403,25 +402,6 @@
 	  </execution>
 	</executions>
       </plugin>
-<!--
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.1</version>
-        <configuration>
-
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
--->
-
     </plugins>
 
     <!-- some more config -->
@@ -458,57 +438,9 @@
 	  <url>https://jitpack.io</url>
 	</repository>
     <repository>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>tcl-artifactory-release</id>
-      <name>tcl-artifactory-release</name>
-      <url>http://akci.coli.uni-saarland.de/artifactory/release</url>
-    </repository>
-    
-    <repository>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <id>tcl-artifactory-snapshots</id>
-      <name>tcl-artifactory-snapshots</name>
-      <url>http://akci.coli.uni-saarland.de/artifactory/snapshots</url>
-    </repository>
-
-    <repository>
       <id>tcl-artifactory-external</id>
       <name>tcl-artifactory-external</name>
       <url>http://akci.coli.uni-saarland.de/artifactory/external</url>
-    </repository>
-
-
-    
-
-    <!-- legacy repositories -->
-
-    <repository>
-      <id>tcl-releases</id>
-      <name>TCL releases</name>
-      <url>http://www.ling.uni-potsdam.de/tcl/maven2/releases</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-
-
-    <repository>
-      <id>tcl-external</id>
-      <name>TCL external libraries</name>
-      <url>http://www.ling.uni-potsdam.de/tcl/maven2/external</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
     </repository>
   </repositories>
 
@@ -534,50 +466,3 @@
         <tag>HEAD</tag>
   </scm>
 </project>
-
-
-<!--
-
-
-  <profiles>
-    <profile>
-      <id>fatjar</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>zip</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>${assembly.version}</version>
-            <configuration>
-              <descriptors>
-                <descriptor>zip.xml</descriptor>
-              </descriptors>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
--->
