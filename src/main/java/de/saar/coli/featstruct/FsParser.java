@@ -11,7 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import org.antlr.v4.runtime.ANTLRInputStream;
+
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
@@ -24,7 +25,7 @@ class FsParser {
     private Map<String, FeatureStructure> canonicalPlaceholders = new HashMap<>();
 
     public FeatureStructure parse(InputStream is) throws IOException, FsParsingException {
-        FeatStructLexer l = new FeatStructLexer(new ANTLRInputStream(is));
+        FeatStructLexer l = new FeatStructLexer(CharStreams.fromStream(is));
         FeatStructParser p = new FeatStructParser(new CommonTokenStream(l));
 
         p.setErrorHandler(new ExceptionErrorStrategy());

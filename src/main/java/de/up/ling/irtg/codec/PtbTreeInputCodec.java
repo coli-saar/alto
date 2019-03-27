@@ -12,7 +12,8 @@ import de.up.ling.tree.Tree;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import org.antlr.v4.runtime.ANTLRInputStream;
+
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
@@ -47,7 +48,7 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
      */
     @Override
     public Tree<String> read(InputStream is) throws CodecParseException, IOException {
-        PtbTreeLexer l = new PtbTreeLexer(new ANTLRInputStream(is));
+        PtbTreeLexer l = new PtbTreeLexer(CharStreams.fromStream(is));
         PtbTreeParser p = new PtbTreeParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
@@ -84,7 +85,7 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
      * @throws IOException 
      */
     public List<Tree<String>> readCorpus(InputStream is) throws CodecParseException, IOException {
-        PtbTreeLexer l = new PtbTreeLexer(new ANTLRInputStream(is));
+        PtbTreeLexer l = new PtbTreeLexer(CharStreams.fromStream(is));
         PtbTreeParser p = new PtbTreeParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);

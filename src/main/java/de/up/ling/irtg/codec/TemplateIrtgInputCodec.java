@@ -12,7 +12,8 @@ import de.up.ling.irtg.codec.template_irtg.TemplateIrtgParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import org.antlr.v4.runtime.ANTLRInputStream;
+
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
@@ -46,7 +47,7 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
 
     @Override
     public TemplateInterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
-        TemplateIrtgLexer l = new TemplateIrtgLexer(new ANTLRInputStream(is));
+        TemplateIrtgLexer l = new TemplateIrtgLexer(CharStreams.fromStream(is));
         TemplateIrtgParser p = new TemplateIrtgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);

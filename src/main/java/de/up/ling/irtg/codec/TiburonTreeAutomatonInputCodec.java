@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.antlr.v4.runtime.ANTLRInputStream;
+
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
@@ -53,7 +54,7 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
 
     @Override
     public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
-        TiburonTreeAutomatonLexer l = new TiburonTreeAutomatonLexer(new ANTLRInputStream(is));
+        TiburonTreeAutomatonLexer l = new TiburonTreeAutomatonLexer(CharStreams.fromStream(is));
         TiburonTreeAutomatonParser p = new TiburonTreeAutomatonParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);

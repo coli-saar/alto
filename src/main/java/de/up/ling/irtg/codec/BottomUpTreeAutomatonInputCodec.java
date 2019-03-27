@@ -16,7 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import org.antlr.v4.runtime.ANTLRInputStream;
+
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
@@ -53,7 +54,7 @@ public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
 
     @Override
     public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
-        BottomUpTreeAutomatonLexer l = new BottomUpTreeAutomatonLexer(new ANTLRInputStream(is));
+        BottomUpTreeAutomatonLexer l = new BottomUpTreeAutomatonLexer(CharStreams.fromStream(is));
         BottomUpTreeAutomatonParser p = new BottomUpTreeAutomatonParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);

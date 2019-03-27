@@ -20,7 +20,8 @@ import de.up.ling.irtg.codec.tulipac.TulipacLexer;
 import de.up.ling.irtg.codec.tulipac.TulipacParser;
 import java.io.IOException;
 import java.io.InputStream;
-import org.antlr.v4.runtime.ANTLRInputStream;
+
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
@@ -52,7 +53,7 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     private void parseFile(InputStream is) throws CodecParseException, IOException {
-        TulipacLexer l = new TulipacLexer(new ANTLRInputStream(is));
+        TulipacLexer l = new TulipacLexer(CharStreams.fromStream(is));
         TulipacParser p = new TulipacParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);

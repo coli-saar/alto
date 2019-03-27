@@ -35,7 +35,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.antlr.v4.runtime.ANTLRInputStream;
+
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -136,7 +137,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
-        BolinasHrgLexer l = new BolinasHrgLexer(new ANTLRInputStream(is));
+        BolinasHrgLexer l = new BolinasHrgLexer(CharStreams.fromStream(is));
         BolinasHrgParser p = new BolinasHrgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
