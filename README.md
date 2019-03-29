@@ -27,7 +27,23 @@ Alto is published under a [Apache 2.0 license](https://www.apache.org/licenses/L
 
 The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11). You can find more details on the [Literature](https://bitbucket.org/tclup/alto/wiki/Literature) page.
 
+# Running and using Alto
+
 Alto requires [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) and can be downloaded [here](https://bitbucket.org/tclup/alto/downloads).
+To build Alto from source, clone this repository and run `./gradlew build` (or `./gradlew.bat build` if you use Windows).
+
+To use Alto as a library in your project, include it via jitpack:
+```
+repositories {
+    [...]
+    maven {url 'https://jitpack.io'}
+}
+dependencies {
+    compile group: "com.github.coli-saar", name:"alto", version:"2.3"
+}
+```
+If you want to build against the latest version, use `master-SNAPSHOT` or a specific git hash as version.
+
 
 See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto. The [tutorials](https://bitbucket.org/tclup/alto/wiki/Tutorials) are a good way to get started. For advanced usage, you can check out the [Apidocs](http://www.ling.uni-potsdam.de/tcl/alto/apidocs/).
 
@@ -49,6 +65,10 @@ Here's the result of parsing "the boy wants to go" with this grammar:
 
 
 ## Version History ##
+
+**Version 2.3, April 2019**
+- Move to GitHub and switch build system to gradle.
+
 
 **Version 2.1, April 2017**
 
@@ -72,5 +92,7 @@ Here's the result of parsing "the boy wants to go" with this grammar:
 * Danilo Baumgarten (BSc University of Potsdam, 2013)
 * Johannes Gontrum (BSc University of Potsdam, 2015)
 * [Jonas Groschwitz](http://www.ling.uni-potsdam.de/~groschwitz)
+* [Arne Köhn](https://arne.chark.eu)
 * [Alexander Koller](http://www.coli.uni-saarland.de/~koller/)
 * [Christoph Teichmann](https://www.cteichmann.com/)
+

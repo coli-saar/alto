@@ -46,7 +46,7 @@ public class FastutilUtils {
     /**
      * An optimized implementation of {@link #forEach(it.unimi.dsi.fastutil.ints.IntIterable, java.util.function.IntConsumer) }
      * for lists. The method assumes an array-based implementation of lists, in which
-     * {@link IntList#get(int) } is fast.
+     * {@link IntList#getInt(int) } is fast.
      * 
      * @param list
      * @param visitor 

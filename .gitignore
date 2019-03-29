@@ -4,7 +4,11 @@
 /.classpath
 /.project
 /target/
+/bin/
+/out/
 /.idea/
 /.settings/
 .DS_Store
 ^src/main/java/de/up/ling/irtg/script/ParseCorpus\.java$
+/build/
+/.gradle/
