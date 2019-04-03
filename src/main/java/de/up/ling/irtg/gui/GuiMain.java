@@ -4,26 +4,8 @@
  */
 package de.up.ling.irtg.gui;
 
-import com.bric.window.WindowList;
-import com.bric.window.WindowMenu;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.corpus.ChartAttacher;
-import de.up.ling.irtg.corpus.Charts;
-import de.up.ling.irtg.corpus.Corpus;
-import de.up.ling.irtg.corpus.FileInputStreamSupplier;
-import de.up.ling.irtg.corpus.OnTheFlyCharts;
-import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
-import de.up.ling.irtg.util.FirstOrderModel;
-import de.up.ling.irtg.util.GuiUtils;
-import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.ValueAndTimeConsumer;
-import de.up.ling.irtg.util.ProgressBarWorker;
-import de.up.ling.irtg.util.TextInputDialog;
-import de.up.ling.irtg.util.Util;
+import static de.up.ling.irtg.util.GuiUtils.showError;
+
 import java.awt.Component;
 import java.awt.Frame;
 import java.awt.Window;
@@ -44,6 +26,7 @@ import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -52,17 +35,34 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.Document;
-import org.simplericity.macify.eawt.Application;
-import org.simplericity.macify.eawt.ApplicationEvent;
-import org.simplericity.macify.eawt.ApplicationListener;
-import org.simplericity.macify.eawt.DefaultApplication;
-import static de.up.ling.irtg.util.GuiUtils.showError;
+
+import com.bric.window.WindowList;
+import com.bric.window.WindowMenu;
+
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.InputCodec;
+import de.up.ling.irtg.corpus.ChartAttacher;
+import de.up.ling.irtg.corpus.Charts;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.FileInputStreamSupplier;
+import de.up.ling.irtg.corpus.OnTheFlyCharts;
+import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
+import de.up.ling.irtg.util.FirstOrderModel;
+import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.irtg.util.Logging;
+import de.up.ling.irtg.util.ProgressBarWorker;
+import de.up.ling.irtg.util.TextInputDialog;
+import de.up.ling.irtg.util.Util;
+import de.up.ling.irtg.util.ValueAndTimeConsumer;
 
 /**
  *
  * @author koller
  */
-public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
+public class GuiMain extends javax.swing.JFrame {
 
     private static File previousDirectory;
     private static GuiMain app;
@@ -79,22 +79,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public GuiMain() {
         initComponents();
         jMenuBar1.add(new WindowMenu(this));
-
-        if (!GuiMain.isMac()) {
-            GuiUtils.replaceMetaByCtrl(jMenuBar1);
-//            miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-//            miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-//            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-//            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-        }
     }
 
     public static GuiMain getApplication() {
         return app;
-    }
-
-    public static boolean isMac() {
-        return new DefaultApplication().isMac();
     }
 
     /**
@@ -235,7 +223,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }//GEN-LAST:event_miLoadTemplateIrtgActionPerformed
 
     private void miAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAboutActionPerformed
-        handleAbout(null);
     }//GEN-LAST:event_miAboutActionPerformed
 
     private void miLoadIrtgFromURLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadIrtgFromURLActionPerformed
@@ -657,13 +644,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         final GuiMain guiMain = new GuiMain();
         GuiMain.app = guiMain;
 
-        Application application = new DefaultApplication();
-        application.addApplicationListener(guiMain);
-        application.addPreferencesMenuItem();
-//        application.removeAboutMenuItem();
-        application.setEnabledAboutMenu(true);
-        application.setEnabledPreferencesMenu(false);
-
         // set up logging
         Logging.setUp();
         Logging.get().setLevel(Level.INFO);
@@ -713,36 +693,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenuItem miVisualizeInput;
     private javax.swing.JScrollPane spLog;
     // End of variables declaration//GEN-END:variables
-
-    /**
-     * ** callback methods for macify ***
-     */
-    public void handleAbout(ApplicationEvent ae) {
-        new AboutWindow(this, true).setVisible(true);
-
-        if (ae != null) {
-            ae.setHandled(true);
-        }
-    }
-
-    public void handleOpenApplication(ApplicationEvent ae) {
-    }
-
-    public void handleOpenFile(ApplicationEvent ae) {
-    }
-
-    public void handlePreferences(ApplicationEvent ae) {
-    }
-
-    public void handlePrintFile(ApplicationEvent ae) {
-    }
-
-    public void handleQuit(ApplicationEvent ae) {
-        System.exit(0);
-    }
-
-    public void handleReOpenApplication(ApplicationEvent ae) {
-    }
 
     public static String getGrammarServer() {
         return GRAMMAR_SERVER_URL;

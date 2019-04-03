@@ -62,9 +62,6 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
         derivationViewers.add(dv);
         miRemoveView.setEnabled(false);
 
-        if (!GuiMain.isMac()) {
-            GuiUtils.replaceMetaByCtrl(jMenuBar1);
-        }
     }
 
     @Override

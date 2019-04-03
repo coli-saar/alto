@@ -62,10 +62,6 @@ public class JVisualizationViewer extends javax.swing.JFrame {
         }
 
         valuePanel.add(sp(vis));
-
-        if (!GuiMain.isMac()) {
-            GuiUtils.replaceMetaByCtrl(jMenuBar1);
-        }
     }
     
     private JComponent makeErrorComponent(Exception e) {

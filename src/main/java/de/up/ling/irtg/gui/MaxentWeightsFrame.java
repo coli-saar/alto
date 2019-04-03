@@ -27,7 +27,7 @@ public class MaxentWeightsFrame extends JTableDialog<JTreeAutomaton.FtWeight> {
         super(title, data);
         this.irtg = irtg;
 
-        int keymask = GuiMain.isMac() ? InputEvent.META_MASK : InputEvent.CTRL_MASK;
+        int keymask = InputEvent.CTRL_MASK;
 
         JMenuItem miSaveWeights = new JMenuItem("Save Weights ...");
         miSaveWeights.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, keymask));

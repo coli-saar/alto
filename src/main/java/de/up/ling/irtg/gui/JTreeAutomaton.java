@@ -86,9 +86,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 //        if (!SHOW_DEBUG_MENU) {
 //            jMenuBar2.remove(debugMenu);
 //        }
-        if (!GuiMain.isMac()) {
-            GuiUtils.replaceMetaByCtrl(jMenuBar2);
-        }
 
         this.automaton = automaton;
 
