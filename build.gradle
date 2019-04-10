@@ -1,6 +1,7 @@
 plugins {
     id 'application'
     id 'java'
+	id 'java-library'
     id 'groovy'
     id 'antlr'
     id 'ca.coglinc.javacc' version '2.4.0'
