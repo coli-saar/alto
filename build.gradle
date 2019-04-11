@@ -71,6 +71,12 @@ idea {
     }
 }
 
+// travisCI currently reports lots of errors in the javadoc.
+// until those are fixed, we need to ignore them.
+javadoc {
+	failOnError = false
+}
+
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource

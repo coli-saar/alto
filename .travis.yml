@@ -1,1 +1,10 @@
 language: java
+deploy:
+  provider: releases
+  api_key:
+    secure: kzeVZzpeePAE/71putv0sTQ+Ck3KZEKLQPMIvOkS6flFZUH/ObS56FS9p5Fui1RKTLl6CmiPqbzeBzKNLouVI9Q4ewdmlIlaiJr8YTdzOe0xwuaQ3PkoYHTY3oPLI0gklxP9GAjpFVl8EYBWdjnd7zMfmMDxSZAAedimJGSHI2KuvLjckIOYHB3u9GtuCewc1eJHQ/Dwq0ekuc1JGJq5dHLCFYEcrgXAP8CiKxDGcxkVsR0iRW54JhjqFtyunbCYsBIMTPRAlgMSP5jHckiC1L7sHavczQBPVR7s+cAyj/HQ0m4XahVDqXKOWVfdoOf/HfltqrknQSl/+vm5zgqkUiHES1e7xFEhjJaTAT92XofCT4B6lkrGT6hw8uT4yJtF2OKq0C1ZE7iU2GdrVqruIXw3TjfEx11kpOSPdnEoBe+Y+crSRuY76XH40L8uPW9Bik/0X6S8qAPOc/+nr6vF6ikNNjh0qxo3SzEjrgfUxgFO5QsTCniotcqB2owkE3gQvsAjDNZacIcM3R6mHBM5vl1VWuyAwXaQE1s1TnioR0ABg0ZqISpEbOTCtDsRVJ2HgnIKiMRPtM5CpHWYc/qvSsQPrnBfyWFlMXmaSl847UadUU3vAORkW/3RGMeddDJU/tRiyF+VT1rGyrfSKoZT7SC1tjTooqYt2m1vZd3f3W8=
+  skip_cleanup: true
+  file_glob: true
+  file: build/libs/alto-*-all.jar
+  on:
+    tags: true
