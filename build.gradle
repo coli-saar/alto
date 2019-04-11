@@ -18,6 +18,7 @@ repositories {
 dependencies {
 	antlr   'org.antlr:antlr4:4.7.2'
     api 'com.github.coli-saar:basics:2909d4b20d9a9cb47ef'
+    api 'it.unimi.dsi:fastutil:8.2.2'
     implementation 'org.springframework:spring-jdbc:4.2.2.RELEASE'
     implementation 'mysql:mysql-connector-java:5.1.37'
     implementation 'edu.stanford.nlp:stanford-corenlp:3.8.0'
@@ -26,7 +27,6 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'cc.mallet:mallet:2.0.7'
-    implementation 'it.unimi.dsi:fastutil:8.2.2'
     implementation 'com.bric.window:windowmenu:1.0'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
@@ -44,7 +44,7 @@ dependencies {
     testCompile 'org.codehaus.groovy:groovy-all:2.4.13'
 }
 
-group = 'de.up.ling'
+group = 'com.github.coli-saar'
 version = '2.3-SNAPSHOT'
 description = 'alto'
 sourceCompatibility = '1.8'
