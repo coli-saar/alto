@@ -1,5 +1,9 @@
 # The Alto parser
 
+[![Build Status](https://travis-ci.org/coli-saar/alto.svg?branch=master)](https://travis-ci.org/coli-saar/alto)
+[![](https://jitpack.io/v/coli-saar/alto.svg)](https://jitpack.io/#coli-saar/alto)
+
+
 Welcome to Alto, the Algebraic Language Toolkit.
 
 Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It is being developed at [Saarland University](http://www.coli.uni-saarland.de/) in the Computational Linguistics group, led by [Alexander Koller](http://www.coli.uni-saarland.de/~koller/). Its main features are:
