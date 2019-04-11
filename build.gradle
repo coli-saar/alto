@@ -1,4 +1,6 @@
 plugins {
+    id 'pl.allegro.tech.build.axion-release' version '1.10.1'
+    id 'maven-publish'
     id 'application'
     id 'java'
 	id 'java-library'
@@ -44,8 +46,15 @@ dependencies {
     testCompile 'org.codehaus.groovy:groovy-all:2.4.13'
 }
 
+// we use raw versions, e.g. 2.3.0
+scmVersion {
+    tag {
+        prefix = ''
+    }
+}
+
 group = 'com.github.coli-saar'
-version = '2.3-SNAPSHOT'
+version = scmVersion.version
 description = 'alto'
 sourceCompatibility = '1.8'
 mainClassName = 'de.up.ling.irtg.main.Alto'
