@@ -34,7 +34,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import jline.console.ConsoleReader;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 /**
  *
@@ -180,13 +183,13 @@ public class TulipacParser {
         filename = param.grammarFilename.get(0);
         reloadGrammar();
 
-        ConsoleReader cr = new ConsoleReader();
-        cr.setPrompt("parse> ");
+        Terminal terminal = TerminalBuilder.terminal();
+        LineReader cr = LineReaderBuilder.builder().terminal(terminal).build();
 
         String line;
 
         mainLoop:
-        while ((line = cr.readLine()) != null) {
+        while ((line = cr.readLine("parse> ")) != null) {
             // check whether line was a command
             for (Command c : commands) {
                 if (c.command.equalsIgnoreCase(line)) {
