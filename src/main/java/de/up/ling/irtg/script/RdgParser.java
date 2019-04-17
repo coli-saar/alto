@@ -24,7 +24,10 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import jline.console.ConsoleReader;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 /**
  *
@@ -123,14 +126,14 @@ public class RdgParser {
 
         filename = param.grammarFilename.get(0);
         reloadGrammar();
-
-        ConsoleReader cr = new ConsoleReader();
-        cr.setPrompt("parse> ");
+        
+        Terminal terminal = TerminalBuilder.terminal();
+        LineReader cr = LineReaderBuilder.builder().terminal(terminal).build();
 
         String line;
 
         mainLoop:
-        while ((line = cr.readLine()) != null) {
+        while ((line = cr.readLine("parse> ")) != null) {
             // check whether line was a command
             for (Command c : commands) {
                 if (c.command.equalsIgnoreCase(line)) {

@@ -12,3 +12,4 @@
 ^src/main/java/de/up/ling/irtg/script/ParseCorpus\.java$
 /build/
 /.gradle/
+/.nb-gradle/
