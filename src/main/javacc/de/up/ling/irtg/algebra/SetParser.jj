@@ -22,6 +22,8 @@ import java.io.*;
 /**
  * Parser for sets of strings and sets of tuples of strings,
  * e.g. "{a, b, c}" or "{(a,b), (c,d)}".
+ * Sets of strings are represented as sets of one-tuples of strings.
+ * I.e. {a} and {(a)} represent the same structure.
  * @author Alexander Koller
  */
 public class SetParser {

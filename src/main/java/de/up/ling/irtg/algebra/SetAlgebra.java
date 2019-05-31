@@ -30,7 +30,11 @@ import java.util.Set;
  * <li>intersect_i(R,F) returns the set of all tuples of R (a k-place relation
  * with k >= i) whose i-th element is a member of F (a subset of the
  * universe).</li>
+ * <li>intersect(A,B) returns the intersections of the sets A and B.</li>
+ * <li>union(A,B) returns the union of the sets A and B.</li>
  * <li>uniq_a(A) returns the set A (a subset of the universe) itself if A = {a};
+ * otherwise it returns the empty set.</li>
+ * <li>size_i(A) returns the set A (a subset of the universe) itself if size(A) = i;
  * otherwise it returns the empty set.</li>
  * <li>member_a(A) returns the set {{a}} if {a} belongs to A;
  * otherwise it returns the empty set.</li> 
@@ -49,11 +53,13 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
 
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
+    private static final String INTERSECTSETS = "intersect";
     private static final String UNIQ = "uniq_";
-	private static final String SIZE = "size_";
+    private static final String SIZE = "size_";
+    private static final String UNION = "union";
     private static final String MEMBER = "member_";
     private static final String TOP = "T";
-    private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ, SIZE, MEMBER};
+    private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, INTERSECTSETS, UNIQ, UNION, SIZE, MEMBER};
     
     private FirstOrderModel model;
     
@@ -192,7 +198,17 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
             ret = intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(UNIQ)) {
             ret = uniq(childrenValues.get(0), arg(label));
-		} else if (label.startsWith(SIZE)) {
+        } else if (label.equals(UNION)) {
+            ret = new HashSet<List<String>>();
+            for (Set<List<String>> i: childrenValues) {
+                ret.addAll(i);
+            }
+		} else if (label.equals(INTERSECTSETS)) {
+            ret = childrenValues.get(0);
+            for (Set<List<String>> i: childrenValues) {
+                ret = Sets.intersection(ret, i);
+            }
+        } else if (label.startsWith(SIZE)) {
             ret = size(childrenValues.get(0), arg(label));
         } else if (label.startsWith(MEMBER)) {
             ret = member(childrenValues.get(0), arg(label));

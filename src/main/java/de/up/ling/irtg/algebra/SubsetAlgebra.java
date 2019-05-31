@@ -116,6 +116,11 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
         }
     }
 
+    @Override
+    public boolean hasOptions() {
+        return true;
+    }
+
     public BitSet toBitset(Set<E> s) {
         if (s == null) {
             return null;
