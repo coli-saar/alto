@@ -40,9 +40,12 @@ To use Alto as a library in your project, include it via jitpack:
 ```
 repositories {
     [...]
+    mavenCentral()
+    maven {url 'http://akci.coli.uni-saarland.de/artifactory/external'}
     maven {url 'https://jitpack.io'}
 }
 dependencies {
+    [...]
     compile group: "com.github.coli-saar", name:"alto", version:"2.3.0"
 }
 ```
