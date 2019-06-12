@@ -35,7 +35,12 @@ public class CpuTimeStopwatch {
     }
 
     public long getTimeBefore(int id) {
-        return timestamps.get(id) - timestamps.get(id - 1);
+        if (!timestamps.containsKey(id)) {
+            return 0;
+        } else {
+            return timestamps.get(id) - timestamps.get(id - 1);
+            //default return is 0, which is what we want if the key id-1 does not exist.
+        }
     }
     
     public double getMillisecondsBefore(int id) {

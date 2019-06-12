@@ -6,7 +6,6 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.algebra.ParserException;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_APPLICATION;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_MODIFICATION;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_COREF;
@@ -18,9 +17,7 @@ import de.up.ling.irtg.automata.index.MapTopDownIndex;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.siblingfinder.SiblingFinder;
-import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.AverageLogger;
-import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -67,7 +64,6 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
     private final Int2DoubleMap nodeID2CorefWeight;
     private final BitSet allowedCorefNodes;
 
-    @SuppressWarnings("deprecation")
     public AMDecompositionAutomaton(ApplyModifyGraphAlgebra alg, Map<String, Double> node2CorefWeight, SGraph input) {
         super(alg.getSignature());
         ruleStore = new RuleStore(this, new MapTopDownIndex(this), new BinaryBottomUpRuleIndex(this));
@@ -83,7 +79,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
         maxCorefs = corefCounter;
         graphInfo = new GraphInfo(input, new GraphAlgebra(), new HashSet<>());//will add source names along the way.
         allowedCorefNodes = new BitSet();
-        for (GraphNode node : BlobUtils.getMultimods(input)) {
+        for (GraphNode node : input.getGraph().vertexSet()) {//currently allow all nodes to be coref nodes. Possibly change in the future, or remove all coref functionality here
             allowedCorefNodes.set(graphInfo.getIntForNode(node.getName()));
         }
         rootSrcID = graphInfo.getIntForSource("root");
@@ -122,8 +118,9 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             BoundaryRepresentation target = child1.left;
             BoundaryRepresentation leftGraph = child0.left;
             Type leftType = child0.right;
-            Type targetType = child1.right;
+            Type targetType = child1.right.closure();
             int appSource = label2SourceID.getInt(label);
+            Int2IntMap nestedRole2Unif = leftType.role2nestedRole2Unif.get(appSource);
             
             //check if application is allowed according to types
             if (!leftType.canApplyTo(targetType, appSource)) {
@@ -140,19 +137,31 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//target must have root for APP to be allowed.
             }
             for (int i = 0; i<orderedSources.size(); i++) {
-                target = target.rename(orderedSources.getInt(i), graphInfo.getIntForSource("temp"+i), false);
+                int renamedSource = orderedSources.getInt(i);
+                int targetSource = nestedRole2Unif.get(orderedSources.getInt(i));
+                if (target.getAllSources().contains(renamedSource)) {
+                    target = target.rename(orderedSources.getInt(i), graphInfo.getIntForSource("temp"+i), false);
+                } else {
+                    if (renamedSource != targetSource) {
+                        System.err.println("***WARNING: suspicious nested rename, disallowing the apply operation");//TODO: this should never occur with current signature builders.
+                        //Will be fixed with proper DAG type rework. For now, allowing this could lead to problems down the road.
+                        return cacheRules(Collections.EMPTY_LIST, labelId, childStates);
+                    }
+                    //otherwise it's ok, and just don't perform the rename.
+                }
             }
             //rename temps to left sources
-            Int2IntMap nestedRole2Unif = leftType.role2nestedRole2Unif.get(appSource);
             for (int i = 0; i<orderedSources.size(); i++) {
                 int src = orderedSources.getInt(i);
 //                if (target == null) {
 //                    System.err.println();
 //                }
-                if (src == rootSrcID) {
-                    target = target.rename(graphInfo.getIntForSource("temp"+i), appSource, false);
-                } else {
-                    target = target.rename(graphInfo.getIntForSource("temp"+i), nestedRole2Unif.get(orderedSources.getInt(i)), false);
+                if (target.getAllSources().contains(graphInfo.getIntForSource("temp"+i))) {
+                    if (src == rootSrcID) {
+                        target = target.rename(graphInfo.getIntForSource("temp"+i), appSource, false);
+                    } else {
+                        target = target.rename(graphInfo.getIntForSource("temp"+i), nestedRole2Unif.get(orderedSources.getInt(i)), false);
+                    }
                 }
             }
             
@@ -212,21 +221,22 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             }
             retGraph = retGraph.forget(appSource, graphInfo);
 
-            //decide weight of rule, depending on application order
-            int rootNodeID = leftGraph.getSourceNode(rootSrcID);
             double weight = 1.0;
-            GraphNode rootHere = graphInfo.getSGraph().getNode(graphInfo.getNodeForInt(rootNodeID));
-            for (int e : graphInfo.getIncidentEdges(rootNodeID)) {
-                GraphEdge edge = graphInfo.getEdge(e);
-                int otherNodeID = graphInfo.getOtherNode(e, rootNodeID);
-                if (edge != null && !roleIsFilled(leftGraph, otherNodeID)) {
-                    if (BlobUtils.isBlobEdge(rootHere, edge)) {
-                        if (edge.getLabel().compareTo(graphInfo.getSourceForInt(appSource))>0) {
-                            weight *= 0.5;
-                        }
-                    }
-                }
-            }
+            //decide weight of rule, depending on application order -- EDIT:
+            // this is outdated and thus commented out --JG
+//            int rootNodeID = leftGraph.getSourceNode(rootSrcID);
+//            GraphNode rootHere = graphInfo.getSGraph().getNode(graphInfo.getNodeForInt(rootNodeID));
+//            for (int e : graphInfo.getIncidentEdges(rootNodeID)) {
+//                GraphEdge edge = graphInfo.getEdge(e);
+//                int otherNodeID = graphInfo.getOtherNode(e, rootNodeID);
+//                if (edge != null && !roleIsFilled(leftGraph, otherNodeID)) {
+//                    if (BlobUtils.isBlobEdge(rootHere, edge)) {
+//                        if (edge.getLabel().compareTo(graphInfo.getSourceForInt(appSource))>0) {
+//                            weight *= 0.5;
+//                        }
+//                    }
+//                }
+//            }
 
             AverageLogger.increaseValue("APP success");
             return cacheRules(sing(retGraph, leftType.simulateApply(appSource), labelId, childStates, weight), labelId, childStates);
@@ -241,7 +251,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             BoundaryRepresentation target = child1.left;
             BoundaryRepresentation leftGraph = child0.left;
             Type targetType = child1.right;
-            Type leftType = child0.right;
+            Type leftType = child0.right.closure();
             
             //check if MOD is allowed according to types
             if (!leftType.canBeModifiedBy(targetType, modSource)) {
@@ -334,23 +344,25 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             }
             BoundaryRepresentation retGraph = leftGraph.merge(target);
             
-            int rootNodeID = leftGraph.getSourceNode(rootSrcID);
             double weight = 1.0;
-            GraphNode rootHere = graphInfo.getSGraph().getNode(graphInfo.getNodeForInt(rootNodeID));
-            for (int e : graphInfo.getIncidentEdges(rootNodeID)) {
-                GraphEdge edge = graphInfo.getEdge(e);
-                int otherNodeID = graphInfo.getOtherNode(e, rootNodeID);
-                if (edge != null && !roleIsFilled(retGraph, otherNodeID)) {
-                    if (!BlobUtils.isBlobEdge(rootHere, edge)) {
-                        if (edge.getLabel().compareTo(graphInfo.getSourceForInt(modSource))>0) {
-                            weight *= 0.5;
-                        }
-                    }
-                }
-            }
+            //the following commented bit was weird, removed now
+//            int rootNodeID = leftGraph.getSourceNode(rootSrcID);
+//            GraphNode rootHere = graphInfo.getSGraph().getNode(graphInfo.getNodeForInt(rootNodeID));
+//            for (int e : graphInfo.getIncidentEdges(rootNodeID)) {
+//                GraphEdge edge = graphInfo.getEdge(e);
+//                int otherNodeID = graphInfo.getOtherNode(e, rootNodeID);
+//                if (edge != null && !roleIsFilled(retGraph, otherNodeID)) {
+//                    if (!BlobUtils.isBlobEdge(rootHere, edge)) {
+//                        if (edge.getLabel().compareTo(graphInfo.getSourceForInt(modSource))>0) {
+//                            weight *= 0.5;
+//                        }
+//                    }
+//                }
+//            }
             AverageLogger.increaseValue("MOD success");
             return cacheRules(sing(retGraph, leftType, labelId, childStates, weight), labelId, childStates);
         } else if (label.startsWith(OP_COREF) && childStates.length == 0) {
+            //TODO this bit is somewhat deprecated
             int id = Integer.valueOf(label.substring(OP_COREF.length()));
             SGraph ret = new SGraph();
             List<Rule> rules = new ArrayList<>();
@@ -368,6 +380,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             AverageLogger.increaseValue("COREF call");
             return cacheRules(rules, labelId, childStates);
         } else if (label.startsWith(OP_COREFMARKER) && childStates.length == 0) {
+            //TODO this bit is somewhat deprecated
             String shortLabel = label.substring(OP_COREFMARKER.length());
             int id = Integer.valueOf(shortLabel.substring(0, shortLabel.indexOf("_")));
             String graphString = shortLabel.substring(shortLabel.indexOf("_")+1);
@@ -635,10 +648,10 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 Int2IntMap nestedRole2Unif = new Int2IntOpenHashMap();
                 for (Tree<String> nestedRoleTree : roleTree.getChildren()) {
                     String[] parts = nestedRoleTree.getLabel().split("_UNIFY_");
-                    try {
+                    if (parts.length == 1) {
+                        nestedRole2Unif.put(graphInfo.getIntForSource(parts[0]), graphInfo.getIntForSource(parts[0]));
+                    } else {
                         nestedRole2Unif.put(graphInfo.getIntForSource(parts[0]), graphInfo.getIntForSource(parts[1]));
-                    } catch (java.lang.Exception ex) {
-                        System.err.println(Util.getStackTrace(ex));
                     }
                 }
                 String role = roleTree.getLabel().split("_UNIFY_")[0];
@@ -650,6 +663,31 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
         public Type(Int2ObjectMap<Int2IntMap> role2nestedRoleAndUnif, Int2ObjectMap<Type> role2Type) {
             this.role2nestedRole2Unif = role2nestedRoleAndUnif;
             this.role2Type = role2Type;
+        }
+        
+        /**
+         * Returns the closure of this type, i.e., this function adds all
+         * sources now that can later be added through application, and their
+         * target types, to this type. E.g. [O[S]] becomes [O[S], S].
+         *
+         * @return
+         */
+        public Type closure() {
+            Int2ObjectMap<Int2IntMap> newId = new Int2ObjectOpenHashMap<>();
+            Int2ObjectMap<Type> newRho= new Int2ObjectOpenHashMap<>();
+            for (int r : domain()) {
+                Type recHere = role2Type.get(r);
+                newRho.put(r, recHere);
+                Int2IntMap idHere = role2nestedRole2Unif.get(r);
+                newId.put(r, idHere);
+                for (int u : idHere.keySet()) {
+                    if (!domain().contains(idHere.get(u))) {
+                        newRho.put(idHere.get(u), recHere.role2Type.get(u));
+                        newId.put(idHere.get(u), recHere.role2nestedRole2Unif.get(u));
+                    }
+                }
+            }
+            return new Type(newId, newRho);
         }
 
         @Override
@@ -697,6 +735,28 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 retId.put(graphInfo.getSourceForInt(entry.getIntKey()), nr2unif);
             }
             return new ApplyModifyGraphAlgebra.Type(retRho, retId);
+        }
+        
+        /**
+         * Returns this type as a ApplyModifyGraphAlgebra.Type, which is more readable.
+         * @param type
+         * @param graphInfo
+         * @return 
+         */
+        public static Type fromAlgebraType(ApplyModifyGraphAlgebra.Type type, GraphInfo graphInfo) {
+            Int2ObjectMap<Type> retRho = new Int2ObjectOpenHashMap<>();
+            for (Map.Entry<String, ApplyModifyGraphAlgebra.Type> entry : type.rho.entrySet()) {
+                retRho.put(graphInfo.getIntForSource(entry.getKey()), fromAlgebraType(entry.getValue(), graphInfo));
+            }
+            Int2ObjectMap<Int2IntMap> retId = new Int2ObjectOpenHashMap<>();
+            for (Map.Entry<String, Map<String, String>> entry : type.id.entrySet()) {
+                Int2IntMap nr2unif = new Int2IntOpenHashMap();
+                for (Map.Entry<String, String> e : entry.getValue().entrySet()) {
+                    nr2unif.put(graphInfo.getIntForSource(e.getKey()), graphInfo.getIntForSource(e.getValue()));
+                }
+                retId.put(graphInfo.getIntForSource(entry.getKey()), nr2unif);
+            }
+            return new Type(retId, retRho);
         }
 
         @Override
@@ -886,7 +946,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                     v = getStateForId(stateID).left.getSourceNode(rootSrcID);
                     if (v != -1) {
                         Map<Type, SinglesideMergePartnerFinder> map = node2LeftStates[v];
-                        SinglesideMergePartnerFinder retHere = map.get(state.right);
+                        SinglesideMergePartnerFinder retHere = map.get(state.right.closure());
                         if (retHere == null) {
                             ret = EMPTYSET;
                         } else {
@@ -950,7 +1010,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 case 1:
                     v = state.left.getSourceNode(rootSrcID);
                     Map<Type, SinglesideMergePartnerFinder> map = node2RightStates[v];
-                    Type type = state.right;
+                    Type type = state.right.closure();
                     SinglesideMergePartnerFinder set = map.get(type);
                     if (set == null) {
                         if (maxCorefs == 0) {
@@ -1199,19 +1259,5 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
         }
 
     }
-    
-    public static void main(String[] args) throws ParseException, ParserException {
-        SGraph graph = new IsiAmrInputCodec().read("(r<root>/root)");
-        Signature sig = AMSignatureBuilder.makeDecompositionSignature(graph, 0);
-        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(sig);
-        TreeAutomaton auto = alg.decompose(alg.parseString("(r<root>/root)"));
-        auto.makeAllRulesExplicit();
-        System.err.println("vit "+auto.viterbi());
-        for (Object rule : auto.getRuleSet()) {
-            System.err.println("rule "+rule);
-        }
         
-        System.err.println(auto);
-    }
-    
 }

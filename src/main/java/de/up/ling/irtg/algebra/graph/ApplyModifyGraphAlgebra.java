@@ -14,6 +14,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -55,13 +56,19 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
     @Override
     public TreeAutomaton decompose(Pair<SGraph, ApplyModifyGraphAlgebra.Type> value) {
         //first, if the signature is empty, we make one. This is necessary for e.g. the GUI to work
-        if (signature.getSymbols().isEmpty()) {
-            try {
-                signature = AMSignatureBuilder.makeDecompositionSignature(value.left, 0);
-            } catch (ParseException ex) {
-                Logger.getLogger(ApplyModifyGraphAlgebra.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+        /* EDIT: this no longer works, since the signature builder is in the
+        am-tools project now. Thus, the next bit is commented out and
+        decomposing with the AM algebra
+        in the GUI is currently not possible.
+          -- JG
+        */
+//        if (signature.getSymbols().isEmpty()) {
+//            try {
+//                signature = AMSignatureBuilder.makeDecompositionSignature(value.left, 0);
+//            } catch (ParseException ex) {
+//                Logger.getLogger(ApplyModifyGraphAlgebra.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
         if (value.right.rho.isEmpty()) {
             return new AMDecompositionAutomaton(this, null, value.left);
         } else {
@@ -79,8 +86,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         if (label.startsWith(OP_APPLICATION) && childrenValues.size() == 2) {
             String appSource = label.substring(OP_APPLICATION.length());
             SGraph target = childrenValues.get(1).left;
-            Type targetType = childrenValues.get(1).right;
+            Type targetType = childrenValues.get(1).right.closure();
             Type leftType = childrenValues.get(0).right;
+            Map<String, String> nestedRole2Unif = leftType.id.get(appSource);
 
             //rename right sources to temps
             List<String> orderedSources = new ArrayList(targetType.keySet());
@@ -91,17 +99,29 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 return null;//target must have root for APP to be allowed.
             }
             for (int i = 0; i < orderedSources.size(); i++) {
-                target = target.renameSource(orderedSources.get(i), "temp" + i);
+                String renamedSource = orderedSources.get(i);
+                String targetSource = nestedRole2Unif.get(renamedSource);
+                if (target.getAllSources().contains(renamedSource)) {
+                    target = target.renameSource(orderedSources.get(i), "temp"+i);
+                } else {
+                    if (!renamedSource.equals(targetSource)) {
+                        System.err.println("***WARNING: suspicious nested rename, disallowing the apply operation");//TODO: this should never occur with current signature builders.
+                        //Will be fixed with proper DAG type rework. For now, allowing this could lead to problems down the road.
+                        return null;
+                    }
+                    //otherwise it's ok, and just don't perform the rename.
+                }
             }
 
             //rename temps to left sources
-            Map<String, String> nestedRole2Unif = leftType.id.get(appSource);
             for (int i = 0; i < orderedSources.size(); i++) {
                 String src = orderedSources.get(i);
-                if (src.equals("root")) {
-                    target = target.renameSource("temp" + i, appSource);
-                } else {
-                    target = target.renameSource("temp" + i, nestedRole2Unif.get(orderedSources.get(i)));
+                if (target.getAllSources().contains("temp" + i)) {
+                    if (src.equals("root")) {
+                        target = target.renameSource("temp" + i, appSource);
+                    } else {
+                        target = target.renameSource("temp" + i, nestedRole2Unif.get(orderedSources.get(i)));
+                    }
                 }
             }
 
@@ -129,7 +149,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             target = target.renameSource(modSource, "root");
 
-            if (!childrenValues.get(0).right.canBeModifiedBy(targetType, modSource)) {
+            if (!childrenValues.get(0).right.closure().canBeModifiedBy(targetType, modSource)) {
                 System.err.println("MOD evaluation failed: invalid types! " + childrenValues.get(0).right + " mod by " + targetType);
                 return null;//modifier must have empty type at modName, and rest must be compatible with modifyee
             }
@@ -139,7 +159,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             //then just merge
             SGraph retGraph = leftGraph.merge(target);
             if (retGraph == null) {
-                System.err.println("APP merge failed!");
+                System.err.println("MOD merge failed!");
             }
             return new Pair(retGraph, childrenValues.get(0).right);
         } else {
@@ -182,7 +202,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
     }
 
-    public static class Type {
+    public static class Type implements Serializable {
 
         final Map<String, Type> rho;
         final Map<String, Map<String, String>> id;
@@ -226,7 +246,11 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 Map<String, String> role2Unif = new HashMap<>();
                 for (Tree<String> nestedRoleTree : roleTree.getChildren()) {
                     String[] parts = nestedRoleTree.getLabel().split("_UNIFY_");
-                    role2Unif.put(parts[0], parts[1]);
+                    if (parts.length >1) {
+                        role2Unif.put(parts[0], parts[1]);
+                    } else {
+                        role2Unif.put(parts[0], parts[0]);//then no rename
+                    }
                 }
                 id.put(keyHere, role2Unif);
             }

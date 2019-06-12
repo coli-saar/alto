@@ -44,15 +44,14 @@ class PairwiseShortestPaths {//this class computes (and stores) pairwise shortes
         {
             for (int l = j; l < n; l++)//maybe k=j+1, since diagonal unimportant?
             {
-                GraphNode nodej = wholeGraph.getNode(graphInfo.getNodeForInt(j));
-                GraphNode nodek = wholeGraph.getNode(graphInfo.getNodeForInt(l));
-                //the containsEdge check for DirectedMultigraph returns true iff there is at least one edge. So we can use it here.
-                if (g.containsEdge(nodej, nodek)) {
+                //g.containsEdge(nodej, nodel) sometimes seems to ignore directionality.
+                //so we check !graphInfo.getEdges(j, l).isEmpty() instead. TODO: figure out what's going on here.
+                if (!graphInfo.getEdges(j, l).isEmpty()) {
                     oldP[j][l] = 1;
                     oldP[l][j] = 1;
                     oldE[j][l] = graphInfo.getEdges(j, l).iterator().nextInt();
                     oldE[l][j] = graphInfo.getEdges(j, l).iterator().nextInt();
-                } else if (g.containsEdge(nodek, nodej)) {
+                } else if (!graphInfo.getEdges(l, j).isEmpty()) {
                     oldP[j][l] = 1;
                     oldP[l][j] = 1;
                     oldE[j][l] = graphInfo.getEdges(l, j).iterator().nextInt();
