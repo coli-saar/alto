@@ -476,6 +476,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 return null;
             }
         }
+        
+        public Map<String, String> getUnifications(String s) {
+            if (id.containsKey(s)) {
+                return id.get(s);
+            } else {
+                return null;
+            }
+        }
 
         public Set<Type> getAllSubtypes() {
             Set<Type> ret = new HashSet<>();
