@@ -36,9 +36,10 @@ class AmrCodecsTest {
         assertEquals(y, x)
     }
 
+	@Test
     public void amrWithDoubleQuotes() {
         // checks whether double quotes are parsed and also properly escaped in the output coded.
-        SGraph x = new IsiAmrInputCodec().read("   (w_5 / \"want\\\"\"  :ARG0 (subj_6 / boy)  :ARG1 (vcomp_7 / believe  :ARG0 (obj_8 / girl)  :ARG1 (xcomp_6_3 / like  :ARG0 (subj_5_2_4 / boy)  :ARG1 (obj_6_3_5 / girl))))");
+        SGraph x = new IsiAmrInputCodec().read("   (w_5 / \"want\\\"\"  :ARG0 (subj_6 / boy)  :ARG1 (vcomp_7 / \"believe³€↓@€¶ŧ←↓→øĸðħŋŋħæſðđŋ|«¢„»“\"  :ARG0 (obj_8 / girl)  :ARG1 (xcomp_6_3 / like  :ARG0 (subj_5_2_4 / boy)  :ARG1 (obj_6_3_5 / girl))))");
         String s = new SgraphAmrOutputCodec().asString(x);
 		// check that the double quote survived
         assert(s.contains("want\\\""));

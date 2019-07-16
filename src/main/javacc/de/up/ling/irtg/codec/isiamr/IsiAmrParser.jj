@@ -8,6 +8,7 @@ options {
   STATIC = false;
   FORCE_LA_CHECK=true;
   SUPPORT_CLASS_VISIBILITY_PUBLIC=false;
+  UNICODE_INPUT=true;
 }
 PARSER_BEGIN(IsiAmrParser)
 package de.up.ling.irtg.codec.isiamr;
