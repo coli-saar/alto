@@ -63,7 +63,13 @@ TOKEN :
 {
     <NAME: ((["a"-"z", "A"-"Z", "-", "_", "0"-"9", ".", "\'"])+ )> |
     <EDGE: [":"] (~[" ", "\t", "\n"])*> |
-    <DOUBLE_QUOTED_TOKEN: "\"" (~["\""])* "\"">
+    <DOUBLE_QUOTED_TOKEN: "\""
+    (
+         "\\" ~[]     //any escaped character
+    |                 //or
+        ~["\"","\\"]  //any character except quote or backslash
+    )*
+    "\"">
 }
 
 void graph() :
@@ -141,7 +147,23 @@ String token() :
 }
 {
     tok = <NAME> { return tok.image; }
-    | tok = <DOUBLE_QUOTED_TOKEN> { return tok.image.substring(1, tok.image.length()-1); }
+    | tok = <DOUBLE_QUOTED_TOKEN> {
+        String withEscapes = tok.image.substring(1, tok.image.length()-1);
+        StringBuffer newText = new StringBuffer();
+        for (int i = 0; i < withEscapes.length(); i++) {
+            if (withEscapes.charAt(i) == '\\') {
+                // jump to the next character to see whether it is a double quote
+                i += 1;
+                 if (withEscapes.charAt(i) != '"') {
+                     // no double qoute: add the backslash, otherwise it is omitted.
+                     newText.append('\\');
+                 }
+            }
+            // add the character.
+            newText.append(withEscapes.charAt(i));
+        }
+        return newText.toString();
+    }
 }
 
 String edge() :

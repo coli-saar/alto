@@ -127,7 +127,7 @@ public class SgraphAmrOutputCodec extends OutputCodec<SGraph> {
         if (TOKEN_PATTERN.matcher(s).matches()) {
             return s;
         } else {
-            return "\"" + s + "\"";
+            return "\"" + s.replace("\"", "\\\"") + "\"";
         }
     }
 
