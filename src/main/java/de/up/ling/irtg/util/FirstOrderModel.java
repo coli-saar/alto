@@ -133,7 +133,7 @@ public class FirstOrderModel {
 
     public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
-//        maxArity = 0;
+        maxArity = 0;
 
         allIndividuals.clear();
         allIndividualsAsTuples.clear();

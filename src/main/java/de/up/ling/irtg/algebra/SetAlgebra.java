@@ -112,7 +112,7 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     }
 
     @Override
-    public TreeAutomaton decompose(Set<List<String>> value) {
+    public TreeAutomaton<Set<List<String>>> decompose(Set<List<String>> value) {
         return new EvaluatingDecompositionAutomaton(value) {
             @Override
             public IntSet getAllStates() {
@@ -175,9 +175,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         this.model = model;
     }
     
-    
-    
-
     /**
      * @return the atomicInterpretations
      */
@@ -185,6 +182,12 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         return model.getAtomicInterpretations();
     }
 
+    /**
+     * Evaluates the operation given by the label on the child values.
+     * Most of the operations are parametrized using an underscore.
+     * E.g., project_1 projects all tuples of the first child value
+     * to one-element tuples.
+     */
     protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) throws NoModelException {
         Set<List<String>> ret = null;
 
