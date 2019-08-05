@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.saar.basic.StringTools;
@@ -174,5 +175,17 @@ public class FirstOrderModel {
         }
         
         return ret;
+    }
+
+    @Override
+    public String toString() {
+        ObjectMapper mapper = new ObjectMapper();
+        String result = "";
+        try {
+            result = mapper.writeValueAsString(atomicInterpretations);
+        } catch (JsonProcessingException e) {
+            result = super.toString();
+        }
+        return result;
     }
 }

@@ -26,8 +26,8 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
     private Interner<E> universeInterner;
     private static final BitSet EMPTY_BITSET = new BitSet();
 
-//    private Set<E> universe;
     public static final String DISJOINT_UNION = "dunion";
+	public static final String UNION = "union";
     public static final String EMPTYSET = "EMPTYSET";
     private static final String SEPARATOR_RE = "\\s*\\+\\s*";
     public static final String SEPARATOR = " + ";
@@ -75,6 +75,14 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
 
     @Override
     protected BitSet evaluate(String label, List<BitSet> childrenValues) {
+        if (UNION.equals(label)) {
+            BitSet ret = new BitSet();
+            for (BitSet bs: childrenValues) {
+                ret.or(bs);
+            }
+            return ret;
+        }
+
         if (DISJOINT_UNION.equals(label)) {
             assert childrenValues.size() == 2;
 
@@ -140,6 +148,11 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
 
             return ret;
         }
+    }
+
+    @Override
+    protected boolean isValidValue(BitSet value) {
+        return !value.isEmpty();
     }
 
     @Override
