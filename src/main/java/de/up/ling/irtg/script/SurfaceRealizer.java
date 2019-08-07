@@ -90,7 +90,7 @@ public class SurfaceRealizer {
             irtg = InterpretedTreeAutomaton.read(new FileInputStream(param.filenames.get(0)));
         }
 
-        SubsetAlgebra<String> sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
+        SubsetAlgebra sem = (SubsetAlgebra) irtg.getInterpretation("sem").getAlgebra();
         Interpretation semI = irtg.getInterpretation("sem");
 
         SetAlgebra ref = (SetAlgebra) irtg.getInterpretation("ref").getAlgebra();
@@ -198,7 +198,7 @@ public class SurfaceRealizer {
 
     private static MultiFOM makeFom(TreeAutomaton<BitSet> semInvhom, TreeAutomaton<Set<List<String>>> refInvhom,
             BitSet targetSem, Set<List<String>> targetRef,
-            SubsetAlgebra<String> sem,
+            SubsetAlgebra sem,
             FloydWarshallShortestPaths fw, Object2IntMap<String> numDistractors,
             TreeAutomaton<String> drtg) {
         // right[0] = ref
@@ -243,7 +243,7 @@ public class SurfaceRealizer {
         };
     }
 
-    private static FOM makeFom(TreeAutomaton<BitSet> semInvhom, TreeAutomaton<Pair<String, Set<List<String>>>> chartAfterRef, BitSet targetSem, Map<Integer, Integer> refDistance, SubsetAlgebra<String> sem) {
+    private static FOM makeFom(TreeAutomaton<BitSet> semInvhom, TreeAutomaton<Pair<String, Set<List<String>>>> chartAfterRef, BitSet targetSem, Map<Integer, Integer> refDistance, SubsetAlgebra sem) {
         return new FOM() {
             @Override
             public double evaluate(Rule left, CondensedRule right) {

@@ -1,8 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+// Copyright 2017 Alexander Koller
+// Copyright 2019 Arne Köhn
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package de.up.ling.irtg.algebra;
 
 import de.saar.basic.StringTools;
@@ -18,12 +28,15 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * A simple algebra performing union and disjoint union on sets.
  *
- * @author koller
+ * Sets are represented as elem1+elem2+elem3 and can be combinded
+ * using either dunion (disjoint) or union (non-disjoint).
  */
-public class SubsetAlgebra<E> extends Algebra<BitSet> {
+public class SubsetAlgebra extends Algebra<BitSet> {
 
-    private Interner<E> universeInterner;
+    private boolean emptyStatesAllowd = true;
+    private Interner<String> universeInterner;
     private static final BitSet EMPTY_BITSET = new BitSet();
 
     public static final String DISJOINT_UNION = "dunion";
@@ -32,27 +45,30 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
     private static final String SEPARATOR_RE = "\\s*\\+\\s*";
     public static final String SEPARATOR = " + ";
 
-    // Don't call this directly; it is only needed so
-    // an IRTG with this algebra can be constructed by a codec.
+
+    /**
+     * Don't call this constructor directly; it is only needed so
+     * an IRTG with this algebra can be constructed by a codec.
+     */
     public SubsetAlgebra() {
         this(Collections.emptySet());
     }
 
-    public SubsetAlgebra(Set<E> universe) {
+    public SubsetAlgebra(Set<String> universe) {
         setUniverse(universe);
     }
 
-    private void setUniverse(Set<E> universe) {
+    private void setUniverse(Set<String> universe) {
         universeInterner = new Interner<>();
 
-        for (E element : universe) {
+        for (String element : universe) {
             universeInterner.addObject(element);
         }
     }
 
     @Override
     public void readOptions(Reader optionReader) throws Exception {
-        setUniverse((Set<E>) parseStringSet(StringTools.slurp(optionReader)));
+      setUniverse(parseStringSet(StringTools.slurp(optionReader)));
     }
 
     private static boolean disjoint(BitSet s1, BitSet s2) {
@@ -96,10 +112,8 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
                 ret.or(s1);
                 ret.or(s2);
                 
-//                System.err.printf("++ %s + %s -> %s\n", toSet(s1), toSet(s2), toSet(ret));
                 return ret;
             } else {
-//                System.err.printf("** not disjoint: %s | %s\n", toSet(s1), toSet(s2));
                 return null;
             }
         } else if (EMPTYSET.equals(label)) {
@@ -114,9 +128,6 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
                 if( ret == null ) {
                     throw new RuntimeException("Could not parse set constant: " + label);
                 }
-                
-//                System.err.printf("LL %s\n", toSet(ret));
-
                 return ret;
             } catch (ParserException ex) {
                 throw new RuntimeException("Could not parse set constant: " + label, ex);
@@ -129,13 +140,13 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
         return true;
     }
 
-    public BitSet toBitset(Set<E> s) {
+    public BitSet toBitset(Set<String> s) {
         if (s == null) {
             return null;
         } else {
             BitSet ret = new BitSet();
 
-            for (E element : s) {
+            for (String element : s) {
                 int x = universeInterner.resolveObject(element);
 
                 if (x > 0) {
@@ -150,17 +161,22 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
         }
     }
 
+    /**
+     * Set whether states with an empty set should be allowd or pruned from the chart.
+     */
+    public void setEmptyStatesAllowed(boolean allowed) {
+        this.emptyStatesAllowd = allowed;
+    }
+
     @Override
     protected boolean isValidValue(BitSet value) {
-        return !value.isEmpty();
+        return emptyStatesAllowd || !value.isEmpty();
     }
 
     @Override
     public BitSet parseString(String representation) throws ParserException {
-        Set<E> s = (Set<E>) parseStringSet(representation);
-//        System.err.printf("parseString: %s\n", s);
+        Set<String> s = parseStringSet(representation);
         return toBitset(s);
-        // TODO - figure out a way to return actual set of E's
     }
 
     public static Set<String> parseStringSet(String representation) {
@@ -175,7 +191,7 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
     }
 
     @Override
-    public TreeAutomaton decompose(BitSet set) {
+    public TreeAutomaton<BitSet> decompose(BitSet set) {
         return new DecompositionAuto(set);
     }
 
@@ -187,7 +203,6 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
             super(SubsetAlgebra.this.getSignature());
 
             this.finalSet = finalSet;
-
         }
 
         @Override
@@ -209,11 +224,11 @@ public class SubsetAlgebra<E> extends Algebra<BitSet> {
         }
     }
 
-    public Set<E> toSet(BitSet bitset) {
+    public Set<String> toSet(BitSet bitset) {
         if (bitset == null) {
             return null;
         } else {
-            Set<E> ret = new HashSet<>();
+            Set<String> ret = new HashSet<>();
 
             for (int i = bitset.nextSetBit(0); i != -1; i = bitset.nextSetBit(i + 1)) {
                 ret.add(universeInterner.resolveId(i + 1)); // add one because interner IDs start at 1
