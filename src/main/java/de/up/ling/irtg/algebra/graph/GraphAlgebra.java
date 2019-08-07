@@ -221,7 +221,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * Writer, and does not store the rules in memory.
      * Iterates through the rules in bottom up order.
      * To avoid cycles, there are no rename operations on states only reachable
-     * via rename. Rules of the form c-> m(a, b) and c-> m(b,a) are both written
+     * via rename. Rules of the form {@literal c-> m(a, b)} and {@literal c-> m(b,a)} are both written
      * into the writer.
      * @param value
      * @param writer
@@ -239,7 +239,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * into the Writer, and does not store the rules in memory.
      * Iterates through the rules in bottom up order.
      * To avoid cycles, there are no rename operations on states only reachable
-     * via rename. Rules of the form c-> m(a, b) and c-> m(b,a) are both written
+     * via rename. Rules of the form {@literal c-> m(a, b)} and {@literal c-> m(b,a)} are both written
      * into the writer.
      * @param value
      * @param sourceCount

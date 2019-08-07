@@ -239,7 +239,7 @@ class SplitManager {
     
     /**
      * computes for every non-cut vertex v from this component a new component
-     * c(v) by adding v as a source, and then returns the map v->c(v).
+     * c(v) by adding v as a source, and then returns the map v→c(v).
      * @param storedComponents if a component occurs in the result, such that an
      * equal component was stored earlier, this earlier instance is used instead
      * of a new copy. The map is an identity map, to retrieve the stored

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The unevaluated item <i1, ..., in> specifies that we should attempt to
+ * The unevaluated item {@code <i1, ..., in>} specifies that we should attempt to
  * build a tree for the given rule by combining the i1-best tree for the
  * first child state, the i2-best tree for the second child state, etc.
  */

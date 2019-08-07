@@ -32,7 +32,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * a tool for working with tree automata from ISI.
  * The rules have the following form:<p>
  * 
- * <pre>q -> NP(x1 x2)  # 0.8</pre>
+ * {@code q -> NP(x1 x2)  # 0.8}
  * 
  * where q, x1, and x2 are states and NP is a terminal symbol. The
  * rules may be assigned weights by an optional annotation like "# 0.8".

@@ -26,7 +26,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * A codec for reading tree automata written in Thomas Hanneforth's format
  * for weighted bottom-up tree automata. Rules are written in the following format:<p>
  * 
- * <pre>TOP(q1,q2) -> q0	&lt;35133&gt;</pre>
+ * <pre>{@code TOP(q1,q2) -> q0	<35133>}</pre>
  * 
  * where TOP is the terminal symbol, and q0, q1, q2 are states. Each rule
  * may optionally be followed by a weight in angle brackets. If no weight is

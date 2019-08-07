@@ -36,7 +36,6 @@ public class ParserException extends Exception {
      * Creates an instance from the given String by calling the superconstructor with it.
      * 
      * @param string
-     * @param thrwbl 
      */
     public ParserException(String string) {
         super(string);

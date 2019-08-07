@@ -31,12 +31,12 @@ import java.util.stream.Collectors;
  * keyword, like so:
  * <p>
  *
- * <pre>
+ * <pre>{@code
  * foreach { x,y | left-of(x,y) and target(x) and distractor(y)}:
  * NP_$x -> leftof_$x(N_$x, NP_$y)
  * [sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
  * [string] *(?1, *("left of", ?2))
- * </pre>
+ * }</pre>
  *
  * A template IRTG can be instantiated to an ordinary IRTG based on the contents
  * of a {@link FirstOrderModel} using the

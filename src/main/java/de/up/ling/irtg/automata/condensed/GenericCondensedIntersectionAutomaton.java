@@ -53,7 +53,7 @@ import java.util.function.Supplier;
  * is the inverse-homomorphism image of a decomposition automaton.<p>
  *
  * Note that this automaton will not work correctly if right is recursive except
- * if all recursive rules are of the form 'q -> {...}(q)' which is explicitly
+ * if all recursive rules are of the form 'q → {...}(q)' which is explicitly
  * handled. Recursive right automata come up, for instance, when parsing with an
  * IRTG that has ?1 on the input interpretation. (See issue #2 on Bitbucket.)
  *

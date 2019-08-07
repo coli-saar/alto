@@ -42,11 +42,11 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * list a tree automaton, rule by rule, and annotate each rule with the homomorphic images
  * of the terminaly symbol on each interpretation, e.g. like this:<p>
  * 
- * <pre>
+ * <pre>{@code
  * S! -> r1(NP,VP)
  * [german] *(?1,?2)
  * [english] *(?2,?1)
- * </pre><p>
+ * }</pre>
  * 
  * The exclamation mark after the S indicates that S is a final state
  * of the tree automaton.<p>

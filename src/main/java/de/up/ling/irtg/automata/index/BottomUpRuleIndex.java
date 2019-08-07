@@ -26,9 +26,9 @@ public abstract class BottomUpRuleIndex {
     
     /**
      * Returns false if adding this rule makes the automaton bottom-up
-     * nondeterministic. That is: when q -> f(q1,...,qn) is added, the method
-     * returns true; when subsequently q' -> f(q1,...,qn) is added, with q !=
-     * q', the method returns false. (However, adding q -> f(q1,...,qn) for a
+     * nondeterministic. That is: when q → f(q1,...,qn) is added, the method
+     * returns true; when subsequently q' → f(q1,...,qn) is added, with q !=
+     * q', the method returns false. (However, adding q → f(q1,...,qn) for a
      * second time does not actually change the set of rules; in this case, the
      * method returns true.)
      *

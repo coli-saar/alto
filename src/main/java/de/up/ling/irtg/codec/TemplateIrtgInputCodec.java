@@ -28,12 +28,12 @@ import java.util.ArrayList;
  * IRTG in which rules may additionally be prefixed by quantification
  * over variables using the <code>foreach</code> keyword, like so:<p>
  * 
- * <pre>
-  foreach { a,b | left-of(a,b) and target(a) and distractor(b)}:
-  NP_$a -> leftof_$a(N_$a, NP_$b)
-  [sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
-  [string] *(?1, *("left of", ?2))
-</pre>
+ * <pre>{@code
+ *  foreach { a,b | left-of(a,b) and target(a) and distractor(b)}:
+ *  NP_$a -> leftof_$a(N_$a, NP_$b)
+ *  [sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
+ *  [string] *(?1, *("left of", ?2))
+ * }</pre>
  * 
  * See {@link TemplateInterpretedTreeAutomaton} for details about
  * what such rules mean.

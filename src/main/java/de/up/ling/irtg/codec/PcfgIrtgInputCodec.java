@@ -33,7 +33,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * The first line of a file that this codec will read contains the start symbol of the grammar.
  * Then one rule is specified on each line, in the following form:<p>
  * 
- * <pre>A -> B c D [0.3]</pre>
+ * {@code A -> B c D [0.3]}
  * 
  * Rule probabilities may optionally be specified in square brackets for each rule.
  * Rules without explicit probabilities receive weight 1; this can be used

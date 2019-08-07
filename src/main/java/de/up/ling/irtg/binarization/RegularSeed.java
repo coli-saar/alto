@@ -64,7 +64,7 @@ public abstract class RegularSeed {
      * tree automaton substitution. That is, the binarization of f(t1,...,tn)
      * contains all the rules from the binarizations of f and all t1,...,tn. The
      * states of these automata are renamed apart, and connected in the
-     * following way. If the binarization automaton for f contains a rule q ->
+     * following way. If the binarization automaton for f contains a rule q →
      * ?i (i.e., the i-th variable), then all occurrences of q in the automaton
      * are replaced by the final state of the binarization automaton for ti.
      *

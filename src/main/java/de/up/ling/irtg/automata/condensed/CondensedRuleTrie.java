@@ -17,7 +17,6 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 /**
  * A recursively defined Trie for CondensedRules
  * @author koller, modified by gontrum to use primitive int as keys.
- * @param <V>
  */
 public class CondensedRuleTrie {
     private final Int2ObjectMap<CondensedRuleTrie> map;

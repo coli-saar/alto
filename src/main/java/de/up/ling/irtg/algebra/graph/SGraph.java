@@ -517,10 +517,7 @@ public class SGraph{
      * Returns the graph underlying this s-graph. This graph contains
      * all the nodes, edges, node labels, and edge labels of the s-graph,
      * but none of the source information. It can be processed further
-     * using the JGraphT graph library.
-     * 
-     * @see JGraphT library at <a href="http://jgrapht.org/">http://jgrapht.org/</a>
-     * @return 
+     * using the <a href="http://jgrapht.org/">JGraphT graph library</a>.
      */
     public DirectedMultigraph<GraphNode, GraphEdge> getGraph() {
         return graph;
@@ -687,9 +684,6 @@ public class SGraph{
     
     /**
      * Returns a string representation of the graph.
-     * @param graph
-     * @param nra
-     * @return 
      */
     public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph) {
         return graphToString(graph, (node, visitedNodes, buf) -> {
@@ -707,8 +701,6 @@ public class SGraph{
 
     /**
      * Returns a string representation of this s-graph.
-     * 
-     * @return 
      */
     @Override
     public String toString() {
@@ -733,9 +725,6 @@ public class SGraph{
     /**
      * Controls whether the toString method uses the general one for graphs,
      * or the specific one for AMRs.
-     * 
-     * @see #equals(java.lang.Object) 
-     * @param equalsMeansIsomorphy 
      */
     public void setWriteAsAMR(boolean writeAsAMR) {
         this.writeAsAMR = writeAsAMR;

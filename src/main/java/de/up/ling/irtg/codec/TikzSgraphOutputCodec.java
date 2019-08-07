@@ -21,7 +21,7 @@ import java.io.PrintWriter;
  * and have it typeset.<p>
  *
  * The generated TikZ code relies on TikZ's graph layout capabilities,
- * and requires that you compile your document with <a href-"http://www.luatex.org/">Luatex</a>.
+ * and requires that you compile your document with <a href="http://www.luatex.org/">Luatex</a>.
  * Alternatively, you can remove the "layered layout" option from the tikzpicture
  * and specify the node coordinates by hand.
  * 

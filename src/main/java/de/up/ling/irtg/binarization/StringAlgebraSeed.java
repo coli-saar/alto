@@ -36,7 +36,7 @@ public class StringAlgebraSeed extends RegularSeed {
     
     /**
      * This is only for technical reasons; don't use this constructor!
-     * Use {@link #StringAlgebraSeed(de.up.ling.irtg.signature.Signature, java.lang.String) } instead.
+     * Use {@link #StringAlgebraSeed(Algebra, Algebra) } instead.
      */
     public StringAlgebraSeed() {
         

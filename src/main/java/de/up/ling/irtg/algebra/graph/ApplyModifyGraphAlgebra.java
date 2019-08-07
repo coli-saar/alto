@@ -227,7 +227,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * top level Note that a unify target also needs to be specified if no
          * rename occurs, as in S_UNIFY_S. Differences to the notation in the
          * paper include round brackets instead of square brackets, and
-         * '_UNIFY_' instead of '->'.
+         * '_UNIFY_' instead of '{@literal ->}'.
          *
          * @param typeString
          * @throws de.up.ling.tree.ParseException
@@ -430,7 +430,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 
         /**
          * Returns all source names that the nested types signal to be added
-         * through APP, e.g. S in [O[S]] or in O[O->S]. This method is not
+         * through APP, e.g. S in [O[S]] or in {@literal O[O->S]}. This method is not
          * recursive, so to get all types that will be added through any
          * sequence of applies, us this function on the closure of this type.
          *

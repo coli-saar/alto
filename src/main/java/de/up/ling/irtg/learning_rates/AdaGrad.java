@@ -11,7 +11,7 @@ import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 /**
  * A simple implementation of the widely used AdaGrad learning rate.
  * 
- * @see John Duchi and Elad Hazan and Yoram Singer, Adaptive Subgradient Methods for Online Learning and Stochastic Optimization, 2010, University of California, Berkeley
+ * see John Duchi and Elad Hazan and Yoram Singer, Adaptive Subgradient Methods for Online Learning and Stochastic Optimization, 2010, University of California, Berkeley
  * @author teichmann
  */
 public class AdaGrad implements LearningRate {

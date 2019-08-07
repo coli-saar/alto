@@ -30,8 +30,9 @@ public class BinarizingAlgebraSeed extends RegularSeed {
     private BinarizingAlgebra targetAlgebra;
 
     /**
-     * This is only for technical reasons; don't use this constructor! Use {@link #StringAlgebraSeed(de.up.ling.irtg.signature.Signature, java.lang.String)
-     * } instead.
+     * This is only for technical reasons; don't use this constructor! Use
+     * {@link #BinarizingAlgebraSeed(Algebra, Algebra)}
+     * instead.
      */
     public BinarizingAlgebraSeed() {
 

@@ -334,8 +334,6 @@ public class SComponentRepresentation {
 
     /**
      * Based on the source assignment and the set of components are equal.
-     * @param other
-     * @return 
      */
     @Override
     public int hashCode() {

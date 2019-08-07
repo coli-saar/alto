@@ -384,7 +384,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * Returns a set that contains all terminal symbols f such that the
-     * automaton has top-down transition rules parentState -> f(...). The set
+     * automaton has top-down transition rules parentState → f(...). The set
      * returned by this method may contain symbol IDs for which such a
      * transition does not actually exist; it is only guaranteed that all
      * symbols for which transitions exist are also in the set.
@@ -515,9 +515,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 //    }
 //    /**
 //     * Returns false if adding this rule makes the automaton bottom-up
-//     * nondeterministic. That is: when q -> f(q1,...,qn) is added, the method
-//     * returns true; when subsequently q' -> f(q1,...,qn) is added, with q !=
-//     * q', the method returns false. (However, adding q -> f(q1,...,qn) for a
+//     * nondeterministic. That is: when q → f(q1,...,qn) is added, the method
+//     * returns true; when subsequently q' → f(q1,...,qn) is added, with q !=
+//     * q', the method returns false. (However, adding q → f(q1,...,qn) for a
 //     * second time does not actually change the set of rules; in this case, the
 //     * method returns true.)
 //     *
@@ -999,7 +999,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Generates a random tree from the language of this tree automaton. The
      * probability of a tree is the product of the probabilities of the rules
-     * that were used to build it. The probability for the rule A ->
+     * that were used to build it. The probability for the rule A →
      * f(B1,...,Bn) is the weight of that rule, divided by the sum of all
      * weights for rules with left-hand side A. If the automaton has multiple
      * final states, one of these is chosen with uniform probability.
@@ -2233,7 +2233,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * The method is only guaranteed to work on non-recursive automata. As a
-     * special case, loop rules of the form q -> f(q) are allowed, but they are
+     * special case, loop rules of the form q → f(q) are allowed, but they are
      * simply skipped. This is correct in automata in which traversals of the
      * loop only lead to worse results, e.g. in Viterbi for PCFGs.
      *
@@ -2774,7 +2774,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Creates a new rule. Note that this method only creates the rule object;
      * it does not add it to the automaton. For a more convenient (if slightly
-     * less efficient) alternative, consider {@link #createRule(java.lang.Object, java.lang.String, State[], double)
+     * less efficient) alternative, consider {@link #createRule(java.lang.Object, java.lang.String, Object[], double)
      * }.
      *
      * @param parent
@@ -2790,8 +2790,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Creates a new rule. Note that this method only creates the rule object;
      * it does not add it to the automaton. For a more convenient (if slightly
-     * less efficient) alternative, consider {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double)
-     * }.
+     * less efficient) alternative, consider
+     * {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double)}.
      *
      * @param parent
      * @param label
@@ -2842,7 +2842,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * not already known in the automaton's signature, it is added to the
      * signature using the number of children as the arity. The rule creates an
      * unweighted rule by calling
-     * {@link #createRule(java.lang.Object, java.lang.String, State[], double)}
+     * {@link #createRule(Object, String, Object[], double)}
      * with a weight of 1.
      *
      * @param parent the rule's parent state
@@ -2859,7 +2859,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * not already known in the automaton's signature, it is added to the
      * signature using the number of children as the arity. The rule creates an
      * unweighted rule by calling
-     * {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double)}
+     * {@link #createRule(Object, String, java.util.List, double)}
      * with a weight of 1.
      *
      * @param parent the rule's parent state

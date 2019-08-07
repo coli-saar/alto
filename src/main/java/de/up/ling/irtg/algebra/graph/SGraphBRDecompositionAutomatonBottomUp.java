@@ -922,7 +922,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     /**
      * Writes all rules in this decomposition automaton, with one restriction:
      * There are no rename operations on states only reachable via rename.
-     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the
+     * Rules of the form {@literal c-> m(a, b)} and {@literal c-> m(b,a)} are both written into the
      * writer (this is different from previous implementations).
      * @param writer
      * @return
@@ -1086,7 +1086,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     /**
      * Writes the decomposition automata for all specified graphs in the corpus,
      * with one restriction: There are no rename operations on states only
-     * reachable via rename. Rules of the form c-> m(a, b) and c-> m(b,a) are
+     * reachable via rename. Rules of the form {@literal c-> m(a, b)} and {@literal c-> m(b,a)} are
      * both written into the writer (this is different from previous
      * implementations).
      * Output files are formatted CORPUSID_NODECOUNTnodes.rtg

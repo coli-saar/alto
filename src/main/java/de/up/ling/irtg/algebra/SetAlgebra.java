@@ -1,7 +1,18 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+// Copyright 2012-2017 Alexander Koller
+// Copyright 2019 Arne Köhn
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.Sets;
@@ -10,6 +21,8 @@ import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Lazy;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
@@ -25,10 +38,10 @@ import java.util.Set;
  * operations:
  *
  * <ul>
- * <li> project_i(R) projects its argument R (a k-place relation with k >= i) to
+ * <li> project_i(R) projects its argument R (a k-place relation with k ≥ i) to
  * the set of i-th elements of this relation.</li>
  * <li>intersect_i(R,F) returns the set of all tuples of R (a k-place relation
- * with k >= i) whose i-th element is a member of F (a subset of the
+ * with k ≥ i) whose i-th element is a member of F (a subset of the
  * universe).</li>
  * <li>intersect(A,B) returns the intersections of the sets A and B.</li>
  * <li>union(A,B) returns the union of the sets A and B.</li>
@@ -44,9 +57,7 @@ import java.util.Set;
  * Importantly, the decomposition automata for this algebra only implement
  * {@link TreeAutomaton#getRulesBottomUp(int, int[])}, not
  * {@link TreeAutomaton#getRulesTopDown(int, int)}. This means that you need to
- * take care to only ever call methods on them that look at rules bottom-up.<p>
- *
- * @author koller
+ * take care to only ever call methods on them that look at rules bottom-up.
  */
 
 public class SetAlgebra extends Algebra<Set<List<String>>> {
@@ -63,10 +74,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     
     private FirstOrderModel model;
     
-//    private Map<String, Set<List<String>>> atomicInterpretations;
-//    private int maxArity;
-//    private Set<String> allIndividuals;
-//    private Set<List<String>> allIndividualsAsTuples;
     private Lazy<IntSet> allStates = null;
 
     /**
@@ -74,11 +81,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
      */
     public SetAlgebra() {
         this.model = new FirstOrderModel();
-//        this.atomicInterpretations = null;
-//        maxArity = 0;
-//
-//        allIndividuals = new HashSet<String>();
-//        allIndividualsAsTuples = new HashSet<List<String>>();
         allStates = null;
     }
 
@@ -258,15 +260,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         return ret;
     }
 
-    /**
-     * returns the smallSet, if it's a subset of the bigSet. Otherwise returns
-     * the empty set.
-     *
-     * @param bigSet
-     * @param smallSet
-     * @param pos
-     * @return
-     */
     private Set<List<String>> member(Set<List<String>> tupleSet, String value) {
         List<String> memberValue = new ArrayList<>();
         
@@ -343,9 +336,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
             super(cause);
         }
 
-//        public NoModelException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-//            super(message, cause, enableSuppression, writableStackTrace);
-//        }
         @Override
         public String toString() {
             return "NoModelException: " + getMessage();

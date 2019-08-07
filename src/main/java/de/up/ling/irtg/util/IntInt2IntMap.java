@@ -81,8 +81,8 @@ public class IntInt2IntMap implements Serializable {
     
 
     /**
-     * Marco suggested an implementation of an (int, int) -> int map which
-     * encodes (int, int) as long and uses a long -> int hash map. If the outer
+     * Marco suggested an implementation of an (int, int) → int map which
+     * encodes (int, int) as long and uses a long → int hash map. If the outer
      * ArrayMap in the implementation above is dense, this is actually a
      * _slower_ implementation, but in case we ever need it again, here's the
      * code for it:
