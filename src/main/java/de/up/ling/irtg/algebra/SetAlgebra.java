@@ -102,15 +102,14 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     }
 
     /**
-     * Writes the interpretations of the atomic concepts to the given Writer.
-     * This method should encode into a Json string, but is not yet implemented.
+     * Writes the interpretations of the atomic concepts to the given Writer as a Json string.
+     * @throws IOException
      *
      * @see #readOptions(java.io.Reader)
-     * @param optionWriter
      */
     @Override
-    public void writeOptions(Writer optionWriter) {
-        throw new UnsupportedOperationException("Not implemented yet.");
+    public void writeOptions(Writer optionWriter) throws IOException {
+        optionWriter.append(model.toString());
     }
 
     @Override
