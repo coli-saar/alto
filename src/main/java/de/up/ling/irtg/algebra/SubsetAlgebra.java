@@ -196,32 +196,48 @@ public class SubsetAlgebra extends Algebra<BitSet> {
         return new DecompositionAuto(set);
     }
 
+    /**
+     * Perform decomposition with several possible target states.
+     */
+    public TreeAutomaton<BitSet> decompose(Set<BitSet> sets) {
+        return new DecompositionAuto(sets);
+    }
+
     private class DecompositionAuto extends EvaluatingDecompositionAutomaton {
 
-        private final BitSet finalSet;
+        private final Set<BitSet> finalSets;
 
         public DecompositionAuto(BitSet finalSet) {
             super(SubsetAlgebra.this.getSignature());
 
-            this.finalSet = finalSet;
+            this.finalSets = new HashSet<>();
+            finalSets.add(finalSet);
+        }
+
+        /**
+         * Construct a decomposition automaton with several possible
+         * final states.
+         */
+        public DecompositionAuto(Set<BitSet> finalSets) {
+            super(SubsetAlgebra.this.getSignature());
+            this.finalSets = finalSets;
         }
 
         @Override
         protected int addState(BitSet state) {
-            if (state == null) {
-                return 0;
-            } else {
-                int ret = stateInterner.resolveObject(state);
-
+            int ret = 0;
+            if (state != null) {
+                ret = stateInterner.resolveObject(state);
                 if (ret == 0) {
                     ret = stateInterner.addObject(state);
-                    if (subset(finalSet, state)) {
-                        finalStates.add(ret);
+                    for (BitSet finalSet: finalSets) {
+                        if (subset(finalSet, state)) {
+                            finalStates.add(ret);
+                        }
                     }
                 }
-
-                return ret;
             }
+            return ret;
         }
     }
 
