@@ -32,6 +32,20 @@ import static org.hamcrest.Matchers.*
 
 class SubsetAlgebraTest {
     @Test
+    public void testIsSubset() {
+        BitSet s1 = new BitSet()
+        BitSet s2 = new BitSet()
+        s1.set(0)
+        assertTrue(SubsetAlgebra.subset(s2,s1))
+        assertFalse(SubsetAlgebra.subset(s1,s2))
+        s2.set(0)
+        assertTrue(SubsetAlgebra.subset(s2,s1))
+        s1.set(4)
+        assertTrue(SubsetAlgebra.subset(s2,s1))
+        assertFalse(SubsetAlgebra.subset(s1,s2))
+    }
+
+    @Test
     public void testParseStringSet() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         assertThat(s, is(new HashSet(["rabbit(r1)", "sleep(e,r1)"])))
