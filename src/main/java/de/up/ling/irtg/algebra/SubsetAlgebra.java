@@ -30,8 +30,9 @@ import java.util.Set;
 /**
  * A simple algebra performing union and disjoint union on sets.
  *
- * Sets are represented as elem1+elem2+elem3 and can be combinded
+ * Sets are represented as elem1+elem2+elem3 and can be combined
  * using either dunion (disjoint) or union (non-disjoint).
+ * Combining two non-disjoint sets using dunion results in the empty set.
  */
 public class SubsetAlgebra extends Algebra<BitSet> {
 
@@ -77,16 +78,16 @@ public class SubsetAlgebra extends Algebra<BitSet> {
 
     /**
      * Checks if s1 is a subset of s2.
-     *
-     * @param s1
-     * @param s2
-     * @return
      */
     private static boolean subset(BitSet s1, BitSet s2) {
-        BitSet copy = new BitSet();
-        copy.or(s1);
-        copy.andNot(s2); // -> copy = s1 & ~s2
-        return copy.isEmpty();
+        int currIndex = s1.nextSetBit(0);
+        while (currIndex >= 0) {
+            if (!s2.get(currIndex)) {
+                return false;
+            }
+            currIndex = s1.nextSetBit(currIndex+1);
+        }
+        return true;
     }
 
     @Override
