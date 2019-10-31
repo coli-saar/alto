@@ -13,20 +13,17 @@ import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeBottomUpVisitor;
 import de.up.ling.tree.TreeParser;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
@@ -232,9 +229,16 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 
         private Type(Tree<String> typeTree) {
             super(Edge.class);
-            addTreeRecursive(typeTree);
+            boolean success = addTreeRecursive(typeTree);
+            if (!success) {
+                throw new IllegalArgumentException("Type string led to invalid type: "+typeTree.toString());
+            }
             origins = new HashSet<>();
             updateOrigins();
+            ensureClosure();
+            if (!verify()) {
+                throw new IllegalArgumentException("Type string led to invalid type: "+typeTree.toString());
+            }
         }
         
         /**
@@ -250,11 +254,15 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 try {
                     addDagEdge(e.getSource(), e.getTarget(), new Edge(e.getSource(), e.getTarget(), e.getLabel()));
                 } catch (CycleFoundException ex) {
-                    System.err.println("WARNING! cycle found in "+dag.toString()+".");
+                    throw new IllegalArgumentException("Cycle found in supposed DAG "+dag.toString());
                 }
             }
             origins = new HashSet<>();
             updateOrigins();
+            ensureClosure();
+            if (!verify()) {
+                throw new IllegalArgumentException("DAG led to invalid type: "+dag.toString());
+            }
         }
         
         /**
@@ -282,7 +290,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                         return false;
                     }
                     try {
-                        addDagEdge(target, target, new Edge(parent, target, edgeLabel));
+                        addDagEdge(parent, target, new Edge(parent, target, edgeLabel));
                     } catch (CycleFoundException ex) {
                         return false;
                     }
@@ -295,6 +303,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return true;
         }
         
+        
         //TODO might be better to keep track of this dynamically, by overriding addVertex and addEdge methods (former has origins.add(v), latter has origins.remove(e.getTarget()))
         private void updateOrigins() {
             origins.clear();
@@ -306,6 +315,30 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
         
         
+        private void ensureClosure() {
+            for (String node : vertexSet()) {
+                for (String desc : getDescendants(node)) {
+                    if (getEdge(node, desc) == null) {
+                        addEdge(node, desc, new Edge(node, desc, desc));//no rename, so edge label = desc
+                    }
+                }
+            }
+        }
+        
+        
+        private boolean verify() {
+            for (String node : vertexSet()) {
+                Set<String> seenLabels = new HashSet<>();
+                for (Edge e : outgoingEdgesOf(node)) {
+                    if (seenLabels.contains(e.getLabel())) {
+                        return false;
+                    } else {
+                        seenLabels.add(e.getLabel());
+                    }
+                }
+            }
+            return true;
+        }
         
         
         @Override
@@ -341,9 +374,10 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @param r
          * @return
          */
-        public Type remove(String r) {
+        public Type copyWithRemoved(String r) {
             Type copy = new Type(this);
             copy.removeVertex(r);
+            copy.updateOrigins();
             return copy;
         }
 
@@ -357,14 +391,11 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @return
          */
         public Type simulateApply(String s) {
-
             if (!origins.contains(s)) {
                 return null;
             }
 
-            Type copy = new Type(this);
-            copy.remove(s);
-            return copy;
+            return copyWithRemoved(s);
         }
 
         /**
@@ -512,7 +543,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         public boolean canBeModifiedBy(Type modifier, String modSource) {
             Type requestAtMod = modifier.getRequest(modSource);
             return requestAtMod != null && requestAtMod.equals(EMPTY_TYPE)
-                    && modifier.origins.contains(modSource) && modifier.remove(modSource).isCompatibleWith(this);
+                    && modifier.origins.contains(modSource) && modifier.copyWithRemoved(modSource).isCompatibleWith(this);
         }
 
         /**
@@ -552,36 +583,11 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
         }
 
-        private static class Edge {
-        
-        private final String source;
-        private final String target;
-        private final String label;
-        
-        public Edge(String source, String target, String label) {
-            this.source = source;
-            this.target = target;
-            this.label = label;
-        }
-
-        public String getTarget() {
-            return target;
-        }
-
-        public String getSource() {
-            return source;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
         @Override
         public int hashCode() {
-            int hash = 7;
-            hash = 43 * hash + Objects.hashCode(this.target);
-            hash = 43 * hash + Objects.hashCode(this.source);
-            hash = 43 * hash + Objects.hashCode(this.label);
+            int hash = 5;
+            hash = 79 * hash + Objects.hashCode(this.vertexSet());
+            hash = 79 * hash + Objects.hashCode(this.edgeSet());
             return hash;
         }
 
@@ -596,22 +602,80 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final Edge other = (Edge) obj;
-            if (!Objects.equals(this.target, other.target)) {
+            final Type other = (Type) obj;
+            if (!Objects.equals(this.vertexSet(), other.vertexSet())) {
                 return false;
             }
-            if (!Objects.equals(this.source, other.source)) {
-                return false;
-            }
-            if (!Objects.equals(this.label, other.label)) {
+            if (!Objects.equals(this.edgeSet(), other.edgeSet())) {
                 return false;
             }
             return true;
         }
+
         
         
         
-    }
+        
+        private static class Edge {
+        
+            private final String source;
+            private final String target;
+            private final String label;
+
+            public Edge(String source, String target, String label) {
+                this.source = source;
+                this.target = target;
+                this.label = label;
+            }
+
+            public String getTarget() {
+                return target;
+            }
+
+            public String getSource() {
+                return source;
+            }
+
+            public String getLabel() {
+                return label;
+            }
+
+            @Override
+            public int hashCode() {
+                int hash = 7;
+                hash = 43 * hash + Objects.hashCode(this.target);
+                hash = 43 * hash + Objects.hashCode(this.source);
+                hash = 43 * hash + Objects.hashCode(this.label);
+                return hash;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (this == obj) {
+                    return true;
+                }
+                if (obj == null) {
+                    return false;
+                }
+                if (getClass() != obj.getClass()) {
+                    return false;
+                }
+                final Edge other = (Edge) obj;
+                if (!Objects.equals(this.target, other.target)) {
+                    return false;
+                }
+                if (!Objects.equals(this.source, other.source)) {
+                    return false;
+                }
+                if (!Objects.equals(this.label, other.label)) {
+                    return false;
+                }
+                return true;
+            }
+
+
+
+        }
         
     }
     
@@ -662,5 +726,50 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return false;
         }
     }
+    
+    
+    
+    public static void main(String[] args) {
+        Signature sig = new Signature();
+        
+        String giraffe = "(g<root>/giraffe)";
+        String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
+        String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
+        String tall = "(t<root>/tall :ARG0 (m<m>))"+GRAPH_TYPE_SEP+"(m)";
+        String appS = "APP_s";
+        String appO = "APP_o";
+        String modM = "MOD_m";
+        
+        Tree<String> term1 = Tree.create(appS, Tree.create(eat), Tree.create(giraffe));
+        test(term1);
+        Tree<String> term2 = Tree.create(appS,
+                Tree.create(appO, Tree.create(want), Tree.create(eat)),
+                Tree.create(modM, Tree.create(giraffe), Tree.create(tall)));
+        test(term2);
+        //TODO: make actual tests out of this.
+        //TODO: add tests where type checks are supposed to _fail_
+        //TODO: add modify with unification
+        //TODO: add rename
+        //TODO: add more deeply nested checks (coord of control, but maybe also something more hypothetical and deeper)
+    }
+    
+    private static void test(Tree<String> term) {
+        System.err.println("Testing "+term.toString());
+        Signature sig = new Signature();
+        term.dfs((Tree<String> tree, List<Void> list) -> {
+            sig.addSymbol(tree.getLabel(), list.size());
+            return null;
+        });
+        
+        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(sig);
+        Pair<SGraph, Type> asGraph = alg.evaluate(term);
+        System.err.println("evaluation result: "+String.valueOf(asGraph));
+        
+        if (asGraph != null) {
+            AMDecompositionAutomaton auto = new AMDecompositionAutomaton(alg, null, asGraph.left);
+            System.err.println("decomp viterbi: "+auto.asConcreteTreeAutomatonBottomUp().viterbi());
+        }
+    }
+    
 
 }
