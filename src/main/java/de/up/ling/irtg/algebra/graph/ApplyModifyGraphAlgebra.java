@@ -24,10 +24,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
+import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
@@ -69,7 +71,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 //                Logger.getLogger(ApplyModifyGraphAlgebra.class.getName()).log(Level.SEVERE, null, ex);
 //            }
 //        }
-        if (value.right.rho.isEmpty()) {
+        if (value.right.isEmpty()) {
             return new AMDecompositionAutomaton(this, null, value.left);
         } else {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -86,31 +88,22 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         if (label.startsWith(OP_APPLICATION) && childrenValues.size() == 2) {
             String appSource = label.substring(OP_APPLICATION.length());
             SGraph target = childrenValues.get(1).left;
-            Type targetType = childrenValues.get(1).right.closure();
+            Type targetType = childrenValues.get(1).right;
             Type leftType = childrenValues.get(0).right;
-            Map<String, String> nestedRole2Unif = leftType.id.get(appSource);
-
-            //rename right sources to temps
-            List<String> orderedSources = new ArrayList(targetType.keySet());
-            if (target.getAllSources().contains("root")) {
-                orderedSources.add("root");
-            } else {
+            
+            //check if we can apply
+            if (!leftType.canApplyTo(targetType, appSource)) {
+                return null;
+            }
+            if (!target.getAllSources().contains("root")) {
                 System.err.println("target had no root in APP!");
                 return null;//target must have root for APP to be allowed.
             }
+            
+            //rename right sources to temps
+            List<String> orderedSources = new ArrayList(target.getAllSources());
             for (int i = 0; i < orderedSources.size(); i++) {
-                String renamedSource = orderedSources.get(i);
-                String targetSource = nestedRole2Unif.get(renamedSource);
-                if (target.getAllSources().contains(renamedSource)) {
-                    target = target.renameSource(orderedSources.get(i), "temp"+i);
-                } else {
-                    if (!renamedSource.equals(targetSource)) {
-                        System.err.println("***WARNING: suspicious nested rename, disallowing the apply operation");//TODO: this should never occur with current signature builders.
-                        //Will be fixed with proper DAG type rework. For now, allowing this could lead to problems down the road.
-                        return null;
-                    }
-                    //otherwise it's ok, and just don't perform the rename.
-                }
+                target = target.renameSource(orderedSources.get(i), "temp"+i);
             }
 
             //rename temps to left sources
@@ -120,12 +113,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                     if (src.equals("root")) {
                         target = target.renameSource("temp" + i, appSource);
                     } else {
-                        target = target.renameSource("temp" + i, nestedRole2Unif.get(orderedSources.get(i)));
+                        target = target.renameSource("temp" + i, leftType.redomain(appSource, orderedSources.get(i)));
                     }
                 }
             }
 
-            //target = target.renameSource("root", appName);
+            //merge and then remove appSource from head (prepare the source removal first)
             SGraph leftGraph = childrenValues.get(0).left;
             Set<String> retainedSources = new HashSet<>(leftGraph.getAllSources());
             retainedSources.addAll(target.getAllSources());
@@ -141,7 +134,15 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             String modSource = label.substring(OP_MODIFICATION.length());
             SGraph target = childrenValues.get(1).left;
             Type targetType = childrenValues.get(1).right;
+            Type leftType = childrenValues.get(0).right;
 
+            //check if mod is allowed
+            if (!leftType.canBeModifiedBy(targetType, modSource)) {
+                System.err.println("MOD evaluation failed: invalid types! " + leftType + " mod by " + targetType);
+                return null;
+            }
+            
+            // remove old root source of modifier and rename modSource to root
             if (target.getNodeForSource("root") != null) {
                 Set<String> retainedSources = new HashSet<>(target.getAllSources());
                 retainedSources.remove("root");
@@ -149,14 +150,8 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             target = target.renameSource(modSource, "root");
 
-            if (!childrenValues.get(0).right.closure().canBeModifiedBy(targetType, modSource)) {
-                System.err.println("MOD evaluation failed: invalid types! " + childrenValues.get(0).right + " mod by " + targetType);
-                return null;//modifier must have empty type at modName, and rest must be compatible with modifyee
-            }
-
-            SGraph leftGraph = childrenValues.get(0).left;
-
             //then just merge
+            SGraph leftGraph = childrenValues.get(0).left;
             SGraph retGraph = leftGraph.merge(target);
             if (retGraph == null) {
                 System.err.println("MOD merge failed!");
@@ -202,10 +197,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
     }
 
-    public static class Type implements Serializable {
-
-        final Map<String, Type> rho;
-        final Map<String, Map<String, String>> id;
+    public static class Type extends DirectedAcyclicGraph<String, Type.Edge> implements Serializable {
 
         public static final Type EMPTY_TYPE;
 
@@ -219,13 +211,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             EMPTY_TYPE = temp;
         }
+        
+        
+        private final Set<String> origins;
 
         /**
          * Creates a type from a string representation. Example format: (S,
-         * O(O2_UNIFY_S, O_UNIFY_O2), O2(S_UNIFY_S)) Notes: No depth deeper than
-         * this example is allowed. The unify target always corresponds to the
-         * top level Note that a unify target also needs to be specified if no
-         * rename occurs, as in S_UNIFY_S. Differences to the notation in the
+         * O(O2_UNIFY_S, O_UNIFY_O2), O2(S_UNIFY_S)).
+         * Differences to the notation in the
          * paper include round brackets instead of square brackets, and
          * '_UNIFY_' instead of '{@literal ->}'.
          *
@@ -238,79 +231,107 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
 
         private Type(Tree<String> typeTree) {
-            this.rho = new HashMap<>();
-            this.id = new HashMap<>();
-            for (Tree<String> roleTree : typeTree.getChildren()) {
-                String keyHere = roleTree.getLabel().split("_UNIFY_")[0];
-                rho.put(keyHere, new Type(roleTree));
-                Map<String, String> role2Unif = new HashMap<>();
-                for (Tree<String> nestedRoleTree : roleTree.getChildren()) {
-                    String[] parts = nestedRoleTree.getLabel().split("_UNIFY_");
-                    if (parts.length >1) {
-                        role2Unif.put(parts[0], parts[1]);
-                    } else {
-                        role2Unif.put(parts[0], parts[0]);//then no rename
+            super(Edge.class);
+            addTreeRecursive(typeTree);
+            origins = new HashSet<>();
+            updateOrigins();
+        }
+        
+        /**
+         * Use this to create a copy.
+         * @param dag
+         */
+        private Type(DirectedAcyclicGraph<String, Edge> dag) {
+            super(Edge.class);
+            for (String v : dag.vertexSet()) {
+                addVertex(v);
+            }
+            for (Edge e : dag.edgeSet()) {
+                try {
+                    addDagEdge(e.getSource(), e.getTarget(), new Edge(e.getSource(), e.getTarget(), e.getLabel()));
+                } catch (CycleFoundException ex) {
+                    System.err.println("WARNING! cycle found in "+dag.toString()+".");
+                }
+            }
+            origins = new HashSet<>();
+            updateOrigins();
+        }
+        
+        /**
+         * returns true if success, returns false if we found an inconsistency.
+         * @param typeTree
+         * @return 
+         */
+        private boolean addTreeRecursive(Tree<String> typeTree) {
+            String parent = typeTree.getLabel().split("_UNIFY_")[0];
+            for (Tree<String> childTree : typeTree.getChildren()) {
+                String[] parts = childTree.getLabel().split("_UNIFY_");
+                String target;
+                String edgeLabel;
+                if (parts.length >1) {
+                    target = parts[1];
+                    edgeLabel = parts[0];
+                } else {
+                    target = parts[0];
+                    edgeLabel = parts[0];
+                }
+                this.addVertex(target);
+                if (!parent.equals("TOP")) {
+                    Edge existingEdge = getEdge(target, parent);
+                    if (existingEdge != null && existingEdge.getLabel().equals(edgeLabel)) {
+                        return false;
+                    }
+                    try {
+                        addDagEdge(target, target, new Edge(parent, target, edgeLabel));
+                    } catch (CycleFoundException ex) {
+                        return false;
                     }
                 }
-                id.put(keyHere, role2Unif);
+                boolean recursiveSuccess = addTreeRecursive(childTree);
+                if (!recursiveSuccess) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        //TODO might be better to keep track of this dynamically, by overriding addVertex and addEdge methods (former has origins.add(v), latter has origins.remove(e.getTarget()))
+        private void updateOrigins() {
+            origins.clear();
+            for (String node : vertexSet()) {
+                if (incomingEdgesOf(node).isEmpty()) {
+                    origins.add(node);
+                }
             }
         }
-
-        public Type(Map<String, Type> rho, Map<String, Map<String, String>> id) {
-            if (!rho.keySet().equals(id.keySet())) {
-
-            }
-            this.rho = rho;
-            this.id = id;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 7;
-            hash = 37 * hash + Objects.hashCode(this.rho);
-            hash = 37 * hash + Objects.hashCode(this.id);
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final Type other = (Type) obj;
-            if (!Objects.equals(this.rho, other.rho)) {
-                return false;
-            }
-            return Objects.equals(this.id, other.id);
-        }
-
-        public Set<String> keySet() {
-            return rho.keySet();
-        }
-
+        
+        
+        
+        
         @Override
         public String toString() {
-            List<String> roleStrings = new ArrayList();
-            for (String role : rho.keySet()) {
-                roleStrings.add(role + rho.get(role).toStringWithUnify(id.get(role)));
+            
+            StringJoiner sj = new StringJoiner(", ", "(", ")");
+            for (String origin : origins) {
+                sj.add(dominatedSubgraphToString(origin));
             }
-            roleStrings.sort(Comparator.naturalOrder());
-            return "(" + roleStrings.stream().collect(Collectors.joining(", ")) + ")";
+            
+            return sj.toString();
         }
 
-        private String toStringWithUnify(Map<String, String> id4Unif) {
-            List<String> roleStrings = new ArrayList();
-            for (String role : rho.keySet()) {
-                roleStrings.add(role + "_UNIFY_" + id4Unif.get(role) + rho.get(role).toStringWithUnify(id.get(role)));
+        private String dominatedSubgraphToString(String node) {
+            StringJoiner sj = new StringJoiner(", ", "(", ")");
+            
+            for (Edge e : outgoingEdgesOf(node)) {
+                String eRep = "";
+                if (!e.getLabel().equals(e.getTarget())) {
+                    eRep = e.getLabel()+"_UNIFY_";
+                }
+                sj.add(eRep+dominatedSubgraphToString(e.getTarget()));
             }
-            roleStrings.sort(Comparator.naturalOrder());
-            return "(" + roleStrings.stream().collect(Collectors.joining(", ")) + ")";
+            
+            return node+sj.toString();
+            
         }
 
         /**
@@ -321,11 +342,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @return
          */
         public Type remove(String r) {
-            Map<String, Map<String, String>> newId = new HashMap<>(id);
-            Map<String, Type> newRho = new HashMap<>(rho);
-            newId.remove(r);
-            newRho.remove(r);
-            return new Type(newRho, newId);
+            Type copy = new Type(this);
+            copy.removeVertex(r);
+            return copy;
         }
 
         /**
@@ -339,67 +358,24 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          */
         public Type simulateApply(String s) {
 
-            if (!rho.containsKey(s)) {
+            if (!origins.contains(s)) {
                 return null;
             }
 
-            //check if we need this for unification later
-            Type closure = closure();
-            Set<String> allUnifTargets = new HashSet();
-            for (String role : closure.rho.keySet()) {
-                allUnifTargets.addAll(closure.id.get(role).values());
-            }
-            if (allUnifTargets.contains(s)) {
-                return null;
-            } else {
-                Map<String, Map<String, String>> newId = new HashMap<>();
-                Map<String, Type> newRho = new HashMap<>();
-                for (String r : keySet()) {
-                    if (!s.equals(r)) {
-                        Type recHere = rho.get(r);
-                        newRho.put(r, recHere);
-                        Map<String, String> idHere = id.get(r);
-                        newId.put(r, idHere);
-                    }
-                }
-                Type recHere = rho.get(s);
-                Map<String, String> idHere = id.get(s);
-                for (String u : idHere.keySet()) {
-                    if (!keySet().contains(idHere.get(u))) {
-                        newRho.put(idHere.get(u), recHere.rho.get(u));
-                        newId.put(idHere.get(u), recHere.id.get(u));
-                    }
-                }
-                return new Type(newRho, newId);
-            }
+            Type copy = new Type(this);
+            copy.remove(s);
+            return copy;
         }
 
         /**
-         * Checks whether this type is a 'subset' of type 'other', when
-         * extending the subset notion to functions.
+         * Checks whether this type is a subgraph of type 'other'.
          *
          * @param other
          * @return
          */
         public boolean isCompatibleWith(Type other) {
-            if (!other.keySet().containsAll(keySet())) {
-                return false;
-            }
-            for (String r : keySet()) {
-                Type rhoR = rho.get(r);
-                Type otherRhoR = other.rho.get(r);
-                if (!rhoR.isCompatibleWith(otherRhoR)) {
-                    return false;//use stricter version to match with IWCS paper -- EDIT currently using the less strict version again with 'isCompatibleWith' instead of 'equals' in the check.
-                }
-                Map<String, String> iR = id.get(r);
-                Map<String, String> otherIR = other.id.get(r);
-                for (String nr : iR.keySet()) {
-                    if (!iR.get(nr).equals(otherIR.get(nr))) {
-                        return false;
-                    }
-                }
-            }
-            return true;
+            return other.vertexSet().containsAll(vertexSet())
+                    && other.edgeSet().containsAll(edgeSet());
         }
 
         /**
@@ -408,94 +384,101 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @return
          */
         public int depth() {
-            if (keySet().isEmpty()) {
+            if (origins.isEmpty()) {
                 return 0;
             } else {
-                int max = 0;
-                for (Type t : rho.values()) {
-                    max = Math.max(max, t.depth());
-                }
-                return max + 1;
+                //depth is same as height
+                return origins.stream().map(node -> heightRecursive(node))
+                        .collect(Collectors.maxBy(Comparator.naturalOrder())).get();
             }
         }
-
-        /**
-         * Returns the set of all types that are expected at the sources.
-         *
-         * @return
-         */
-        public Collection<Type> getNestedTypes() {
-            return rho.values();
+        
+        private int heightRecursive(String node) {
+            int ret = 1;//using 1-based height here, so we can use 0 for the empty type.
+            for (Edge e : outgoingEdgesOf(node)) {
+                ret = Math.max(ret, heightRecursive(e.getTarget())+1);
+            }
+            return ret;
         }
-
-        /**
-         * Returns all source names that the nested types signal to be added
-         * through APP, e.g. S in [O[S]] or in {@literal O[O->S]}. This method is not
-         * recursive, so to get all types that will be added through any
-         * sequence of applies, us this function on the closure of this type.
-         *
-         * @return
-         */
-        public Set<String> getUnificationTargets() {
+            
+        //TODO a newer package of jgrapht (org.jgrapht:1.3.1) has this method built in. This implementation here is horribly inefficient.
+        private Set<String> getDescendants(String v) {
             Set<String> ret = new HashSet<>();
-            for (Map<String, String> i : id.values()) {
-                ret.addAll(i.values());
+            for (String child : getChildren(v)) {
+                ret.add(child);
+                ret.addAll(getDescendants(child));
+            }
+            return ret;
+        }
+        
+        private Set<String> getChildren(String v) {
+            Set<String> ret = new HashSet<>();
+            for (Edge e : outgoingEdgesOf(v)) {
+                ret.add(e.getTarget());
             }
             return ret;
         }
 
         /**
-         * Returns the closure of this type, i.e., this function adds all
-         * sources now that can later be added through application, and their
-         * target types, to this type. E.g. [O[S]] becomes [O[S], S].
-         *
-         * @return
+         * Returns the request of this type at source s (=req(s)). Returns null
+         * if s is not in this type.
+         * @param s
+         * @return 
          */
-        public Type closure() {
-            Map<String, Map<String, String>> newId = new HashMap<>();
-            Map<String, Type> newRho = new HashMap<>();
-            for (String r : keySet()) {
-                Type recHere = rho.get(r);
-                newRho.put(r, recHere);
-                Map<String, String> idHere = id.get(r);
-                newId.put(r, idHere);
-                for (String u : idHere.keySet()) {
-                    if (!keySet().contains(idHere.get(u))) {
-                        newRho.put(idHere.get(u), recHere.rho.get(u));
-                        newId.put(idHere.get(u), recHere.id.get(u));
-                    }
+        public Type getRequest(String s) {
+            if (!vertexSet().contains(s)) {
+                return null;
+            }
+            
+            Set<String> descendants = getChildren(s);//since every node has a direct edge to all its descendants, we can just do this.
+            Type ret = new Type(EMPTY_TYPE);
+            
+            for (String node : descendants) {
+                ret.addVertex(redomain(s, node));
+            }
+            for (Edge e : edgeSet()) {
+                if (descendants.contains(e.getSource()) && descendants.contains(e.getTarget())) {
+                    String newSource = redomain(s, e.getSource());
+                    String newTarget = redomain(s, e.getTarget());
+                    Edge newEdge = new Edge(newSource, newTarget, e.getLabel());
+                    ret.addEdge(newSource, newTarget, newEdge);
                 }
             }
-            return new Type(newRho, newId);
-        }
-
-        public Type getTargetType(String s) {
-            if (rho.containsKey(s)) {
-                return rho.get(s);
-            } else {
-                return null;
-            }
+            return ret;
         }
         
-        public Map<String, String> getUnifications(String s) {
-            if (id.containsKey(s)) {
-                return id.get(s);
-            } else {
-                return null;
-            }
+        /**
+         * Maps the descendant to its counterpart in req(parent). Returns null
+         * if "descendant" is not actually a descendant of parent.
+         * @param parent
+         * @param descendant
+         * @return 
+         */
+        public String redomain(String parent, String descendant) {
+            return getEdge(parent, descendant).getLabel();
         }
+        
+        
+        
+        public boolean isEmpty() {
+            return equals(EMPTY_TYPE);
+        }
+        
 
         public Set<Type> getAllSubtypes() {
             Set<Type> ret = new HashSet<>();
             ret.add(this);
             //TODO the following check is an arbitrary choice to keep complexity explosion in check. This should be properly fixed.
-            if (rho.keySet().size() < 10) {
-                for (String s : rho.keySet()) {
+            if (origins.size() < 10) {
+                for (String s : origins) {
                     Type after = simulateApply(s);
                     if (after != null) {
                         ret.addAll(after.getAllSubtypes());
                     }
                 }
+            } else {
+                System.err.println("***WARNING*** skipping computation of all subtypes since expected complexity is too high!");
+                System.err.println(this.toString());
             }
             return ret;
         }
@@ -510,16 +493,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          */
         public boolean canApplyTo(Type argument, String appSource) {
             //check if the type expected here at appSource is equal to the argument type
-            Type rhoR = this.rho.get(appSource);
-            if (rhoR == null || !rhoR.equals(argument)) {
+            Type request = getRequest(appSource);
+            if (request == null || !request.equals(argument)) {
                 return false;
             }
-            //check if this removes a unification target that we will need later
-            Set<String> allUnifTargets = new HashSet<>();
-            for (String role : this.keySet()) {
-                allUnifTargets.addAll(this.id.get(role).values());
-            }
-            return !allUnifTargets.contains(appSource);
+            // check that appSource is an origin (and thus not needed for unification later)
+            return origins.contains(appSource);
         }
 
         /**
@@ -531,21 +510,21 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @return
          */
         public boolean canBeModifiedBy(Type modifier, String modSource) {
-            Type rhoR = modifier.rho.get(modSource);
-            return rhoR != null && rhoR.keySet().isEmpty()
-                    && modifier.remove(modSource).isCompatibleWith(this);
+            Type requestAtMod = modifier.getRequest(modSource);
+            return requestAtMod != null && requestAtMod.equals(EMPTY_TYPE)
+                    && modifier.origins.contains(modSource) && modifier.remove(modSource).isCompatibleWith(this);
         }
 
         /**
          * Returns the type of operation(left, right) if that is defined, and
-         * null otherwise. Objects left and right are not modified.
+         * null otherwise.
          *
-         * @param left
-         * @param right
+         * @param head
+         * @param argOrMod
          * @param operation
          * @return
          */
-        public static Type evaluateOperation(Type left, Type right, String operation) {
+        public static Type evaluateOperation(Type head, Type argOrMod, String operation) {
             String s;
             boolean app = false;
             
@@ -559,21 +538,87 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 s = operation.substring(OP_MODIFICATION.length());
             }
             if (app) {
-                if (left.canApplyTo(right, s)) {
-                    return left.simulateApply(s);
+                if (head.canApplyTo(argOrMod, s)) {
+                    return head.simulateApply(s);
                 } else {
                     return null;
                 }
             } else {
-                if (left.canBeModifiedBy(right, s)) {
-                    return left;
+                if (head.canBeModifiedBy(argOrMod, s)) {
+                    return head;
                 } else {
                     return null;
                 }
             }
         }
 
+        private static class Edge {
+        
+        private final String source;
+        private final String target;
+        private final String label;
+        
+        public Edge(String source, String target, String label) {
+            this.source = source;
+            this.target = target;
+            this.label = label;
+        }
+
+        public String getTarget() {
+            return target;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 43 * hash + Objects.hashCode(this.target);
+            hash = 43 * hash + Objects.hashCode(this.source);
+            hash = 43 * hash + Objects.hashCode(this.label);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Edge other = (Edge) obj;
+            if (!Objects.equals(this.target, other.target)) {
+                return false;
+            }
+            if (!Objects.equals(this.source, other.source)) {
+                return false;
+            }
+            if (!Objects.equals(this.label, other.label)) {
+                return false;
+            }
+            return true;
+        }
+        
+        
+        
     }
+        
+    }
+    
+    
+    
+    
+    
 
     /**
      * Checks whether g1 and g2 are isomorphic, taking only sources into account

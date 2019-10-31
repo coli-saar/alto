@@ -10,6 +10,7 @@ import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_APPLICATI
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_MODIFICATION;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_COREF;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.OP_COREFMARKER;
+import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.Type;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.index.BinaryBottomUpRuleIndex;
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author Jonas
  */
-public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryRepresentation, AMDecompositionAutomaton.Type>> {
+public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryRepresentation, Type>> {
 
     private final static double COREFWEIGHT = 0.001;
     
@@ -118,37 +119,24 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             BoundaryRepresentation target = child1.left;
             BoundaryRepresentation leftGraph = child0.left;
             Type leftType = child0.right;
-            Type targetType = child1.right.closure();
+            Type targetType = child1.right;
             int appSource = label2SourceID.getInt(label);
-            Int2IntMap nestedRole2Unif = leftType.role2nestedRole2Unif.get(appSource);
+            String appSourceS = graphInfo.getSourceForInt(appSource);
             
             //check if application is allowed according to types
-            if (!leftType.canApplyTo(targetType, appSource)) {
+            if (!leftType.canApplyTo(targetType, appSourceS)) {
                 AverageLogger.increaseValue("APP failed type, or before unif");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);
             }
             
             //rename right sources to temps
-            IntList orderedSources = new IntArrayList(targetType.domain());
-            if (target.getAllSources().contains(rootSrcID)) {
-                orderedSources.add(rootSrcID);
-            } else {
-                AverageLogger.increaseValue("APP target no root");
+            IntList orderedSources = target.getAllSources();
+            if (!orderedSources.contains(rootSrcID)) {
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//target must have root for APP to be allowed.
             }
             for (int i = 0; i<orderedSources.size(); i++) {
-                int renamedSource = orderedSources.getInt(i);
-                int targetSource = nestedRole2Unif.get(orderedSources.getInt(i));
-                if (target.getAllSources().contains(renamedSource)) {
-                    target = target.rename(orderedSources.getInt(i), graphInfo.getIntForSource("temp"+i), false);
-                } else {
-                    if (renamedSource != targetSource) {
-                        System.err.println("***WARNING: suspicious nested rename, disallowing the apply operation");//TODO: this should never occur with current signature builders.
-                        //Will be fixed with proper DAG type rework. For now, allowing this could lead to problems down the road.
-                        return cacheRules(Collections.EMPTY_LIST, labelId, childStates);
-                    }
-                    //otherwise it's ok, and just don't perform the rename.
-                }
+                target = target.rename(orderedSources.getInt(i), graphInfo.getIntForSource("temp"+i), false);
+                
             }
             //rename temps to left sources
             for (int i = 0; i<orderedSources.size(); i++) {
@@ -160,7 +148,8 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                     if (src == rootSrcID) {
                         target = target.rename(graphInfo.getIntForSource("temp"+i), appSource, false);
                     } else {
-                        target = target.rename(graphInfo.getIntForSource("temp"+i), nestedRole2Unif.get(orderedSources.getInt(i)), false);
+                        int targetSource = graphInfo.getIntForSource(leftType.redomain(appSourceS, graphInfo.getSourceForInt(orderedSources.getInt(i))));
+                        target = target.rename(graphInfo.getIntForSource("temp"+i), targetSource, false);
                     }
                 }
             }
@@ -239,22 +228,23 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
 //            }
 
             AverageLogger.increaseValue("APP success");
-            return cacheRules(sing(retGraph, leftType.simulateApply(appSource), labelId, childStates, weight), labelId, childStates);
+            return cacheRules(sing(retGraph, leftType.simulateApply(appSourceS), labelId, childStates, weight), labelId, childStates);
             
             
         } else if (label.startsWith(OP_MODIFICATION) && childStates.length == 2) {
             
             //get basic info and setup
             int modSource = label2SourceID.getInt(label);
+            String modSourceS = graphInfo.getSourceForInt(modSource);
             Pair<BoundaryRepresentation, Type> child0 = getStateForId(childStates[0]);
             Pair<BoundaryRepresentation, Type> child1 = getStateForId(childStates[1]);
             BoundaryRepresentation target = child1.left;
             BoundaryRepresentation leftGraph = child0.left;
             Type targetType = child1.right;
-            Type leftType = child0.right.closure();
+            Type leftType = child0.right;
             
             //check if MOD is allowed according to types
-            if (!leftType.canBeModifiedBy(targetType, modSource)) {
+            if (!leftType.canBeModifiedBy(targetType, modSourceS)) {
                 AverageLogger.increaseValue("MOD fail type");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);
             }
@@ -371,7 +361,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 ret.addSource("root", nn);
                 ret.addSource("COREF"+id, nn);
                 Rule rule = makeRule(new BoundaryRepresentation(ret, graphInfo),
-                        new Type(new Int2ObjectOpenHashMap<>(), new Int2ObjectOpenHashMap<>()), labelId, childStates);
+                        Type.EMPTY_TYPE, labelId, childStates);
                 int nodeID = graphInfo.getIntForNode(nn);
                 if (allowedCorefNodes.get(nodeID)) {
                     rules.add(createRule(rule.getParent(), rule.getLabel(), rule.getChildren(), COREFWEIGHT*nodeID2CorefWeight.get(nodeID)/((double)id+1.0)));
@@ -423,10 +413,10 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
             if (label.contains(ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP)) {
                 String[] parts = label.split(ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP);
                 sGraph = new IsiAmrInputCodec().read(parts[0]);
-                type = new Type(parts[1], graphInfo);
+                type = new Type(parts[1]);
             } else {
                 sGraph = new IsiAmrInputCodec().read(label);
-                type = new Type(new Int2ObjectOpenHashMap<>(), new Int2ObjectOpenHashMap<>());
+                type = Type.EMPTY_TYPE;
             }
             List<Rule> rules = new ArrayList<>();
             graphInfo.getSGraph().foreachMatchingSubgraph(sGraph, matchedSubgraph -> {
@@ -466,7 +456,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
     private Collection<Rule> sing(BoundaryRepresentation parent, Type type, int labelId, int[] childStates, double weight) {
 //        System.err.println("-> make rule, parent= " + parent);
         for (int src : parent.getAllSources()) {
-            if (!(src == rootSrcID || type.domain().contains(src) || graphInfo.getSourceForInt(src).startsWith("COREF"))) {
+            if (!(src == rootSrcID || type.vertexSet().contains(graphInfo.getSourceForInt(src)) || graphInfo.getSourceForInt(src).startsWith("COREF"))) {
                 System.err.println(parent);
                 System.err.println(type);
                 for (int childID : childStates) {
@@ -614,271 +604,258 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    public static class Type {
-        final Int2ObjectMap<Int2IntMap> role2nestedRole2Unif;
-        final Int2ObjectMap<Type> role2Type;
-        
-        
-        //  (ARG0, ARG1(ARG2_UNIFY_ARG0, ARG1_UNIFY_ARG2), ARG2(ARG0_UNIFY_ARG0))
-        // allow only this depth, unify argument is always top level
-        public Type(String typeString, GraphInfo graphInfo) throws ParseException {
-            this(TreeParser.parse("TOP"+typeString.replaceAll("\\(\\)", "")), graphInfo);
-        }
-        
-        //  (ARG0, ARG1(ARG2_UNIFY_ARG0, ARG1_UNIFY_ARG2), ARG2(ARG0_UNIFY_ARG0))
-        // allow only this depth, unify argument is always top level
-        private Type(Tree<String> typeTree, GraphInfo graphInfo) {
-            this.role2nestedRole2Unif = new Int2ObjectOpenHashMap<>();
-            this.role2Type = new Int2ObjectOpenHashMap<>();
-            for (Tree<String> roleTree : typeTree.getChildren()) {
-                Int2IntMap nestedRole2Unif = new Int2IntOpenHashMap();
-                for (Tree<String> nestedRoleTree : roleTree.getChildren()) {
-                    String[] parts = nestedRoleTree.getLabel().split("_UNIFY_");
-                    if (parts.length == 1) {
-                        nestedRole2Unif.put(graphInfo.getIntForSource(parts[0]), graphInfo.getIntForSource(parts[0]));
-                    } else {
-                        nestedRole2Unif.put(graphInfo.getIntForSource(parts[0]), graphInfo.getIntForSource(parts[1]));
-                    }
-                }
-                String role = roleTree.getLabel().split("_UNIFY_")[0];
-                role2nestedRole2Unif.put(graphInfo.getIntForSource(role), nestedRole2Unif);
-                role2Type.put(graphInfo.getIntForSource(role), new Type(roleTree, graphInfo));
-            }
-        }
-        
-        public Type(Int2ObjectMap<Int2IntMap> role2nestedRoleAndUnif, Int2ObjectMap<Type> role2Type) {
-            this.role2nestedRole2Unif = role2nestedRoleAndUnif;
-            this.role2Type = role2Type;
-        }
-        
-        /**
-         * Returns the closure of this type, i.e., this function adds all
-         * sources now that can later be added through application, and their
-         * target types, to this type. E.g. [O[S]] becomes [O[S], S].
-         *
-         * @return
-         */
-        public Type closure() {
-            Int2ObjectMap<Int2IntMap> newId = new Int2ObjectOpenHashMap<>();
-            Int2ObjectMap<Type> newRho= new Int2ObjectOpenHashMap<>();
-            for (int r : domain()) {
-                Type recHere = role2Type.get(r);
-                newRho.put(r, recHere);
-                Int2IntMap idHere = role2nestedRole2Unif.get(r);
-                newId.put(r, idHere);
-                for (int u : idHere.keySet()) {
-                    if (!domain().contains(idHere.get(u))) {
-                        newRho.put(idHere.get(u), recHere.role2Type.get(u));
-                        newId.put(idHere.get(u), recHere.role2nestedRole2Unif.get(u));
-                    }
-                }
-            }
-            return new Type(newId, newRho);
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 3;
-            hash = 53 * hash + Objects.hashCode(this.role2nestedRole2Unif);
-            hash = 53 * hash + Objects.hashCode(this.role2Type);
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final Type other = (Type) obj;
-            if (!Objects.equals(this.role2nestedRole2Unif, other.role2nestedRole2Unif)) {
-                return false;
-            }
-            return Objects.equals(this.role2Type, other.role2Type);
-        }
-
-        /**
-         * Returns this type as a ApplyModifyGraphAlgebra.Type, which is more readable.
-         * @param graphInfo
-         * @return 
-         */
-        public ApplyModifyGraphAlgebra.Type toAlgebraType(GraphInfo graphInfo) {
-            Map<String, ApplyModifyGraphAlgebra.Type> retRho = new HashMap<>();
-            for (Int2ObjectMap.Entry<Type> entry : role2Type.int2ObjectEntrySet()) {
-                retRho.put(graphInfo.getSourceForInt(entry.getIntKey()), entry.getValue().toAlgebraType(graphInfo));
-            }
-            Map<String, Map<String, String>> retId = new HashMap<>();
-            for (Int2ObjectMap.Entry<Int2IntMap> entry : role2nestedRole2Unif.int2ObjectEntrySet()) {
-                Map<String, String> nr2unif = new HashMap<>();
-                for (Int2IntMap.Entry e : entry.getValue().int2IntEntrySet()) {
-                    nr2unif.put(graphInfo.getSourceForInt(e.getIntKey()), graphInfo.getSourceForInt(e.getIntValue()));
-                }
-                retId.put(graphInfo.getSourceForInt(entry.getIntKey()), nr2unif);
-            }
-            return new ApplyModifyGraphAlgebra.Type(retRho, retId);
-        }
-        
-        /**
-         * Returns this type as a ApplyModifyGraphAlgebra.Type, which is more readable.
-         * @param type
-         * @param graphInfo
-         * @return 
-         */
-        public static Type fromAlgebraType(ApplyModifyGraphAlgebra.Type type, GraphInfo graphInfo) {
-            Int2ObjectMap<Type> retRho = new Int2ObjectOpenHashMap<>();
-            for (Map.Entry<String, ApplyModifyGraphAlgebra.Type> entry : type.rho.entrySet()) {
-                retRho.put(graphInfo.getIntForSource(entry.getKey()), fromAlgebraType(entry.getValue(), graphInfo));
-            }
-            Int2ObjectMap<Int2IntMap> retId = new Int2ObjectOpenHashMap<>();
-            for (Map.Entry<String, Map<String, String>> entry : type.id.entrySet()) {
-                Int2IntMap nr2unif = new Int2IntOpenHashMap();
-                for (Map.Entry<String, String> e : entry.getValue().entrySet()) {
-                    nr2unif.put(graphInfo.getIntForSource(e.getKey()), graphInfo.getIntForSource(e.getValue()));
-                }
-                retId.put(graphInfo.getIntForSource(entry.getKey()), nr2unif);
-            }
-            return new Type(retId, retRho);
-        }
-
-        @Override
-        public String toString() {
-            List<String> roleStrings = new ArrayList();
-            for (int role : role2nestedRole2Unif.keySet()) {
-                List<String> nrStrings = new ArrayList();
-                for (int nr : role2nestedRole2Unif.get(role).keySet()) {
-                    nrStrings.add(nr + "_UNIFY_"+ role2nestedRole2Unif.get(role).get(nr));
-                }
-                roleStrings.add(role+"("+nrStrings.stream().collect(Collectors.joining(", "))+")");
-            }
-            return "("+roleStrings.stream().collect(Collectors.joining(", "))+")";
-        }
-        
-        public IntSet domain() {
-            return role2nestedRole2Unif.keySet();//same as role2nestedRole2Type.keySet()
-        }
-        
-        /**
-         * Checks whether type 'other' is a 'subset' of this type, when extending
-         * the subset notion to functions.
-         * @param other
-         * @return 
-         */
-        public boolean isCompatibleWith(Type other) {
-            if (!other.domain().containsAll(domain())) {
-                return false;
-            }
-            for (int r : domain()) {
-                Type rhoR = role2Type.get(r);
-                Type otherRhoR = other.role2Type.get(r);
-                if (!rhoR.isCompatibleWith(otherRhoR)) {
-                    return false;
-                }
-                Int2IntMap iR = role2nestedRole2Unif.get(r);
-                Int2IntMap otherIR = other.role2nestedRole2Unif.get(r);
-                for (int nr : iR.keySet()) {
-                    if (iR.get(nr) != otherIR.get(nr)) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-        
-        /**
-         * Creates a copy with r removed from the domain. Does not modify the original type.
-         * @param r
-         * @return 
-         */
-        public Type remove(int r) {
-            Int2ObjectMap<Int2IntMap> r2nr2u = new Int2ObjectOpenHashMap<>(role2nestedRole2Unif);
-            r2nr2u.remove(r);
-            Int2ObjectMap<Type> r2Type = new Int2ObjectOpenHashMap<>(role2Type);
-            r2Type.remove(r);
-            return new Type(r2nr2u, r2Type);
-        }
-        
-        /**
-         * Creates a copy with r removed from the domain, and nested types of r
-         * added if necessary, i.e.~the result of using APP_r on this type.
-         * Does not modify the original type.
-         * @param r
-         * @return 
-         */
-        public Type simulateApply(int r) {
-            Int2ObjectMap<Int2IntMap> r2nr2u = new Int2ObjectOpenHashMap<>(role2nestedRole2Unif);
-            r2nr2u.remove(r);
-            Int2ObjectMap<Type> r2Type = new Int2ObjectOpenHashMap<>(role2Type);
-            r2Type.remove(r);
-            Int2IntMap nr2u = role2nestedRole2Unif.get(r);
-            Type nt = role2Type.get(r);
-            for (int nr : nt.domain()) {
-                int nru;
-                if (nr2u.containsKey(nr)) {
-                    nru = nr2u.get(nr);
-                } else {
-                    nru = nr;
-                }
-                if (!domain().contains(nru)) {
-                    r2nr2u.put(nru, nt.role2nestedRole2Unif.get(nr));//theoretically, we should also apply renames within the map we get from nt.role2nestedRole2Unif.get(nr). But in for signatures provided by the current version of AMSignature builder, this also works. JG, 2017-11-24
-                    r2Type.put(nru, nt.role2Type.get(nr));
-                }
-            }
-            return new Type(r2nr2u, r2Type);
-        }
-        
-        /**
-         * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this type,
-         * and G_2 has type argument.
-         * @param argument
-         * @param appSource
-         * @return 
-         */
-        public boolean canApplyTo(Type argument, int appSource) {
-            //check if the type expected here at appSource is equal to the argument type
-            Type rhoR = this.role2Type.get(appSource);
-            if (rhoR == null || !rhoR.equals(argument)) {
-                return false;
-            }
-            //check if this removes a unification target that we will need later
-            IntSet allUnifTargets = new IntOpenHashSet();
-            for (int role : this.domain()) {
-                allUnifTargets.addAll(this.role2nestedRole2Unif.get(role).values());
-            }
-            return !allUnifTargets.contains(appSource);
-        }
-        
-        /**
-         * Checks whether MOD_modSource(G_1, G_2) is allowed, given G_1 has this type,
-         * and G_2 has type argument.
-         * @param modifier
-         * @param modSource
-         * @return 
-         */
-        public boolean canBeModifiedBy(Type modifier, int modSource) {
-            Type rhoR = modifier.role2Type.get(modSource);
-            return rhoR != null && rhoR.domain().isEmpty()
-                    && modifier.remove(modSource).isCompatibleWith(this);
-        }
-    }
+//    
+//    public static class Type {
+//        final Int2ObjectMap<Int2IntMap> role2nestedRole2Unif;
+//        final Int2ObjectMap<Type> role2Type;
+//        
+//        
+//        //  (ARG0, ARG1(ARG2_UNIFY_ARG0, ARG1_UNIFY_ARG2), ARG2(ARG0_UNIFY_ARG0))
+//        // allow only this depth, unify argument is always top level
+//        public Type(String typeString, GraphInfo graphInfo) throws ParseException {
+//            this(TreeParser.parse("TOP"+typeString.replaceAll("\\(\\)", "")), graphInfo);
+//        }
+//        
+//        //  (ARG0, ARG1(ARG2_UNIFY_ARG0, ARG1_UNIFY_ARG2), ARG2(ARG0_UNIFY_ARG0))
+//        // allow only this depth, unify argument is always top level
+//        private Type(Tree<String> typeTree, GraphInfo graphInfo) {
+//            this.role2nestedRole2Unif = new Int2ObjectOpenHashMap<>();
+//            this.role2Type = new Int2ObjectOpenHashMap<>();
+//            for (Tree<String> roleTree : typeTree.getChildren()) {
+//                Int2IntMap nestedRole2Unif = new Int2IntOpenHashMap();
+//                for (Tree<String> nestedRoleTree : roleTree.getChildren()) {
+//                    String[] parts = nestedRoleTree.getLabel().split("_UNIFY_");
+//                    if (parts.length == 1) {
+//                        nestedRole2Unif.put(graphInfo.getIntForSource(parts[0]), graphInfo.getIntForSource(parts[0]));
+//                    } else {
+//                        nestedRole2Unif.put(graphInfo.getIntForSource(parts[0]), graphInfo.getIntForSource(parts[1]));
+//                    }
+//                }
+//                String role = roleTree.getLabel().split("_UNIFY_")[0];
+//                role2nestedRole2Unif.put(graphInfo.getIntForSource(role), nestedRole2Unif);
+//                role2Type.put(graphInfo.getIntForSource(role), new Type(roleTree, graphInfo));
+//            }
+//        }
+//        
+//        public Type(Int2ObjectMap<Int2IntMap> role2nestedRoleAndUnif, Int2ObjectMap<Type> role2Type) {
+//            this.role2nestedRole2Unif = role2nestedRoleAndUnif;
+//            this.role2Type = role2Type;
+//        }
+//        
+//        /**
+//         * Returns the closure of this type, i.e., this function adds all
+//         * sources now that can later be added through application, and their
+//         * target types, to this type. E.g. [O[S]] becomes [O[S], S].
+//         *
+//         * @return
+//         */
+//        public Type closure() {
+//            Int2ObjectMap<Int2IntMap> newId = new Int2ObjectOpenHashMap<>();
+//            Int2ObjectMap<Type> newRho= new Int2ObjectOpenHashMap<>();
+//            for (int r : domain()) {
+//                Type recHere = role2Type.get(r);
+//                newRho.put(r, recHere);
+//                Int2IntMap idHere = role2nestedRole2Unif.get(r);
+//                newId.put(r, idHere);
+//                for (int u : idHere.keySet()) {
+//                    if (!domain().contains(idHere.get(u))) {
+//                        newRho.put(idHere.get(u), recHere.role2Type.get(u));
+//                        newId.put(idHere.get(u), recHere.role2nestedRole2Unif.get(u));
+//                    }
+//                }
+//            }
+//            return new Type(newId, newRho);
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            int hash = 3;
+//            hash = 53 * hash + Objects.hashCode(this.role2nestedRole2Unif);
+//            hash = 53 * hash + Objects.hashCode(this.role2Type);
+//            return hash;
+//        }
+//
+//        @Override
+//        public boolean equals(Object obj) {
+//            if (this == obj) {
+//                return true;
+//            }
+//            if (obj == null) {
+//                return false;
+//            }
+//            if (getClass() != obj.getClass()) {
+//                return false;
+//            }
+//            final Type other = (Type) obj;
+//            if (!Objects.equals(this.role2nestedRole2Unif, other.role2nestedRole2Unif)) {
+//                return false;
+//            }
+//            return Objects.equals(this.role2Type, other.role2Type);
+//        }
+//
+//        /**
+//         * Returns this type as a ApplyModifyGraphAlgebra.Type, which is more readable.
+//         * @param graphInfo
+//         * @return 
+//         */
+//        public ApplyModifyGraphAlgebra.Type toAlgebraType(GraphInfo graphInfo) {
+//            Map<String, ApplyModifyGraphAlgebra.Type> retRho = new HashMap<>();
+//            for (Int2ObjectMap.Entry<Type> entry : role2Type.int2ObjectEntrySet()) {
+//                retRho.put(graphInfo.getSourceForInt(entry.getIntKey()), entry.getValue().toAlgebraType(graphInfo));
+//            }
+//            Map<String, Map<String, String>> retId = new HashMap<>();
+//            for (Int2ObjectMap.Entry<Int2IntMap> entry : role2nestedRole2Unif.int2ObjectEntrySet()) {
+//                Map<String, String> nr2unif = new HashMap<>();
+//                for (Int2IntMap.Entry e : entry.getValue().int2IntEntrySet()) {
+//                    nr2unif.put(graphInfo.getSourceForInt(e.getIntKey()), graphInfo.getSourceForInt(e.getIntValue()));
+//                }
+//                retId.put(graphInfo.getSourceForInt(entry.getIntKey()), nr2unif);
+//            }
+//            return new ApplyModifyGraphAlgebra.Type(retRho, retId);
+//        }
+//        
+//        /**
+//         * Returns this type as a ApplyModifyGraphAlgebra.Type, which is more readable.
+//         * @param type
+//         * @param graphInfo
+//         * @return 
+//         */
+//        public static Type fromAlgebraType(ApplyModifyGraphAlgebra.Type type, GraphInfo graphInfo) {
+//            Int2ObjectMap<Type> retRho = new Int2ObjectOpenHashMap<>();
+//            for (Map.Entry<String, ApplyModifyGraphAlgebra.Type> entry : type.rho.entrySet()) {
+//                retRho.put(graphInfo.getIntForSource(entry.getKey()), fromAlgebraType(entry.getValue(), graphInfo));
+//            }
+//            Int2ObjectMap<Int2IntMap> retId = new Int2ObjectOpenHashMap<>();
+//            for (Map.Entry<String, Map<String, String>> entry : type.id.entrySet()) {
+//                Int2IntMap nr2unif = new Int2IntOpenHashMap();
+//                for (Map.Entry<String, String> e : entry.getValue().entrySet()) {
+//                    nr2unif.put(graphInfo.getIntForSource(e.getKey()), graphInfo.getIntForSource(e.getValue()));
+//                }
+//                retId.put(graphInfo.getIntForSource(entry.getKey()), nr2unif);
+//            }
+//            return new Type(retId, retRho);
+//        }
+//
+//        @Override
+//        public String toString() {
+//            List<String> roleStrings = new ArrayList();
+//            for (int role : role2nestedRole2Unif.keySet()) {
+//                List<String> nrStrings = new ArrayList();
+//                for (int nr : role2nestedRole2Unif.get(role).keySet()) {
+//                    nrStrings.add(nr + "_UNIFY_"+ role2nestedRole2Unif.get(role).get(nr));
+//                }
+//                roleStrings.add(role+"("+nrStrings.stream().collect(Collectors.joining(", "))+")");
+//            }
+//            return "("+roleStrings.stream().collect(Collectors.joining(", "))+")";
+//        }
+//        
+//        public IntSet domain() {
+//            return role2nestedRole2Unif.keySet();//same as role2nestedRole2Type.keySet()
+//        }
+//        
+//        /**
+//         * Checks whether type 'other' is a 'subset' of this type, when extending
+//         * the subset notion to functions.
+//         * @param other
+//         * @return 
+//         */
+//        public boolean isCompatibleWith(Type other) {
+//            if (!other.domain().containsAll(domain())) {
+//                return false;
+//            }
+//            for (int r : domain()) {
+//                Type rhoR = role2Type.get(r);
+//                Type otherRhoR = other.role2Type.get(r);
+//                if (!rhoR.isCompatibleWith(otherRhoR)) {
+//                    return false;
+//                }
+//                Int2IntMap iR = role2nestedRole2Unif.get(r);
+//                Int2IntMap otherIR = other.role2nestedRole2Unif.get(r);
+//                for (int nr : iR.keySet()) {
+//                    if (iR.get(nr) != otherIR.get(nr)) {
+//                        return false;
+//                    }
+//                }
+//            }
+//            return true;
+//        }
+//        
+//        /**
+//         * Creates a copy with r removed from the domain. Does not modify the original type.
+//         * @param r
+//         * @return 
+//         */
+//        public Type remove(int r) {
+//            Int2ObjectMap<Int2IntMap> r2nr2u = new Int2ObjectOpenHashMap<>(role2nestedRole2Unif);
+//            r2nr2u.remove(r);
+//            Int2ObjectMap<Type> r2Type = new Int2ObjectOpenHashMap<>(role2Type);
+//            r2Type.remove(r);
+//            return new Type(r2nr2u, r2Type);
+//        }
+//        
+//        /**
+//         * Creates a copy with r removed from the domain, and nested types of r
+//         * added if necessary, i.e.~the result of using APP_r on this type.
+//         * Does not modify the original type.
+//         * @param r
+//         * @return 
+//         */
+//        public Type simulateApply(int r) {
+//            Int2ObjectMap<Int2IntMap> r2nr2u = new Int2ObjectOpenHashMap<>(role2nestedRole2Unif);
+//            r2nr2u.remove(r);
+//            Int2ObjectMap<Type> r2Type = new Int2ObjectOpenHashMap<>(role2Type);
+//            r2Type.remove(r);
+//            Int2IntMap nr2u = role2nestedRole2Unif.get(r);
+//            Type nt = role2Type.get(r);
+//            for (int nr : nt.domain()) {
+//                int nru;
+//                if (nr2u.containsKey(nr)) {
+//                    nru = nr2u.get(nr);
+//                } else {
+//                    nru = nr;
+//                }
+//                if (!domain().contains(nru)) {
+//                    r2nr2u.put(nru, nt.role2nestedRole2Unif.get(nr));//theoretically, we should also apply renames within the map we get from nt.role2nestedRole2Unif.get(nr). But in for signatures provided by the current version of AMSignature builder, this also works. JG, 2017-11-24
+//                    r2Type.put(nru, nt.role2Type.get(nr));
+//                }
+//            }
+//            return new Type(r2nr2u, r2Type);
+//        }
+//        
+//        /**
+//         * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this type,
+//         * and G_2 has type argument.
+//         * @param argument
+//         * @param appSource
+//         * @return 
+//         */
+//        public boolean canApplyTo(Type argument, int appSource) {
+//            //check if the type expected here at appSource is equal to the argument type
+//            Type rhoR = this.role2Type.get(appSource);
+//            if (rhoR == null || !rhoR.equals(argument)) {
+//                return false;
+//            }
+//            //check if this removes a unification target that we will need later
+//            IntSet allUnifTargets = new IntOpenHashSet();
+//            for (int role : this.domain()) {
+//                allUnifTargets.addAll(this.role2nestedRole2Unif.get(role).values());
+//            }
+//            return !allUnifTargets.contains(appSource);
+//        }
+//        
+//        /**
+//         * Checks whether MOD_modSource(G_1, G_2) is allowed, given G_1 has this type,
+//         * and G_2 has type argument.
+//         * @param modifier
+//         * @param modSource
+//         * @return 
+//         */
+//        public boolean canBeModifiedBy(Type modifier, int modSource) {
+//            Type rhoR = modifier.role2Type.get(modSource);
+//            return rhoR != null && rhoR.domain().isEmpty()
+//                    && modifier.remove(modSource).isCompatibleWith(this);
+//        }
+//    }
 
     @Override
     public boolean useSiblingFinder() {
@@ -927,7 +904,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                     v = state.left.getSourceNode(src);
                     if (v != -1) {
                         Map<Type, SinglesideMergePartnerFinder> map = node2RightStates[v];
-                        Type type = state.right.role2Type.get(src);
+                        Type type = state.right.getRequest(graphInfo.getSourceForInt(src));
                         if (type == null) {
                             ret = EMPTYSET;
                         } else {
@@ -946,7 +923,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                     v = getStateForId(stateID).left.getSourceNode(rootSrcID);
                     if (v != -1) {
                         Map<Type, SinglesideMergePartnerFinder> map = node2LeftStates[v];
-                        SinglesideMergePartnerFinder retHere = map.get(state.right.closure());
+                        SinglesideMergePartnerFinder retHere = map.get(state.right);
                         if (retHere == null) {
                             ret = EMPTYSET;
                         } else {
@@ -989,7 +966,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                     v = state.left.getSourceNode(src);
                     if (v != -1) {
                         Map<Type, SinglesideMergePartnerFinder> map = node2LeftStates[v];
-                        Type type = state.right.role2Type.get(src);
+                        Type type = state.right.getRequest(graphInfo.getSourceForInt(src));
                         if (type == null) {
                             return;
                         } else {
@@ -1010,7 +987,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 case 1:
                     v = state.left.getSourceNode(rootSrcID);
                     Map<Type, SinglesideMergePartnerFinder> map = node2RightStates[v];
-                    Type type = state.right.closure();
+                    Type type = state.right;
                     SinglesideMergePartnerFinder set = map.get(type);
                     if (set == null) {
                         if (maxCorefs == 0) {
@@ -1066,7 +1043,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 case 1:
                     Pair<BoundaryRepresentation, Type> state = getStateForId(stateID);
                     v = state.left.getSourceNode(src);
-                    if (v != -1 && state.right.role2Type.get(src).domain().isEmpty()) {
+                    if (v != -1 && state.right.getRequest(graphInfo.getSourceForInt(src)).isEmpty()) {
                         ret = node2LeftStates[v].getAllMergePartners(stateID);
                     } else {
                         ret = EMPTYSET;
@@ -1109,7 +1086,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 case 1:
                     Pair<BoundaryRepresentation, Type> state = getStateForId(stateID);
                     v = state.left.getSourceNode(src);
-                    if (v != -1 && state.right.role2Type.get(src).domain().isEmpty()) {
+                    if (v != -1 && state.right.getRequest(graphInfo.getSourceForInt(src)).isEmpty()) {
                         node2RightStates[v].insert(stateID);
                     }
                     break;
