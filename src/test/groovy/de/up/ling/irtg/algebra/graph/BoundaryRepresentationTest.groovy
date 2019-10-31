@@ -18,7 +18,6 @@ import static org.hamcrest.CoreMatchers.*;
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
-import de.up.ling.irtg.algebra.graph.decompauto.*;
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.util.*

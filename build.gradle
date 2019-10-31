@@ -32,7 +32,7 @@ dependencies {
     implementation 'com.bric.window:windowmenu:1.0'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
-    implementation 'net.sf.jgrapht:jgrapht:0.8.3'
+    implementation 'net.sf.jgrapht:jgrapht:0.8.3'//possibly update to org.jgrapht:1.3.1 ?
     implementation 'jgraph:jgraph:5.13.0.0'
     implementation 'com.ezware.oxbow:task-dialog:1.3.5'
     implementation 'com.miglayout:miglayout:3.7.4'
