@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.Sets;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
@@ -13,20 +14,13 @@ import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeBottomUpVisitor;
 import de.up.ling.tree.TreeParser;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
+import org.jgrapht.experimental.dag.DirectedAcyclicGraph.CycleFoundException;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
@@ -51,6 +45,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
     public static final String OP_MODIFICATION = "MOD_";
     public static final String OP_COREF = "COREF_";
     public static final String OP_COREFMARKER = "MARKER_";
+    public static final String ROOT_SOURCE_NAME = "root";
 
     @Override
     public TreeAutomaton decompose(Pair<SGraph, ApplyModifyGraphAlgebra.Type> value) {
@@ -69,7 +64,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 //            }
 //        }
         if (value.right.isEmpty()) {
-            return new AMDecompositionAutomaton(this, null, value.left);
+            return new AMDecompositionAutomaton(this, null, value.left).asConcreteTreeAutomatonBottomUp();
         } else {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
@@ -82,6 +77,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 
     @Override
     protected Pair<SGraph, ApplyModifyGraphAlgebra.Type> evaluate(String label, List<Pair<SGraph, ApplyModifyGraphAlgebra.Type>> childrenValues) {
+        if (childrenValues.contains(null)) {
+            return null;
+        }
         if (label.startsWith(OP_APPLICATION) && childrenValues.size() == 2) {
             String appSource = label.substring(OP_APPLICATION.length());
             SGraph target = childrenValues.get(1).left;
@@ -92,7 +90,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (!leftType.canApplyTo(targetType, appSource)) {
                 return null;
             }
-            if (!target.getAllSources().contains("root")) {
+            if (!target.getAllSources().contains(ROOT_SOURCE_NAME)) {
                 System.err.println("target had no root in APP!");
                 return null;//target must have root for APP to be allowed.
             }
@@ -107,10 +105,10 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             for (int i = 0; i < orderedSources.size(); i++) {
                 String src = orderedSources.get(i);
                 if (target.getAllSources().contains("temp" + i)) {
-                    if (src.equals("root")) {
+                    if (src.equals(ROOT_SOURCE_NAME)) {
                         target = target.renameSource("temp" + i, appSource);
                     } else {
-                        target = target.renameSource("temp" + i, leftType.redomain(appSource, orderedSources.get(i)));
+                        target = target.renameSource("temp" + i, leftType.getRenameTarget(appSource, orderedSources.get(i)));
                     }
                 }
             }
@@ -125,7 +123,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (retGraph == null) {
                 System.err.println("APP merge failed!");
             }
-            return new Pair(retGraph, leftType.simulateApply(appSource));
+            return new Pair(retGraph, leftType.performApply(appSource));
 
         } else if (label.startsWith(OP_MODIFICATION) && childrenValues.size() == 2) {
             String modSource = label.substring(OP_MODIFICATION.length());
@@ -140,12 +138,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             
             // remove old root source of modifier and rename modSource to root
-            if (target.getNodeForSource("root") != null) {
+            if (target.getNodeForSource(ROOT_SOURCE_NAME) != null) {
                 Set<String> retainedSources = new HashSet<>(target.getAllSources());
-                retainedSources.remove("root");
+                retainedSources.remove(ROOT_SOURCE_NAME);
                 target = target.forgetSourcesExcept(retainedSources);
             }
-            target = target.renameSource(modSource, "root");
+            target = target.renameSource(modSource, ROOT_SOURCE_NAME);
 
             //then just merge
             SGraph leftGraph = childrenValues.get(0).left;
@@ -194,7 +192,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
     }
 
-    public static class Type extends DirectedAcyclicGraph<String, Type.Edge> implements Serializable {
+    
+    /**
+     * The type system of the AM algebra as described in Chapter 5 of
+     * coli.uni-saarland.de/~jonasg/thesis.pdf
+     */
+    public static class Type implements Serializable {
 
         public static final Type EMPTY_TYPE;
 
@@ -209,8 +212,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             EMPTY_TYPE = temp;
         }
         
-        
+        private final DirectedAcyclicGraph<String, Edge> graph;
         private final Set<String> origins;
+        private final Map<Pair<String, String>, String> parentAndRequestSource2rename;
 
         /**
          * Creates a type from a string representation. Example format: (S,
@@ -228,45 +232,52 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
 
         private Type(Tree<String> typeTree) {
-            super(Edge.class);
-            boolean success = addTreeRecursive(typeTree);
+            this.graph = new DirectedAcyclicGraph<>(Edge.class);
+            this.origins = new HashSet<>();
+            parentAndRequestSource2rename = new HashMap<>();
+            boolean success = addTree(typeTree);//addTree calls processUpdates
             if (!success) {
-                throw new IllegalArgumentException("Type string led to invalid type: "+typeTree.toString());
-            }
-            origins = new HashSet<>();
-            updateOrigins();
-            ensureClosure();
-            if (!verify()) {
                 throw new IllegalArgumentException("Type string led to invalid type: "+typeTree.toString());
             }
         }
         
         /**
-         * Use this to create a copy.
+         * Creates a new type based on a copy(!) of the provided DAG.
          * @param dag
          */
         private Type(DirectedAcyclicGraph<String, Edge> dag) {
-            super(Edge.class);
+            // copy the dag
+            this.graph = new DirectedAcyclicGraph<>(Edge.class);
             for (String v : dag.vertexSet()) {
-                addVertex(v);
+                graph.addVertex(v);
             }
             for (Edge e : dag.edgeSet()) {
-                try {
-                    addDagEdge(e.getSource(), e.getTarget(), new Edge(e.getSource(), e.getTarget(), e.getLabel()));
-                } catch (CycleFoundException ex) {
-                    throw new IllegalArgumentException("Cycle found in supposed DAG "+dag.toString());
-                }
+                // don't need to use addDagEdge here, since input is a DAG.
+                // Since all properties of e are final, we can use same e here and don't have to create a copy of e.
+                graph.addEdge(e.getSource(), e.getTarget(), e);
             }
             origins = new HashSet<>();
-            updateOrigins();
-            ensureClosure();
-            if (!verify()) {
+            parentAndRequestSource2rename = new HashMap<>();
+            boolean success = processUpdates();
+            if (!success) {
                 throw new IllegalArgumentException("DAG led to invalid type: "+dag.toString());
             }
         }
         
         /**
+         * Adds the given tree encoding of a type to this type and updates.
+         * @param typeTree
+         * @return 
+         */
+        private boolean addTree(Tree<String> typeTree) {
+            boolean success = addTreeRecursive(typeTree);
+            return success && processUpdates();
+        }
+        
+        /**
          * returns true if success, returns false if we found an inconsistency.
+         * Note: Don't use this function, it is only the recursive bit
+         * of addTree. In particular, This function does not call updateGraphs. 
          * @param typeTree
          * @return 
          */
@@ -283,14 +294,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                     target = parts[0];
                     edgeLabel = parts[0];
                 }
-                this.addVertex(target);
+                graph.addVertex(target);
                 if (!parent.equals("TOP")) {
-                    Edge existingEdge = getEdge(target, parent);
+                    Edge existingEdge = graph.getEdge(target, parent);
                     if (existingEdge != null && existingEdge.getLabel().equals(edgeLabel)) {
                         return false;
                     }
                     try {
-                        addDagEdge(parent, target, new Edge(parent, target, edgeLabel));
+                        graph.addDagEdge(parent, target, new Edge(parent, target, edgeLabel));
                     } catch (CycleFoundException ex) {
                         return false;
                     }
@@ -303,33 +314,73 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return true;
         }
         
-        
-        //TODO might be better to keep track of this dynamically, by overriding addVertex and addEdge methods (former has origins.add(v), latter has origins.remove(e.getTarget()))
-        private void updateOrigins() {
-            origins.clear();
-            for (String node : vertexSet()) {
-                if (incomingEdgesOf(node).isEmpty()) {
-                    origins.add(node);
-                }
-            }
+        /**
+         * Call this after modifying the graph to update internal structures and
+         * verify well-formedness. Every public function that changes the type
+         * must call this function in the end! Every private function that updates
+         * the graph but does
+         * not call this function should be marked as such.
+         * @return 
+         */
+        private boolean processUpdates() {
+            updateOrigins();
+            ensureClosure();
+            updateRenameMap();
+            return verify();
         }
         
+        /**
+         * Updates the origin set. To be used when the graph has been updated or created.
+         */
+        private void updateOrigins() {
+            origins.clear();
+            for (String node : graph.vertexSet()) {
+                if (graph.incomingEdgesOf(node).isEmpty()) {
+                    origins.add(node);
+//                    System.err.println("added "+node+" to origins");
+//                    System.err.println(graph.inDegreeOf(node));
+//                    System.err.println(graph.incomingEdgesOf(node));
+//                    System.err.println(graph.edgesOf(node));
+//                    System.err.println(graph.outgoingEdgesOf(node));
+                }
+            }
+//            System.err.println(this.toString());
+//            System.err.println(this.origins.toString());
+        }
         
+        /**
+         * Ensures that all descendents of a node are direct children. If not,
+         * this function adds the respective edge (with label equal to the child)
+         */
         private void ensureClosure() {
-            for (String node : vertexSet()) {
+            for (String node : graph.vertexSet()) {
                 for (String desc : getDescendants(node)) {
-                    if (getEdge(node, desc) == null) {
-                        addEdge(node, desc, new Edge(node, desc, desc));//no rename, so edge label = desc
+                    if (graph.getEdge(node, desc) == null) {
+                        graph.addEdge(node, desc, new Edge(node, desc, desc));//no rename, so edge label = desc
                     }
                 }
             }
         }
-        
-        
+
+        /**
+         * always run after ensureClosure.
+         */
+        private void updateRenameMap() {
+            parentAndRequestSource2rename.clear();
+            for (Edge e : graph.edgeSet()) {
+                parentAndRequestSource2rename.put(new Pair(e.getSource(), e.getLabel()), e.getTarget());
+            }
+        }
+
+
+        /**
+         * Checks if all requests are types again.
+         * @return 
+         */
         private boolean verify() {
-            for (String node : vertexSet()) {
+            for (String node : graph.vertexSet()) {
                 Set<String> seenLabels = new HashSet<>();
-                for (Edge e : outgoingEdgesOf(node)) {
+                for (Edge e : graph.outgoingEdgesOf(node)) {
                     if (seenLabels.contains(e.getLabel())) {
                         return false;
                     } else {
@@ -352,10 +403,15 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return sj.toString();
         }
 
+        /**
+         * Helper for the toString() function.
+         * @param node
+         * @return 
+         */
         private String dominatedSubgraphToString(String node) {
             StringJoiner sj = new StringJoiner(", ", "(", ")");
             
-            for (Edge e : outgoingEdgesOf(node)) {
+            for (Edge e : graph.outgoingEdgesOf(node)) {
                 String eRep = "";
                 if (!e.getLabel().equals(e.getTarget())) {
                     eRep = e.getLabel()+"_UNIFY_";
@@ -367,46 +423,17 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             
         }
 
-        /**
-         * Creates a copy with r removed from the domain. Does not modify the
-         * original type.
-         *
-         * @param r
-         * @return
-         */
-        public Type copyWithRemoved(String r) {
-            Type copy = new Type(this);
-            copy.removeVertex(r);
-            copy.updateOrigins();
-            return copy;
-        }
-
-        /**
-         * Returns the type that we obtain after using APP_s on this type (does
-         * not modify this type). Returns null if APP_s is not allowed for this
-         * type (i.e. if this type does not contain s, or s is needed for later
-         * unification).
-         *
-         * @param s
-         * @return
-         */
-        public Type simulateApply(String s) {
-            if (!origins.contains(s)) {
-                return null;
-            }
-
-            return copyWithRemoved(s);
-        }
-
+        
+        
         /**
          * Checks whether this type is a subgraph of type 'other'.
          *
          * @param other
          * @return
          */
-        public boolean isCompatibleWith(Type other) {
-            return other.vertexSet().containsAll(vertexSet())
-                    && other.edgeSet().containsAll(edgeSet());
+        private boolean isCompatibleWith(Type other) {
+            return other.graph.vertexSet().containsAll(graph.vertexSet())
+                    && other.graph.edgeSet().containsAll(graph.edgeSet());
         }
 
         /**
@@ -424,9 +451,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
         }
         
+        /**
+         * helper for the depth function (since depth=height for the full graph)
+         * @param node
+         * @return 
+         */
         private int heightRecursive(String node) {
             int ret = 1;//using 1-based height here, so we can use 0 for the empty type.
-            for (Edge e : outgoingEdgesOf(node)) {
+            for (Edge e : graph.outgoingEdgesOf(node)) {
                 ret = Math.max(ret, heightRecursive(e.getTarget())+1);
             }
             return ret;
@@ -444,7 +476,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         
         private Set<String> getChildren(String v) {
             Set<String> ret = new HashSet<>();
-            for (Edge e : outgoingEdgesOf(v)) {
+            for (Edge e : graph.outgoingEdgesOf(v)) {
                 ret.add(e.getTarget());
             }
             return ret;
@@ -457,25 +489,25 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @return 
          */
         public Type getRequest(String s) {
-            if (!vertexSet().contains(s)) {
+            if (!graph.vertexSet().contains(s)) {
                 return null;
             }
             
             Set<String> descendants = getChildren(s);//since every node has a direct edge to all its descendants, we can just do this.
-            Type ret = new Type(EMPTY_TYPE);
+            DirectedAcyclicGraph<String, Edge> ret = new DirectedAcyclicGraph(Edge.class);
             
             for (String node : descendants) {
-                ret.addVertex(redomain(s, node));
+                ret.addVertex(toRequestNamespace(s, node));
             }
-            for (Edge e : edgeSet()) {
+            for (Edge e : graph.edgeSet()) {
                 if (descendants.contains(e.getSource()) && descendants.contains(e.getTarget())) {
-                    String newSource = redomain(s, e.getSource());
-                    String newTarget = redomain(s, e.getTarget());
+                    String newSource = toRequestNamespace(s, e.getSource());
+                    String newTarget = toRequestNamespace(s, e.getTarget());
                     Edge newEdge = new Edge(newSource, newTarget, e.getLabel());
                     ret.addEdge(newSource, newTarget, newEdge);
                 }
             }
-            return ret;
+            return new Type(ret);
         }
         
         /**
@@ -485,24 +517,66 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @param descendant
          * @return 
          */
-        public String redomain(String parent, String descendant) {
-            return getEdge(parent, descendant).getLabel();
+        public String toRequestNamespace(String parent, String descendant) {
+            Edge e = graph.getEdge(parent, descendant);
+            if (e == null) {
+                return null;
+            } else {
+                return e.getLabel();
+            }
+        }
+
+        /**
+         * Maps the source in the request namespace of parent to its counterpart in this graph. Returns null
+         * if "inRequestNamespace" is not actually in the request namespace.
+         * @param parent
+         * @param inRequestNamespace
+         * @return
+         */
+        public String getRenameTarget(String parent, String inRequestNamespace) {
+            return parentAndRequestSource2rename.get(new Pair(parent, inRequestNamespace));
         }
         
+        /**
+         * Given an s-graph with the given sources in it, is this type
+         * valid for that graph? Also checks that the graph has a root source,
+         * while we're at it.
+         * C.f. Definition 5.3 in coli.uni-saarland.de/~jonasg/thesis.pdf
+         * (Condition (iii) reformulated here).
+         * @param sources
+         * @return 
+         */
+        public boolean isValidTypeForSourceSet(Collection<String> sources) {
+            for (String s : sources) {
+                if (s.equals(ROOT_SOURCE_NAME) || s.startsWith("COREF")) {
+                    //do nothing, we ignore those in types
+                } else if (!graph.vertexSet().contains(s)) {
+                    // all other sources must be in this type
+                    return false;
+                }
+            }
+            // graph must contain root source and all origins.
+            return sources.contains(ROOT_SOURCE_NAME) && sources.containsAll(origins);
+        }
         
         
         public boolean isEmpty() {
-            return equals(EMPTY_TYPE);
+            return this.equals(EMPTY_TYPE);
         }
         
 
+        /**
+         * Get all types that can be obtained from this type through a sequence
+         * of apply operations. Should maybe be renamed to be more precise?
+         * @return 
+         */
         public Set<Type> getAllSubtypes() {
             Set<Type> ret = new HashSet<>();
             ret.add(this);
             //TODO the following check is an arbitrary choice to keep complexity explosion in check. This should be properly fixed.
             if (origins.size() < 10) {
                 for (String s : origins) {
-                    Type after = simulateApply(s);
+                    Type after = performApply(s);
                     if (after != null) {
                         ret.addAll(after.getAllSubtypes());
                     }
@@ -514,6 +588,32 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return ret;
         }
 
+        
+        /**
+         * Returns the set of source names such that if we call apply for all those
+         * source names on this type, the given subtype remains. Returns null if
+         * no such set of source names exists.
+         * @param subtype
+         * @return 
+         */
+        public Set<String> getApplySet(Type subtype) {
+            if (!subtype.isCompatibleWith(this)) {
+                return null;
+            }
+            // return value is all sources in this type that are not in subtype
+            Set<String> ret = Sets.difference(graph.vertexSet(), subtype.graph.vertexSet());
+            // but if any source s in ret is a descendant of a node t in subtype,
+            // then we can't remove s via apply without removing t before.
+            // Can check for that by just looking at the children of the nodes in subtype.
+            for (String t : subtype.graph.vertexSet()) {
+                if (!Sets.intersection(subtype.getChildren(t), ret).isEmpty()) {
+                    return null;
+                }
+            }
+            return ret;
+        }
+        
+        
         /**
          * Checks whether APP_appSource(G_1, G_2) is allowed, given G_1 has this
          * type, and G_2 has type 'argument'.
@@ -570,7 +670,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             if (app) {
                 if (head.canApplyTo(argOrMod, s)) {
-                    return head.simulateApply(s);
+                    return head.copyWithRemoved(s);
                 } else {
                     return null;
                 }
@@ -583,11 +683,68 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
         }
 
+        
+        
+        /**
+         * Returns the type that we obtain after using APP_s on this type (returns
+         * a copy and does
+         * not modify this type). Returns null if APP_s is not allowed for this
+         * type (i.e. if this type does not contain s, or s is needed for later
+         * unification).
+         *
+         * This is a bit redundant with performOperation and copyWithRemoved,
+         * but performOperation is clunkier to use (and requires righthand side type)
+         * and copyWithRemoved is not public. So I think this has a place -- JG
+         * 
+         * @param s
+         * @return
+         */
+        public Type performApply(String s) {
+            if (!canApplyNow(s)) {
+                return null;
+            }
+            return copyWithRemoved(s);
+        }
+
+        
+        /**
+         * Creates a copy with r removed from the domain. Does not modify the
+         * original type.
+         *
+         * @param r
+         * @return
+         */
+        private Type copyWithRemoved(String r) {
+            Type copy = new Type(this.graph);
+            copy.graph.removeVertex(r);
+            boolean success = copy.processUpdates();
+            if (!success) {
+                //this should never happen, so we don't set it up to be caught
+                throw new RuntimeException("removing a node in type led to invalid type: "+copy.toString());
+            }
+            return copy;
+        }
+        
+        private boolean isOrigin(String source) {
+            return origins.contains(source);
+        }
+        
+        
+        /**
+         * If an application at this source would be well-typed at the moment.
+         * @param source
+         * @return 
+         */
+        public boolean canApplyNow(String source) {
+            return isOrigin(source);
+        }
+        
+        
         @Override
         public int hashCode() {
             int hash = 5;
-            hash = 79 * hash + Objects.hashCode(this.vertexSet());
-            hash = 79 * hash + Objects.hashCode(this.edgeSet());
+            hash = 79 * hash + Objects.hashCode(this.graph.vertexSet());
+            hash = 79 * hash + Objects.hashCode(this.graph.edgeSet());
             return hash;
         }
 
@@ -603,10 +760,10 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 return false;
             }
             final Type other = (Type) obj;
-            if (!Objects.equals(this.vertexSet(), other.vertexSet())) {
+            if (!Objects.equals(this.graph.vertexSet(), other.graph.vertexSet())) {
                 return false;
             }
-            if (!Objects.equals(this.edgeSet(), other.edgeSet())) {
+            if (!Objects.equals(this.graph.edgeSet(), other.graph.edgeSet())) {
                 return false;
             }
             return true;
@@ -615,7 +772,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         
         
         
-        
+        /**
+         * Just a simple helper class for edges between nodes that are
+         * strings (the sources here) and that also have string labels.
+         * The GraphEdge class does not work here, since that requires
+         * GraphNode objects 
+         */
         private static class Edge {
         
             private final String source;
@@ -671,6 +833,11 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                     return false;
                 }
                 return true;
+            }
+
+            @Override
+            public String toString() {
+                return source + "-" + label +  "->" + target;
             }
 
 
@@ -729,31 +896,88 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
     
     
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
+
         Signature sig = new Signature();
         
         String giraffe = "(g<root>/giraffe)";
         String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
         String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
-        String tall = "(t<root>/tall :ARG0 (m<m>))"+GRAPH_TYPE_SEP+"(m)";
+        String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
+        String whistling = "(w<root>/whistle-01 :manner-of (m<m>) :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(m, s)";
+        String tree = "(t<root>/tree)";
+        String eat2 = "(e<root>/eat-01 :ARG0 (s<s>) :ARG01 (o<o>))"+GRAPH_TYPE_SEP+"(s, o)";
         String appS = "APP_s";
         String appO = "APP_o";
+        String appO2 = "APP_o2";
         String modM = "MOD_m";
+//        
+//        Tree<String> term1 = Tree.create(appS, Tree.create(eat), Tree.create(giraffe));
+//        test(term1, false, 1, true);
+//        Tree<String> term2 = Tree.create(appS,
+//                Tree.create(appO, Tree.create(want), Tree.create(eat)),
+//                Tree.create(modM, Tree.create(giraffe), Tree.create(tall)));
+//        test(term2, false, 1, true);
+//        Tree<String> termWhistling = Tree.create(appS,
+//                Tree.create(modM, Tree.create(eat), Tree.create(whistling)),
+//                Tree.create(giraffe));
+//        test(termWhistling, false, 1, true);
+//        Tree<String> termTransitive = Tree.create(appS,
+//                Tree.create(appO, Tree.create(eat2), Tree.create(tree)),
+//                Tree.create(giraffe));
+//        test(termTransitive, false, 2, true);
         
-        Tree<String> term1 = Tree.create(appS, Tree.create(eat), Tree.create(giraffe));
-        test(term1);
-        Tree<String> term2 = Tree.create(appS,
-                Tree.create(appO, Tree.create(want), Tree.create(eat)),
-                Tree.create(modM, Tree.create(giraffe), Tree.create(tall)));
-        test(term2);
         //TODO: make actual tests out of this.
         //TODO: add tests where type checks are supposed to _fail_
-        //TODO: add modify with unification
-        //TODO: add rename
         //TODO: add more deeply nested checks (coord of control, but maybe also something more hypothetical and deeper)
+        
+        
+        String persuade = "(p<root>/persuade-01 :ARG0 (s<s>) :ARG1 (o<o>) :ARG2 (o2<o2>))"+GRAPH_TYPE_SEP+"(s, o2(s_UNIFY_o))";
+        Tree<String> termPersuade = Tree.create(appS,
+                    Tree.create(appO,
+                        Tree.create(appO2, Tree.create(persuade), Tree.create(eat)),
+                        Tree.create(giraffe)),
+                    Tree.create(tree));
+        Tree<String> termPersuade2 =
+                Tree.create(appO,
+                        Tree.create(appO2,
+                                Tree.create(appS, Tree.create(persuade), Tree.create(tree)),
+                                Tree.create(eat)),
+                        Tree.create(giraffe));
+        test(termPersuade, false, 1, true);
+        test(termPersuade2, false, 1, true);
+        
+        Type renameType = new Type("(o2(s_UNIFY_o), s)");
+        System.err.println(renameType.toString());
+        System.err.println(renameType.graph.toString());
+        System.err.println(renameType.getRequest("s"));
+        System.err.println(renameType.getRequest("o"));
+        System.err.println(renameType.getRequest("o2"));
+        System.err.println(renameType.canApplyNow("s"));
+        System.err.println(renameType.canApplyNow("o"));
+        System.err.println(renameType.canApplyNow("o2"));
+        System.err.println(renameType.copyWithRemoved("o2"));
+        System.err.println(renameType.toRequestNamespace("o2", "o"));
+        
+        Type sType = new Type("(s)");
+        Type oType = new Type("(o)");
+        Type o2Type = new Type("(o2)");
+        Type nestedCoordType = new Type("(op1(o2(s_UNIFY_o), s), op2(o2(s_UNIFY_o), s))");
+        
+        System.err.println(renameType.getRequest("o2").equals(sType));
+        System.err.println(renameType.getRequest("o2").equals(oType));
+        System.err.println(renameType.getApplySet(sType));
+        System.err.println(renameType.getApplySet(oType));
+        System.err.println(renameType.getApplySet(o2Type));
+        System.err.println(renameType.getAllSubtypes());
+        System.err.println(nestedCoordType.getAllSubtypes());
+        System.err.println(nestedCoordType.performApply("op1"));
+        assert nestedCoordType.performApply("op1").origins.size() == 1;
+        assert nestedCoordType.performApply("op1").origins.contains("op2");
+        assert nestedCoordType.performApply("op1").performApply("op2").equals(renameType);
     }
     
-    private static void test(Tree<String> term) {
+    private static void test(Tree<String> term, boolean evalShouldFail, int expectedLanguageSize, boolean debug) {
         System.err.println("Testing "+term.toString());
         Signature sig = new Signature();
         term.dfs((Tree<String> tree, List<Void> list) -> {
@@ -763,11 +987,25 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(sig);
         Pair<SGraph, Type> asGraph = alg.evaluate(term);
-        System.err.println("evaluation result: "+String.valueOf(asGraph));
+        if (debug) {
+            System.err.println("evaluation result: "+String.valueOf(asGraph));
+        }
         
-        if (asGraph != null) {
-            AMDecompositionAutomaton auto = new AMDecompositionAutomaton(alg, null, asGraph.left);
-            System.err.println("decomp viterbi: "+auto.asConcreteTreeAutomatonBottomUp().viterbi());
+        if (evalShouldFail) {
+            assert asGraph == null;
+        } else {
+            assert asGraph != null;
+            TreeAutomaton auto = alg.decompose(asGraph);
+            if (debug) {
+                System.err.println(auto);
+                System.err.println("decomp viterbi: "+auto.viterbi());
+                for (Tree<String> tree : (Iterable<Tree<String>>)auto.languageIterable()) {
+                    System.err.println(tree);
+                }
+            }
+            assert auto.accepts(term);
+            assert alg.evaluate(auto.viterbi()).equals(asGraph);
+            assert auto.countTrees() == expectedLanguageSize;
         }
     }
     

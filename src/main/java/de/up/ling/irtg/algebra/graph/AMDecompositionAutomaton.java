@@ -140,7 +140,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                     if (src == rootSrcID) {
                         target = target.rename(graphInfo.getIntForSource("temp"+i), appSource, false);
                     } else {
-                        int targetSource = graphInfo.getIntForSource(leftType.redomain(appSourceS, graphInfo.getSourceForInt(orderedSources.getInt(i))));
+                        int targetSource = graphInfo.getIntForSource(leftType.getRenameTarget(appSourceS, graphInfo.getSourceForInt(orderedSources.getInt(i))));
                         target = target.rename(graphInfo.getIntForSource("temp"+i), targetSource, false);
                     }
                 }
@@ -220,7 +220,7 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
 //            }
 
             AverageLogger.increaseValue("APP success");
-            return cacheRules(sing(retGraph, leftType.simulateApply(appSourceS), labelId, childStates, weight), labelId, childStates);
+            return cacheRules(sing(retGraph, leftType.performApply(appSourceS), labelId, childStates, weight), labelId, childStates);
             
             
         } else if (label.startsWith(OP_MODIFICATION) && childStates.length == 2) {
@@ -447,17 +447,16 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
     
     private Collection<Rule> sing(BoundaryRepresentation parent, Type type, int labelId, int[] childStates, double weight) {
 //        System.err.println("-> make rule, parent= " + parent);
-        for (int src : parent.getAllSources()) {
-            if (!(src == rootSrcID || type.vertexSet().contains(graphInfo.getSourceForInt(src)) || graphInfo.getSourceForInt(src).startsWith("COREF"))) {
-                System.err.println(parent);
-                System.err.println(type);
-                for (int childID : childStates) {
-                    System.err.println("child: "+getStateForId(childID).toString());
-                }
-                System.err.println(signature.resolveSymbolId(labelId));
-                System.err.println(graphInfo.getSGraph().toIsiAmrString());
-                System.err.println(this);
+        //debugging
+        if (!type.isValidTypeForSourceSet(parent.getAllSourceNames())) {
+            System.err.println(parent);
+            System.err.println(type);
+            for (int childID : childStates) {
+                System.err.println("child: "+getStateForId(childID).toString());
             }
+            System.err.println(signature.resolveSymbolId(labelId));
+            System.err.println(graphInfo.getSGraph().toIsiAmrString());
+            System.err.println(this);
         }
         return Collections.singleton(makeRule(parent, type, labelId, childStates, weight));
     }
@@ -487,7 +486,8 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
 
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
-        return ruleStore.getRulesTopDown(labelId, parentState);
+        throw new UnsupportedOperationException("AMDecompositionAutomaton does not support top down queries. To obtain an automaton that can answer top-down queries, call asConcreteTreeAutomatonBottomUp");
+        //return ruleStore.getRulesTopDown(labelId, parentState); //this didn't work properly
     }
 
     @Override
