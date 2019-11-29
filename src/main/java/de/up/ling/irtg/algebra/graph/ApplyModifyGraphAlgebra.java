@@ -64,7 +64,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 //            }
 //        }
         if (value.right.isEmpty()) {
-            return new AMDecompositionAutomaton(this, null, value.left).asConcreteTreeAutomatonBottomUp();
+            return new AMDecompositionAutomaton(this, null, value.left);
         } else {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
@@ -898,85 +898,53 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
     
     public static void main(String[] args) throws ParseException {
 
-        Signature sig = new Signature();
-        
+        // construct a term over the AM algebra. This allows us to conveniently have a signature and the resulting
+        // graph at the same time.
         String giraffe = "(g<root>/giraffe)";
         String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
-        String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
-        String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
-        String whistling = "(w<root>/whistle-01 :manner-of (m<m>) :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(m, s)";
-        String tree = "(t<root>/tree)";
-        String eat2 = "(e<root>/eat-01 :ARG0 (s<s>) :ARG01 (o<o>))"+GRAPH_TYPE_SEP+"(s, o)";
+        String treeConst = "(t<root>/tree)";
         String appS = "APP_s";
         String appO = "APP_o";
         String appO2 = "APP_o2";
-        String modM = "MOD_m";
-//        
-//        Tree<String> term1 = Tree.create(appS, Tree.create(eat), Tree.create(giraffe));
-//        test(term1, false, 1, true);
-//        Tree<String> term2 = Tree.create(appS,
-//                Tree.create(appO, Tree.create(want), Tree.create(eat)),
-//                Tree.create(modM, Tree.create(giraffe), Tree.create(tall)));
-//        test(term2, false, 1, true);
-//        Tree<String> termWhistling = Tree.create(appS,
-//                Tree.create(modM, Tree.create(eat), Tree.create(whistling)),
-//                Tree.create(giraffe));
-//        test(termWhistling, false, 1, true);
-//        Tree<String> termTransitive = Tree.create(appS,
-//                Tree.create(appO, Tree.create(eat2), Tree.create(tree)),
-//                Tree.create(giraffe));
-//        test(termTransitive, false, 2, true);
-        
-        //TODO: make actual tests out of this.
-        //TODO: add tests where type checks are supposed to _fail_
-        //TODO: add more deeply nested checks (coord of control, but maybe also something more hypothetical and deeper)
-        
-        
         String persuade = "(p<root>/persuade-01 :ARG0 (s<s>) :ARG1 (o<o>) :ARG2 (o2<o2>))"+GRAPH_TYPE_SEP+"(s, o2(s_UNIFY_o))";
-        Tree<String> termPersuade = Tree.create(appS,
+        Tree<String> term = Tree.create(appS,
                     Tree.create(appO,
                         Tree.create(appO2, Tree.create(persuade), Tree.create(eat)),
                         Tree.create(giraffe)),
-                    Tree.create(tree));
-        Tree<String> termPersuade2 =
-                Tree.create(appO,
-                        Tree.create(appO2,
-                                Tree.create(appS, Tree.create(persuade), Tree.create(tree)),
-                                Tree.create(eat)),
-                        Tree.create(giraffe));
-        test(termPersuade, false, 1, true);
-        test(termPersuade2, false, 1, true);
-        
-        Type renameType = new Type("(o2(s_UNIFY_o), s)");
-        System.err.println(renameType.toString());
-        System.err.println(renameType.graph.toString());
-        System.err.println(renameType.getRequest("s"));
-        System.err.println(renameType.getRequest("o"));
-        System.err.println(renameType.getRequest("o2"));
-        System.err.println(renameType.canApplyNow("s"));
-        System.err.println(renameType.canApplyNow("o"));
-        System.err.println(renameType.canApplyNow("o2"));
-        System.err.println(renameType.copyWithRemoved("o2"));
-        System.err.println(renameType.toRequestNamespace("o2", "o"));
-        
-        Type sType = new Type("(s)");
-        Type oType = new Type("(o)");
-        Type o2Type = new Type("(o2)");
-        Type nestedCoordType = new Type("(op1(o2(s_UNIFY_o), s), op2(o2(s_UNIFY_o), s))");
-        
-        System.err.println(renameType.getRequest("o2").equals(sType));
-        System.err.println(renameType.getRequest("o2").equals(oType));
-        System.err.println(renameType.getApplySet(sType));
-        System.err.println(renameType.getApplySet(oType));
-        System.err.println(renameType.getApplySet(o2Type));
-        System.err.println(renameType.getAllSubtypes());
-        System.err.println(nestedCoordType.getAllSubtypes());
-        System.err.println(nestedCoordType.performApply("op1"));
-        assert nestedCoordType.performApply("op1").origins.size() == 1;
-        assert nestedCoordType.performApply("op1").origins.contains("op2");
-        assert nestedCoordType.performApply("op1").performApply("op2").equals(renameType);
+                    Tree.create(treeConst));
+
+        System.err.println("Term: "+term);
+
+        //construct signature
+        Signature sig = new Signature();
+        term.dfs((Tree<String> tree, List<Void> list) -> {
+            sig.addSymbol(tree.getLabel(), list.size());
+            return null;
+        });
+
+        // make algebra with correct signature and evaluate term to graph
+        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(sig);
+        Pair<SGraph, Type> asGraph = alg.evaluate(term);
+        System.err.println("Graph: "+asGraph);
+
+        //now our setup is complete. We can create a decomposition automaton:
+        AMDecompositionAutomaton auto = (AMDecompositionAutomaton)alg.decompose(asGraph);
+
+        //calling auto.accepts before makeAllRulesExplicit seems to mess with the ruleStoreObject.
+        System.err.println("count trees: "+auto.countTrees());
+        System.err.println("Last count should be 0, since we haven't seen any rules yet");
+        auto.accepts(term);
+        System.err.println("count trees: "+auto.countTrees());
+        System.err.println("Last count should be 1, since we saw only the rules for one term");
+        auto.makeAllRulesExplicit();
+
+        System.err.println("count trees: "+auto.countTrees());
+        System.err.println("Last count should be 3, since we made the whole automaton explicit and its language size is 3.");
+        System.err.println("Note: I think the warning about the invalid use of TreeAutomaton#makeAllRulesExplicit is incorrect or irrelevant. " +
+                "Using TreeAutomaton#asConcreteTreeAutomatonBottomUp yields the same result for auto (the concrete tree automaton has the correct countRules result of 3)");
+        System.err.println("language size: "+auto.language().size());
     }
-    
+
     private static void test(Tree<String> term, boolean evalShouldFail, int expectedLanguageSize, boolean debug) {
         System.err.println("Testing "+term.toString());
         Signature sig = new Signature();
@@ -984,13 +952,13 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             sig.addSymbol(tree.getLabel(), list.size());
             return null;
         });
-        
+
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(sig);
         Pair<SGraph, Type> asGraph = alg.evaluate(term);
         if (debug) {
             System.err.println("evaluation result: "+String.valueOf(asGraph));
         }
-        
+
         if (evalShouldFail) {
             assert asGraph == null;
         } else {

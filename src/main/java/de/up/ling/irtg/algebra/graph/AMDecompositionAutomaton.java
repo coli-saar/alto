@@ -486,8 +486,8 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
 
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
-        throw new UnsupportedOperationException("AMDecompositionAutomaton does not support top down queries. To obtain an automaton that can answer top-down queries, call asConcreteTreeAutomatonBottomUp");
-        //return ruleStore.getRulesTopDown(labelId, parentState); //this didn't work properly
+        //throw new UnsupportedOperationException("AMDecompositionAutomaton does not support top down queries. To obtain an automaton that can answer top-down queries, call asConcreteTreeAutomatonBottomUp");
+        return ruleStore.getRulesTopDown(labelId, parentState); //this doesn't seem to work properly (and it shouldn't, but it seems to not work in the wrong way...)
     }
 
     @Override
