@@ -64,7 +64,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 //            }
 //        }
         if (value.right.isEmpty()) {
-            return new AMDecompositionAutomaton(this, null, value.left).asConcreteTreeAutomatonBottomUp();
+            return new AMDecompositionAutomaton(this, null, value.left);
         } else {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
@@ -606,7 +606,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             // then we can't remove s via apply without removing t before.
             // Can check for that by just looking at the children of the nodes in subtype.
             for (String t : subtype.graph.vertexSet()) {
-                if (!Sets.intersection(subtype.getChildren(t), ret).isEmpty()) {
+                if (!Sets.intersection(getChildren(t), ret).isEmpty()) {
                     return null;
                 }
             }
@@ -944,41 +944,89 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                                 Tree.create(appS, Tree.create(persuade), Tree.create(tree)),
                                 Tree.create(eat)),
                         Tree.create(giraffe));
-        test(termPersuade, false, 1, true);
-        test(termPersuade2, false, 1, true);
+        test(termPersuade, false, 3, false);
+        test(termPersuade2, false, 3, false);
         
         Type renameType = new Type("(o2(s_UNIFY_o), s)");
-        System.err.println(renameType.toString());
-        System.err.println(renameType.graph.toString());
-        System.err.println(renameType.getRequest("s"));
-        System.err.println(renameType.getRequest("o"));
-        System.err.println(renameType.getRequest("o2"));
-        System.err.println(renameType.canApplyNow("s"));
-        System.err.println(renameType.canApplyNow("o"));
-        System.err.println(renameType.canApplyNow("o2"));
-        System.err.println(renameType.copyWithRemoved("o2"));
-        System.err.println(renameType.toRequestNamespace("o2", "o"));
-        
+
+        String renameTypeString = "(o2(s_UNIFY_o), s)";
+        String osString = "(o, s)";
+        String sString = "(s)";
+        String oString = "(o)";
+        String o2String = "(o2)";
+        String o2soString = "(o2(s_UNIFY_o))";
+        String emptyTypeString = "()";
+        testType(renameTypeString, new String[]{"s", "o2"}, new String[]{"o"});
+        testRequest(renameTypeString, "o2", sString);
+        testRequest(renameTypeString, "o", emptyTypeString);
+        testRequest(renameTypeString, "s", emptyTypeString);
+        assert renameType.toRequestNamespace("o2", "o").equals("s");
+        testApply(renameTypeString, "o2", osString);
+        testApply(renameTypeString, "s", o2soString);
+
+
         Type sType = new Type("(s)");
         Type oType = new Type("(o)");
         Type o2Type = new Type("(o2)");
         Type nestedCoordType = new Type("(op1(o2(s_UNIFY_o), s), op2(o2(s_UNIFY_o), s))");
-        
-        System.err.println(renameType.getRequest("o2").equals(sType));
-        System.err.println(renameType.getRequest("o2").equals(oType));
-        System.err.println(renameType.getApplySet(sType));
-        System.err.println(renameType.getApplySet(oType));
-        System.err.println(renameType.getApplySet(o2Type));
+        String nestedCoordTypeString = "(op1(o2(s_UNIFY_o), s), op2(o2(s_UNIFY_o), s))";
+        testType(nestedCoordTypeString, new String[]{"op1", "op2"}, new String[]{"o2", "o", "s"});
+        testRequest(nestedCoordTypeString, "op1", renameTypeString);
+        testRequest(nestedCoordTypeString, "op2", renameTypeString);
+        testRequest(nestedCoordTypeString, "o2", sString);
+        testRequest(nestedCoordTypeString, "o", emptyTypeString);
+        testRequest(nestedCoordTypeString, "s", emptyTypeString);
+        testApply(nestedCoordTypeString, "op1", "(op2(o2(s_UNIFY_o()), s(), o()))");
+        testApply("(op2(o2(s_UNIFY_o()), s(), o()))", "op2", renameTypeString);
+
+        assert !new Type(sString).equals(new Type(oString));
+        testApplySet(renameTypeString, sString, Sets.newHashSet("o2", "o"));
+        testApplySet(renameTypeString, oString, Sets.newHashSet("o2", "s"));
+        testApplySet(renameTypeString, o2String, null);
         System.err.println(renameType.getAllSubtypes());
         System.err.println(nestedCoordType.getAllSubtypes());
-        System.err.println(nestedCoordType.performApply("op1"));
-        assert nestedCoordType.performApply("op1").origins.size() == 1;
-        assert nestedCoordType.performApply("op1").origins.contains("op2");
-        assert nestedCoordType.performApply("op1").performApply("op2").equals(renameType);
     }
-    
+
+    private static void testType(String typeString, String[] canApplyNow, String[] cannotApplyNow) throws ParseException {
+        Type t = new Type(typeString);
+        assert new Type(t.toString()).equals(t);//check toString and constructor for consistency
+        for (String s : canApplyNow) {
+            assert t.canApplyNow(s);
+        }
+        for (String s : cannotApplyNow) {
+            assert !t.canApplyNow(s);
+        }
+    }
+
+    private static void testRequest(String typeString, String source, String requestTypeString) throws ParseException {
+        Type t = new Type(typeString);
+        Type req = new Type(requestTypeString);
+        assert t.getRequest(source).equals(req);
+    }
+
+    private static void testApply(String typeString, String source, String resultTypeString) throws ParseException {
+        Type t = new Type(typeString);
+        Type result = new Type(resultTypeString);
+        assert t.performApply(source).equals(result);
+    }
+
+    private static void testApplySet(String typeString, String subtypeString, Set<String> applySet) throws ParseException {
+        Type t = new Type(typeString);
+        Type subtype = new Type(subtypeString);
+        Set<String> ret = t.getApplySet(subtype);
+        if (ret == null) {
+            assert  applySet == null;
+        } else {
+            assert ret.equals(applySet);
+        }
+    }
+
+    //TODO test subtypes
+
     private static void test(Tree<String> term, boolean evalShouldFail, int expectedLanguageSize, boolean debug) {
-        System.err.println("Testing "+term.toString());
+        if (debug) {
+            System.err.println("Testing " + term.toString());
+        }
         Signature sig = new Signature();
         term.dfs((Tree<String> tree, List<Void> list) -> {
             sig.addSymbol(tree.getLabel(), list.size());
@@ -995,7 +1043,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             assert asGraph == null;
         } else {
             assert asGraph != null;
-            TreeAutomaton auto = alg.decompose(asGraph);
+            TreeAutomaton auto = alg.decompose(asGraph).asConcreteTreeAutomatonBottomUp();
             if (debug) {
                 System.err.println(auto);
                 System.err.println("decomp viterbi: "+auto.viterbi());
