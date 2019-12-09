@@ -223,8 +223,8 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * paper include round brackets instead of square brackets, and
          * '_UNIFY_' instead of '{@literal ->}'.
          *
-         * @param typeString
-         * @throws de.up.ling.tree.ParseException
+         * @param typeString string representation of type
+         * @throws de.up.ling.tree.ParseException if the input string is not in the right recursive form
          *
          */
         public Type(String typeString) throws ParseException {
@@ -243,7 +243,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         
         /**
          * Creates a new type based on a copy(!) of the provided DAG.
-         * @param dag
+         * @param dag new type is based on this DAG
          */
         private Type(DirectedAcyclicGraph<String, Edge> dag) {
             // copy the dag
@@ -266,8 +266,8 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         
         /**
          * Adds the given tree encoding of a type to this type and updates.
-         * @param typeTree
-         * @return 
+         * @param typeTree tree to be added
+         * @return false iff adding the tree leads to an invalid type
          */
         private boolean addTree(Tree<String> typeTree) {
             boolean success = addTreeRecursive(typeTree);
@@ -278,8 +278,8 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * returns true if success, returns false if we found an inconsistency.
          * Note: Don't use this function, it is only the recursive bit
          * of addTree. In particular, This function does not call updateGraphs. 
-         * @param typeTree
-         * @return 
+         * @param typeTree tree to be added
+         * @return false iff adding the tree leads to an invalid type
          */
         private boolean addTreeRecursive(Tree<String> typeTree) {
             String parent = typeTree.getLabel().split("_UNIFY_")[0];
@@ -320,7 +320,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * must call this function in the end! Every private function that updates
          * the graph but does
          * not call this function should be marked as such.
-         * @return 
+         * @return true iff well-formed
          */
         private boolean processUpdates() {
             updateOrigins();
@@ -368,14 +368,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         private void updateRenameMap() {
             parentAndRequestSource2rename.clear();
             for (Edge e : graph.edgeSet()) {
-                parentAndRequestSource2rename.put(new Pair(e.getSource(), e.getLabel()), e.getTarget());
+                parentAndRequestSource2rename.put(new Pair<>(e.getSource(), e.getLabel()), e.getTarget());
             }
         }
 
 
         /**
          * Checks if all requests are types again.
-         * @return 
+         * @return false iff two identical nodes would exist in a request
          */
         private boolean verify() {
             for (String node : graph.vertexSet()) {
@@ -464,7 +464,15 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return ret;
         }
             
-        //TODO a newer package of jgrapht (org.jgrapht:1.3.1) has this method built in. This implementation here is horribly inefficient.
+        //TODO a newer package of jgrapht (org.jgrapht:1.3.1) has this method built in. This implementation here is horribly inefficient (but with such small types in practice it doesn't matter much).
+        /**
+         * Returns the descendants of v. After ensureClosure has been called, a node has an edge to each descendant,
+         * so that getChildren(v) returns the same thing as this (and is faster). However, before the transitive
+         * closure has been ensured, the functions may yield different results. In fact, the only usage of this
+         * function is (should be) in the creation of the transitive closure.
+         * @param v Node to get the descendants of.
+         * @return The descendants of v in the type graph.
+         */
         private Set<String> getDescendants(String v) {
             Set<String> ret = new HashSet<>();
             for (String child : getChildren(v)) {
@@ -473,7 +481,14 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             return ret;
         }
-        
+
+        /**
+         * Returns all children of v. After ensureClosure has been called, a node has an edge to each descendant,
+         * so that this returns the same thing as getDescendants(v) (and is faster). However, before the transitive
+         * closure has been ensured, the functions may yield different results.
+         * @param v Node to get the children of.
+         * @return The children of v in the type graph.
+         */
         private Set<String> getChildren(String v) {
             Set<String> ret = new HashSet<>();
             for (Edge e : graph.outgoingEdgesOf(v)) {
