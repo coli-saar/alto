@@ -10,6 +10,7 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.ParserException;
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP;
 import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.Type;
+import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -128,26 +129,38 @@ public class AMDependencyTree {
     
     public static void main(String[] args) {
         String giraffe = "(g<root>/giraffe)";
+        String swim = "(e<root>/swim-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
         String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
         String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
+        String not = "(n<root>/\"-\" :polarity-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
         String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
         String appS = "APP_s";
         String appO = "APP_o";
         String modM = "MOD_m";
         
         
-        //AMDependencyTree tEat = new AMDependencyTree(eat);
+
         AMDependencyTree tWant = new AMDependencyTree(want);
         AMDependencyTree tGiraffe = new AMDependencyTree(giraffe);
         
         tWant.addEdge(appS, tGiraffe);
-        tWant.addEdge(appO, eat);
-//        tGiraffe.addEdge(modM, tall);
-//        tGiraffe.addEdge(modM, tall);
-//        tWant.addEdge(modM, tall);
-        
-        System.err.println("\n"+tWant.evaluate());
-        
+        tWant.addEdge(appO, swim);
+        tGiraffe.addEdge(modM, tall);
+        tGiraffe.addEdge(modM, tall);
+        tWant.addEdge(modM, not);
+
+        SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
+        SGraph gEat = new IsiAmrInputCodec().read("(e<root>/eat-01 :ARG0 (g/giraffe))");
+
+        System.err.println(tWant.evaluate().equals(new Pair<>(gWant, Type.EMPTY_TYPE)));
+
+        AMDependencyTree tEat = new AMDependencyTree(eat);
+        tEat.addEdge(appS, new AMDependencyTree(giraffe));
+        System.err.println(tEat.evaluate().equals(new Pair<>(gEat, Type.EMPTY_TYPE)));
+
+
+
+
     }
     
     
