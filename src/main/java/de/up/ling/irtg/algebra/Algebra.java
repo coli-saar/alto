@@ -134,7 +134,7 @@ public abstract class Algebra<E> implements Serializable {
      * @return
      */
     @OperationAnnotation(code = "decomp")
-    public TreeAutomaton<E> decompose(E value) {
+    public TreeAutomaton decompose(E value) {
         return new EvaluatingDecompositionAutomaton(value);
     }
 
