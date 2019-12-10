@@ -56,6 +56,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         in the GUI is currently not possible.
           -- JG
         */
+        //TODO fix this, there should be a (maybe stupid) default decomposition method that works.
 //        if (signature.getSymbols().isEmpty()) {
 //            try {
 //                signature = AMSignatureBuilder.makeDecompositionSignature(value.left, 0);
@@ -76,6 +77,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
     }
 
     @Override
+    //document what kind of graphs we can evaluate.
     protected Pair<SGraph, ApplyModifyGraphAlgebra.Type> evaluate(String label, List<Pair<SGraph, ApplyModifyGraphAlgebra.Type>> childrenValues) {
         if (childrenValues.contains(null)) {
             return null;
@@ -133,7 +135,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 
             //check if mod is allowed
             if (!leftType.canBeModifiedBy(targetType, modSource)) {
-                System.err.println("MOD evaluation failed: invalid types! " + leftType + " mod by " + targetType);
+                //System.err.println("MOD evaluation failed: invalid types! " + leftType + " mod by " + targetType);
                 return null;
             }
             
@@ -149,20 +151,21 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             SGraph leftGraph = childrenValues.get(0).left;
             SGraph retGraph = leftGraph.merge(target);
             if (retGraph == null) {
-                System.err.println("MOD merge failed!");
+                System.err.println("MOD merge failed after type checks succeeded! This should not happen, check the code");
             }
             return new Pair(retGraph, childrenValues.get(0).right);
         } else {
             try {
                 return parseString(label);
             } catch (ParserException ex) {
-                System.err.println("could not parse label!");
+                System.err.println("could not parse label '"+label+"' in the AM algebra! Make sure it is the right format.");
                 return null;
             }
         }
     }
 
     @Override
+    //TODO document what kinds of strings we can read
     public Pair<SGraph, ApplyModifyGraphAlgebra.Type> parseString(String representation) throws ParserException {
         if (representation.contains(GRAPH_TYPE_SEP)) {
             if (representation.startsWith(OP_COREFMARKER)) {
@@ -282,7 +285,13 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * @return false iff adding the tree leads to an invalid type
          */
         private boolean addTreeRecursive(Tree<String> typeTree) {
-            String parent = typeTree.getLabel().split("_UNIFY_")[0];
+            String rootLabel = typeTree.getLabel();
+            String parent;
+            if (rootLabel.contains("_UNIFY")) {
+                parent = typeTree.getLabel().split("_UNIFY_")[1];
+            } else {
+                parent = rootLabel;
+            }
             for (Tree<String> childTree : typeTree.getChildren()) {
                 String[] parts = childTree.getLabel().split("_UNIFY_");
                 String target;
@@ -296,8 +305,8 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 }
                 graph.addVertex(target);
                 if (!parent.equals("TOP")) {
-                    Edge existingEdge = graph.getEdge(target, parent);
-                    if (existingEdge != null && existingEdge.getLabel().equals(edgeLabel)) {
+                    Edge existingEdge = graph.getEdge(parent, target);
+                    if (existingEdge != null && !existingEdge.getLabel().equals(edgeLabel)) {
                         return false;
                     }
                     try {
@@ -908,169 +917,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return false;
         }
     }
-    
-    
-    
-    public static void main(String[] args) throws ParseException {
-
-        Signature sig = new Signature();
-        
-        String giraffe = "(g<root>/giraffe)";
-        String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
-        String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
-        String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
-        String whistling = "(w<root>/whistle-01 :manner-of (m<m>) :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(m, s)";
-        String tree = "(t<root>/tree)";
-        String eat2 = "(e<root>/eat-01 :ARG0 (s<s>) :ARG01 (o<o>))"+GRAPH_TYPE_SEP+"(s, o)";
-        String appS = "APP_s";
-        String appO = "APP_o";
-        String appO2 = "APP_o2";
-        String modM = "MOD_m";
-//        
-//        Tree<String> term1 = Tree.create(appS, Tree.create(eat), Tree.create(giraffe));
-//        test(term1, false, 1, true);
-//        Tree<String> term2 = Tree.create(appS,
-//                Tree.create(appO, Tree.create(want), Tree.create(eat)),
-//                Tree.create(modM, Tree.create(giraffe), Tree.create(tall)));
-//        test(term2, false, 1, true);
-//        Tree<String> termWhistling = Tree.create(appS,
-//                Tree.create(modM, Tree.create(eat), Tree.create(whistling)),
-//                Tree.create(giraffe));
-//        test(termWhistling, false, 1, true);
-//        Tree<String> termTransitive = Tree.create(appS,
-//                Tree.create(appO, Tree.create(eat2), Tree.create(tree)),
-//                Tree.create(giraffe));
-//        test(termTransitive, false, 2, true);
-        
-        //TODO: make actual tests out of this.
-        //TODO: add tests where type checks are supposed to _fail_
-        //TODO: add more deeply nested checks (coord of control, but maybe also something more hypothetical and deeper)
-        
-        
-        String persuade = "(p<root>/persuade-01 :ARG0 (s<s>) :ARG1 (o<o>) :ARG2 (o2<o2>))"+GRAPH_TYPE_SEP+"(s, o2(s_UNIFY_o))";
-        Tree<String> termPersuade = Tree.create(appS,
-                    Tree.create(appO,
-                        Tree.create(appO2, Tree.create(persuade), Tree.create(eat)),
-                        Tree.create(giraffe)),
-                    Tree.create(tree));
-        Tree<String> termPersuade2 =
-                Tree.create(appO,
-                        Tree.create(appO2,
-                                Tree.create(appS, Tree.create(persuade), Tree.create(tree)),
-                                Tree.create(eat)),
-                        Tree.create(giraffe));
-        test(termPersuade, false, 3, false);
-        test(termPersuade2, false, 3, false);
-        
-        Type renameType = new Type("(o2(s_UNIFY_o), s)");
-
-        String renameTypeString = "(o2(s_UNIFY_o), s)";
-        String osString = "(o, s)";
-        String sString = "(s)";
-        String oString = "(o)";
-        String o2String = "(o2)";
-        String o2soString = "(o2(s_UNIFY_o))";
-        String emptyTypeString = "()";
-        testType(renameTypeString, new String[]{"s", "o2"}, new String[]{"o"});
-        testRequest(renameTypeString, "o2", sString);
-        testRequest(renameTypeString, "o", emptyTypeString);
-        testRequest(renameTypeString, "s", emptyTypeString);
-        assert renameType.toRequestNamespace("o2", "o").equals("s");
-        testApply(renameTypeString, "o2", osString);
-        testApply(renameTypeString, "s", o2soString);
 
 
-        Type sType = new Type("(s)");
-        Type oType = new Type("(o)");
-        Type o2Type = new Type("(o2)");
-        Type nestedCoordType = new Type("(op1(o2(s_UNIFY_o), s), op2(o2(s_UNIFY_o), s))");
-        String nestedCoordTypeString = "(op1(o2(s_UNIFY_o), s), op2(o2(s_UNIFY_o), s))";
-        testType(nestedCoordTypeString, new String[]{"op1", "op2"}, new String[]{"o2", "o", "s"});
-        testRequest(nestedCoordTypeString, "op1", renameTypeString);
-        testRequest(nestedCoordTypeString, "op2", renameTypeString);
-        testRequest(nestedCoordTypeString, "o2", sString);
-        testRequest(nestedCoordTypeString, "o", emptyTypeString);
-        testRequest(nestedCoordTypeString, "s", emptyTypeString);
-        testApply(nestedCoordTypeString, "op1", "(op2(o2(s_UNIFY_o()), s(), o()))");
-        testApply("(op2(o2(s_UNIFY_o()), s(), o()))", "op2", renameTypeString);
-
-        assert !new Type(sString).equals(new Type(oString));
-        testApplySet(renameTypeString, sString, Sets.newHashSet("o2", "o"));
-        testApplySet(renameTypeString, oString, Sets.newHashSet("o2", "s"));
-        testApplySet(renameTypeString, o2String, null);
-        System.err.println(renameType.getAllSubtypes());
-        System.err.println(nestedCoordType.getAllSubtypes());
-    }
-
-    private static void testType(String typeString, String[] canApplyNow, String[] cannotApplyNow) throws ParseException {
-        Type t = new Type(typeString);
-        assert new Type(t.toString()).equals(t);//check toString and constructor for consistency
-        for (String s : canApplyNow) {
-            assert t.canApplyNow(s);
-        }
-        for (String s : cannotApplyNow) {
-            assert !t.canApplyNow(s);
-        }
-    }
-
-    private static void testRequest(String typeString, String source, String requestTypeString) throws ParseException {
-        Type t = new Type(typeString);
-        Type req = new Type(requestTypeString);
-        assert t.getRequest(source).equals(req);
-    }
-
-    private static void testApply(String typeString, String source, String resultTypeString) throws ParseException {
-        Type t = new Type(typeString);
-        Type result = new Type(resultTypeString);
-        assert t.performApply(source).equals(result);
-    }
-
-    private static void testApplySet(String typeString, String subtypeString, Set<String> applySet) throws ParseException {
-        Type t = new Type(typeString);
-        Type subtype = new Type(subtypeString);
-        Set<String> ret = t.getApplySet(subtype);
-        if (ret == null) {
-            assert  applySet == null;
-        } else {
-            assert ret.equals(applySet);
-        }
-    }
-
-    //TODO test subtypes
-
-    private static void test(Tree<String> term, boolean evalShouldFail, int expectedLanguageSize, boolean debug) {
-        if (debug) {
-            System.err.println("Testing " + term.toString());
-        }
-        Signature sig = new Signature();
-        term.dfs((Tree<String> tree, List<Void> list) -> {
-            sig.addSymbol(tree.getLabel(), list.size());
-            return null;
-        });
-        
-        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra(sig);
-        Pair<SGraph, Type> asGraph = alg.evaluate(term);
-        if (debug) {
-            System.err.println("evaluation result: "+String.valueOf(asGraph));
-        }
-        
-        if (evalShouldFail) {
-            assert asGraph == null;
-        } else {
-            assert asGraph != null;
-            TreeAutomaton auto = alg.decompose(asGraph).asConcreteTreeAutomatonBottomUp();
-            if (debug) {
-                System.err.println(auto);
-                System.err.println("decomp viterbi: "+auto.viterbi());
-                for (Tree<String> tree : (Iterable<Tree<String>>)auto.languageIterable()) {
-                    System.err.println(tree);
-                }
-            }
-            assert auto.accepts(term);
-            assert alg.evaluate(auto.viterbi()).equals(asGraph);
-            assert auto.countTrees() == expectedLanguageSize;
-        }
-    }
-    
 
 }
