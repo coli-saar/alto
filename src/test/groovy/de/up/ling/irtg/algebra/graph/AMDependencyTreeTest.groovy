@@ -5,10 +5,6 @@ import de.up.ling.irtg.codec.IsiAmrInputCodec
 import org.junit.Test
 
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP
-import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP
-import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP
-import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP
-import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP
 
 class AMDependencyTreeTest {
 
@@ -27,10 +23,10 @@ class AMDependencyTreeTest {
         AMDependencyTree tEat = new AMDependencyTree(eat);
         SGraph gEat = new IsiAmrInputCodec().read("(e<root>/eat-01 :ARG0 (g/giraffe))");
         tEat.addEdge(appS, new AMDependencyTree(giraffe));
-        System.err.println(tEat.evaluate().equals(new Pair<>(gEat, de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.Type.EMPTY_TYPE)));
+        System.err.println(tEat.evaluate().equals(new Pair<>(gEat, ApplyModifyGraphAlgebra.Type.EMPTY_TYPE)));
     }
 
-    
+
     @Test
     void testWant() {
         AMDependencyTree tWant = new AMDependencyTree(want);
@@ -41,7 +37,7 @@ class AMDependencyTreeTest {
         tGiraffe.addEdge(modM, tall);
         tWant.addEdge(modM, not);
         SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
-        assert tWant.evaluate().equals(new Pair< >(gWant, de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.Type.EMPTY_TYPE));
+        assert tWant.evaluate().equals(new Pair< >(gWant, ApplyModifyGraphAlgebra.Type.EMPTY_TYPE));
     }
 
 
