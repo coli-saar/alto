@@ -266,13 +266,11 @@ public class Signature implements Serializable {
      * @return
      */
     public Tree<Integer> addAllSymbols(Tree<String> tree) {
-        return tree.dfs(new TreeVisitor<String, Void, Tree<Integer>>() {
-            @Override
-            public Tree<Integer> combine(Tree<String> node, List<Tree<Integer>> childrenValues) {
-                int sym = addSymbol(node.getLabel(), childrenValues.size());
-                return Tree.create(sym, childrenValues);
-            }
-        });
+        return tree.dfs((Tree<String> node, List<Tree<Integer>> childrenValues) -> {
+                    int sym = addSymbol(node.getLabel(), childrenValues.size());
+                    return Tree.create(sym, childrenValues);
+                }
+        );
     }
 
     /**

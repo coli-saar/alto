@@ -1,3 +1,19 @@
+// Copyright 2012-2015 Alexander Koller
+// Copyright 2017 Christoph Teichmann
+// Copyright 2019 Arne Köhn
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package de.up.ling.irtg.automata;
 
 import de.saar.basic.CartesianIterator;
@@ -18,18 +34,21 @@ import java.util.Set;
 import java.util.function.ToIntFunction;
 
 /**
- *
- * @author koller
- * @param <State>
+ * An InverseHomAutomaton performs computations back from an
+ * interpretation to derivation trees using the inverse of a
+ * homomorphism hom.  Given a TreeAutomaton T over an interpretation
+ * and a homomorphism hom from the derivation rules to the
+ * interpretation, it generates exactly those derivation trees d
+ * for which hom(d) ∈ T.
  */
 public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
-    public static String FAIL_STATE = "q_FAIL_";
+    private static final long serialVersionUID = 8577758932160718432L;
+	public static final String FAIL_STATE = "q_FAIL_";
     private final int failStateId;
     private final TreeAutomaton<State> rhsAutomaton;
     private final Homomorphism hom;
     private final Set<Integer> computedLabels;
-//    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
     private final ToIntFunction<HomomorphismSymbol> remappingHomSymbolToIntFunction;
     private final IntSet provisionalStateSet;
@@ -41,28 +60,16 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         this.hom = hom;
 
         labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
-        remappingHomSymbolToIntFunction = f -> labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().applyAsInt(f)]; // TODO replace by sig mapper
+
+        // TODO replace by sig mapper
+        remappingHomSymbolToIntFunction = f -> labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().applyAsInt(f)];
 
         computedLabels = new HashSet<>();
-//        rhsState = new HashMap<String, State>();
 
         this.stateInterner = (Interner) rhsAutomaton.stateInterner;
         this.allStates = new IntOpenHashSet(rhsAutomaton.getAllStates());
 
-//        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
-//            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
-//        }
         finalStates.addAll(rhsAutomaton.getFinalStates());
-
-//        for (State fin : rhsAutomaton.getFinalStates()) {
-//            finalStates.add(fin.toString());
-//        }
-//
-//        // _must_ do this here to cache mapping from strings to rhs states
-//        for (State s : rhsAutomaton.getAllStates()) {
-//            String normalized = addState(s.toString());
-//            rhsState.put(normalized, s);
-//        }
         failStateId = addState(FAIL_STATE);
 
         // Record a provisional set of states, which is sure to be a
