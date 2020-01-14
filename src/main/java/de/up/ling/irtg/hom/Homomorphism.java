@@ -430,8 +430,8 @@ public class Homomorphism implements Serializable {
     private transient boolean isNondeleting = false;
 
     /**
-     * A homomorphism is nondeleting iff every variable from the signature
-     * is also present on the right-hand-side for every mapping.
+     * A homomorphism is nondeleting iff in the image of every
+     * symbol y all k variables are present, where k is the arity of y.
      */
     public boolean isNonDeleting() {
         if (isNondeletingComputed) {
