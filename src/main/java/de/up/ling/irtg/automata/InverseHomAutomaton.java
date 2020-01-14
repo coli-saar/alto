@@ -34,12 +34,11 @@ import java.util.Set;
 import java.util.function.ToIntFunction;
 
 /**
- * An InverseHomAutomaton performs computations back from an
- * interpretation to derivation trees using the inverse of a
- * homomorphism hom.  Given a TreeAutomaton T over an interpretation
- * and a homomorphism hom from the derivation rules to the
- * interpretation, it generates exactly those derivation trees d
- * for which hom(d) ∈ T.
+ * An InverseHomAutomaton computes the inverse of a homomorphism hom
+ * for a whole tree automaton.  Given a homomorphism hom from
+ * a signature A to a signature B, and a TreeAutomaton T over B,
+ * InverseHomAutomaton is a TreeAutomaton that generates exactly those
+ * trees d over A for which hom(d) ∈ T.
  */
 public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 

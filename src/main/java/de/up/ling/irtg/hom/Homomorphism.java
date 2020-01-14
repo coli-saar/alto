@@ -42,13 +42,20 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * A Homomorphism defines a mapping from the derivation terms to the
- * terms of an interpretation.  It is used to obtain an interpretation
- * tree from a derivation tree.  Homomorphism assumes that each label
- * in the derivation tree grammar is used in only a single term as the
- * term is identified by the label; it is e.g. not possible to have
- * {@code foo(X,Y)} and {@code foo(X,Y,Z)} in two different rules of a
- * grammar.
+ * A Homomorphism f defines a mapping from a signature A to terms over
+ * a signature B. For a symbol y in A of arity k, the term f(y)
+ * may contain variables x_1 to x_k. A homomorphism can map
+ * a whole term t over A to a term f(t) over B recursively in
+ * the following way: for each label
+ * y in f(t), replace each variable x_i in f(y) with the result of the term at the i-th
+ * position below y. I.e. if s is the i-th term below y in t, then replace
+ * x_i in f(y) with f(s), and repeat this recursively.
+ *
+ * In an IRTG, A is the signature of the grammar and B is the signature
+ * of the algebra (i.e. the algebra's operations). Thus, a homomorphism
+ * maps a term of the grammar to a term over the algebra which then
+ * can be evaluated. This way, the Homomorphism class is a central
+ * part of the Interpretation class.
  */
 public class Homomorphism implements Serializable {
 
