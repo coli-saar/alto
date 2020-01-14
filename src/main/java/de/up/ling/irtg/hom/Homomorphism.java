@@ -1,11 +1,24 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+// Copyright 2012-2017 Alexander Koller
+// Copyright 2013 baumgarten
+// Copyright 2013 danilo
+// Copyright 2014 Johannes Gontrum
+// Copyright 2015-2016 Jonas Groschwitz
+// Copyright 2017 Christoph Teichmann
+// Copyright 2019 Arne Köhn
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package de.up.ling.irtg.hom;
 
-import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
-import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
@@ -29,12 +42,25 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
+ * A Homomorphism f defines a mapping from a signature A to terms over
+ * a signature B. For a symbol y in A of arity k, the term f(y)
+ * may contain variables x_1 to x_k. A homomorphism can map
+ * a whole term t over A to a term f(t) over B recursively in
+ * the following way: for each label
+ * y in f(t), replace each variable x_i in f(y) with the result of the term at the i-th
+ * position below y. I.e. if s is the i-th term below y in t, then replace
+ * x_i in f(y) with f(s), and repeat this recursively.
  *
- * @author koller
+ * In an IRTG, A is the signature of the grammar and B is the signature
+ * of the algebra (i.e. the algebra's operations). Thus, a homomorphism
+ * maps a term of the grammar to a term over the algebra which then
+ * can be evaluated. This way, the Homomorphism class is a central
+ * part of the Interpretation class.
  */
 public class Homomorphism implements Serializable {
 
-    private static final Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
+    private static final long serialVersionUID = 8615572724774133330L;
+	private static final Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
     private final Signature srcSignature, tgtSignature;
     private static final boolean debug = false;
 
@@ -134,7 +160,9 @@ public class Homomorphism implements Serializable {
         }
     }
 
-    // Creates a new labelSet for a new label and returns the labelSetID
+  /**
+   *Creates a new labelSet for a new label and returns the labelSetID
+   */
     private int createNewLabelSet(int label) {
         IntSet labelSet = new IntOpenHashSet();
         labelSet.add(label);            // put first element in set
@@ -150,9 +178,6 @@ public class Homomorphism implements Serializable {
 
     /**
      * Returns the value h(label), using symbol IDs.
-     *
-     * @param label
-     * @return
      */
     public Tree<HomomorphismSymbol> get(int label) {
         if (debug) {
@@ -200,9 +225,6 @@ public class Homomorphism implements Serializable {
 
     /**
      * This method is deprecated. Use {@link #getTermID(int) } instead.
-     *
-     * @param label
-     * @return
      * @deprecated
      */
     @Deprecated
@@ -226,9 +248,6 @@ public class Homomorphism implements Serializable {
      * signature. If necessary, the returned tree can be converted back to a
      * tree of HomomorphismSymbols using HomomorphismSymbo.treeFromNames and the
      * homomorphism's target signature.
-     *
-     * @param label
-     * @return
      */
     public Tree<String> get(String label) {
         if (debug) {
@@ -253,10 +272,9 @@ public class Homomorphism implements Serializable {
         return ret;
     }
 
-    /*
+    /**
      * Applies the homomorphism to the given tree. Returns the homomorphic image
      * of the tree under this homomorphism.
-     *
      */
     public Tree<Integer> applyRaw(Tree<Integer> tree) {
         Tree<HomomorphismSymbol> homSym = get(tree.getLabel());
@@ -278,11 +296,6 @@ public class Homomorphism implements Serializable {
      * Applies the homomorphism to a given input tree. Variables are substituted
      * according to the "subtrees" parameter: ?1, ?x1 etc. refer to the first
      * entry in the list, and so on.
-     *
-     * @param tree
-     * @param subtrees
-     * @param knownGensyms
-     * @return
      */
     private Tree<Integer> constructRaw(final Tree<HomomorphismSymbol> tree, final List<Tree<Integer>> subtrees) {
         HomomorphismSymbol label = tree.getLabel();
@@ -413,33 +426,33 @@ public class Homomorphism implements Serializable {
         return true;
     }
 
-    private transient Boolean nondeleting = null;
+    private transient boolean isNondeletingComputed = false;
+    private transient boolean isNondeleting = false;
 
-    private void checkNondeleting() {
-        if (nondeleting == null) {
-            for (int label : labelToLabelSet.keySet()) {
-                Tree<HomomorphismSymbol> rhs = get(label);
-                Set<HomomorphismSymbol> variables = new HashSet<>();
-
-                for (HomomorphismSymbol l : rhs.getLeafLabels()) {
-                    if (l.isVariable()) {
-                        variables.add(l);
-                    }
-                }
-
-                if (variables.size() < srcSignature.getArity(label)) {
-                    nondeleting = Boolean.FALSE;
-                    return;
+    /**
+     * A homomorphism is nondeleting iff in the image of every
+     * symbol y all k variables are present, where k is the arity of y.
+     */
+    public boolean isNonDeleting() {
+        if (isNondeletingComputed) {
+            return isNondeleting;
+        }
+        isNondeleting = true;
+        for (int label : labelToLabelSet.keySet()) {
+            Tree<HomomorphismSymbol> rhs = get(label);
+            Set<HomomorphismSymbol> variables = new HashSet<>();
+            for (HomomorphismSymbol l : rhs.getLeafLabels()) {
+                if (l.isVariable()) {
+                    variables.add(l);
                 }
             }
-
-            nondeleting = Boolean.TRUE;
+            if (variables.size() < srcSignature.getArity(label)) {
+                isNondeleting = false;
+                break;
+            }
         }
-    }
-
-    public boolean isNonDeleting() {
-        checkNondeleting();
-        return nondeleting;
+        isNondeletingComputed = true;
+        return isNondeleting;
     }
 
     /**
@@ -448,8 +461,6 @@ public class Homomorphism implements Serializable {
      * need, when this method is called for the first time, and then reused.
      * Note that if one of the underlying signatures changes, you need to call
      * {@link SignatureMapper#recompute() } to update the mapper.
-     *
-     * @return
      */
     public SignatureMapper getSignatureMapper() {
         if (signatureMapper == null) {
