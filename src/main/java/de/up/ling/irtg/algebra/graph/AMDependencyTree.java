@@ -28,18 +28,18 @@ public class AMDependencyTree {
     // left is operation that combines this with parent (always null at top node)
     // right is graph constant at this node as a string, such that
     // ApplyModifyGraphAlgebra#parseString can read it.
-    private final Tree<Pair<String, String>> tree;
+    private final Tree<Pair<String, Pair<SGraph, Type>>> tree;
     
-    public AMDependencyTree(String graph) {
+    public AMDependencyTree(Pair<SGraph, Type> graph) throws ParserException {
         tree = makeNode(null, graph);
     }
     
     
-    public void addEdge(String operation, String graph) {
+    public void addEdge(String operation, Pair<SGraph, Type> graph) {
         tree.getChildren().add(makeNode(operation, graph));
     }
     
-    private Tree<Pair<String, String>> makeNode(String operation, String node) {
+    private Tree<Pair<String, Pair<SGraph, Type>>> makeNode(String operation, Pair<SGraph, Type> node) {
         return Tree.create(new Pair(operation, node), new ArrayList<>());
     }
     
@@ -56,7 +56,7 @@ public class AMDependencyTree {
      */
     public Pair<SGraph, Type> evaluate() {
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
-        return tree.dfs((Tree<Pair<String, String>> localTree, List<Pair<SGraph, Type>> childResults) -> {
+        return tree.dfs((Tree<Pair<String, Pair<SGraph, Type>>> localTree, List<Pair<SGraph, Type>> childResults) -> {
 //            System.err.println(localTree);
 //            System.err.println(childResults);
 //            System.err.println();
@@ -66,13 +66,8 @@ public class AMDependencyTree {
             }
             Type localType;
             Pair<SGraph, Type> current;
-            try {
-                localType = alg.parseString(localTree.getLabel().right).right;
-                current = alg.parseString(localTree.getLabel().right);
-            } catch (ParserException ex) {
-                System.err.println("***WARNING*** could not parse as-graph "+localTree.getLabel().right);
-                return null;
-            }
+            localType = localTree.getLabel().right.right;
+            current = localTree.getLabel().right;
             IntList todo = new IntArrayList();
             for (int i = 0; i<localTree.getChildren().size(); i++) {
                 todo.add(i);
@@ -84,7 +79,7 @@ public class AMDependencyTree {
                 String operation = localTree.getChildren().get(i).getLabel().left;
                 if (operation.startsWith(ApplyModifyGraphAlgebra.OP_MODIFICATION)) {
 //                    System.err.println("before "+operation+": "+current);
-                    current = alg.evaluate(operation, Lists.newArrayList(current, childResults.get(i)));
+                    current = alg.evaluateOperation(operation, current, childResults.get(i));
                     covered.add(i);
 //                    System.err.println("after: "+current);
 //                    System.err.println();
@@ -109,7 +104,7 @@ public class AMDependencyTree {
 //                        System.err.println("before "+operation+": "+current);
                         changed = true;
                         covered.add(i);
-                        current = alg.evaluate(operation, Lists.newArrayList(current, childResults.get(i)));
+                        current = alg.evaluateOperation(operation, current, childResults.get(i));
 //                        System.err.println("after: "+current);
 //                        System.err.println();
                     }
@@ -127,7 +122,11 @@ public class AMDependencyTree {
     
      
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParserException {
+
+        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
+
+
         String giraffe = "(g<root>/giraffe)";
         String swim = "(e<root>/swim-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
         String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
@@ -137,26 +136,27 @@ public class AMDependencyTree {
         String appS = "APP_s";
         String appO = "APP_o";
         String modM = "MOD_m";
-        
-        
 
-        AMDependencyTree tWant = new AMDependencyTree(want);
-        AMDependencyTree tGiraffe = new AMDependencyTree(giraffe);
-        
+
+
+        AMDependencyTree tWant = new AMDependencyTree(alg.parseString(want));
+        AMDependencyTree tGiraffe = new AMDependencyTree(alg.parseString(giraffe));
+
         tWant.addEdge(appS, tGiraffe);
-        tWant.addEdge(appO, swim);
-        tGiraffe.addEdge(modM, tall);
-        tGiraffe.addEdge(modM, tall);
-        tWant.addEdge(modM, not);
+        tWant.addEdge(appO, alg.parseString(swim));
+        tGiraffe.addEdge(modM, alg.parseString(tall));
+        tGiraffe.addEdge(modM, alg.parseString(tall));
+        tWant.addEdge(modM, alg.parseString(not));
 
         SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
         SGraph gEat = new IsiAmrInputCodec().read("(e<root>/eat-01 :ARG0 (g/giraffe))");
 
         System.err.println(tWant.evaluate().equals(new Pair<>(gWant, Type.EMPTY_TYPE)));
 
-        AMDependencyTree tEat = new AMDependencyTree(eat);
-        tEat.addEdge(appS, new AMDependencyTree(giraffe));
+        AMDependencyTree tEat = new AMDependencyTree(alg.parseString(eat));
+        tEat.addEdge(appS, new AMDependencyTree(alg.parseString(giraffe)));
         System.err.println(tEat.evaluate().equals(new Pair<>(gEat, Type.EMPTY_TYPE)));
+
 
 
 

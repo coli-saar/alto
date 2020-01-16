@@ -82,12 +82,27 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         if (childrenValues.contains(null)) {
             return null;
         }
-        if (label.startsWith(OP_APPLICATION) && childrenValues.size() == 2) {
-            String appSource = label.substring(OP_APPLICATION.length());
-            SGraph target = childrenValues.get(1).left;
-            Type targetType = childrenValues.get(1).right;
-            Type leftType = childrenValues.get(0).right;
-            
+        if (childrenValues.size() == 2) {
+            return evaluateOperation(label, childrenValues.get(0), childrenValues.get(1));
+        }
+         else {
+            try {
+                return parseString(label);
+            } catch (ParserException ex) {
+                System.err.println("could not parse label '"+label+"' in the AM algebra! Make sure it is the right format.");
+                return null;
+            }
+        }
+    }
+
+    public Pair<SGraph, ApplyModifyGraphAlgebra.Type> evaluateOperation(String operation,
+               Pair<SGraph, ApplyModifyGraphAlgebra.Type> head, Pair<SGraph, ApplyModifyGraphAlgebra.Type> nonHead) {
+        if (operation.startsWith(OP_APPLICATION)) {
+            String appSource = operation.substring(OP_APPLICATION.length());
+            SGraph target = nonHead.left;
+            Type targetType = nonHead.right;
+            Type leftType = head.right;
+
             //check if we can apply
             if (!leftType.canApplyTo(targetType, appSource)) {
                 return null;
@@ -96,7 +111,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 System.err.println("target had no root in APP!");
                 return null;//target must have root for APP to be allowed.
             }
-            
+
             //rename right sources to temps
             List<String> orderedSources = new ArrayList(target.getAllSources());
             for (int i = 0; i < orderedSources.size(); i++) {
@@ -116,29 +131,29 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
 
             //merge and then remove appSource from head (prepare the source removal first)
-            SGraph leftGraph = childrenValues.get(0).left;
+            SGraph leftGraph = head.left;
             Set<String> retainedSources = new HashSet<>(leftGraph.getAllSources());
             retainedSources.addAll(target.getAllSources());
             retainedSources.remove(appSource);
 
-            SGraph retGraph = target.merge(childrenValues.get(0).left).forgetSourcesExcept(retainedSources);
+            SGraph retGraph = target.merge(head.left).forgetSourcesExcept(retainedSources);
             if (retGraph == null) {
                 System.err.println("APP merge failed!");
             }
             return new Pair(retGraph, leftType.performApply(appSource));
 
-        } else if (label.startsWith(OP_MODIFICATION) && childrenValues.size() == 2) {
-            String modSource = label.substring(OP_MODIFICATION.length());
-            SGraph target = childrenValues.get(1).left;
-            Type targetType = childrenValues.get(1).right;
-            Type leftType = childrenValues.get(0).right;
+        } else if (operation.startsWith(OP_MODIFICATION)) {
+            String modSource = operation.substring(OP_MODIFICATION.length());
+            SGraph target = nonHead.left;
+            Type targetType = nonHead.right;
+            Type leftType = head.right;
 
             //check if mod is allowed
             if (!leftType.canBeModifiedBy(targetType, modSource)) {
                 //System.err.println("MOD evaluation failed: invalid types! " + leftType + " mod by " + targetType);
                 return null;
             }
-            
+
             // remove old root source of modifier and rename modSource to root
             if (target.getNodeForSource(ROOT_SOURCE_NAME) != null) {
                 Set<String> retainedSources = new HashSet<>(target.getAllSources());
@@ -148,19 +163,15 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             target = target.renameSource(modSource, ROOT_SOURCE_NAME);
 
             //then just merge
-            SGraph leftGraph = childrenValues.get(0).left;
+            SGraph leftGraph = head.left;
             SGraph retGraph = leftGraph.merge(target);
             if (retGraph == null) {
                 System.err.println("MOD merge failed after type checks succeeded! This should not happen, check the code");
             }
-            return new Pair(retGraph, childrenValues.get(0).right);
+            return new Pair(retGraph, head.right);
         } else {
-            try {
-                return parseString(label);
-            } catch (ParserException ex) {
-                System.err.println("could not parse label '"+label+"' in the AM algebra! Make sure it is the right format.");
-                return null;
-            }
+            System.err.println("could not understand operation '"+operation+"' in the AM algebra! Make sure it is the right format.");
+            return null;
         }
     }
 

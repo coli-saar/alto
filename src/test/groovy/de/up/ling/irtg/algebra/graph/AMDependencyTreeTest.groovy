@@ -2,18 +2,21 @@ package de.up.ling.irtg.algebra.graph
 
 import de.saar.basic.Pair
 import de.up.ling.irtg.codec.IsiAmrInputCodec
+import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.Type
 import org.junit.Test
 
 import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP
 
 class AMDependencyTreeTest {
 
-    String giraffe = "(g<root>/giraffe)";
-    String swim = "(e<root>/swim-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
-    String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
-    String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
-    String not = "(n<root>/\"-\" :polarity-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
-    String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
+    ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra()
+
+    Pair<SGraph, Type> giraffe = alg.parseString("(g<root>/giraffe)");
+    Pair<SGraph, Type> swim = alg.parseString("(e<root>/swim-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)");
+    Pair<SGraph, Type> eat = alg.parseString("(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)");
+    Pair<SGraph, Type> want = alg.parseString("(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))");
+    Pair<SGraph, Type> not = alg.parseString("(n<root>/\"-\" :polarity-of (m<m>))"+GRAPH_TYPE_SEP+"(m)");
+    Pair<SGraph, Type> tall = alg.parseString("(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)");
     String appS = "APP_s";
     String appO = "APP_o";
     String modM = "MOD_m";
