@@ -748,7 +748,13 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             return copy;
         }
-        
+
+
+        public Set<String> getOrigins() {
+            return Collections.unmodifiableSet(origins);
+        }
+
+
         private boolean isOrigin(String source) {
             return origins.contains(source);
         }
