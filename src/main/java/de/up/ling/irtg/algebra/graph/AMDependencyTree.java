@@ -18,6 +18,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * TODO unify / make compatible with the AMDependencyTree class in am-tools
@@ -47,6 +48,14 @@ public class AMDependencyTree {
     public void addEdge(String operation, AMDependencyTree childTree) {
         childTree.tree.setLabel(new Pair(operation, childTree.tree.getLabel().right));
         tree.getChildren().add(childTree.tree);
+    }
+
+    /**
+     * childTree must include at the top level the operation that combines it with this tree.
+     * @param childTree
+     */
+    public void removeEdge(AMDependencyTree childTree) {
+        tree.getChildren().remove(childTree.tree);
     }
     
     
@@ -119,9 +128,25 @@ public class AMDependencyTree {
             }
         });
     }
-    
-     
-    
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AMDependencyTree that = (AMDependencyTree) o;
+        return Objects.equals(tree, that.tree);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tree);
+    }
+
+    @Override
+    public String toString() {
+        return tree.toString();
+    }
+
     public static void main(String[] args) throws ParserException {
 
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();

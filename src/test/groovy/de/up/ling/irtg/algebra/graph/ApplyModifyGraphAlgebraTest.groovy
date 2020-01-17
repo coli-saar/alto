@@ -202,6 +202,35 @@ class ApplyModifyGraphAlgebraTest {
                 "(o2(s_UNIFY_o()))", "(op1(o2(s_UNIFY_o()), s(), o()))", "(o2(s_UNIFY_o()), s())", "(s())", "(op2(o2(s_UNIFY_o()), s(), o()))", "(s(), o())", "()", "(o())"));
     }
 
+    @Test
+    void testChangingTypes() {
+        ApplyModifyGraphAlgebra.Type t = new ApplyModifyGraphAlgebra.Type("(s)");
+        t = t.addSource("o");
+        assert t.equals(new ApplyModifyGraphAlgebra.Type("(s(), o())"));
+        t = t.addSource("o2");
+        assert t.equals(new ApplyModifyGraphAlgebra.Type("(s(), o2(), o())"));
+        t = t.setDependency("o2", "o", "o");
+        assert t.equals(new ApplyModifyGraphAlgebra.Type("(s(), o2(o()))"));
+        t = t.setDependency("o2", "o", "s");
+        assert t.equals(new ApplyModifyGraphAlgebra.Type("(s(), o2(s_UNIFY_o()))"));
+        ApplyModifyGraphAlgebra.Type t2 = t.setDependency("o2", "s", "x");
+        // check that we didn't change the original type
+        assert t.equals(new ApplyModifyGraphAlgebra.Type("(s(), o2(s_UNIFY_o()))"));
+        assert t2.equals(new ApplyModifyGraphAlgebra.Type("(o2(s_UNIFY_o(), x_UNIFY_s()))"));
+        t2 = t2.setDependency("o", "s", "o");
+        assert t2.equals(new ApplyModifyGraphAlgebra.Type("(o2(s_UNIFY_o(o_UNIFY_s()), x_UNIFY_s()))"));
+        t2 = t2.setDependency("o", "s", "s");
+        assert t2.equals(new ApplyModifyGraphAlgebra.Type("(o2(s_UNIFY_o(s()), x_UNIFY_s()))"));
+        boolean threwError = false;
+        try {
+            t2 = t2.setDependency("s", "o2", "o2");
+        } catch (IllegalArgumentException ex) {
+            threwError = true;
+        }
+        assert threwError;
+    }
+
+
     private static void testType(String typeString, Set<String> canApplyNow, Set<String> cannotApplyNow) throws ParseException {
         ApplyModifyGraphAlgebra.Type t = new ApplyModifyGraphAlgebra.Type(typeString);
         assert new ApplyModifyGraphAlgebra.Type(t.toString()).equals(t);//check toString and constructor for consistency
@@ -292,4 +321,7 @@ class ApplyModifyGraphAlgebraTest {
             assert auto.countTrees() == expectedLanguageSize;
         }
     }
+
+
+
 }

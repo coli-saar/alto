@@ -410,6 +410,54 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             return true;
         }
+
+        /**
+         * Creates a copy of this type with the given source added as a node. If the source already existed in
+         * this type, simply an identical copy is returned. The original type is never modified.
+         * @param source The source to be added to this type as a node.
+         * @return The type with the added node.
+         * @throws IllegalArgumentException if the node would lead to an invalid Type.
+         */
+        public Type addSource(String source) {
+            Type ret = new Type(this.graph);
+            ret.graph.addVertex(source);
+            if (!ret.processUpdates()) {
+                throw new IllegalArgumentException("Adding node " + source + " to type " + this.toString()
+                        + " led to invalid type.");
+            }
+            return ret;
+        }
+
+        /**
+         * Creates a copy of this type with an additional dependency edge. If an edge between the vertices already
+         * exists, the label of that edge is replaced and no warning is given. To add a default edge (with no rename)
+         * from source A to source B, call <code>setDependency(A,B,B)</code>. The original type is never modified.
+         * @param sourceVertex The node the edge originates from.
+         * @param targetVertex The node where the edge goes to.
+         * @param label The edge label
+         * @return The type with the added edge.
+         * @throws IllegalArgumentException if the edge would lead to an invalid Type.
+         */
+        public Type setDependency(String sourceVertex, String targetVertex, String label) throws IllegalArgumentException {
+            if (label == null || sourceVertex == null || targetVertex == null) {
+                throw new IllegalArgumentException(new NullPointerException());
+            }
+            Type ret = new Type(this.graph);
+            // remove possible existing edge (does nothing if edge does not exist)
+            ret.graph.removeEdge(sourceVertex, targetVertex);
+            // add new edge
+            Edge edge = new Edge(sourceVertex, targetVertex, label);
+            try {
+                ret.graph.addDagEdge(sourceVertex, targetVertex, edge);
+            } catch (CycleFoundException e) {
+                throw new IllegalArgumentException(e);
+            }
+            if (!ret.processUpdates()) {
+                throw new IllegalArgumentException("Setting dependency in "+this.toString()+" from "
+                    + sourceVertex + " to " + targetVertex + " with label " + label + " led to invalid type.");
+            }
+            return ret;
+        }
         
         
         @Override
@@ -934,7 +982,6 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return false;
         }
     }
-
-
+    
 
 }
