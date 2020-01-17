@@ -25,37 +25,60 @@ import java.util.Objects;
  * @author JG
  */
 public class AMDependencyTree {
+
+    private final Pair<SGraph, Type> headGraph; // label at this node
+    private final List<String> operations; //operations that combine the children with headGraph
+    private final List<AMDependencyTree> children; // child dependeny trees below.
+    // The implementation should guarantee operations.size() == children.size() at all times.
     
-    // left is operation that combines this with parent (always null at top node)
-    // right is graph constant at this node as a string, such that
-    // ApplyModifyGraphAlgebra#parseString can read it.
-    private final Tree<Pair<String, Pair<SGraph, Type>>> tree;
-    
-    public AMDependencyTree(Pair<SGraph, Type> graph) throws ParserException {
-        tree = makeNode(null, graph);
-    }
-    
-    
-    public void addEdge(String operation, Pair<SGraph, Type> graph) {
-        tree.getChildren().add(makeNode(operation, graph));
-    }
-    
-    private Tree<Pair<String, Pair<SGraph, Type>>> makeNode(String operation, Pair<SGraph, Type> node) {
-        return Tree.create(new Pair(operation, node), new ArrayList<>());
-    }
-    
-    
-    public void addEdge(String operation, AMDependencyTree childTree) {
-        childTree.tree.setLabel(new Pair(operation, childTree.tree.getLabel().right));
-        tree.getChildren().add(childTree.tree);
+    public AMDependencyTree(Pair<SGraph, Type> headGraph) throws ParserException {
+        this.headGraph = headGraph;
+        this.operations = new ArrayList<>();
+        this.children = new ArrayList<>();
     }
 
     /**
-     * childTree must include at the top level the operation that combines it with this tree.
+     * Combines addEdge and AMDependencyTree constructor for the argument in one function.
+     * @param operation
+     * @param graph
+     * @return the AMDependencyTree just added as a child.
+     */
+    public AMDependencyTree addEdge(String operation, Pair<SGraph, Type> graph) throws ParserException {
+        operations.add(operation);
+        AMDependencyTree newDepTree = new AMDependencyTree(graph);
+        children.add(newDepTree);
+        return newDepTree;
+    }
+
+
+    /**
+     * Adds the childTree as a child to this tree, with the given operation. Note that this modifies the childTree
+     * to now contain the operation at the top level.
+     * @param operation
      * @param childTree
      */
-    public void removeEdge(AMDependencyTree childTree) {
-        tree.getChildren().remove(childTree.tree);
+    public void addEdge(String operation, AMDependencyTree childTree) {
+        operations.add(operation);
+        children.add(childTree);
+    }
+
+    /**
+     * Removes a child from the tree. Both the child tree and the operation on the edge to it must match.
+     * If multiple children are equal (same operation and same AMDependencyTree below), then only one is removed.
+     * If no such child is in this tree, the tree remains unchanged. Returns true iff such a child was contained in this tree.
+     * (Overall, the behaviour is aimed to be the one of List#remove.)
+     * @param childTree
+     */
+    public boolean removeEdge(String operation, AMDependencyTree childTree) {
+        // note that operations.size() == children.size()
+        for (int i = 0; i<operations.size(); i++) {
+            if (operations.get(i).equals(operation) && children.get(i).equals(childTree)) {
+                operations.remove(i);
+                children.remove(i);
+                return true;
+            }
+        }
+        return false;
     }
     
     
@@ -65,68 +88,60 @@ public class AMDependencyTree {
      */
     public Pair<SGraph, Type> evaluate() {
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
-        return tree.dfs((Tree<Pair<String, Pair<SGraph, Type>>> localTree, List<Pair<SGraph, Type>> childResults) -> {
-//            System.err.println(localTree);
-//            System.err.println(childResults);
-//            System.err.println();
-            
-            if (childResults.contains(null)) {
-                return null;
-            }
-            Type localType;
-            Pair<SGraph, Type> current;
-            localType = localTree.getLabel().right.right;
-            current = localTree.getLabel().right;
-            IntList todo = new IntArrayList();
-            for (int i = 0; i<localTree.getChildren().size(); i++) {
-                todo.add(i);
-            }
-            IntSet covered = new IntOpenHashSet();
-            
-            // do all modifications first. Return null if not well typed.
-            for (int i : todo) {
-                String operation = localTree.getChildren().get(i).getLabel().left;
-                if (operation.startsWith(ApplyModifyGraphAlgebra.OP_MODIFICATION)) {
+        List<Pair<SGraph, Type>> childResults = Lists.transform(children, child -> child.evaluate());
+        if (childResults.contains(null)) {
+            return null;
+        }
+        Pair<SGraph, Type> current = headGraph;
+        IntList todo = new IntArrayList();
+        for (int i = 0; i<childResults.size(); i++) {
+            todo.add(i);
+        }
+        IntSet covered = new IntOpenHashSet();
+
+        // do all modifications first. Return null if not well typed.
+        for (int i : todo) {
+            String operation = operations.get(i);
+            if (operation.startsWith(ApplyModifyGraphAlgebra.OP_MODIFICATION)) {
 //                    System.err.println("before "+operation+": "+current);
-                    current = alg.evaluateOperation(operation, current, childResults.get(i));
-                    covered.add(i);
+                current = alg.evaluateOperation(operation, current, childResults.get(i));
+                covered.add(i);
 //                    System.err.println("after: "+current);
 //                    System.err.println();
-                }
             }
-            
-            todo.removeAll(covered);
-            covered.clear();
-            
-            // keep doing applications with origins of localType until all edges are consumed. Return null if not well typed.
-            boolean changed = true;
-            while (changed) {
-                changed = false;
-                for (int i : todo) {
-                    String operation = localTree.getChildren().get(i).getLabel().left;
-                    assert operation.startsWith(ApplyModifyGraphAlgebra.OP_APPLICATION);
-                    String appSource = operation.substring(ApplyModifyGraphAlgebra.OP_APPLICATION.length());
-                    if (current == null) {
-                        return null;
-                    }
-                    if (current.right.canApplyNow(appSource)) {
+        }
+
+        todo.removeAll(covered);
+        covered.clear();
+
+        // keep doing applications with origins of localType until all edges are consumed. Return null if not well typed.
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (int i : todo) {
+                String operation = operations.get(i);
+                assert operation.startsWith(ApplyModifyGraphAlgebra.OP_APPLICATION);
+                String appSource = operation.substring(ApplyModifyGraphAlgebra.OP_APPLICATION.length());
+                if (current == null) {
+                    return null;
+                }
+                if (current.right.canApplyNow(appSource)) {
 //                        System.err.println("before "+operation+": "+current);
-                        changed = true;
-                        covered.add(i);
-                        current = alg.evaluateOperation(operation, current, childResults.get(i));
+                    changed = true;
+                    covered.add(i);
+                    current = alg.evaluateOperation(operation, current, childResults.get(i));
 //                        System.err.println("after: "+current);
 //                        System.err.println();
-                    }
                 }
-                todo.removeAll(covered);
-                covered.clear();
             }
-            if (todo.isEmpty()) {
-                return current;
-            } else {
-                return null;
-            }
-        });
+            todo.removeAll(covered);
+            covered.clear();
+        }
+        if (todo.isEmpty()) {
+            return current;
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -134,17 +149,31 @@ public class AMDependencyTree {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AMDependencyTree that = (AMDependencyTree) o;
-        return Objects.equals(tree, that.tree);
+        return Objects.equals(headGraph, that.headGraph) &&
+                Objects.equals(operations, that.operations) &&
+                Objects.equals(children, that.children);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tree);
+        return Objects.hash(headGraph, operations, children);
     }
 
     @Override
     public String toString() {
-        return tree.toString();
+        return toStringRecursive("");
+    }
+
+    final static String DEFAULT_TO_STRING_PREFIX = "  ";
+    private String toStringRecursive(String prefix) {
+        StringBuilder ret = new StringBuilder(headGraph.left.toIsiAmrStringWithSources()+ GRAPH_TYPE_SEP+headGraph.right.toString());
+        ret.append("\n");
+        // note that operations.size() == children.size()
+        for (int i = 0; i<operations.size(); i++) {
+            ret.append(prefix).append(operations.get(i));
+            ret.append(" [ "+children.get(i).toStringRecursive(prefix + DEFAULT_TO_STRING_PREFIX));
+        }
+        return ret.toString();
     }
 
     public static void main(String[] args) throws ParserException {
@@ -172,6 +201,8 @@ public class AMDependencyTree {
         tGiraffe.addEdge(modM, alg.parseString(tall));
         tGiraffe.addEdge(modM, alg.parseString(tall));
         tWant.addEdge(modM, alg.parseString(not));
+        System.err.println(tWant);
+        System.err.println(tGiraffe);
 
         SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
         SGraph gEat = new IsiAmrInputCodec().read("(e<root>/eat-01 :ARG0 (g/giraffe))");

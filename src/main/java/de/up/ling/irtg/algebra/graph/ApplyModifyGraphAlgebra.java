@@ -982,6 +982,6 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return false;
         }
     }
-    
+
 
 }
