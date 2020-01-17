@@ -5,20 +5,20 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.ParserException;
-import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP;
 import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.Type;
-import de.up.ling.irtg.codec.IsiAmrInputCodec;
-import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+
+import java.util.*;
+
+import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_SEP;
 
 /**
  * TODO unify / make compatible with the AMDependencyTree class in am-tools
@@ -27,39 +27,35 @@ import java.util.Objects;
 public class AMDependencyTree {
 
     private final Pair<SGraph, Type> headGraph; // label at this node
-    private final List<String> operations; //operations that combine the children with headGraph
-    private final List<AMDependencyTree> children; // child dependeny trees below.
-    // The implementation should guarantee operations.size() == children.size() at all times.
+    private final List<Pair<String, AMDependencyTree>> operationsAndChildren; //operations that combine the children with headGraph
     
-    public AMDependencyTree(Pair<SGraph, Type> headGraph) throws ParserException {
+    public AMDependencyTree(Pair<SGraph, Type> headGraph, Pair<String, AMDependencyTree>... operationsAndChildren) throws ParserException {
         this.headGraph = headGraph;
-        this.operations = new ArrayList<>();
-        this.children = new ArrayList<>();
+        this.operationsAndChildren = new ArrayList<>();
+        this.operationsAndChildren.addAll(Arrays.asList(operationsAndChildren));
     }
 
     /**
      * Combines addEdge and AMDependencyTree constructor for the argument in one function.
      * @param operation
      * @param graph
-     * @return the AMDependencyTree just added as a child.
+     * @return the new AMDependency tree just added as a child.
      */
     public AMDependencyTree addEdge(String operation, Pair<SGraph, Type> graph) throws ParserException {
-        operations.add(operation);
         AMDependencyTree newDepTree = new AMDependencyTree(graph);
-        children.add(newDepTree);
+        operationsAndChildren.add(new Pair(operation, newDepTree));
         return newDepTree;
     }
 
 
     /**
-     * Adds the childTree as a child to this tree, with the given operation. Note that this modifies the childTree
+     * Returns a copy of Adds the childTree as a child to this tree, with the given operation. Note that this modifies the childTree
      * to now contain the operation at the top level.
      * @param operation
      * @param childTree
      */
     public void addEdge(String operation, AMDependencyTree childTree) {
-        operations.add(operation);
-        children.add(childTree);
+        operationsAndChildren.add(new Pair(operation, childTree));
     }
 
     /**
@@ -71,16 +67,13 @@ public class AMDependencyTree {
      */
     public boolean removeEdge(String operation, AMDependencyTree childTree) {
         // note that operations.size() == children.size()
-        for (int i = 0; i<operations.size(); i++) {
-            if (operations.get(i).equals(operation) && children.get(i).equals(childTree)) {
-                operations.remove(i);
-                children.remove(i);
-                return true;
-            }
-        }
-        return false;
+        return operationsAndChildren.remove(new Pair(operation, childTree));
     }
-    
+
+
+    public Collection<Pair<String, AMDependencyTree>> getOutgoingEdges() {
+        return operationsAndChildren;
+    }
     
     /**
      * Returns null if the dependency tree is not well typed.
@@ -88,7 +81,13 @@ public class AMDependencyTree {
      */
     public Pair<SGraph, Type> evaluate() {
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
-        List<Pair<SGraph, Type>> childResults = Lists.transform(children, child -> child.evaluate());
+        List<String> operations = new ArrayList<>();
+        List<AMDependencyTree> childTrees = new ArrayList<>();
+        for (Pair<String, AMDependencyTree> operationAndChild : operationsAndChildren) {
+            operations.add(operationAndChild.left);
+            childTrees.add(operationAndChild.right);
+        }
+        List<Pair<SGraph, Type>> childResults = Lists.transform(childTrees, child -> child.evaluate());
         if (childResults.contains(null)) {
             return null;
         }
@@ -150,13 +149,13 @@ public class AMDependencyTree {
         if (o == null || getClass() != o.getClass()) return false;
         AMDependencyTree that = (AMDependencyTree) o;
         return Objects.equals(headGraph, that.headGraph) &&
-                Objects.equals(operations, that.operations) &&
-                Objects.equals(children, that.children);
+                Objects.equals(HashMultiset.create(operationsAndChildren),
+                        HashMultiset.create(that.operationsAndChildren));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(headGraph, operations, children);
+        return Objects.hash(headGraph, HashMultiset.create(operationsAndChildren));
     }
 
     @Override
@@ -169,50 +168,80 @@ public class AMDependencyTree {
         StringBuilder ret = new StringBuilder(headGraph.left.toIsiAmrStringWithSources()+ GRAPH_TYPE_SEP+headGraph.right.toString());
         ret.append("\n");
         // note that operations.size() == children.size()
-        for (int i = 0; i<operations.size(); i++) {
-            ret.append(prefix).append(operations.get(i));
-            ret.append(" [ "+children.get(i).toStringRecursive(prefix + DEFAULT_TO_STRING_PREFIX));
+        for (Pair<String, AMDependencyTree> operationAndChild : operationsAndChildren) {
+            ret.append(prefix).append(operationAndChild.left);
+            ret.append(" [ "+operationAndChild.right.toStringRecursive(prefix + DEFAULT_TO_STRING_PREFIX));
         }
         return ret.toString();
     }
 
     public static void main(String[] args) throws ParserException {
 
+
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
-
-
         String giraffe = "(g<root>/giraffe)";
-        String swim = "(e<root>/swim-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
-        String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
-        String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
-        String not = "(n<root>/\"-\" :polarity-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
-        String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
-        String appS = "APP_s";
-        String appO = "APP_o";
-        String modM = "MOD_m";
-
-
-
-        AMDependencyTree tWant = new AMDependencyTree(alg.parseString(want));
         AMDependencyTree tGiraffe = new AMDependencyTree(alg.parseString(giraffe));
+        String modM = "MOD_m";
+        String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
+        tGiraffe.addEdge(modM, alg.parseString(tall));
+        tGiraffe.addEdge(modM, alg.parseString(tall));
+        System.err.println(tGiraffe.equals(tGiraffe));
 
+        Multiset<Pair<String, AMDependencyTree>> test = HashMultiset.create();
+        test.add(new Pair("x", tGiraffe));
+        System.err.println(test.remove(new Pair("x", tGiraffe)));
+        System.err.println(test);
+
+        String appS = "APP_s";
+        String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
+        AMDependencyTree tWant = new AMDependencyTree(alg.parseString(want));
         tWant.addEdge(appS, tGiraffe);
-        tWant.addEdge(appO, alg.parseString(swim));
-        tGiraffe.addEdge(modM, alg.parseString(tall));
-        tGiraffe.addEdge(modM, alg.parseString(tall));
-        tWant.addEdge(modM, alg.parseString(not));
-        System.err.println(tWant);
-        System.err.println(tGiraffe);
+        System.err.println(tWant.removeEdge(appS, tGiraffe));
+        System.err.println(tWant.getOutgoingEdges());
 
-        SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
-        SGraph gEat = new IsiAmrInputCodec().read("(e<root>/eat-01 :ARG0 (g/giraffe))");
-
-        System.err.println(tWant.evaluate().equals(new Pair<>(gWant, Type.EMPTY_TYPE)));
-
-        AMDependencyTree tEat = new AMDependencyTree(alg.parseString(eat));
-        tEat.addEdge(appS, new AMDependencyTree(alg.parseString(giraffe)));
-        System.err.println(tEat.evaluate().equals(new Pair<>(gEat, Type.EMPTY_TYPE)));
-
+//
+//        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
+//
+//
+//        String giraffe = "(g<root>/giraffe)";
+//        String swim = "(e<root>/swim-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
+//        String eat = "(e<root>/eat-01 :ARG0 (s<s>))"+GRAPH_TYPE_SEP+"(s)";
+//        String want = "(w<root>/want-01 :ARG0 (s<s>) :ARG1 (o<o>))"+GRAPH_TYPE_SEP+"(s, o(s))";
+//        String not = "(n<root>/\"-\" :polarity-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
+//        String tall = "(t<root>/tall :mod-of (m<m>))"+GRAPH_TYPE_SEP+"(m)";
+//        String appS = "APP_s";
+//        String appO = "APP_o";
+//        String modM = "MOD_m";
+//
+//
+//
+//        AMDependencyTree tWant = new AMDependencyTree(alg.parseString(want));
+//        AMDependencyTree tGiraffe = new AMDependencyTree(alg.parseString(giraffe));
+//
+//        tWant.addEdge(appS, tGiraffe);
+//        tWant.addEdge(appO, alg.parseString(swim));
+//        tGiraffe.addEdge(modM, alg.parseString(tall));
+//        tGiraffe.addEdge(modM, alg.parseString(tall));
+//        tWant.addEdge(modM, alg.parseString(not));
+//        System.err.println(tWant);
+//        System.err.println(tWant.getOutgoingEdges());
+//        System.err.println(tGiraffe);
+//        System.err.println(tGiraffe.getOutgoingEdges());
+//        System.err.println(tWant.removeEdge(appS, tGiraffe));
+//        System.err.println(tWant);
+//        System.err.println(tWant.removeEdge(modM, new AMDependencyTree(alg.parseString(not))));
+//        System.err.println(tWant.removeEdge(appS, tGiraffe));
+//        System.err.println(tWant);
+//
+//        SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
+//        SGraph gEat = new IsiAmrInputCodec().read("(e<root>/eat-01 :ARG0 (g/giraffe))");
+//
+//        System.err.println(tWant.evaluate().equals(new Pair<>(gWant, Type.EMPTY_TYPE)));
+//
+//        AMDependencyTree tEat = new AMDependencyTree(alg.parseString(eat));
+//        tEat.addEdge(appS, new AMDependencyTree(alg.parseString(giraffe)));
+//        System.err.println(tEat.evaluate().equals(new Pair<>(gEat, Type.EMPTY_TYPE)));
+//
 
 
 

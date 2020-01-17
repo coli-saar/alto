@@ -39,11 +39,63 @@ class AMDependencyTreeTest {
         tGiraffe.addEdge(modM, tall);
         tGiraffe.addEdge(modM, tall);
         tWant.addEdge(modM, not);
+        assert tWant.getOutgoingEdges().size() == 3;
+        assert tGiraffe.getOutgoingEdges().size() == 2;
         SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
         assert tWant.evaluate().equals(new Pair< >(gWant, ApplyModifyGraphAlgebra.Type.EMPTY_TYPE));
     }
 
+    @Test
+    void testBadTree() {
+        AMDependencyTree tWant = new AMDependencyTree(want);
+        AMDependencyTree tGiraffe = new AMDependencyTree(giraffe);
+        tWant.addEdge(appS, tGiraffe);
+        assert tWant.evaluate() == null;
+    }
 
+    @Test
+    void testRemoveEdges() {
+        AMDependencyTree tWant = new AMDependencyTree(want);
+        AMDependencyTree tGiraffe = new AMDependencyTree(giraffe);
+
+        tWant.addEdge(appS, tGiraffe);
+        tWant.addEdge(appO, swim);
+        tGiraffe.addEdge(modM, tall);
+        tGiraffe.addEdge(modM, tall);
+        tWant.addEdge(modM, not);
+        assert tWant.removeEdge(appS, tGiraffe);
+        assert tWant.getOutgoingEdges().size() == 2;
+        //remove the negation edge, but we don't know the negation AMDependencyTree at this point, so we need to find it
+        assert tWant.removeEdge(modM, new AMDependencyTree(not));
+        assert tWant.getOutgoingEdges().size() == 1;
+        //now we try to remove some edges that are not there
+        assert !tWant.removeEdge(appS, tGiraffe);
+        assert !tWant.removeEdge(appO, tGiraffe);
+        assert !tWant.removeEdge(appS, new AMDependencyTree(swim));
+        assert tWant.getOutgoingEdges().size() == 1;
+        //removing final edge, also testing equals function of AMDependencyTree a bit
+        assert tWant.removeEdge(appO, new AMDependencyTree(swim));
+        assert tWant.getOutgoingEdges().isEmpty();
+    }
+
+    @Test
+    void testEquals() {
+        AMDependencyTree tWant = new AMDependencyTree(want);
+        AMDependencyTree tWant2 = new AMDependencyTree(want);
+        assert tWant.hashCode() == tWant2.hashCode() && tWant2.equals(tWant);
+        AMDependencyTree tGiraffe = new AMDependencyTree(giraffe);
+        tGiraffe.addEdge(modM, tall);
+
+        tWant.addEdge(appS, tGiraffe);
+        tWant2.addEdge(appS, new AMDependencyTree(giraffe));
+        assert !tWant2.equals(tWant);
+        tWant2.removeEdge(appS, new AMDependencyTree(giraffe));
+        tWant2.addEdge(appO, new AMDependencyTree(swim));
+        assert !tWant2.equals(tWant);
+        tWant2.addEdge(appS, tGiraffe);
+        tWant.addEdge(appO, swim);
+        assert tWant.hashCode() == tWant2.hashCode() && tWant2.equals(tWant);
+    }
 
 
 
