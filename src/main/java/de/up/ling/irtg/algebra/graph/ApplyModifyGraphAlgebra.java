@@ -98,7 +98,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             
             //rename right sources to temps
-            List<String> orderedSources = new ArrayList(target.getAllSources());
+            List<String> orderedSources = new ArrayList<>(target.getAllSources());
             for (int i = 0; i < orderedSources.size(); i++) {
                 target = target.renameSource(orderedSources.get(i), "temp"+i);
             }
@@ -125,7 +125,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (retGraph == null) {
                 System.err.println("APP merge failed!");
             }
-            return new Pair(retGraph, leftType.performApply(appSource));
+            return new Pair<>(retGraph, leftType.performApply(appSource));
 
         } else if (label.startsWith(OP_MODIFICATION) && childrenValues.size() == 2) {
             String modSource = label.substring(OP_MODIFICATION.length());
@@ -153,13 +153,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (retGraph == null) {
                 System.err.println("MOD merge failed after type checks succeeded! This should not happen, check the code");
             }
-            return new Pair(retGraph, childrenValues.get(0).right);
+            return new Pair<>(retGraph, childrenValues.get(0).right);
         } else {
             try {
                 return parseString(label);
             } catch (ParserException ex) {
-                System.err.println("could not parse label '"+label+"' in the AM algebra! Make sure it is the right format.");
-                return null;
+                throw new RuntimeException("could not parse label '"+label+"' in the AM algebra.");
             }
         }
     }
@@ -174,24 +173,17 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             String[] parts = representation.split(GRAPH_TYPE_SEP);
             try {
-                return new Pair(new IsiAmrInputCodec().read(parts[0]), new Type(parts[1]));
-            } catch (ParseException ex) {
+                return new Pair<>(new IsiAmrInputCodec().read(parts[0]), new Type(parts[1]));
+            } catch (ParseException | IllegalArgumentException ex) {
                 throw new ParserException(ex);
             }
         } else if (representation.startsWith(OP_COREF)) {
             String corefIndex = representation.substring(OP_COREF.length());
             String graphString = "(u<root,COREF" + corefIndex + ">)";
-            try {
-                return new Pair(new IsiAmrInputCodec().read(graphString), new Type("()"));
-            } catch (ParseException ex) {
-                throw new ParserException(ex);
-            }
+            return new Pair<>(new IsiAmrInputCodec().read(graphString), Type.EMPTY_TYPE);
         } else {
-            try {
-                return new Pair(new IsiAmrInputCodec().read(representation), new Type("()"));
-            } catch (ParseException ex) {
-                throw new ParserException(ex);
-            }
+            //TODO should maybe have a default case where we just put all non-root sources in the type.
+            return new Pair<>(new IsiAmrInputCodec().read(representation), Type.EMPTY_TYPE);
         }
     }
 
@@ -208,9 +200,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             Type temp;
             try {
                 temp = new Type("()");
-            } catch (ParseException ex) {
+            } catch (ParseException | IllegalArgumentException ex) {
                 temp = null;
-                System.err.println("this should really never happen");
+                System.err.println("Creating EMPTY_TYPE in ApplyModifyGraphAlgebra.Type failed. this should really never happen");
             }
             EMPTY_TYPE = temp;
         }

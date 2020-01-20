@@ -419,7 +419,8 @@ public class AMDecompositionAutomaton extends TreeAutomaton<Pair<BoundaryReprese
                 }
             });
             return rules;
-        } catch (ParseException ex) {
+        } catch (ParseException | IllegalArgumentException ex) {
+            System.err.println("WARNING: AMDecompositionAutomaton failed to parse constant '"+label+"'");
             return Collections.EMPTY_LIST;
         }
     }
