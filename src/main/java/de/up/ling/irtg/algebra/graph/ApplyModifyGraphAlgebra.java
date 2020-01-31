@@ -168,13 +168,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (retGraph == null) {
                 System.err.println("MOD merge failed after type checks succeeded! This should not happen, check the code");
             }
-            return new Pair<>(retGraph, childrenValues.get(0).right);
+            return new Pair<>(retGraph, head.right);
         } else {
-            try {
-                return parseString(label);
-            } catch (ParserException ex) {
-                throw new RuntimeException("could not understand operation '"+operation+"' in the AM algebra! Make sure it is the right format.");
-            }
+            throw new RuntimeException("could not understand operation '"+operation+"' in the AM algebra! Make sure it is the right format.");
         }
     }
 
