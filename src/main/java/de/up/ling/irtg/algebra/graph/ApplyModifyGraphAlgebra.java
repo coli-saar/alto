@@ -84,8 +84,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
         if (childrenValues.size() == 2) {
             return evaluateOperation(label, childrenValues.get(0), childrenValues.get(1));
-        }
-         else {
+        } else {
             try {
                 return parseString(label);
             } catch (ParserException ex) {
@@ -168,13 +167,9 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             if (retGraph == null) {
                 System.err.println("MOD merge failed after type checks succeeded! This should not happen, check the code");
             }
-            return new Pair<>(retGraph, childrenValues.get(0).right);
+            return new Pair<>(retGraph, head.right);
         } else {
-            try {
-                return parseString(label);
-            } catch (ParserException ex) {
-                throw new RuntimeException("could not understand operation '"+operation+"' in the AM algebra! Make sure it is the right format.");
-            }
+            throw new RuntimeException("could not understand operation '"+operation+"' in the AM algebra! Make sure it is the right format.");
         }
     }
 
@@ -977,6 +972,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
 
             return false;
         }
+    }
+
+    public static void main(String[] args) throws ParseException {
+        Type tParent = new Type("(o2(s_UNIFY_o()), s())");
+        Type tChild = new Type("(s(), o())");
+        System.err.println(tParent.canApplyTo(tChild, "o2"));
     }
 
 
