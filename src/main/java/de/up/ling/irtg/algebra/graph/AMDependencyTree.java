@@ -143,6 +143,20 @@ public class AMDependencyTree {
         }
     }
 
+    /**
+     * Returns all subtrees of this dependency tree (including the full tree). The list is in arbitrary order, but contains
+     * identical subtrees that occur multiple times in that multiplicity.
+     * @return
+     */
+    public List<AMDependencyTree> getAllSubtrees() {
+        List<AMDependencyTree> ret = new ArrayList<>();
+        ret.add(this);
+        for (Pair<String, AMDependencyTree> opAndChild : operationsAndChildren) {
+            ret.addAll(opAndChild.right.getAllSubtrees());
+        }
+        return ret;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
