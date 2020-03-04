@@ -22,6 +22,7 @@ import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_S
 
 /**
  * TODO unify / make compatible with the AMDependencyTree class in am-tools
+ * TODO test that all public functions return the same thing, even if internal list is different in two AMDependencyTrees
  * @author JG
  */
 public class AMDependencyTree {
@@ -70,10 +71,6 @@ public class AMDependencyTree {
         return operationsAndChildren.remove(new Pair(operation, childTree));
     }
 
-
-    public Collection<Pair<String, AMDependencyTree>> getOutgoingEdges() {
-        return operationsAndChildren;
-    }
     
     /**
      * Returns null if the dependency tree is not well typed.
@@ -144,17 +141,36 @@ public class AMDependencyTree {
     }
 
     /**
-     * Returns all subtrees of this dependency tree (including the full tree). The list is in arbitrary order, but contains
-     * identical subtrees that occur multiple times in that multiplicity.
+     * Returns all subtrees of this dependency tree (including the full tree). The Multiset has no order, and contains
+     * identical subtrees as often as they occur as subtrees.
      * @return
      */
-    public List<AMDependencyTree> getAllSubtrees() {
-        List<AMDependencyTree> ret = new ArrayList<>();
+    public Multiset<AMDependencyTree> getAllSubtrees() {
+        Multiset<AMDependencyTree> ret = HashMultiset.create();
         ret.add(this);
         for (Pair<String, AMDependencyTree> opAndChild : operationsAndChildren) {
             ret.addAll(opAndChild.right.getAllSubtrees());
         }
         return ret;
+    }
+
+    /**
+     * The returned multiset contains, for each child of this tree, a pair of the child (left) and the operation
+     * connecting this parent to the child (right).
+     * @return
+     */
+    public Multiset<Pair<String, AMDependencyTree>> getOperationsAndChildren() {
+        Multiset<Pair<String, AMDependencyTree>> ret = HashMultiset.create();
+        ret.addAll(operationsAndChildren);
+        return ret;
+    }
+
+    /**
+     * Returns the as-graph at the head of this dependency tree.
+     * @return
+     */
+    public Pair<SGraph, Type> getHeadGraph() {
+        return headGraph;
     }
 
     @Override
@@ -211,7 +227,7 @@ public class AMDependencyTree {
         AMDependencyTree tWant = new AMDependencyTree(alg.parseString(want));
         tWant.addEdge(appS, tGiraffe);
         System.err.println(tWant.removeEdge(appS, tGiraffe));
-        System.err.println(tWant.getOutgoingEdges());
+        System.err.println(tWant.getOperationsAndChildren());
 
 //
 //        ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();

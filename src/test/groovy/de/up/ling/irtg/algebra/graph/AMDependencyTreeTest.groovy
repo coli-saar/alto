@@ -39,8 +39,8 @@ class AMDependencyTreeTest {
         tGiraffe.addEdge(modM, tall);
         tGiraffe.addEdge(modM, tall);
         tWant.addEdge(modM, not);
-        assert tWant.getOutgoingEdges().size() == 3;
-        assert tGiraffe.getOutgoingEdges().size() == 2;
+        assert tWant.getOperationsAndChildren().size() == 3;
+        assert tGiraffe.getOperationsAndChildren().size() == 2;
         SGraph gWant = new IsiAmrInputCodec().read("(w<root>/want-01 :ARG0 (g/giraffe :mod (t/tall) :mod (t2/tall)) :ARG1 (s/swim-01 :ARG0 g) :polarity (n/\"-\"))");
         assert tWant.evaluate().equals(new Pair< >(gWant, ApplyModifyGraphAlgebra.Type.EMPTY_TYPE));
     }
@@ -64,18 +64,18 @@ class AMDependencyTreeTest {
         tGiraffe.addEdge(modM, tall);
         tWant.addEdge(modM, not);
         assert tWant.removeEdge(appS, tGiraffe);
-        assert tWant.getOutgoingEdges().size() == 2;
+        assert tWant.getOperationsAndChildren().size() == 2;
         //remove the negation edge, but we don't know the negation AMDependencyTree at this point, so we need to find it
         assert tWant.removeEdge(modM, new AMDependencyTree(not));
-        assert tWant.getOutgoingEdges().size() == 1;
+        assert tWant.getOperationsAndChildren().size() == 1;
         //now we try to remove some edges that are not there
         assert !tWant.removeEdge(appS, tGiraffe);
         assert !tWant.removeEdge(appO, tGiraffe);
         assert !tWant.removeEdge(appS, new AMDependencyTree(swim));
-        assert tWant.getOutgoingEdges().size() == 1;
+        assert tWant.getOperationsAndChildren().size() == 1;
         //removing final edge, also testing equals function of AMDependencyTree a bit
         assert tWant.removeEdge(appO, new AMDependencyTree(swim));
-        assert tWant.getOutgoingEdges().isEmpty();
+        assert tWant.getOperationsAndChildren().isEmpty();
     }
 
     @Test
