@@ -27,10 +27,10 @@ import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_S
  */
 public class AMDependencyTree {
 
-    private final Pair<SGraph, Type> headGraph; // label at this node
+    private Pair<SGraph, Type> headGraph; // label at this node
     private final List<Pair<String, AMDependencyTree>> operationsAndChildren; //operations that combine the children with headGraph
     
-    public AMDependencyTree(Pair<SGraph, Type> headGraph, Pair<String, AMDependencyTree>... operationsAndChildren) throws ParserException {
+    public AMDependencyTree(Pair<SGraph, Type> headGraph, Pair<String, AMDependencyTree>... operationsAndChildren) {
         this.headGraph = headGraph;
         this.operationsAndChildren = new ArrayList<>();
         this.operationsAndChildren.addAll(Arrays.asList(operationsAndChildren));
@@ -69,6 +69,14 @@ public class AMDependencyTree {
     public boolean removeEdge(String operation, AMDependencyTree childTree) {
         // note that operations.size() == children.size()
         return operationsAndChildren.remove(new Pair(operation, childTree));
+    }
+
+    /**
+     * Changes the head graph of this AMDependencyTree.
+     * @param newHeadGraph
+     */
+    public void setHeadGraph(Pair<SGraph, Type> newHeadGraph) {
+        this.headGraph = newHeadGraph;
     }
 
     
