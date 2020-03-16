@@ -849,8 +849,22 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             return true;
         }
 
-        
-        
+        /**
+         * Returns an unmodifiable set of all nodes (sources) in this type.
+         * @return
+         */
+        public Set<String> getAllSources() {
+            return Collections.unmodifiableSet(graph.vertexSet());
+        }
+
+        /**
+         * Returns an unmodifiable set of all edges in this type.
+         * @return
+         */
+        public Set<Edge> getAllEdges() {
+            return Collections.unmodifiableSet(graph.edgeSet());
+        }
+
         
         /**
          * Just a simple helper class for edges between nodes that are
@@ -858,13 +872,13 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * The GraphEdge class does not work here, since that requires
          * GraphNode objects 
          */
-        private static class Edge {
+        public static class Edge {
         
             private final String source;
             private final String target;
             private final String label;
 
-            public Edge(String source, String target, String label) {
+            private Edge(String source, String target, String label) {
                 this.source = source;
                 this.target = target;
                 this.label = label;
@@ -920,10 +934,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
                 return source + "-" + label +  "->" + target;
             }
 
-
-
         }
-        
     }
     
     
