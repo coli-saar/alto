@@ -2,7 +2,7 @@ plugins {
     id 'pl.allegro.tech.build.axion-release' version '1.10.1'
     id 'application'
     id 'java'
-	id 'java-library'
+    id 'java-library'
     id 'maven-publish'
     id 'groovy'
     id 'antlr'
@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-	antlr   'org.antlr:antlr4:4.7.2'
+    antlr   'org.antlr:antlr4:4.7.2'
     api 'com.github.coli-saar:basics:2909d4b20d9a9cb47ef'
     api 'it.unimi.dsi:fastutil:8.2.2'
     implementation 'org.springframework:spring-jdbc:4.2.2.RELEASE'
@@ -34,7 +34,15 @@ dependencies {
     implementation 'com.google.guava:guava:27.0.1-jre'
     implementation 'com.google.code.findbugs:jsr305:3.0.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
-    implementation 'cc.mallet:mallet:2.0.7'
+    /*
+     Mallet incorrectly depends on junit 4.10 even for their runtime code,
+     which breaks junit 5 tests in some scenarios.  It is not needed
+     at all and we therefore exclude it because otherwise we would export
+     it transitively as well.
+     */
+    implementation ('cc.mallet:mallet:2.0.7') {
+        exclude module: "junit"
+    }
     implementation 'com.bric.window:windowmenu:1.0'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
