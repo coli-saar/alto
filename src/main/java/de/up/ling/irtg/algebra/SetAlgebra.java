@@ -219,8 +219,8 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
             ret = member(childrenValues.get(0), arg(label));
         } else if (label.equals(DIFFERENCE)) {
             ret = childrenValues.get(0);
-            for (Set<List<String>> i: childrenValues) {
-                ret = Sets.difference(ret, i);
+            for (int i=1; i < childrenValues.size(); i++) {
+                ret = Sets.difference(ret, childrenValues.get(i));
             }
         } else if (label.equals(TOP)) {
             ret = model.getUniverseAsTuples();
