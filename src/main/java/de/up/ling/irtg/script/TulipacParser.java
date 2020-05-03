@@ -34,6 +34,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
@@ -188,58 +190,63 @@ public class TulipacParser {
 
         String line;
 
-        mainLoop:
-        while ((line = cr.readLine("parse> ")) != null) {
-            // check whether line was a command
-            for (Command c : commands) {
-                if (c.command.equalsIgnoreCase(line)) {
-                    c.action.perform();
-                    continue mainLoop;
+        try {
+            mainLoop:
+            while ((line = cr.readLine("parse> ")) != null) {
+                // check whether line was a command
+                for (Command c : commands) {
+                    if (c.command.equalsIgnoreCase(line)) {
+                        c.action.perform();
+                        continue mainLoop;
+                    }
                 }
-            }
 
-            // otherwise, parse sentence
-            long start = System.nanoTime();
-            Object inp = sa.parseString(line);
-            TreeAutomaton chart = irtg.parseWithSiblingFinder("string", inp);
-            TreeAutomaton filtered = chart;
-            System.out.printf("computed chart: %s\n", Util.formatTimeSince(start));
+                // otherwise, parse sentence
+                long start = System.nanoTime();
+                Object inp = sa.parseString(line);
+                TreeAutomaton chart = irtg.parseWithSiblingFinder("string", inp);
+                TreeAutomaton filtered = chart;
+                System.out.printf("computed chart: %s\n", Util.formatTimeSince(start));
 
-            Tree<String> dt = chart.viterbi();
-            if (dt == null) {
-                System.out.printf("No parse found (even while ignoring features).\n");
-                System.out.println();
-                continue mainLoop;
-            }
-
-            if (hasFeatures) {
-                start = System.nanoTime();
-                filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(fh));
-                System.out.printf("filtered chart for feature structures: %s\n", Util.formatTimeSince(start));
-
-                if (filtered.viterbi() == null) {
-                    System.out.printf("Found parses, but they all violate the constraints from the feature structures.\n");
-                    debugAnalysis(dt, irtg);
+                Tree<String> dt = chart.viterbi();
+                if (dt == null) {
+                    System.out.printf("No parse found (even while ignoring features).\n");
                     System.out.println();
                     continue mainLoop;
                 }
-            }
 
-            JLanguageViewer lv = new JLanguageViewer();
-            lv.setAutomaton(filtered, irtg);
-            lv.setTitle(String.format("Parses of '%s'", line));
-            lv.addView("tree");
-            if (hasFeatures) {
-                lv.addView("ft");
+                if (hasFeatures) {
+                    start = System.nanoTime();
+                    filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(fh));
+                    System.out.printf("filtered chart for feature structures: %s\n", Util.formatTimeSince(start));
+
+                    if (filtered.viterbi() == null) {
+                        System.out.printf("Found parses, but they all violate the constraints from the feature structures.\n");
+                        debugAnalysis(dt, irtg);
+                        System.out.println();
+                        continue mainLoop;
+                    }
+                }
+
+                JLanguageViewer lv = new JLanguageViewer();
+                lv.setAutomaton(filtered, irtg);
+                lv.setTitle(String.format("Parses of '%s'", line));
+                lv.addView("tree");
+                if (hasFeatures) {
+                    lv.addView("ft");
+                }
+                lv.pack();
+                lv.setVisible(true);
+
+                System.out.println();
             }
-            lv.pack();
-            lv.setVisible(true);
 
             System.out.println();
+            System.exit(0);
+        } catch (EndOfFileException e) {
+            System.out.println("Quit.");
+            System.exit(0);
         }
-
-        System.out.println();
-        System.exit(0);
     }
 
     private static void debugAnalysis(Tree<String> dt, InterpretedTreeAutomaton irtg) {
