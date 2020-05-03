@@ -39,5 +39,12 @@ class FeatureStructureAlgebraTest {
         
         assertThat(fs, is(FeatureStructure.parse("[num: sg]")))
     }
+
+    @Test
+    public void testIssue46() {
+        FeatureStructureAlgebra alg = new FeatureStructureAlgebra()
+        FeatureStructure fs = alg.evaluate(pt("unify(emb_n2(proj_root('[n1b: #1 [], n1t: #1, root: #1]')),'[]')"))
+        assertThat(fs, is(FeatureStructure.parse("[n2: []]")))
+    }
 }
 

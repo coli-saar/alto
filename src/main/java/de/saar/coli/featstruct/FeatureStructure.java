@@ -136,10 +136,8 @@ public abstract class FeatureStructure {
     
     protected FeatureStructure unify0(FeatureStructure other, long currentTimestamp) {
         boolean unifiable = unify1(other, currentTimestamp);
-        
 
         if (unifiable) {
-//            System.err.println("before copying:\n" + rawToString());
             return copyWithCompArcs(currentTimestamp);
         } else {
             return null;
@@ -384,7 +382,22 @@ public abstract class FeatureStructure {
     }
     
     abstract protected int calculateHashCode();
-    
+
+    /**
+     * Makes a deep copy of this feature structure. The copy has no
+     * nodes in common with the feature structure itself. TODO: The current
+     * implementation is really slow.
+     *
+      * @return
+     */
+    public FeatureStructure deepCopy() {
+        try {
+            return parse(toString());
+        } catch (FsParsingException e) {
+            // This should never happen
+            throw new RuntimeException("Could not reparse " + toString(), e);
+        }
+    }
     
     
     /***************************************************************************
@@ -396,7 +409,8 @@ public abstract class FeatureStructure {
         Map<FeatureStructure, Integer> previouslyPrinted = new IdentityHashMap<>();
         MutableInteger fsId = new MutableInteger(1);
 
-        buf.append("=== Feature structure, global timestamp=" + globalCopyTimestamp + "\n");
+//        buf.append("=== Feature structure, global timestamp=" + globalCopyTimestamp + "\n");
+        buf.append("[t=" + globalCopyTimestamp + "] ");
         appendRawToString(buf, 0);
 
         return buf.toString();

@@ -52,25 +52,27 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
             return null;
         }
 
+
         if (label == null) {
             Logger.getLogger(FeatureStructureAlgebra.class.getName()).log(Level.SEVERE, null, "Cannot evaluate null label");
+//            System.err.println("evaluate -> null"); // AKAKAK
             return null;
         } else if (UNIFY.equals(label)) {
             assert childrenValues.size() == 2;
-            return childrenValues.get(0).unify(childrenValues.get(1));
+            FeatureStructure ret = childrenValues.get(0).unify(childrenValues.get(1));
+//            System.err.println("evaluate1 -> " + ret.rawToString()); // AKAKAK
+            return ret;
         } else if (label.startsWith(PROJ)) {
             assert childrenValues.size() == 1;
-
             String attr = withoutPrefix(label, PROJ);
             FeatureStructure arg = childrenValues.get(0);
-//            System.err.println(arg.rawToString());
-//            System.err.printf("%s -> proj(%s) / of %s / is %s\n", label, attr, arg, arg.get(attr));
-
+//            System.err.println("evaluate2 -> " + arg.get(attr).rawToString()); // AKAKAK
             return arg.get(attr);
         } else if (label.startsWith(EMBED)) {
             assert childrenValues.size() == 1;
             AvmFeatureStructure ret = new AvmFeatureStructure();
             ret.put(withoutPrefix(label, EMBED), childrenValues.get(0));
+//            System.err.println("evaluate3 -> " + ret.rawToString()); // AKAKAK
             return ret;
         } else if (label.startsWith(EMBED_AUX)) {
             assert childrenValues.size() == 1;
@@ -78,11 +80,13 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
             AvmFeatureStructure ret = new AvmFeatureStructure();
             ret.put(parts[1], childrenValues.get(0).get("root"));
             ret.put(parts[2], childrenValues.get(0).get("foot"));
+//            System.err.println("evaluate4 -> " + ret.rawToString()); // AKAKAK
             return ret;
         } else {
             assert childrenValues.isEmpty();
 
             try {
+                // Always return the same FS object for the same literal.
                 FeatureStructure cached = parsedAtoms.get(label);
 
                 if (cached == null) {
@@ -90,9 +94,11 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
                     parsedAtoms.put(label, cached);
                 }
 
+//                System.err.println("evaluate5 -> " + cached.rawToString()); // AKAKAK
                 return cached;
             } catch (FsParsingException ex) {
                 Logger.getLogger(FeatureStructureAlgebra.class.getName()).log(Level.SEVERE, null, ex);
+//                System.err.println("evaluate -> null"); // AKAKAK
                 return null;
             }
         }
@@ -120,6 +126,28 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
         }
     }
 
+    /**
+     * A tree automaton which accepts all terms over this algebra which do not evaluate
+     * to null. Intersect this automaton into a parse chart to filter out derivations with
+     * unification failures.<p>
+     *
+     * The states of this automaton are feature structures, modulo equality; that is, two
+     * feature structures which are equal as per {@link FeatureStructure#equals(Object)} are
+     * conflated into the same state. This suppresses re-derivations of the same feature
+     * structure for the same substring.<p>
+     *
+     * It is guaranteed that no two
+     * of these feature structures have nodes in common. Node sharing between different
+     * FSes in the same chart might improve efficiency, but it is really dangerous
+     * because the unification algorithm in {@link AvmFeatureStructure#unify(FeatureStructure)}
+     * destructively modifies feature structures. In particular, if we first parse the FS
+     * #1 [ft: #2 []], there will be a state #2 []. If we subsequently encounter the state
+     * #3 [], it will be replaced by #2 [] because of the equality caching described above.
+     * Unifying #1 [ft: #2] with #2 [] will fail because it introduced a cycle. This is the
+     * cause behind issue #46.
+     *
+     * @return
+     */
     @Override
     public TreeAutomaton nullFilter() {
         return new TreeAutomaton<FeatureStructure>(signature) {
@@ -132,6 +160,7 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
 
                 FeatureStructure parent = evaluate(op, children);
                 if (parent != null) {
+                    parent = parent.deepCopy(); // deepCopy -> ensure no nodes in common, see #46
                     int parentState = addState(parent);
                     addFinalState(parentState);
 

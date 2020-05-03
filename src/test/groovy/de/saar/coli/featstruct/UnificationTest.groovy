@@ -80,6 +80,15 @@ class UnificationTest {
             "[a: #3 s, b: #3, c: t]"
         )
     }
+
+    @Test
+    public void testIssue46() {
+        testShouldUnify(
+                "[n2: []]",
+                "[]",
+                "[n2: []]"
+        )
+    }
     
     
     
