@@ -280,7 +280,9 @@ public class AvmFeatureStructure extends FeatureStructure {
     /**
      * Makes a deep copy of this feature structure. The copy has no
      * nodes in common with the feature structure itself. This should be a little
-     * faster than the generic implementation from the base class.
+     * faster than the generic implementation from the base class. Limitation:
+     * Not quite certain if this works correctly if the FS contains nodes
+     * which are not instances of {@link AvmFeatureStructure} or {@link PlaceholderFeatureStructure}.
      *
      * @return
      */
@@ -298,12 +300,16 @@ public class AvmFeatureStructure extends FeatureStructure {
             // previously visited this node
             return nodeInCopy;
         } else {
+            // otherwise copy this node
             nodeInCopy = new AvmFeatureStructure();
             originalNodeToCopyNode.put(this, nodeInCopy);
 
+            // iterate over its features
             for (Map.Entry<String, FeatureStructure> edge : avm.entrySet()) {
                 FeatureStructure copyOfChild;
+
                 if (edge.getValue() instanceof AvmFeatureStructure) {
+                    // Child is another AVM => copy it recursively.
                     AvmFeatureStructure child = (AvmFeatureStructure) edge.getValue();
                     copyOfChild = child.recursiveDeepCopy(originalNodeToCopyNode, indexToPlaceholder);
                 } else if (edge.getValue() instanceof PlaceholderFeatureStructure) {
