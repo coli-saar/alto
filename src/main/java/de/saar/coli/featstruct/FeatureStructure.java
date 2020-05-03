@@ -10,12 +10,7 @@ import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -385,8 +380,9 @@ public abstract class FeatureStructure {
 
     /**
      * Makes a deep copy of this feature structure. The copy has no
-     * nodes in common with the feature structure itself. TODO: The current
-     * implementation is really slow.
+     * nodes in common with the feature structure itself. This current
+     * implementation is really slow; derived classes are encouraged
+     * to exploit implementation details to provide faster implementations.
      *
       * @return
      */
@@ -398,6 +394,8 @@ public abstract class FeatureStructure {
             throw new RuntimeException("Could not reparse " + toString(), e);
         }
     }
+
+
     
     
     /***************************************************************************

@@ -6,13 +6,8 @@
 package de.saar.coli.featstruct;
 
 import de.up.ling.irtg.util.Util;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -282,4 +277,55 @@ public class AvmFeatureStructure extends FeatureStructure {
         }
     }
 
+    /**
+     * Makes a deep copy of this feature structure. The copy has no
+     * nodes in common with the feature structure itself. This should be a little
+     * faster than the generic implementation from the base class.
+     *
+     * @return
+     */
+    @Override
+    public FeatureStructure deepCopy() {
+        Map<AvmFeatureStructure, AvmFeatureStructure> originalNodeToCopyNode = new IdentityHashMap<>();
+        Map<String, PlaceholderFeatureStructure> indexToPlaceholder = new HashMap<>();
+        return recursiveDeepCopy(originalNodeToCopyNode, indexToPlaceholder);
+    }
+
+    private AvmFeatureStructure recursiveDeepCopy(Map<AvmFeatureStructure, AvmFeatureStructure> originalNodeToCopyNode, Map<String, PlaceholderFeatureStructure> indexToPlaceholder) {
+        AvmFeatureStructure nodeInCopy = originalNodeToCopyNode.get(this);
+
+        if( nodeInCopy != null ) {
+            // previously visited this node
+            return nodeInCopy;
+        } else {
+            nodeInCopy = new AvmFeatureStructure();
+            originalNodeToCopyNode.put(this, nodeInCopy);
+
+            for (Map.Entry<String, FeatureStructure> edge : avm.entrySet()) {
+                FeatureStructure copyOfChild;
+                if (edge.getValue() instanceof AvmFeatureStructure) {
+                    AvmFeatureStructure child = (AvmFeatureStructure) edge.getValue();
+                    copyOfChild = child.recursiveDeepCopy(originalNodeToCopyNode, indexToPlaceholder);
+                } else if (edge.getValue() instanceof PlaceholderFeatureStructure) {
+                    // Make exactly one copy per AVM of each placeholder FS, then reuse that copy
+                    // throughout the AVM.
+                    PlaceholderFeatureStructure child = (PlaceholderFeatureStructure) edge.getValue();
+                    PlaceholderFeatureStructure p = indexToPlaceholder.get(child.getIndex());
+
+                    if( p == null ) {
+                        p = (PlaceholderFeatureStructure) child.deepCopy();
+                        indexToPlaceholder.put(child.getIndex(), p);
+                    }
+
+                    copyOfChild = p;
+                } else {
+                    copyOfChild = edge.getValue().deepCopy();
+                }
+
+                nodeInCopy.put(edge.getKey(), copyOfChild);
+            }
+
+            return nodeInCopy;
+        }
+    }
 }
