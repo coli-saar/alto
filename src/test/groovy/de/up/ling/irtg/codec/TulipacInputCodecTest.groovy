@@ -342,7 +342,7 @@ tree intrans3:
     }
 } // <-- this closing bracket is too much
 
-word 'schl"ä"ft': <lphaintrans>  // deliberately misspelled: if not even this triggers an exception, then ANTLR stopped reading at the extra bracket
+word 'schl"ä"ft': <alphaintrans> 
 word 'ruht': <alphaintrans> 
 """;
 }

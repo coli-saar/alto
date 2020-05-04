@@ -192,27 +192,33 @@ public abstract class InputCodec<E> {
      * @return
      * @throws Exception 
      */
-    public static InputCodec getInputCodecByNameOrExtension(String filename, String codecName) throws Exception {
+    public static InputCodec getInputCodecByNameOrExtension(String filename, String codecName) throws CodecLookupException {
         InputCodec ic = null;
         
         if( codecName != null ) {
             ic = InputCodec.getInputCodecByName(codecName);
             
             if( ic == null ) {
-                throw new Exception("Unknown input codec: " + codecName);
+                throw new CodecLookupException("Unknown input codec: " + codecName);
             }
         } else if( filename != null ) {            
             String ext = Util.getFilenameExtension(filename);
             ic = InputCodec.getInputCodecByExtension(ext);
             
             if( ic == null ) {
-                throw new Exception("Could not determine input codec from filename extension '" + ext + "'");
+                throw new CodecLookupException("Could not determine input codec from filename extension '" + ext + "'");
             }
         } else {
-            throw new Exception("Specify an input codec, either explicitly or through the filename extension of the input file.");
+            throw new CodecLookupException("Specify an input codec, either explicitly or through the filename extension of the input file.");
         }
         
         return ic;
+    }
+
+    public static class CodecLookupException extends Exception {
+        public CodecLookupException(String message) {
+            super(message);
+        }
     }
     
     /**

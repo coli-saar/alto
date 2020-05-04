@@ -203,7 +203,7 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         List<String> treesInFamily = treeFamilies.get(familyName);
 
         if( treesInFamily == null ) {
-            throw new CodecParseException(String.format(errorMessage, errorArgs));
+            throw new CodecParseException(String.format(errorMessage, (Object[]) errorArgs));
         }
 
         return treesInFamily;
@@ -222,7 +222,7 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         ElementaryTree etree = tagg.getElementaryTree(etreeName);
 
         if( etree == null ) {
-            throw new CodecParseException(String.format(errorMessage, errorArgs));
+            throw new CodecParseException(String.format(errorMessage, (Object[]) errorArgs));
         }
     }
 

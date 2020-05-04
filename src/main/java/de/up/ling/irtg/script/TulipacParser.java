@@ -22,6 +22,7 @@ import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.GensymBinaryRuleFactory;
 import de.up.ling.irtg.binarization.IdentitySeed;
 import de.up.ling.irtg.binarization.RegularSeed;
+import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.gui.JLanguageViewer;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -29,6 +30,8 @@ import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +51,7 @@ import org.jline.terminal.TerminalBuilder;
 public class TulipacParser {
 
     private static String filename;
-    private static InterpretedTreeAutomaton irtg;
+    private static InterpretedTreeAutomaton irtg = null;
     private static FeatureStructureAlgebra fsa;
     private static TagStringAlgebra sa;
     private static Homomorphism fh;
@@ -57,20 +60,37 @@ public class TulipacParser {
     private static JCommander jc;
     private static CmdLineParameters param = new CmdLineParameters();
 
-    private static void reloadGrammar() throws Exception {
+    private static void reportException(Throwable e) {
+        String exceptionClass = e.getClass().getSimpleName();
+        System.err.printf("%s: %s\n", exceptionClass, e.getMessage());
+    }
+
+    private static void reloadGrammar() {
         System.err.printf("Reading grammar from %s ...\n", filename);
+        InterpretedTreeAutomaton newIrtg = null;
 
-        long start = System.nanoTime();
-        InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension(filename, null);
-        irtg = ic.read(new FileInputStream(filename));
-        hasFeatures = irtg.getInterpretations().containsKey("ft");
-        System.err.printf("Done, read %s grammar in %s\n\n", hasFeatures ? "FTAG" : "TAG", Util.formatTimeSince(start));
+        try {
+            long start = System.nanoTime();
+            InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension(filename, null);
+            newIrtg = ic.read(new FileInputStream(filename));
+            System.err.printf("Done, read %s grammar in %s\n\n", hasFeatures ? "FTAG" : "TAG", Util.formatTimeSince(start));
 
-        if (param.binarize) {
-            irtg = binarize(irtg);
+            if (param.binarize) {
+                newIrtg = binarize(newIrtg);
+            }
+        } catch(CodecParseException e) {
+            Throwable ex = e.getCause() == null ? e : e.getCause(); // unwrap original exception
+            reportException(ex);
+            return;
+        } catch (Exception e) {
+            reportException(e);
+            return;
         }
 
+        // At this point, everything that can fail has been done, so we can change the irtg field of the class.
+        irtg = newIrtg;
         sa = (TagStringAlgebra) irtg.getInterpretation("string").getAlgebra();
+        hasFeatures = newIrtg.getInterpretations().containsKey("ft");
 
         if (hasFeatures) {
             fh = irtg.getInterpretation("ft").getHomomorphism();
@@ -179,11 +199,16 @@ public class TulipacParser {
             cmdlineUsage("No grammar file specified.");
         }
 
-        System.err.println("Alto tulipac-style TAG parser, v1.1");
+        System.err.println("Alto tulipac-style TAG parser, v1.2; May 2020");
         System.err.println("Type a sentence to parse it, or type 'help' for help.\n");
 
         filename = param.grammarFilename.get(0);
         reloadGrammar();
+
+        if( irtg == null ) {
+            System.err.println("Could not load grammar.");
+            System.exit(0);
+        }
 
         Terminal terminal = TerminalBuilder.terminal();
         LineReader cr = LineReaderBuilder.builder().terminal(terminal).build();
