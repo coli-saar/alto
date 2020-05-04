@@ -289,11 +289,10 @@ public class AvmFeatureStructure extends FeatureStructure {
     @Override
     public FeatureStructure deepCopy() {
         Map<AvmFeatureStructure, AvmFeatureStructure> originalNodeToCopyNode = new IdentityHashMap<>();
-        Map<String, PlaceholderFeatureStructure> indexToPlaceholder = new HashMap<>();
-        return recursiveDeepCopy(originalNodeToCopyNode, indexToPlaceholder);
+        return recursiveDeepCopy(originalNodeToCopyNode);
     }
 
-    private AvmFeatureStructure recursiveDeepCopy(Map<AvmFeatureStructure, AvmFeatureStructure> originalNodeToCopyNode, Map<String, PlaceholderFeatureStructure> indexToPlaceholder) {
+    private AvmFeatureStructure recursiveDeepCopy(Map<AvmFeatureStructure, AvmFeatureStructure> originalNodeToCopyNode) {
         AvmFeatureStructure nodeInCopy = originalNodeToCopyNode.get(this);
 
         if( nodeInCopy != null ) {
@@ -311,20 +310,9 @@ public class AvmFeatureStructure extends FeatureStructure {
                 if (edge.getValue() instanceof AvmFeatureStructure) {
                     // Child is another AVM => copy it recursively.
                     AvmFeatureStructure child = (AvmFeatureStructure) edge.getValue();
-                    copyOfChild = child.recursiveDeepCopy(originalNodeToCopyNode, indexToPlaceholder);
-                } else if (edge.getValue() instanceof PlaceholderFeatureStructure) {
-                    // Make exactly one copy per AVM of each placeholder FS, then reuse that copy
-                    // throughout the AVM.
-                    PlaceholderFeatureStructure child = (PlaceholderFeatureStructure) edge.getValue();
-                    PlaceholderFeatureStructure p = indexToPlaceholder.get(child.getIndex());
-
-                    if( p == null ) {
-                        p = (PlaceholderFeatureStructure) child.deepCopy();
-                        indexToPlaceholder.put(child.getIndex(), p);
-                    }
-
-                    copyOfChild = p;
+                    copyOfChild = child.recursiveDeepCopy(originalNodeToCopyNode);
                 } else {
+                    // Otherwise, just call deepCopy of the child.
                     copyOfChild = edge.getValue().deepCopy();
                 }
 

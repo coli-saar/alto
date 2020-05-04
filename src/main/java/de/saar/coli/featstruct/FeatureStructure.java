@@ -379,10 +379,15 @@ public abstract class FeatureStructure {
     abstract protected int calculateHashCode();
 
     /**
-     * Makes a deep copy of this feature structure. The copy has no
-     * nodes in common with the feature structure itself. This current
-     * implementation is really slow; derived classes are encouraged
-     * to exploit implementation details to provide faster implementations.
+     * Makes a deep copy of this feature structure. The copy shares no
+     * nodes of class {@link AvmFeatureStructure} with the original
+     * feature structure; thus, destructive operations such as unification
+     * can be performed safely on the copy without affecting the original,
+     * and vice versa. Nodes of immutable classes, such as {@link PlaceholderFeatureStructure},
+     * may be shared.<p>
+     *
+     * The default implementation is really slow; derived classes
+     * are encouraged to provide faster specialized implementations.
      *
       * @return
      */
