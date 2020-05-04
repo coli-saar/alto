@@ -10,7 +10,7 @@ Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It i
 
 - Represents grammars from a wide variety of popular grammar formalisms as IRTGs, including:
 	- Context-free grammars
-	- Tree-adjoining grammars (TAG)
+	- Tree-adjoining grammars (TAG), including TAG with feature structures ([FTAG](https://github.com/coli-saar/alto/wiki/Parsing-TAG-with-feature-structures-(tulipac)))
 	- Tree automata and bottom-up tree transducers
 	- Synchronous context-free grammars, TAG, etc.
 	- Tree-to-string and string-to-tree transducers
