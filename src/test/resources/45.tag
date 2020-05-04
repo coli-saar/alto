@@ -1,5 +1,5 @@
-// This grammar has multiple tree families with the same name.
-// It reproduces issue #45.
+// This grammar has undefined tree families.
+// It reproduces issue #45 (or rather, a version of it).
 
 
 //family alphanx0Vnx1: { alphanx0Vnx1_nn, alphanx0Vnx1_wn, alphanx0Vnx1_nw }
