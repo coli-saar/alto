@@ -61,8 +61,12 @@ public class TulipacParser {
     private static CmdLineParameters param = new CmdLineParameters();
 
     private static void reportException(Throwable e) {
-        String exceptionClass = e.getClass().getSimpleName();
-        System.err.printf("%s: %s\n", exceptionClass, e.getMessage());
+        if( param.debug ) {
+            e.printStackTrace();
+        } else {
+            String exceptionClass = e.getClass().getSimpleName();
+            System.err.printf("%s: %s\n", exceptionClass, e.getMessage());
+        }
     }
 
     private static void reloadGrammar() {
@@ -334,6 +338,9 @@ public class TulipacParser {
 
         @Parameter(names = "--binarize", description = "Binarize the grammar after loading.")
         public boolean binarize = false;
+
+        @Parameter(names = "--debug", description = "Detailed error messages for debugging.")
+        public boolean debug = false;
 
         @Parameter(names = "--help", help = true, description = "Prints usage information.")
         private boolean help;

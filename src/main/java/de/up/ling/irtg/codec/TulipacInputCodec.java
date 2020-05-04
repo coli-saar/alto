@@ -238,7 +238,7 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } else {
             // declared with elementary tree name
             String etreeName = identifier(lemmaC.identifier(1));
-            checkTreeExists("Lemma '%s' is declared with unknown elementary tree '%s'.", lemma, etreeName);
+            checkTreeExists(etreeName,"Lemma '%s' is declared with unknown elementary tree '%s'.", lemma, etreeName);
             etrees = Collections.singletonList(etreeName);
         }
 
