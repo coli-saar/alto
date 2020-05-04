@@ -172,7 +172,11 @@ class TulipacInputCodecTest {
         InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(WRONG_ORDER);
     }
 
-
+    // Reproduce issue #44: Extra closing brackets should cause an exception.
+    @Test(expected = CodecParseException.class)
+    public void testExtraClosingBrackets() {
+        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(EXTRA_CLOSING_BRACKETS);
+    }
 
 
     
@@ -277,11 +281,11 @@ lemma 'hälfe': <vinf_tv>[objcase=dat] {
     """;
 
     private static final String UNDECLARED_TREE = """
-    word 'mer': np_pron;
+    word 'mer': np_pron
 """;
 
     private static final String UNDECLARED_FAMILY = """
-    word 'mer': <unk_family>;
+    word 'mer': <unk_family>
 """;
 
     private static final String FAMILY_WITH_UNDECLARED_TREE = """
@@ -312,6 +316,34 @@ tree np_pron:
      }
 
 
+""";
+
+
+    private static final String EXTRA_CLOSING_BRACKETS = """
+family alphaintrans: { intrans1, intrans2, intrans3 }
+
+tree intrans1:
+  S {
+    NP![case=nom] []
+    V+ 
+    }
+
+tree intrans2:
+  S {
+    V+
+    NP![case=nom] [] 
+    }
+
+tree intrans3:
+  S {
+    D! [] []
+    NP![case=nom] []
+    V+ 
+    }
+} // <-- this closing bracket is too much
+
+word 'schl"ä"ft': <lphaintrans>  // deliberately misspelled: if not even this triggers an exception, then ANTLR stopped reading at the extra bracket
+word 'ruht': <alphaintrans> 
 """;
 }
 

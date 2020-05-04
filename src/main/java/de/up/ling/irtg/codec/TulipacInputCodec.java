@@ -21,20 +21,17 @@ import de.up.ling.irtg.codec.tulipac.TulipacParser;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 import static de.up.ling.irtg.codec.tulipac.TulipacParser.*;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import org.antlr.v4.runtime.dfa.DFA;
 
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -58,6 +55,14 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         TulipacParser p = new TulipacParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
+
+        l.removeErrorListeners();
+        l.addErrorListener(new BaseErrorListener() {
+            @Override
+            public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+                throw e;
+            }
+        });
 
         GrmrContext parse = p.grmr();
         buildGrmr(parse);
