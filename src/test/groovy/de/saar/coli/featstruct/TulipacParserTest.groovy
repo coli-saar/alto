@@ -1,6 +1,7 @@
 package de.saar.coli.featstruct
 
 import de.up.ling.irtg.InterpretedTreeAutomaton
+import de.up.ling.irtg.codec.CodecParseException
 import de.up.ling.irtg.codec.InputCodec
 import org.junit.Test
 import java.util.*
@@ -23,7 +24,25 @@ import static org.hamcrest.CoreMatchers.*;
 class TulipacParserTest {
     @Test
     public void testIssue46() {
-        String filename = "46.tag";
+        Tree<String> dt = parseTag("46.tag", "mer a a b c a a b c");
+        assertEquals(dt, pt("subj-mer__(*NOP*_N_A,copy_a-a__(*NOP*_A_A,just_a-a__(*NOP*_A_leaf_A),aux_a-a__(*NOP*_A_A,just_a-a__(*NOP*_A_leaf_A),aux_b-b__(*NOP*_B_A,just_b-b__(*NOP*_B_leaf_A),aux_c-c__(*NOP*_C_A,just_c-c__(*NOP*_C_leaf_A),*NOP*_VP_A)))),*NOP*_S_A)"))
+    }
+
+    @Test(expected = CodecParseException.class)
+    public void testIssue45() {
+        Tree<String> dt = parseTag("45.tag", "hallo");
+    }
+
+    /**
+     * Runs a TAG parser with the same code as in the TulipacParser script.
+     * The grammar is read from a resource with the name given in "filename" (in src/test/resources).
+     * Then the string given in "str" is parsed, and the Viterbi derivation tree is returned.
+     *
+     * @param filename
+     * @param str
+     * @return
+     */
+    private Tree<String> parseTag(String filename, String str) {
         InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension(filename, null);
         InputStream is = rs(filename);
         InterpretedTreeAutomaton irtg = ic.read(is);
@@ -31,15 +50,14 @@ class TulipacParserTest {
         Homomorphism fh = irtg.getInterpretation("ft").getHomomorphism();
         FeatureStructureAlgebra fsa = (FeatureStructureAlgebra) irtg.getInterpretation("ft").getAlgebra();
 
-        Object inp = sa.parseString("mer a a b c a a b c");
+        Object inp = sa.parseString(str);
         TreeAutomaton chart = irtg.parseWithSiblingFinder("string", inp);
         TreeAutomaton filtered = chart;
 
         Tree<String> dt = chart.viterbi();
         TreeAutomaton ftFilter = fsa.nullFilter().inverseHomomorphism(fh);
         filtered = chart.intersect(ftFilter);
-
-        assertEquals(chart.viterbi(), pt("subj-mer__(*NOP*_N_A,copy_a-a__(*NOP*_A_A,just_a-a__(*NOP*_A_leaf_A),aux_a-a__(*NOP*_A_A,just_a-a__(*NOP*_A_leaf_A),aux_b-b__(*NOP*_B_A,just_b-b__(*NOP*_B_leaf_A),aux_c-c__(*NOP*_C_A,just_c-c__(*NOP*_C_leaf_A),*NOP*_VP_A)))),*NOP*_S_A)"))
+        return filtered.viterbi();
     }
 
 }

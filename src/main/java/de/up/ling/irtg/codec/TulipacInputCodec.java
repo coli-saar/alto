@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  *
@@ -167,14 +168,56 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         if (wordC.familyIdentifier() != null) {
             // declared with tree family
-            for (String etreeName : treeFamilies.get(familyIdentifier(wordC.familyIdentifier()))) {
+            String treeFamilyName = familyIdentifier(wordC.familyIdentifier());
+
+            for (String etreeName : lookupFamily(treeFamilyName, "Word '%s' is declared with unknown tree family '%s'.", word, treeFamilyName)) {
+                checkTreeExists(etreeName, "Word '%s' is declared with tree family '%s', which contains the unknown elementary tree '%s'.", word, treeFamilyName, etreeName);
                 tagg.addLexiconEntry(word, new LexiconEntry(word, etreeName, lexFs));
             }
         } else {
             // declared with elementary tree name
             String etreeName = identifier(wordC.identifier(1));
+            checkTreeExists(etreeName, "Word '%s' is declared with unknown elementary tree '%s'.", word, etreeName);
+
             LexiconEntry lex = new LexiconEntry(word, etreeName, lexFs);
             tagg.addLexiconEntry(word, lex);
+        }
+    }
+
+    /**
+     * Look up a tree family by name. If the family is not defined, throw an exception with the given
+     * error message.
+     *
+     * @param familyName
+     * @param errorMessage
+     * @param errorArgs
+     * @return
+     * @throws CodecParseException
+     */
+    private List<String> lookupFamily(String familyName, String errorMessage, String... errorArgs) throws CodecParseException {
+        List<String> treesInFamily = treeFamilies.get(familyName);
+
+        if( treesInFamily == null ) {
+            throw new CodecParseException(String.format(errorMessage, errorArgs));
+        }
+
+        return treesInFamily;
+    }
+
+    /**
+     * Check that an elementary tree with the given name exists. If the tree name is not defined, throw an
+     * exception with the given error message.
+     *
+     * @param etreeName
+     * @param errorMessage
+     * @param errorArgs
+     * @throws CodecParseException
+     */
+    private void checkTreeExists(String etreeName, String errorMessage, String... errorArgs) throws CodecParseException {
+        ElementaryTree etree = tagg.getElementaryTree(etreeName);
+
+        if( etree == null ) {
+            throw new CodecParseException(String.format(errorMessage, errorArgs));
         }
     }
 
@@ -185,10 +228,13 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         if (lemmaC.familyIdentifier() != null) {
             // declared with tree family
-            etrees = treeFamilies.get(familyIdentifier(lemmaC.familyIdentifier()));
+            String familyName = familyIdentifier(lemmaC.familyIdentifier());
+            etrees = lookupFamily(familyName, "Lemma '%s' is declared with unknown tree family '%s'.", lemma, familyName);
         } else {
             // declared with elementary tree name
-            etrees = Collections.singletonList(identifier(lemmaC.identifier(1)));
+            String etreeName = identifier(lemmaC.identifier(1));
+            checkTreeExists("Lemma '%s' is declared with unknown elementary tree '%s'.", lemma, etreeName);
+            etrees = Collections.singletonList(etreeName);
         }
 
         for (WordInLemmaContext wc : lemmaC.wordInLemma()) {
@@ -200,6 +246,10 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             }
 
             for (String etree : etrees) {
+                if (lemmaC.familyIdentifier() != null) {
+                    checkTreeExists(etree, "Lemma '%s' is declared with tree family '%s', which contains the unknown elementary tree '%s'.", word, familyIdentifier(lemmaC.familyIdentifier()), etree);
+                }
+
                 tagg.addLexiconEntry(word, new LexiconEntry(word, etree, wordFs));
             }
         }

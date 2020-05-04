@@ -140,6 +140,41 @@ class TulipacInputCodecTest {
 
         return binarized;
     }
+
+    @Test(expected = CodecParseException.class)
+    public void testUndeclaredTree() {
+        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(UNDECLARED_TREE);
+    }
+
+    @Test(expected = CodecParseException.class)
+    public void testUndeclaredFamily() {
+        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(UNDECLARED_FAMILY);
+    }
+
+    @Test(expected = CodecParseException.class)
+    public void testFamilyWithUndeclaredTree() {
+        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(FAMILY_WITH_UNDECLARED_TREE);
+    }
+
+    @Test(expected = CodecParseException.class)
+    public void testUndeclaredFamilyLemma() {
+        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(UNDECLARED_FAMILY_FOR_LEMMA);
+    }
+
+    @Test(expected = CodecParseException.class)
+    public void testFamilyWithUndeclaredForLemma() {
+        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(FAMILY_WITH_UNDECLARED_TREE_FOR_LEMMA);
+    }
+
+    @Test
+    public void testWrongOrder() {
+        // Words may be defined before trees and families in the grammar file
+        InterpretedTreeAutomaton irtg = new TulipacInputCodec().read(WRONG_ORDER);
+    }
+
+
+
+
     
     private static final String LINDEMANN = """
 tree A:
@@ -240,5 +275,43 @@ lemma 'hälfe': <vinf_tv>[objcase=dat] {
 
 
     """;
+
+    private static final String UNDECLARED_TREE = """
+    word 'mer': np_pron;
+""";
+
+    private static final String UNDECLARED_FAMILY = """
+    word 'mer': <unk_family>;
+""";
+
+    private static final String FAMILY_WITH_UNDECLARED_TREE = """
+    family my_family: {tree_a, tree_b}
+    word 'mer': <my_family>
+""";
+
+    private static final String UNDECLARED_FAMILY_FOR_LEMMA = """
+    lemma 'mer': <unk_family> {
+       word 'x'
+    }
+""";
+
+    private static final String FAMILY_WITH_UNDECLARED_TREE_FOR_LEMMA = """
+    family my_family: {tree_a, tree_b}
+    lemma 'mer': <my_family> {
+      word 'x'
+    }
+""";
+
+    // declare first word, then tree
+    private static final String WRONG_ORDER = """
+word 'mer': np_pron[case=nom]
+
+tree np_pron:
+     np[][case=?c] {
+       pron+ [case=?c] []
+     }
+
+
+""";
 }
 
