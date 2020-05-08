@@ -5,13 +5,8 @@
  */
 package de.up.ling.irtg.codec;
 
-import org.antlr.v4.runtime.DefaultErrorStrategy;
-import org.antlr.v4.runtime.FailedPredicateException;
-import org.antlr.v4.runtime.InputMismatchException;
-import org.antlr.v4.runtime.NoViableAltException;
-import org.antlr.v4.runtime.Parser;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.misc.IntervalSet;
 
 /**
@@ -62,6 +57,14 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         if (e.getMessage() != null) {
             // if e already contained an error message, just pass it on
             throw e;
+        } else if (e instanceof LexerNoViableAltException) {
+            LexerNoViableAltException ex = (LexerNoViableAltException) e;
+            int start = Math.max(0, ex.getStartIndex()-20);
+            int end = Math.min(ex.getInputStream().size(), ex.getStartIndex()+20);
+            String offendingSymbol = ex.getInputStream().getText(new Interval(ex.getStartIndex(), ex.getStartIndex())).trim();
+            String context = ex.getInputStream().getText(new Interval(start, end)).replaceAll("\\n", "").trim();
+            String msg = String.format("Unexpected symbol '%s' at position %d; context: /%s/", offendingSymbol, ex.getStartIndex(), context);
+            throw new CodecParseException(msg);
         } else {
             // otherwise, construct a meaningful error message
             Token tok = e.getOffendingToken();
@@ -91,7 +94,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         Token t = parser.getCurrentToken();
         IntervalSet expecting = getExpectedTokens(parser);
         String msg = getTokenPosition(t) + ": failed predicate '" + fpe.getMessage() + "': " + expecting.toString(parser.getTokenNames()) + " at " + getTokenErrorDisplay(t);
-        throw new RecognitionException(msg, parser, parser.getInputStream(), parser.getContext());
+        throw new CodecParseException(new RecognitionException(msg, parser, parser.getInputStream(), parser.getContext()));
     }
 
     @SuppressWarnings("deprecation")
@@ -100,7 +103,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         Token t = parser.getCurrentToken();
         IntervalSet expecting = getExpectedTokens(parser);
         String msg = getTokenPosition(t) + ": expected token " + expecting.toString(parser.getTokenNames()) + ", but got " + getTokenErrorDisplay(t) + ".";
-        throw new RecognitionException(msg, parser, parser.getInputStream(), parser.getContext());
+        throw new CodecParseException(new RecognitionException(msg, parser, parser.getInputStream(), parser.getContext()));
     }
 
     private String getTokenPosition(Token t) {

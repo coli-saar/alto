@@ -10,12 +10,7 @@ import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -136,10 +131,8 @@ public abstract class FeatureStructure {
     
     protected FeatureStructure unify0(FeatureStructure other, long currentTimestamp) {
         boolean unifiable = unify1(other, currentTimestamp);
-        
 
         if (unifiable) {
-//            System.err.println("before copying:\n" + rawToString());
             return copyWithCompArcs(currentTimestamp);
         } else {
             return null;
@@ -384,7 +377,30 @@ public abstract class FeatureStructure {
     }
     
     abstract protected int calculateHashCode();
-    
+
+    /**
+     * Makes a deep copy of this feature structure. The copy shares no
+     * nodes of class {@link AvmFeatureStructure} with the original
+     * feature structure; thus, destructive operations such as unification
+     * can be performed safely on the copy without affecting the original,
+     * and vice versa. Nodes of immutable classes, such as {@link PlaceholderFeatureStructure},
+     * may be shared.<p>
+     *
+     * The default implementation is really slow; derived classes
+     * are encouraged to provide faster specialized implementations.
+     *
+      * @return
+     */
+    public FeatureStructure deepCopy() {
+        try {
+            return parse(toString());
+        } catch (FsParsingException e) {
+            // This should never happen
+            throw new RuntimeException("Could not reparse " + toString(), e);
+        }
+    }
+
+
     
     
     /***************************************************************************
@@ -396,7 +412,8 @@ public abstract class FeatureStructure {
         Map<FeatureStructure, Integer> previouslyPrinted = new IdentityHashMap<>();
         MutableInteger fsId = new MutableInteger(1);
 
-        buf.append("=== Feature structure, global timestamp=" + globalCopyTimestamp + "\n");
+//        buf.append("=== Feature structure, global timestamp=" + globalCopyTimestamp + "\n");
+        buf.append("[t=" + globalCopyTimestamp + "] ");
         appendRawToString(buf, 0);
 
         return buf.toString();

@@ -43,7 +43,7 @@ COMMENT
 
 
 
-grmr: (tr | family | wordByItself | lemma | include)+;
+grmr: (tr | family | wordByItself | lemma | include)+ EOF;
 
 
 

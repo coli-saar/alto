@@ -107,6 +107,8 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
         }
     }
 
-
-    
+    @Override
+    public FeatureStructure deepCopy() {
+        return this;
+    }
 }

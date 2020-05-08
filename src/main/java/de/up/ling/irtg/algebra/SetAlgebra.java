@@ -69,6 +69,7 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     private static final String SIZE = "size_";
     private static final String UNION = "union";
     private static final String MEMBER = "member_";
+    private static final String DIFFERENCE = "diff";
     private static final String TOP = "T";
     private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, INTERSECTSETS, UNIQ, UNION, SIZE, MEMBER};
     
@@ -216,6 +217,11 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
             ret = size(childrenValues.get(0), arg(label));
         } else if (label.startsWith(MEMBER)) {
             ret = member(childrenValues.get(0), arg(label));
+        } else if (label.equals(DIFFERENCE)) {
+            ret = childrenValues.get(0);
+            for (int i=1; i < childrenValues.size(); i++) {
+                ret = Sets.difference(ret, childrenValues.get(i));
+            }
         } else if (label.equals(TOP)) {
             ret = model.getUniverseAsTuples();
         } else {

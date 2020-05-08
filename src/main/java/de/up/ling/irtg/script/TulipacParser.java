@@ -22,6 +22,7 @@ import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.GensymBinaryRuleFactory;
 import de.up.ling.irtg.binarization.IdentitySeed;
 import de.up.ling.irtg.binarization.RegularSeed;
+import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.gui.JLanguageViewer;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -29,11 +30,15 @@ import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
@@ -46,7 +51,7 @@ import org.jline.terminal.TerminalBuilder;
 public class TulipacParser {
 
     private static String filename;
-    private static InterpretedTreeAutomaton irtg;
+    private static InterpretedTreeAutomaton irtg = null;
     private static FeatureStructureAlgebra fsa;
     private static TagStringAlgebra sa;
     private static Homomorphism fh;
@@ -55,20 +60,41 @@ public class TulipacParser {
     private static JCommander jc;
     private static CmdLineParameters param = new CmdLineParameters();
 
-    private static void reloadGrammar() throws Exception {
+    private static void reportException(Throwable e) {
+        if( param.debug ) {
+            e.printStackTrace();
+        } else {
+            String exceptionClass = e.getClass().getSimpleName();
+            System.err.printf("%s: %s\n", exceptionClass, e.getMessage());
+        }
+    }
+
+    private static void reloadGrammar() {
         System.err.printf("Reading grammar from %s ...\n", filename);
+        InterpretedTreeAutomaton newIrtg = null;
 
-        long start = System.nanoTime();
-        InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension(filename, null);
-        irtg = ic.read(new FileInputStream(filename));
-        hasFeatures = irtg.getInterpretations().containsKey("ft");
-        System.err.printf("Done, read %s grammar in %s\n\n", hasFeatures ? "FTAG" : "TAG", Util.formatTimeSince(start));
+        try {
+            long start = System.nanoTime();
+            InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension(filename, null);
+            newIrtg = ic.read(new FileInputStream(filename));
+            System.err.printf("Done, read %s grammar in %s\n\n", hasFeatures ? "FTAG" : "TAG", Util.formatTimeSince(start));
 
-        if (param.binarize) {
-            irtg = binarize(irtg);
+            if (param.binarize) {
+                newIrtg = binarize(newIrtg);
+            }
+        } catch(CodecParseException e) {
+            Throwable ex = e.getCause() == null ? e : e.getCause(); // unwrap original exception
+            reportException(ex);
+            return;
+        } catch (Exception e) {
+            reportException(e);
+            return;
         }
 
+        // At this point, everything that can fail has been done, so we can change the irtg field of the class.
+        irtg = newIrtg;
         sa = (TagStringAlgebra) irtg.getInterpretation("string").getAlgebra();
+        hasFeatures = newIrtg.getInterpretations().containsKey("ft");
 
         if (hasFeatures) {
             fh = irtg.getInterpretation("ft").getHomomorphism();
@@ -177,69 +203,79 @@ public class TulipacParser {
             cmdlineUsage("No grammar file specified.");
         }
 
-        System.err.println("Alto tulipac-style TAG parser, v1.1");
+        System.err.println("Alto tulipac-style TAG parser, v1.2; May 2020");
         System.err.println("Type a sentence to parse it, or type 'help' for help.\n");
 
         filename = param.grammarFilename.get(0);
         reloadGrammar();
+
+        if( irtg == null ) {
+            System.err.println("Could not load grammar.");
+            System.exit(0);
+        }
 
         Terminal terminal = TerminalBuilder.terminal();
         LineReader cr = LineReaderBuilder.builder().terminal(terminal).build();
 
         String line;
 
-        mainLoop:
-        while ((line = cr.readLine("parse> ")) != null) {
-            // check whether line was a command
-            for (Command c : commands) {
-                if (c.command.equalsIgnoreCase(line)) {
-                    c.action.perform();
-                    continue mainLoop;
+        try {
+            mainLoop:
+            while ((line = cr.readLine("parse> ")) != null) {
+                // check whether line was a command
+                for (Command c : commands) {
+                    if (c.command.equalsIgnoreCase(line)) {
+                        c.action.perform();
+                        continue mainLoop;
+                    }
                 }
-            }
 
-            // otherwise, parse sentence
-            long start = System.nanoTime();
-            Object inp = sa.parseString(line);
-            TreeAutomaton chart = irtg.parseWithSiblingFinder("string", inp);
-            TreeAutomaton filtered = chart;
-            System.out.printf("computed chart: %s\n", Util.formatTimeSince(start));
+                // otherwise, parse sentence
+                long start = System.nanoTime();
+                Object inp = sa.parseString(line);
+                TreeAutomaton chart = irtg.parseWithSiblingFinder("string", inp);
+                TreeAutomaton filtered = chart;
+                System.out.printf("computed chart: %s\n", Util.formatTimeSince(start));
 
-            Tree<String> dt = chart.viterbi();
-            if (dt == null) {
-                System.out.printf("No parse found (even while ignoring features).\n");
-                System.out.println();
-                continue mainLoop;
-            }
-
-            if (hasFeatures) {
-                start = System.nanoTime();
-                filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(fh));
-                System.out.printf("filtered chart for feature structures: %s\n", Util.formatTimeSince(start));
-
-                if (filtered.viterbi() == null) {
-                    System.out.printf("Found parses, but they all violate the constraints from the feature structures.\n");
-                    debugAnalysis(dt, irtg);
+                Tree<String> dt = chart.viterbi();
+                if (dt == null) {
+                    System.out.printf("No parse found (even while ignoring features).\n");
                     System.out.println();
                     continue mainLoop;
                 }
-            }
 
-            JLanguageViewer lv = new JLanguageViewer();
-            lv.setAutomaton(filtered, irtg);
-            lv.setTitle(String.format("Parses of '%s'", line));
-            lv.addView("tree");
-            if (hasFeatures) {
-                lv.addView("ft");
+                if (hasFeatures) {
+                    start = System.nanoTime();
+                    filtered = chart.intersect(fsa.nullFilter().inverseHomomorphism(fh));
+                    System.out.printf("filtered chart for feature structures: %s\n", Util.formatTimeSince(start));
+
+                    if (filtered.viterbi() == null) {
+                        System.out.printf("Found parses, but they all violate the constraints from the feature structures.\n");
+                        debugAnalysis(dt, irtg);
+                        System.out.println();
+                        continue mainLoop;
+                    }
+                }
+
+                JLanguageViewer lv = new JLanguageViewer();
+                lv.setAutomaton(filtered, irtg);
+                lv.setTitle(String.format("Parses of '%s'", line));
+                lv.addView("tree");
+                if (hasFeatures) {
+                    lv.addView("ft");
+                }
+                lv.pack();
+                lv.setVisible(true);
+
+                System.out.println();
             }
-            lv.pack();
-            lv.setVisible(true);
 
             System.out.println();
+            System.exit(0);
+        } catch (EndOfFileException e) {
+            System.out.println("Quit.");
+            System.exit(0);
         }
-
-        System.out.println();
-        System.exit(0);
     }
 
     private static void debugAnalysis(Tree<String> dt, InterpretedTreeAutomaton irtg) {
@@ -302,6 +338,9 @@ public class TulipacParser {
 
         @Parameter(names = "--binarize", description = "Binarize the grammar after loading.")
         public boolean binarize = false;
+
+        @Parameter(names = "--debug", description = "Detailed error messages for debugging.")
+        public boolean debug = false;
 
         @Parameter(names = "--help", help = true, description = "Prints usage information.")
         private boolean help;

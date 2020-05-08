@@ -6,13 +6,8 @@
 package de.saar.coli.featstruct;
 
 import de.up.ling.irtg.util.Util;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -282,4 +277,49 @@ public class AvmFeatureStructure extends FeatureStructure {
         }
     }
 
+    /**
+     * Makes a deep copy of this feature structure. The copy has no
+     * nodes in common with the feature structure itself. This should be a little
+     * faster than the generic implementation from the base class. Limitation:
+     * Not quite certain if this works correctly if the FS contains nodes
+     * which are not instances of {@link AvmFeatureStructure} or {@link PlaceholderFeatureStructure}.
+     *
+     * @return
+     */
+    @Override
+    public FeatureStructure deepCopy() {
+        Map<AvmFeatureStructure, AvmFeatureStructure> originalNodeToCopyNode = new IdentityHashMap<>();
+        return recursiveDeepCopy(originalNodeToCopyNode);
+    }
+
+    private AvmFeatureStructure recursiveDeepCopy(Map<AvmFeatureStructure, AvmFeatureStructure> originalNodeToCopyNode) {
+        AvmFeatureStructure nodeInCopy = originalNodeToCopyNode.get(this);
+
+        if( nodeInCopy != null ) {
+            // previously visited this node
+            return nodeInCopy;
+        } else {
+            // otherwise copy this node
+            nodeInCopy = new AvmFeatureStructure();
+            originalNodeToCopyNode.put(this, nodeInCopy);
+
+            // iterate over its features
+            for (Map.Entry<String, FeatureStructure> edge : avm.entrySet()) {
+                FeatureStructure copyOfChild;
+
+                if (edge.getValue() instanceof AvmFeatureStructure) {
+                    // Child is another AVM => copy it recursively.
+                    AvmFeatureStructure child = (AvmFeatureStructure) edge.getValue();
+                    copyOfChild = child.recursiveDeepCopy(originalNodeToCopyNode);
+                } else {
+                    // Otherwise, just call deepCopy of the child.
+                    copyOfChild = edge.getValue().deepCopy();
+                }
+
+                nodeInCopy.put(edge.getKey(), copyOfChild);
+            }
+
+            return nodeInCopy;
+        }
+    }
 }
