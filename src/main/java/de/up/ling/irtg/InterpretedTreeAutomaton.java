@@ -542,62 +542,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
 
-        Map<Rule, Double> globalRuleCount = new HashMap<>();
-        // Threshold parameters
-        if (iterations <= 0) {
-            iterations = Integer.MAX_VALUE;
-        }
-        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
-        double difference = Double.POSITIVE_INFINITY;
-        int iteration = 0;
-
-        while (difference > threshold && iteration < iterations) {
-            if (debug) {
-                for (Rule r : originalRuleToIntersectedRules.keySet()) {
-                    System.err.println("Iteration:  " + iteration);
-                    System.err.println("Rule:       " + r.toString(automaton));
-                    System.err.println("Rule (raw): " + r);
-                    System.err.println("Weight:     " + r.getWeight());
-                    System.err.print("\n");
-                }
-            }
-
-            // get the new log likelihood and substract the old one from it for comparison with the given threshold
-            double logLikelihood = estep(parses, globalRuleCount, intersectedRuleToOriginalRule, listener, iteration);
-            assert logLikelihood >= oldLogLikelihood;
-            difference = logLikelihood - oldLogLikelihood;
-            oldLogLikelihood = logLikelihood;
-
-            if (debug) {
-                System.err.println("Current LL: " + logLikelihood + "\n");
-            }
-
-            // sum over rules with same parent state to obtain state counts
-            Map<Integer, Double> globalStateCount = new HashMap<>();
-            for (int state : automaton.getAllStates()) {
-                globalStateCount.put(state, 0.0);
-            }
-
-            for (Rule rule : automaton.getRuleSet()) {
-                int state = rule.getParent();
-                globalStateCount.put(state, globalStateCount.get(state) + globalRuleCount.get(rule));
-            }
-
-            // M-step
-            for (Rule rule : automaton.getRuleSet()) {
-                double newWeight = globalRuleCount.get(rule) / globalStateCount.get(rule.getParent());
-
-                rule.setWeight(newWeight);
-                for (Rule intersectedRule : originalRuleToIntersectedRules.get(rule)) {
-                    intersectedRule.setWeight(newWeight);
-                }
-            }
-
-            if (debug) {
-                System.out.println("\n\n***** After iteration " + (iteration + 1) + " *****\n\n" + automaton);
-            }
-            ++iteration;
-        }
+        getAutomaton().trainEM(parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, iterations, threshold, debug, listener);
 
     }
 
@@ -669,6 +614,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * the progress of the optimization.
      */
     public void trainVB(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
+        //TODO does this duplicate code from trainEM that has been moved to treeAutomaton? Could this be moved to tree automaton too?
         if (!trainingData.hasCharts()) {
             System.err.println("VB training can only be performed on a corpus with attached charts.");
             return;
@@ -719,90 +665,17 @@ public class InterpretedTreeAutomaton implements Serializable {
             }
 
             // re-estimate hyperparameters
-            double logLikelihood = estep(parses, ruleCounts, intersectedRuleToOriginalRule, listener, iteration);
+            double logLikelihood = getAutomaton().estep(parses, ruleCounts, intersectedRuleToOriginalRule, listener, iteration, debug);
             assert logLikelihood >= oldLogLikelihood;
             for (int i = 0; i < numRules; i++) {
                 alpha[i] += ruleCounts.get(automatonRules.get(i));
             }
 
-            // calculate the difference for comparrison with the given threshold 
+            // calculate the difference for comparrison with the given threshold
             difference = logLikelihood - oldLogLikelihood;
             oldLogLikelihood = logLikelihood;
             ++iteration;
         }
-    }
-
-    /**
-     * Performs the E-step of the EM algorithm. This means that the expected
-     * counts are computed for all rules that occur in the parsed corpus.<p>
-     *
-     * This method assumes that the automaton is top-down reduced (see {@link TreeAutomaton#reduceTopDown()
-     * }).
-     *
-     * @param parses
-     * @param globalRuleCount
-     * @param intersectedRuleToOriginalRule
-     * @param listener
-     * @param iteration
-     * @return
-     */
-    protected double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ProgressListener listener, int iteration) {
-        double logLikelihood = 0;
-
-        globalRuleCount.clear();
-
-        for (Rule rule : automaton.getRuleSet()) {
-            globalRuleCount.put(rule, 0.0);
-        }
-
-        for (int i = 0; i < parses.size(); i++) {
-            TreeAutomaton parse = parses.get(i);
-
-            Map<Integer, Double> inside = parse.inside();
-            Map<Integer, Double> outside = parse.outside(inside);
-
-            if (debug) {
-                System.out.println("Inside and outside probabilities for chart #" + i);
-
-                for (Integer r : inside.keySet()) {
-                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + inside.get(r));
-                }
-                System.out.println("-");
-
-                for (Integer r : outside.keySet()) {
-                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + outside.get(r));
-                }
-                System.out.println();
-            }
-
-            double likelihoodHere = 0;
-            for (int finalState : parse.getFinalStates()) {
-                likelihoodHere += inside.get(finalState);
-            }
-
-            for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
-                Integer intersectedParent = intersectedRule.getParent();
-                Rule originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
-
-                double oldRuleCount = globalRuleCount.get(originalRule);
-                double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight() / likelihoodHere;
-
-                for (int j = 0; j < intersectedRule.getArity(); j++) {
-                    thisRuleCount *= inside.get(intersectedRule.getChildren()[j]);
-                }
-
-                globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
-            }
-
-            logLikelihood += Math.log(likelihoodHere);
-
-            if (listener != null) {
-                listener.accept(i + 1, parses.size(), null);
-//                listener.update(iteration, i);
-            }
-        }
-
-        return logLikelihood;
     }
 
     /**
