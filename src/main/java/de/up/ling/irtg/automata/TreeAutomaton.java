@@ -25,6 +25,8 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.automata.pruning.*;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
@@ -37,11 +39,7 @@ import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
-import de.up.ling.irtg.util.DebuggingWriter;
-import de.up.ling.irtg.util.FastutilUtils;
-import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.Util;
+import de.up.ling.irtg.util.*;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
@@ -59,6 +57,8 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import org.apache.commons.math3.special.Gamma;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -3205,4 +3205,153 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             pw.flush();
         }
     }
+
+
+    /**
+     * Adjusts the weights of this automaton with the EM algorithm, for a given set of data, represented as tree automata.
+     * @param data The automata in the data. There is a one-to-many map assumption between the rules of this automaton
+     *             and the rules in the data automata, see the maps that are the other arguments.
+     * @param dataRuleToRuleHere for each automaton in the data, this maps each rule from the data automaton to a rule
+     *                           in this automaton.
+     * @param ruleHereToDataRules for each automaton in the data, this maps each rule in this automaton to all corresponding
+     *                            rules in the data automaton.
+     */
+    public void trainEM(List<TreeAutomaton> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
+                        ListMultimap<Rule, Rule> ruleHereToDataRules, int iterations, double threshold, boolean debug,
+                        ProgressListener listener) {
+        Map<Rule, Double> globalRuleCount = new HashMap<>();
+        // Threshold parameters
+        if (iterations <= 0) {
+            iterations = Integer.MAX_VALUE;
+        }
+        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
+        double difference = Double.POSITIVE_INFINITY;
+        int iteration = 0;
+
+        while (difference > threshold && iteration < iterations) {
+            if (debug) {
+                for (Rule r : ruleHereToDataRules.keySet()) {
+                    System.err.println("Iteration:  " + iteration);
+                    System.err.println("Rule:       " + r.toString(this));
+                    System.err.println("Rule (raw): " + r);
+                    System.err.println("Weight:     " + r.getWeight());
+                    System.err.print("\n");
+                }
+            }
+
+            // get the new log likelihood and substract the old one from it for comparison with the given threshold
+            double logLikelihood = estep(data, globalRuleCount, dataRuleToRuleHere, listener, iteration, debug);
+            assert logLikelihood >= oldLogLikelihood;
+            difference = logLikelihood - oldLogLikelihood;
+            oldLogLikelihood = logLikelihood;
+
+            if (debug) {
+                System.err.println("Current LL: " + logLikelihood + "\n");
+            }
+
+            // sum over rules with same parent state to obtain state counts
+            Map<Integer, Double> globalStateCount = new HashMap<>();
+            for (int state : getAllStates()) {
+                globalStateCount.put(state, 0.0);
+            }
+
+            for (Rule rule : getRuleSet()) {
+                int state = rule.getParent();
+                globalStateCount.put(state, globalStateCount.get(state) + globalRuleCount.get(rule));
+            }
+
+            // M-step
+            for (Rule rule : getRuleSet()) {
+                double newWeight = globalRuleCount.get(rule) / globalStateCount.get(rule.getParent());
+
+                rule.setWeight(newWeight);
+                for (Rule intersectedRule : ruleHereToDataRules.get(rule)) {
+                    intersectedRule.setWeight(newWeight);
+                }
+            }
+
+            if (debug) {
+                System.out.println("\n\n***** After iteration " + (iteration + 1) + " *****\n\n" + this.toString());
+            }
+            ++iteration;
+        }
+    }
+
+
+    /**
+     * Performs the E-step of the EM algorithm. This means that the expected
+     * counts are computed for all rules that occur in the parsed corpus.<p>
+     *
+     * This method assumes that the automaton is top-down reduced (see {@link TreeAutomaton#reduceTopDown()
+     * }).
+     *
+     * @param parses
+     * @param globalRuleCount
+     * @param intersectedRuleToOriginalRule
+     * @param listener
+     * @param iteration
+     * @return
+     */
+    public double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule,
+                        ProgressListener listener, int iteration, boolean debug) {
+        double logLikelihood = 0;
+
+        globalRuleCount.clear();
+
+        for (Rule rule : getRuleSet()) {
+            globalRuleCount.put(rule, 0.0);
+        }
+
+        for (int i = 0; i < parses.size(); i++) {
+            TreeAutomaton parse = parses.get(i);
+
+            Map<Integer, Double> inside = parse.inside();
+            Map<Integer, Double> outside = parse.outside(inside);
+
+            if (debug) {
+                System.out.println("Inside and outside probabilities for chart #" + i);
+
+                for (Integer r : inside.keySet()) {
+                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + inside.get(r));
+                }
+                System.out.println("-");
+
+                for (Integer r : outside.keySet()) {
+                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + outside.get(r));
+                }
+                System.out.println();
+            }
+
+            double likelihoodHere = 0;
+            for (int finalState : parse.getFinalStates()) {
+                likelihoodHere += inside.get(finalState);
+            }
+
+            for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
+                Integer intersectedParent = intersectedRule.getParent();
+                Rule originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
+
+                double oldRuleCount = globalRuleCount.get(originalRule);
+                double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight() / likelihoodHere;
+
+                for (int j = 0; j < intersectedRule.getArity(); j++) {
+                    thisRuleCount *= inside.get(intersectedRule.getChildren()[j]);
+                }
+
+                globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
+            }
+
+            logLikelihood += Math.log(likelihoodHere);
+
+            if (listener != null) {
+                listener.accept(i + 1, parses.size(), null);
+//                listener.update(iteration, i);
+            }
+        }
+
+        return logLikelihood;
+    }
+
+
+
 }

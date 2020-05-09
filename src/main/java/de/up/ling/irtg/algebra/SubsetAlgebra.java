@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public class SubsetAlgebra extends Algebra<BitSet> {
 
-    private boolean emptyStatesAllowd = true;
+    private boolean emptyStatesAllowed = false;
     private Interner<String> universeInterner;
     private static final BitSet EMPTY_BITSET = new BitSet();
 
@@ -166,12 +166,12 @@ public class SubsetAlgebra extends Algebra<BitSet> {
      * Set whether states with an empty set should be allowd or pruned from the chart.
      */
     public void setEmptyStatesAllowed(boolean allowed) {
-        this.emptyStatesAllowd = allowed;
+        this.emptyStatesAllowed = allowed;
     }
 
     @Override
     protected boolean isValidValue(BitSet value) {
-        return emptyStatesAllowd || !value.isEmpty();
+        return emptyStatesAllowed || !value.isEmpty();
     }
 
     @Override
