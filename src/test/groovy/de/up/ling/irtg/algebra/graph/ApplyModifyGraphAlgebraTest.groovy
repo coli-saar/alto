@@ -3,7 +3,8 @@ package de.up.ling.irtg.algebra.graph
 import com.google.common.collect.Sets
 import de.saar.basic.Pair
 import de.up.ling.irtg.automata.TreeAutomaton
-import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.signature.Signature
+import de.up.ling.irtg.util.TestingTools;
 import de.up.ling.tree.ParseException
 import de.up.ling.tree.Tree
 import org.junit.Test
@@ -228,6 +229,18 @@ class ApplyModifyGraphAlgebraTest {
             threwError = true;
         }
         assert threwError;
+    }
+
+    @Test
+    public void testTypeSerialization() {
+        // Types needs to be serializable because the A* parser in am-tools caches the type lexicon
+
+        ApplyModifyGraphAlgebra.Type t = new ApplyModifyGraphAlgebra.Type(nestedCoordTypeString); // new ApplyModifyGraphAlgebra.Type("(s)"); // from testChangingTypes
+
+        byte[] serialized = TestingTools.pickle(t);
+        ApplyModifyGraphAlgebra.Type unpickled = TestingTools.unpickle(serialized, ApplyModifyGraphAlgebra.Type.class);
+
+        assert t.equals(unpickled);
     }
 
 
