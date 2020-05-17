@@ -26,7 +26,6 @@ import static de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra.GRAPH_TYPE_S
  * @author JG
  */
 public class AMDependencyTree {
-
     private Pair<SGraph, Type> headGraph; // label at this node
     private final List<Pair<String, AMDependencyTree>> operationsAndChildren; //operations that combine the children with headGraph
     
@@ -87,15 +86,19 @@ public class AMDependencyTree {
     public Pair<SGraph, Type> evaluate() {
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
         List<String> operations = new ArrayList<>();
-        List<AMDependencyTree> childTrees = new ArrayList<>();
+        List<Pair<SGraph, Type>> childResults = new ArrayList<>();
+
         for (Pair<String, AMDependencyTree> operationAndChild : operationsAndChildren) {
             operations.add(operationAndChild.left);
-            childTrees.add(operationAndChild.right);
+            Pair<SGraph, Type> childResult = operationAndChild.right.evaluate();
+
+            if( childResult == null ) {
+                return null;
+            } else {
+                childResults.add(childResult);
+            }
         }
-        List<Pair<SGraph, Type>> childResults = Lists.transform(childTrees, child -> child.evaluate());
-        if (childResults.contains(null)) {
-            return null;
-        }
+
         Pair<SGraph, Type> current = headGraph;
         IntList todo = new IntArrayList();
         for (int i = 0; i<childResults.size(); i++) {
