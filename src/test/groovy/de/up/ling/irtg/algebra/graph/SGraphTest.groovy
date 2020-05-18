@@ -68,10 +68,22 @@ class SGraphTest {
     }
     
     //tests that node names do not mess up iso
+    @Test
     public void testIso6() {
         SGraph g1 = pg("(v / want-01  :ARG0 (w)  :ARG1 (b))");        
         SGraph g2 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))");
         assertEquals(g1, g2);
+    }
+
+    //@Test
+    /**
+     * c.f. https://github.com/coli-saar/alto/issues/61
+     * TODO currently still failing, requires fix
+     */
+    public void testIso7() {
+        SGraph graph1 = new GraphAlgebra().parseString("[n3<root>/--LEX-- -polarity-> explicitanon2/-; n3 -ARG1-> t<s>]");
+        SGraph graph2 = new GraphAlgebra().parseString("[f<root>/--LEX-- -ARG0-> a<o>; f -ARG1-> c<s>]");
+        assertNotEquals(graph1, graph2);
     }
     
     @Test
