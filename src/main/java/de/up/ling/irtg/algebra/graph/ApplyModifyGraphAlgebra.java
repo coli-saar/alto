@@ -197,7 +197,12 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
         }
     }
 
-    
+
+    @Override
+    public String representAsString(Pair<SGraph, Type> object) {
+        return object.left.toIsiAmrStringWithSources()+GRAPH_TYPE_SEP+object.right.toString();
+    }
+
     /**
      * The type system of the AM algebra as described in Chapter 5 of
      * coli.uni-saarland.de/~jonasg/thesis.pdf
