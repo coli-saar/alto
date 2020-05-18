@@ -3388,14 +3388,25 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             }
 
             // M-step
+            int divisionsByZero = 0;
             for (Rule rule : getRuleSet()) {
                 // normalize weights per nonterminal (subtraction is division in log space)
-                double newWeight = globalRuleCount.get(rule) - globalStateCount.get(rule.getParent());
+                double normalizer = globalStateCount.get(rule.getParent());
+                double newWeight;
+                if (normalizer == Double.NEGATIVE_INFINITY) {
+                    newWeight = Double.NEGATIVE_INFINITY;
+                    divisionsByZero++;
+                } else {
+                    newWeight = globalRuleCount.get(rule) - normalizer;
+                }
 
                 rule.setWeight(Math.exp(newWeight));
                 for (Rule intersectedRule : ruleHereToDataRules.get(rule)) {
                     intersectedRule.setWeight(Math.exp(newWeight));
                 }
+            }
+            if (divisionsByZero > 0) {
+                System.err.println("There were "+divisionsByZero+" divisions by 0 during the M step. This may be due to numerical imprecision, or may indicate an error.");
             }
 
             if (debug) {
@@ -3433,6 +3444,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             globalRuleCount.put(rule, semiring.zero());
         }
 
+        int divisionsByZero = 0;
         for (int i = 0; i < parses.size(); i++) {
             TreeAutomaton<?> parse = parses.get(i);
 
@@ -3464,7 +3476,13 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
                 double oldRuleCount = globalRuleCount.get(originalRule);
                 // subtraction in log space is division
-                double thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), Math.log(intersectedRule.getWeight())) - logLikelihoodHere;
+                double thisRuleCount;
+                if (logLikelihoodHere == Double.NEGATIVE_INFINITY) {
+                    thisRuleCount = Double.NEGATIVE_INFINITY;
+                    divisionsByZero++;
+                } else {
+                    thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), Math.log(intersectedRule.getWeight())) - logLikelihoodHere;
+                }
 
                 for (int j = 0; j < intersectedRule.getArity(); j++) {
                     thisRuleCount = semiring.multiply(thisRuleCount, logInside.get(intersectedRule.getChildren()[j]));
@@ -3481,11 +3499,21 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             }
         }
 
+        if (divisionsByZero > 0) {
+            System.err.println("There were "+divisionsByZero+" divisions by 0 during the Estep. This may be due to numerical imprecision, or may indicate an error.");
+        }
+
         return logLikelihood;
     }
 
 
-//    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
+        double negInf = Double.NEGATIVE_INFINITY;
+        System.out.println(negInf);
+        System.out.println(negInf-1.0);
+        System.out.println(negInf-negInf);
+
+    }
 //        TreeAutomaton<String> auto = new TreeAutomatonInputCodec().read("A -> '(i_1<root> / --LEX--  :compound (i_2<S1>))--TYPE--(S1())' [0.07153849505878765]\n" +
 //                "A -> '(i_2<root> / --LEX--  :compound (i_3<S0>))--TYPE--(S0())' [0.0840018278516351]\n" +
 //                "A -> '(ART-ROOT<root> / --LEX--  :art-snt1 (i_3<S1>))--TYPE--(S1())' [0.016443917977383333]\n" +
