@@ -30,10 +30,8 @@ import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -198,5 +196,37 @@ public class TestingTools {
 
             return new EvaluatedItem<>(unevaluatedItem, wtree, itemWeight, null);
         }
+    }
+
+    /**
+     * Serialize an object to a byte array. Code from https://stackoverflow.com/questions/3840356/how-to-test-in-java-that-a-class-implements-serializable-correctly-not-just-is
+     * @param obj
+     * @param <T>
+     * @return
+     * @throws IOException
+     */
+    private static <T extends Serializable> byte[] pickle(T obj) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(obj);
+        oos.close();
+        return baos.toByteArray();
+    }
+
+    /**
+     * Deserialize an object from a byte array.
+     *
+     * @param b
+     * @param cl
+     * @param <T>
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private static <T extends Serializable> T unpickle(byte[] b, Class<T> cl) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(b);
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        Object o = ois.readObject();
+        return cl.cast(o);
     }
 }

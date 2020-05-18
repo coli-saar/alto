@@ -51,7 +51,7 @@ import org.jgrapht.graph.SimpleDirectedGraph;
  * 
  * @author koller
  */
-public class SGraph{
+public class SGraph {
     private DirectedMultigraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;

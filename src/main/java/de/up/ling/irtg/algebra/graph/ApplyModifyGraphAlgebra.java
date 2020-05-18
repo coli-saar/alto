@@ -877,7 +877,7 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
          * The GraphEdge class does not work here, since that requires
          * GraphNode objects 
          */
-        public static class Edge {
+        public static class Edge implements Serializable {
         
             private final String source;
             private final String target;
