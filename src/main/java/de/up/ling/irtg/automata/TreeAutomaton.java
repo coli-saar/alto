@@ -4,6 +4,8 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -25,6 +27,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.automata.pruning.*;
+import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
@@ -53,6 +56,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import net.didion.jwnl.data.Exc;
 import org.apache.commons.math3.special.Gamma;
 
 import java.io.*;
@@ -3388,9 +3392,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 // normalize weights per nonterminal (subtraction is division in log space)
                 double newWeight = globalRuleCount.get(rule) - globalStateCount.get(rule.getParent());
 
-                rule.setWeight(newWeight);
+                rule.setWeight(Math.exp(newWeight));
                 for (Rule intersectedRule : ruleHereToDataRules.get(rule)) {
-                    intersectedRule.setWeight(newWeight);
+                    intersectedRule.setWeight(Math.exp(newWeight));
                 }
             }
 
@@ -3460,7 +3464,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
                 double oldRuleCount = globalRuleCount.get(originalRule);
                 // subtraction in log space is division
-                double thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), intersectedRule.getWeight()) - logLikelihoodHere;
+                double thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), Math.log(intersectedRule.getWeight())) - logLikelihoodHere;
 
                 for (int j = 0; j < intersectedRule.getArity(); j++) {
                     thisRuleCount = semiring.multiply(thisRuleCount, logInside.get(intersectedRule.getChildren()[j]));
@@ -3479,6 +3483,68 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
         return logLikelihood;
     }
+
+
+//    public static void main(String[] args) throws Exception {
+//        TreeAutomaton<String> auto = new TreeAutomatonInputCodec().read("A -> '(i_1<root> / --LEX--  :compound (i_2<S1>))--TYPE--(S1())' [0.07153849505878765]\n" +
+//                "A -> '(i_2<root> / --LEX--  :compound (i_3<S0>))--TYPE--(S0())' [0.0840018278516351]\n" +
+//                "A -> '(ART-ROOT<root> / --LEX--  :art-snt1 (i_3<S1>))--TYPE--(S1())' [0.016443917977383333]\n" +
+//                "A -> '(i_3<root> / --LEX--)--TYPE--()' [0.05676762092225551]\n" +
+//                "A -> '(ART-ROOT<root> / --LEX--  :art-snt1 (i_3<S0>))--TYPE--(S0())' [0.09095797824446981]\n" +
+//                "B -> APP_S1(A, A) [0.030826121140892268]\n" +
+//                "B -> MOD_S0(A, A) [0.0574610009581227]\n" +
+//                "C! -> APP_S0(A, B) [0.026332376273468017]\n" +
+//                "C! -> MOD_S1(B, B) [0.0452509353696449]");
+//
+//        List<TreeAutomaton<?>> concreteDecompositionAutomata = new ArrayList<>();
+//        concreteDecompositionAutomata.add(auto);
+//
+//        ConcreteTreeAutomaton<String> grammarAutomaton = new ConcreteTreeAutomaton<>();
+//        String dummyState = "X";
+//        Random random = new Random();
+//        List<Map<Rule, Rule>> dataRuleToGrammarRule = new ArrayList<>();
+//        ListMultimap<Rule, Rule> grammarRuleToDataRules = ArrayListMultimap.create();
+//
+//        double ruleSum = 0.0;
+//        for (TreeAutomaton<?> dataAutomaton : concreteDecompositionAutomata) {
+//            Map<Rule, Rule> rulesMapForThisAuto = new HashMap<>();
+//            dataRuleToGrammarRule.add(rulesMapForThisAuto);
+//            for (Rule dataRule : dataAutomaton.getRuleSet()) {
+//                List<String> children = new ArrayList<>();
+//                for (int child : dataRule.getChildren()) {
+//                    children.add(dummyState);
+//                }
+//                String grammarLabel = dataRule.getLabel(dataAutomaton);
+//
+//                Rule grammarRule = grammarAutomaton.createRule(dummyState, grammarLabel, children, random.nextDouble());
+//                ruleSum += grammarRule.getWeight();
+//                rulesMapForThisAuto.put(dataRule, grammarRule);
+//                grammarRuleToDataRules.put(grammarRule, dataRule);//can just do it like this, if same grammar rule shows up multiple times, the ListMultimap will keep multiple entries
+//                grammarAutomaton.addRule(grammarRule);
+//            }
+//        }
+//
+//        //normalize rule weights, or else EM won't work right
+//        for (Rule grammarRule : grammarRuleToDataRules.keySet()) {
+//            grammarRule.setWeight(grammarRule.getWeight()/ruleSum);
+//        }
+//
+//        //need to give data automata the same weights
+//        for (Rule grammarRule : grammarRuleToDataRules.keySet()) {
+//            for (Rule dataRule : grammarRuleToDataRules.get(grammarRule)) {
+//                dataRule.setWeight(grammarRule.getWeight());
+//            }
+//        }
+//
+//        System.out.println(grammarAutomaton);
+//
+//        Pair<Integer, Double> iterationAndDiff = grammarAutomaton.trainEM(concreteDecompositionAutomata,
+//                dataRuleToGrammarRule, grammarRuleToDataRules, 100, 0.00000001, true, null);
+//
+//        System.out.println("EM stopped after iteration "+iterationAndDiff.left+" with difference "+iterationAndDiff.right);
+//
+//        System.out.println(grammarAutomaton);
+//    }
 
 
     /**
