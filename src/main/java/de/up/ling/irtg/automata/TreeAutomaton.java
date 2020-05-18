@@ -26,7 +26,6 @@ import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.automata.pruning.*;
 import de.up.ling.irtg.corpus.Corpus;
-import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
@@ -59,11 +58,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
 import org.apache.commons.math3.special.Gamma;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.io.Writer;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -1081,6 +1076,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
     }
 
+
+
     private <E> Tree<E> getRandomTreeFromInside(int state, Random rnd, Map<Integer, Double> inside, Function<Rule, E> makeLabel) {
         List<Rule> rulesHere = Lists.newArrayList(getRulesTopDown(state));
         double selectWeight = rnd.nextDouble() * inside.get(state);
@@ -1101,80 +1098,88 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return null;
     }
 
-     * @return
-     */
-    public Tree<String> getRandomViterbiTree() {
-        double epsilon = Math.pow(10, -9);
-        Int2ObjectMap<Pair<Double, Rule>> inside = viterbiInside();
-        Map<Integer, Pair<Double, Rule>> outside = viterbiOutside(inside);
-        ConcreteTreeAutomaton<State> viterbiAutomaton = new ConcreteTreeAutomaton<>(getSignature());
-        double maxScore = viterbiRaw().getWeight();
-        for (Rule rule : getRuleSet()) {
-            double ruleScore = rule.getWeight() * outside.getOrDefault(rule.getParent(), new Pair<>(0.0, null)).left;
-            for (int child : rule.getChildren()) {
-                ruleScore *= inside.get(child).left;
-            }
-            if (ruleScore >= (1-epsilon)*maxScore) {
-                viterbiAutomaton.stateInterner.addObjectWithIndex(rule.getParent(), getStateForId(rule.getParent()));
-                for (int child : rule.getChildren()) {
-                    viterbiAutomaton.stateInterner.addObjectWithIndex(child, getStateForId(child));
-                }
-                viterbiAutomaton.addRule(rule);
-            }
-        }
-        for (int finalState : getFinalStates()) {
-            if (viterbiAutomaton.stateInterner.getKnownIds().contains(finalState)) {
-                viterbiAutomaton.addFinalState(finalState);
-            }
-        }
-        return viterbiAutomaton.getRandomTree();
-    }
-
-    public static void main(String[] args) throws Exception {
-        ConcreteTreeAutomaton<String> auto = ConcreteTreeAutomaton.createRandomAcyclicAutomaton(100, 20, 1, 2);
-        System.out.println(auto);
-        System.out.println(auto.viterbi());
-        for (int i = 0; i<1; i++) {
-            System.out.println(auto.getRandomViterbiTree());
-        }
-    }
-
-
-    /**
-     * Returns a map representing the viterbi inside score of each reachable state.
-     *
-     * @return
-     */
-    private Int2ObjectMap<Pair<Double, Rule>> viterbiInside() {
-        return evaluateInSemiring(new ViterbiWithBackpointerSemiring(), (Rule rule) -> new Pair(rule.getWeight(), rule));
-    }
-
-    /**
-     * Returns a map representing the viterbi outside score of each reachable
-     * state.
-     *
-     * @param viterbiInside a map representing the viterbi inside score of each state.
-     * @return
-     */
-    private Map<Integer, Pair<Double, Rule>> viterbiOutside(final Int2ObjectMap<Pair<Double, Rule>> viterbiInside) {
-        return evaluateInSemiringTopDown(new ViterbiWithBackpointerSemiring(), new RuleEvaluatorTopDown<Pair<Double, Rule>>() {
-            @Override
-            public Pair<Double, Rule> initialValue() {
-                return new Pair(1.0, null);
-            }
-
-            @Override
-            public Pair<Double, Rule> evaluateRule(Rule rule, int i) {
-                Double ret = rule.getWeight();
-                for (int j = 0; j < rule.getArity(); j++) {
-                    if (j != i) {
-                        ret = ret * viterbiInside.get(rule.getChildren()[j]).left;
-                    }
-                }
-                return new Pair(ret, rule);
-            }
-        });
-    }
+//
+//    /**
+//     * Of all the trees with maximal scores, i.e. of all viterbi trees, this returns a random one. By contrast,
+//     * the TreeAutomaton#viterbi() method returns an arbitrary one. If the language is empty, returns null.
+//     * A naive implementation enumerating all optimal trees could have exponential runtime.
+//     * This method is implemented in the following way: first, the viterbi inside and outside scores for each rule
+//     * are computed, and then the total viterbi scores (inside, outside, rule weight). Then, only rules where this score
+//     * is maximal are added to a new automaton; a random tree from that automaton is returned.
+//     * @return
+//     */
+//    public Tree<String> getRandomViterbiTree() {
+//        double epsilon = Math.pow(10, -9);
+//        Int2ObjectMap<Pair<Double, Rule>> inside = viterbiInside();
+//        Map<Integer, Pair<Double, Rule>> outside = viterbiOutside(inside);
+//        ConcreteTreeAutomaton<State> viterbiAutomaton = new ConcreteTreeAutomaton<>(getSignature());
+//        double maxScore = viterbiRaw().getWeight();
+//        for (Rule rule : getRuleSet()) {
+//            double ruleScore = rule.getWeight() * outside.getOrDefault(rule.getParent(), new Pair<>(0.0, null)).left;
+//            for (int child : rule.getChildren()) {
+//                ruleScore *= inside.get(child).left;
+//            }
+//            if (ruleScore >= (1-epsilon)*maxScore) {
+//                viterbiAutomaton.stateInterner.addObjectWithIndex(rule.getParent(), getStateForId(rule.getParent()));
+//                for (int child : rule.getChildren()) {
+//                    viterbiAutomaton.stateInterner.addObjectWithIndex(child, getStateForId(child));
+//                }
+//                viterbiAutomaton.addRule(rule);
+//            }
+//        }
+//        for (int finalState : getFinalStates()) {
+//            if (viterbiAutomaton.stateInterner.getKnownIds().contains(finalState)) {
+//                viterbiAutomaton.addFinalState(finalState);
+//            }
+//        }
+//        return viterbiAutomaton.getRandomTree();
+//    }
+//
+//    public static void main(String[] args) throws Exception {
+//        ConcreteTreeAutomaton<String> auto = ConcreteTreeAutomaton.createRandomAcyclicAutomaton(100, 20, 1, 2);
+//        System.out.println(auto);
+//        System.out.println(auto.viterbi());
+//        for (int i = 0; i<1; i++) {
+//            System.out.println(auto.getRandomViterbiTree());
+//        }
+//    }
+//
+//
+//    /**
+//     * Returns a map representing the viterbi inside score of each reachable state.
+//     *
+//     * @return
+//     */
+//    private Int2ObjectMap<Pair<Double, Rule>> viterbiInside() {
+//        return evaluateInSemiring(new ViterbiWithBackpointerSemiring(), (Rule rule) -> new Pair(rule.getWeight(), rule));
+//    }
+//
+//    /**
+//     * Returns a map representing the viterbi outside score of each reachable
+//     * state.
+//     *
+//     * @param viterbiInside a map representing the viterbi inside score of each state.
+//     * @return
+//     */
+//    private Map<Integer, Pair<Double, Rule>> viterbiOutside(final Int2ObjectMap<Pair<Double, Rule>> viterbiInside) {
+//        return evaluateInSemiringTopDown(new ViterbiWithBackpointerSemiring(), new RuleEvaluatorTopDown<Pair<Double, Rule>>() {
+//            @Override
+//            public Pair<Double, Rule> initialValue() {
+//                return new Pair(1.0, null);
+//            }
+//
+//            @Override
+//            public Pair<Double, Rule> evaluateRule(Rule rule, int i) {
+//                Double ret = rule.getWeight();
+//                for (int j = 0; j < rule.getArity(); j++) {
+//                    if (j != i) {
+//                        ret = ret * viterbiInside.get(rule.getChildren()[j]).left;
+//                    }
+//                }
+//                return new Pair(ret, rule);
+//            }
+//        });
+//    }
 
 
     /**
@@ -3292,8 +3297,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param ruleHereToDataRules for each automaton in the data, this maps each rule in this automaton to all corresponding
      *                            rules in the data automaton.
      * @param iterations maximum number of steps run
+     * @param threshold if the change in inside score in one run is less than this, the process will stop early
+     * @param debug if true, prints lots of debug information
+     * @param listener progress listener if you want to keep track of how things are progressing (may be null)
+     * @return returns a pair of number of iterations run (1-based) and difference in inside in the last step
      */
-    public void trainEM(List<TreeAutomaton> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
+    public Pair<Integer, Double> trainEM(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
                         ListMultimap<Rule, Rule> ruleHereToDataRules, int iterations, double threshold, boolean debug,
                         ProgressListener listener) {
         Map<Rule, Double> globalRuleCount = new HashMap<>();
@@ -3352,6 +3361,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             }
             ++iteration;
         }
+        return new Pair<>(iteration, difference);
     }
 
 
@@ -3369,7 +3379,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param iteration
      * @return
      */
-    public double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule,
+    private double estep(List<TreeAutomaton<?>> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule,
                         ProgressListener listener, int iteration, boolean debug) {
         double logLikelihood = 0;
 
@@ -3429,6 +3439,79 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return logLikelihood;
     }
 
+
+    /**
+     * Performs Variational Bayes (VB) training of this (weighted) IRTG using
+     * the given corpus. The corpus may be unannotated; if it contains annotated
+     * derivation trees, these are ignored by the algorithm. However, it must
+     * contain a parse chart for each instance (see {@link Corpus} for details)
+     * .<p>
+     *
+     * This method implements the algorithm from Jones et al., "Semantic Parsing
+     * with Bayesian Tree Transducers", ACL 2012.
+     *
+     * @param data
+     * @param dataRuleToRuleHere
+     * @param iterations the maximum number of iterations allowed
+     * @param threshold the minimum change in the ELBO before iterations are
+     * stopped
+     * @param listener a progress listener that will be given information about
+     * the progress of the optimization.
+     * @param debug
+     */
+    public void trainVB(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere, int iterations,
+                        double threshold, ProgressListener listener, boolean debug) {
+
+
+        // initialize hyperparameters
+        List<Rule> automatonRules = new ArrayList<>();
+        Iterables.addAll(automatonRules, getRuleSet()); // bring rules in defined order
+
+        int numRules = automatonRules.size();
+        double[] alpha = new double[numRules];
+        Arrays.fill(alpha, 1.0); // might want to initialize them differently
+
+        Map<Rule, Double> ruleCounts = new HashMap<>();
+        // Threshold parameters
+        if (iterations <= 0) {
+            iterations = Integer.MAX_VALUE;
+        }
+        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
+        double difference = Double.POSITIVE_INFINITY;
+        int iteration = 0;
+
+        // iterate
+        while (difference > threshold && iteration < iterations) {
+            // for each state, compute sum of alphas for outgoing rules
+            Map<Integer, Double> sumAlphaForSameParent = new HashMap<>();
+            for (int i = 0; i < numRules; i++) {
+                int parent = automatonRules.get(i).getParent();
+                if (sumAlphaForSameParent.containsKey(parent)) {
+                    sumAlphaForSameParent.put(parent, sumAlphaForSameParent.get(parent) + alpha[i]);
+                } else {
+                    sumAlphaForSameParent.put(parent, alpha[i]);
+                }
+            }
+
+            // re-estimate rule weights
+            for (int i = 0; i < numRules; i++) {
+                Rule rule = automatonRules.get(i);
+                rule.setWeight(Math.exp(Gamma.digamma(alpha[i]) - Gamma.digamma(sumAlphaForSameParent.get(rule.getParent()))));
+            }
+
+            // re-estimate hyperparameters
+            double logLikelihood = estep(data, ruleCounts, dataRuleToRuleHere, listener, iteration, debug);
+            assert logLikelihood >= oldLogLikelihood;
+            for (int i = 0; i < numRules; i++) {
+                alpha[i] += ruleCounts.get(automatonRules.get(i));
+            }
+
+            // calculate the difference for comparrison with the given threshold
+            difference = logLikelihood - oldLogLikelihood;
+            oldLogLikelihood = logLikelihood;
+            ++iteration;
+        }
+    }
 
 
 }
