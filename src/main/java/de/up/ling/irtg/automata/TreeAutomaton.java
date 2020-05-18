@@ -3491,6 +3491,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 globalRuleCount.put(originalRule, semiring.add(oldRuleCount, thisRuleCount));
             }
 
+            logLikelihoodHere = Math.max(logLikelihoodHere, -1000000);
+
             logLikelihood += logLikelihoodHere;
 
             if (listener != null) {
