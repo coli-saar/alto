@@ -28,10 +28,7 @@ import de.up.ling.irtg.automata.pruning.*;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
-import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
-import de.up.ling.irtg.semiring.LongArithmeticSemiring;
-import de.up.ling.irtg.semiring.Semiring;
-import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
+import de.up.ling.irtg.semiring.*;
 import de.up.ling.irtg.siblingfinder.SiblingFinder;
 import de.up.ling.irtg.siblingfinder.SiblingFinderIntersection;
 import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
@@ -795,7 +792,17 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Int2ObjectMap<Double> inside() {
-        return evaluateInSemiring(new DoubleArithmeticSemiring(), (Rule rule) -> rule.getWeight());
+        return evaluateInSemiring(new DoubleArithmeticSemiring(), Rule::getWeight);
+    }
+
+    /**
+     * Returns a map representing the inside log-probability of each reachable
+     * state.
+     *
+     * @return
+     */
+    public Int2ObjectMap<Double> logInside() {
+        return evaluateInSemiring(new LogDoubleArithmeticSemiring(), (Rule rule) -> Math.log(rule.getWeight()));
     }
 
     /**
@@ -823,6 +830,33 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                                          return ret;
                                      }
                                  });
+    }
+
+    /**
+     * Returns a map representing the outside log probability of each reachable
+     * state.
+     *
+     * @param logInside a map representing the inside logprobability of each state.
+     * @return
+     */
+    public Map<Integer, Double> logOutside(final Map<Integer, Double> logInside) {
+        return evaluateInSemiringTopDown(new LogDoubleArithmeticSemiring(), new RuleEvaluatorTopDown<Double>() {
+            @Override
+            public Double initialValue() {
+                return 0.0;
+            }
+
+            @Override
+            public Double evaluateRule(Rule rule, int i) {
+                Double ret = Math.log(rule.getWeight());
+                for (int j = 0; j < rule.getArity(); j++) {
+                    if (j != i) {
+                        ret += logInside.get(rule.getChildren()[j]);
+                    }
+                }
+                return ret;
+            }
+        });
     }
 
     /**
@@ -3290,6 +3324,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * Adjusts the weights of this automaton with the EM algorithm, for a given set of data, represented as tree automata.
+     * IMPORTANT: the rules of this automaton must be normalized (weights of rules with the same parent nonterminal sum
+     * to 1) and the weights of the data automata must already be matching the rules of this automaton.//TODO fix this
      * @param data The automata in the data. There is a one-to-many map assumption between the rules of this automaton
      *             and the rules in the data automata, see the maps that are the other arguments.
      * @param dataRuleToRuleHere for each automaton in the data, this maps each rule from the data automaton to a rule
@@ -3305,6 +3341,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public Pair<Integer, Double> trainEM(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
                         ListMultimap<Rule, Rule> ruleHereToDataRules, int iterations, double threshold, boolean debug,
                         ProgressListener listener) {
+        LogDoubleArithmeticSemiring semiring = new LogDoubleArithmeticSemiring();
         Map<Rule, Double> globalRuleCount = new HashMap<>();
         // Threshold parameters
         if (iterations <= 0) {
@@ -3338,17 +3375,18 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             // sum over rules with same parent state to obtain state counts
             Map<Integer, Double> globalStateCount = new HashMap<>();
             for (int state : getAllStates()) {
-                globalStateCount.put(state, 0.0);
+                globalStateCount.put(state, semiring.zero());
             }
 
             for (Rule rule : getRuleSet()) {
                 int state = rule.getParent();
-                globalStateCount.put(state, globalStateCount.get(state) + globalRuleCount.get(rule));
+                globalStateCount.put(state, semiring.add(globalStateCount.get(state), globalRuleCount.get(rule)));
             }
 
             // M-step
             for (Rule rule : getRuleSet()) {
-                double newWeight = globalRuleCount.get(rule) / globalStateCount.get(rule.getParent());
+                // normalize weights per nonterminal (subtraction is division in log space)
+                double newWeight = globalRuleCount.get(rule) - globalStateCount.get(rule.getParent());
 
                 rule.setWeight(newWeight);
                 for (Rule intersectedRule : ruleHereToDataRules.get(rule)) {
@@ -3381,37 +3419,39 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     private double estep(List<TreeAutomaton<?>> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule,
                         ProgressListener listener, int iteration, boolean debug) {
-        double logLikelihood = 0;
+        LogDoubleArithmeticSemiring semiring = new LogDoubleArithmeticSemiring();
+
+        double logLikelihood = 0.0;
 
         globalRuleCount.clear();
 
         for (Rule rule : getRuleSet()) {
-            globalRuleCount.put(rule, 0.0);
+            globalRuleCount.put(rule, semiring.zero());
         }
 
         for (int i = 0; i < parses.size(); i++) {
-            TreeAutomaton parse = parses.get(i);
+            TreeAutomaton<?> parse = parses.get(i);
 
-            Map<Integer, Double> inside = parse.inside();
-            Map<Integer, Double> outside = parse.outside(inside);
+            Map<Integer, Double> logInside = parse.logInside();
+            Map<Integer, Double> logOutside = parse.logOutside(logInside);
 
             if (debug) {
-                System.out.println("Inside and outside probabilities for chart #" + i);
+                System.out.println("logInside and logOutside probabilities for chart #" + i);
 
-                for (Integer r : inside.keySet()) {
-                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + inside.get(r));
+                for (Integer r : logInside.keySet()) {
+                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + logInside.get(r));
                 }
                 System.out.println("-");
 
-                for (Integer r : outside.keySet()) {
-                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + outside.get(r));
+                for (Integer r : logOutside.keySet()) {
+                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + logOutside.get(r));
                 }
                 System.out.println();
             }
 
-            double likelihoodHere = 0;
+            double logLikelihoodHere = semiring.zero();
             for (int finalState : parse.getFinalStates()) {
-                likelihoodHere += inside.get(finalState);
+                logLikelihoodHere = semiring.add(logLikelihoodHere, logInside.get(finalState));
             }
 
             for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
@@ -3419,16 +3459,17 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 Rule originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
 
                 double oldRuleCount = globalRuleCount.get(originalRule);
-                double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight() / likelihoodHere;
+                // subtraction in log space is division
+                double thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), intersectedRule.getWeight()) - logLikelihoodHere;
 
                 for (int j = 0; j < intersectedRule.getArity(); j++) {
-                    thisRuleCount *= inside.get(intersectedRule.getChildren()[j]);
+                    thisRuleCount = semiring.multiply(thisRuleCount, logInside.get(intersectedRule.getChildren()[j]));
                 }
 
-                globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
+                globalRuleCount.put(originalRule, semiring.add(oldRuleCount, thisRuleCount));
             }
 
-            logLikelihood += Math.log(likelihoodHere);
+            logLikelihood += logLikelihoodHere;
 
             if (listener != null) {
                 listener.accept(i + 1, parses.size(), null);
