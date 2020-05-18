@@ -1101,6 +1101,82 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return null;
     }
 
+     * @return
+     */
+    public Tree<String> getRandomViterbiTree() {
+        double epsilon = Math.pow(10, -9);
+        Int2ObjectMap<Pair<Double, Rule>> inside = viterbiInside();
+        Map<Integer, Pair<Double, Rule>> outside = viterbiOutside(inside);
+        ConcreteTreeAutomaton<State> viterbiAutomaton = new ConcreteTreeAutomaton<>(getSignature());
+        double maxScore = viterbiRaw().getWeight();
+        for (Rule rule : getRuleSet()) {
+            double ruleScore = rule.getWeight() * outside.getOrDefault(rule.getParent(), new Pair<>(0.0, null)).left;
+            for (int child : rule.getChildren()) {
+                ruleScore *= inside.get(child).left;
+            }
+            if (ruleScore >= (1-epsilon)*maxScore) {
+                viterbiAutomaton.stateInterner.addObjectWithIndex(rule.getParent(), getStateForId(rule.getParent()));
+                for (int child : rule.getChildren()) {
+                    viterbiAutomaton.stateInterner.addObjectWithIndex(child, getStateForId(child));
+                }
+                viterbiAutomaton.addRule(rule);
+            }
+        }
+        for (int finalState : getFinalStates()) {
+            if (viterbiAutomaton.stateInterner.getKnownIds().contains(finalState)) {
+                viterbiAutomaton.addFinalState(finalState);
+            }
+        }
+        return viterbiAutomaton.getRandomTree();
+    }
+
+    public static void main(String[] args) throws Exception {
+        ConcreteTreeAutomaton<String> auto = ConcreteTreeAutomaton.createRandomAcyclicAutomaton(100, 20, 1, 2);
+        System.out.println(auto);
+        System.out.println(auto.viterbi());
+        for (int i = 0; i<1; i++) {
+            System.out.println(auto.getRandomViterbiTree());
+        }
+    }
+
+
+    /**
+     * Returns a map representing the viterbi inside score of each reachable state.
+     *
+     * @return
+     */
+    private Int2ObjectMap<Pair<Double, Rule>> viterbiInside() {
+        return evaluateInSemiring(new ViterbiWithBackpointerSemiring(), (Rule rule) -> new Pair(rule.getWeight(), rule));
+    }
+
+    /**
+     * Returns a map representing the viterbi outside score of each reachable
+     * state.
+     *
+     * @param viterbiInside a map representing the viterbi inside score of each state.
+     * @return
+     */
+    private Map<Integer, Pair<Double, Rule>> viterbiOutside(final Int2ObjectMap<Pair<Double, Rule>> viterbiInside) {
+        return evaluateInSemiringTopDown(new ViterbiWithBackpointerSemiring(), new RuleEvaluatorTopDown<Pair<Double, Rule>>() {
+            @Override
+            public Pair<Double, Rule> initialValue() {
+                return new Pair(1.0, null);
+            }
+
+            @Override
+            public Pair<Double, Rule> evaluateRule(Rule rule, int i) {
+                Double ret = rule.getWeight();
+                for (int j = 0; j < rule.getArity(); j++) {
+                    if (j != i) {
+                        ret = ret * viterbiInside.get(rule.getChildren()[j]).left;
+                    }
+                }
+                return new Pair(ret, rule);
+            }
+        });
+    }
+
+
     /**
      * Sets a filter for printing the automaton's rules. This filter is being
      * used in the {@link #toString()} method to decide which rules are included
@@ -3215,6 +3291,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *                           in this automaton.
      * @param ruleHereToDataRules for each automaton in the data, this maps each rule in this automaton to all corresponding
      *                            rules in the data automaton.
+     * @param iterations maximum number of steps run
      */
     public void trainEM(List<TreeAutomaton> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
                         ListMultimap<Rule, Rule> ruleHereToDataRules, int iterations, double threshold, boolean debug,

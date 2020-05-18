@@ -537,7 +537,7 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton> parses = new ArrayList<>();
+        List<TreeAutomaton<?>> parses = new ArrayList<>();
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
@@ -624,58 +624,12 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton> parses = new ArrayList<>();
+        List<TreeAutomaton<?>> parses = new ArrayList<>();
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
 
-        // initialize hyperparameters
-        List<Rule> automatonRules = new ArrayList<>();
-        Iterables.addAll(automatonRules, getAutomaton().getRuleSet()); // bring rules in defined order
+        getAutomaton().trainVB(parses, intersectedRuleToOriginalRule, iterations, threshold, listener, debug);
 
-        int numRules = automatonRules.size();
-        double[] alpha = new double[numRules];
-        Arrays.fill(alpha, 1.0); // might want to initialize them differently
-
-        Map<Rule, Double> ruleCounts = new HashMap<>();
-        // Threshold parameters
-        if (iterations <= 0) {
-            iterations = Integer.MAX_VALUE;
-        }
-        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
-        double difference = Double.POSITIVE_INFINITY;
-        int iteration = 0;
-
-        // iterate
-        while (difference > threshold && iteration < iterations) {
-            // for each state, compute sum of alphas for outgoing rules
-            Map<Integer, Double> sumAlphaForSameParent = new HashMap<>();
-            for (int i = 0; i < numRules; i++) {
-                int parent = automatonRules.get(i).getParent();
-                if (sumAlphaForSameParent.containsKey(parent)) {
-                    sumAlphaForSameParent.put(parent, sumAlphaForSameParent.get(parent) + alpha[i]);
-                } else {
-                    sumAlphaForSameParent.put(parent, alpha[i]);
-                }
-            }
-
-            // re-estimate rule weights
-            for (int i = 0; i < numRules; i++) {
-                Rule rule = automatonRules.get(i);
-                rule.setWeight(Math.exp(Gamma.digamma(alpha[i]) - Gamma.digamma(sumAlphaForSameParent.get(rule.getParent()))));
-            }
-
-            // re-estimate hyperparameters
-            double logLikelihood = getAutomaton().estep(parses, ruleCounts, intersectedRuleToOriginalRule, listener, iteration, debug);
-            assert logLikelihood >= oldLogLikelihood;
-            for (int i = 0; i < numRules; i++) {
-                alpha[i] += ruleCounts.get(automatonRules.get(i));
-            }
-
-            // calculate the difference for comparrison with the given threshold
-            difference = logLikelihood - oldLogLikelihood;
-            oldLogLikelihood = logLikelihood;
-            ++iteration;
-        }
     }
 
     /**
@@ -690,7 +644,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param intersectedRuleToOriginalRule
      * @param originalRuleToIntersectedRules
      */
-    private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
+    private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton<?>> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
         parses.clear();
         intersectedRuleToOriginalRule.clear();
 
