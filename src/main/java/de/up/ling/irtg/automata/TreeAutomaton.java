@@ -4,30 +4,15 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.algebra.graph.ApplyModifyGraphAlgebra;
-import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.SortedMultiset;
-import com.google.common.collect.TreeMultiset;
+import com.google.common.collect.*;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import de.up.ling.irtg.automata.condensed.CondensedBottomUpIntersectionAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
+import de.up.ling.irtg.automata.condensed.*;
 import de.up.ling.irtg.automata.index.RuleStore;
-import de.up.ling.irtg.automata.pruning.*;
-import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
+import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
+import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
@@ -41,36 +26,11 @@ import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.*;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
-import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
-import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntIterable;
-import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.ints.IntSets;
-import net.didion.jwnl.data.Exc;
+import it.unimi.dsi.fastutil.ints.*;
 import org.apache.commons.math3.special.Gamma;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.ToIntFunction;
@@ -3355,6 +3315,23 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         double difference = Double.POSITIVE_INFINITY;
         int iteration = 0;
 
+        //normalize rule weights, or else EM won't work right
+        Int2DoubleMap stateRuleSums = new Int2DoubleOpenHashMap();
+        for (Rule grammarRule : getRuleSet()) {
+            stateRuleSums.put(grammarRule.getParent(),
+                    grammarRule.getWeight() + stateRuleSums.getOrDefault(grammarRule.getParent(), 0.0));
+        }
+        for (Rule grammarRule : getRuleSet()) {
+            grammarRule.setWeight(grammarRule.getWeight() / stateRuleSums.get(grammarRule.getParent()));
+        }
+
+        //need to give data automata the same weights
+        for (Rule grammarRule : getRuleSet()) {
+            for (Rule dataRule : ruleHereToDataRules.get(grammarRule)) {
+                dataRule.setWeight(grammarRule.getWeight());
+            }
+        }
+
         while (difference > threshold && iteration < iterations) {
             if (debug) {
                 for (Rule r : ruleHereToDataRules.keySet()) {
@@ -3368,7 +3345,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
             // get the new log likelihood and substract the old one from it for comparison with the given threshold
             double logLikelihood = estep(data, globalRuleCount, dataRuleToRuleHere, listener, iteration, debug);
-            assert logLikelihood >= oldLogLikelihood;
+            assert logLikelihood >= oldLogLikelihood - 0.0000001; // don't want rounding errors to interfere
             difference = logLikelihood - oldLogLikelihood;
             oldLogLikelihood = logLikelihood;
 
@@ -3508,14 +3485,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return logLikelihood;
     }
 
-
-    public static void main(String[] args) throws Exception {
-        double negInf = Double.NEGATIVE_INFINITY;
-        System.out.println(negInf);
-        System.out.println(negInf-1.0);
-        System.out.println(negInf-negInf);
-
-    }
 //        TreeAutomaton<String> auto = new TreeAutomatonInputCodec().read("A -> '(i_1<root> / --LEX--  :compound (i_2<S1>))--TYPE--(S1())' [0.07153849505878765]\n" +
 //                "A -> '(i_2<root> / --LEX--  :compound (i_3<S0>))--TYPE--(S0())' [0.0840018278516351]\n" +
 //                "A -> '(ART-ROOT<root> / --LEX--  :art-snt1 (i_3<S1>))--TYPE--(S1())' [0.016443917977383333]\n" +
