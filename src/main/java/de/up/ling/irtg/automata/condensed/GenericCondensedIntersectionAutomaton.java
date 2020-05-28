@@ -69,6 +69,17 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     private final SignatureMapper leftToRightSignatureMapper;
     private final PruningPolicy pp;
 
+    private long itemLimit = Long.MAX_VALUE;
+    private long itemsCounted = 0;
+
+    public long getItemLimit() {
+        return itemLimit;
+    }
+
+    public void setItemLimit(long itemLimit) {
+        this.itemLimit = itemLimit;
+    }
+
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
     // (index first by right state, then by left state because almost all right states
     // receive corresponding left states, but not vice versa. This keeps outer map very dense,
@@ -165,6 +176,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         D(depth, () -> "cky called: " + right.getStateForId(q));
 
         if (!visited.contains(q)) {
+            if (itemsCounted++ > itemLimit) {
+                throw new IllegalStateException("Number of items in GenericCondensedIntersectionAutomaton exceed given limit of "+itemLimit);
+            }
             visited.add(q);
             D(depth, () -> "-> processing " + right.getStateForId(q));
 
