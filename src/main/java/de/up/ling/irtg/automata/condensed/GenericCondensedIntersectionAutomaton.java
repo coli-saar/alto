@@ -120,7 +120,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     @Override
     public void makeAllRulesExplicit() {
         if (!ruleStore.isExplicit()) {
-            ruleStore.setExplicit(true);
             getStateInterner().setTrustingMode(true);
 
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<>();
@@ -148,6 +147,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 //                long collectedRules = pp.numCollectedRules();
 //                System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
 //            }
+            ruleStore.setExplicit(true);
         }
     }
 
@@ -176,9 +176,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         D(depth, () -> "cky called: " + right.getStateForId(q));
 
         if (!visited.contains(q)) {
-            if (itemsCounted++ > itemLimit) {
-                throw new IllegalStateException("Number of items in GenericCondensedIntersectionAutomaton exceed given limit of "+itemLimit);
-            }
             visited.add(q);
             D(depth, () -> "-> processing " + right.getStateForId(q));
 
@@ -241,6 +238,10 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                                  Rule rule = combineRules(leftRule, rightRule);
 
                                  // transfer rule to staging area for output rules
+
+                                 if (itemsCounted++ > itemLimit) {
+                                     throw new IllegalStateException("Number of items in GenericCondensedIntersectionAutomaton exceed given limit of "+itemLimit);
+                                 }
                                  collectOutputRule(rule);
 
                                  assert q == rightRule.getParent() : "found right rule " + rightRule.toString(right) + " at right state " + right.getStateForId(q);

@@ -344,7 +344,7 @@ public class Interner<E> implements Serializable, Cloneable {
     }
 
     /**
-     * Returns whether the interner is currently in trusting mode, meaing it assumes
+     * Returns whether the interner is currently in trusting mode, meaning it assumes
      * that there will be no attempts to add the same object twice.
      * @return 
      */
