@@ -3288,15 +3288,13 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * Adjusts the weights of this automaton with the EM algorithm, for a given set of data, represented as tree automata.
-     * IMPORTANT: the rules of this automaton must be normalized (weights of rules with the same parent nonterminal sum
-     * to 1) and the weights of the data automata must already be matching the rules of this automaton.//TODO fix this
      * @param data The automata in the data. There is a one-to-many map assumption between the rules of this automaton
      *             and the rules in the data automata, see the maps that are the other arguments.
      * @param dataRuleToRuleHere for each automaton in the data, this maps each rule from the data automaton to a rule
      *                           in this automaton.
      * @param ruleHereToDataRules for each automaton in the data, this maps each rule in this automaton to all corresponding
      *                            rules in the data automaton.
-     * @param iterations maximum number of steps run
+     * @param iterations maximum number of steps run. If negative, uses Integer.MAX_VALUE instead, relying on threshold to stop
      * @param threshold if the change in inside score in one run is less than this, the process will stop early
      * @param debug if true, prints lots of debug information
      * @param listener progress listener if you want to keep track of how things are progressing (may be null)
@@ -3308,7 +3306,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         LogDoubleArithmeticSemiring semiring = new LogDoubleArithmeticSemiring();
         Map<Rule, Double> globalRuleCount = new HashMap<>();
         // Threshold parameters
-        if (iterations <= 0) {
+        if (iterations < 0) {
             iterations = Integer.MAX_VALUE;
         }
         double oldLogLikelihood = Double.NEGATIVE_INFINITY;
@@ -3558,7 +3556,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * @param data
      * @param dataRuleToRuleHere
-     * @param iterations the maximum number of iterations allowed
+     * @param iterations the maximum number of iterations allowed. If negative, uses Integer.MAX_VALUE instead, relying on threshold to stop
      * @param threshold the minimum change in the ELBO before iterations are
      * stopped
      * @param listener a progress listener that will be given information about
@@ -3579,7 +3577,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
         Map<Rule, Double> ruleCounts = new HashMap<>();
         // Threshold parameters
-        if (iterations <= 0) {
+        if (iterations < 0) {
             iterations = Integer.MAX_VALUE;
         }
         double oldLogLikelihood = Double.NEGATIVE_INFINITY;
