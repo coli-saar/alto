@@ -128,7 +128,14 @@ public abstract class Algebra<E> implements Serializable {
     /**
      * Computes a decomposition automaton for the given value. A decomposition
      * automaton is a finite tree automaton which accepts exactly those terms
-     * over the algebra's signature which evaluate to the given value.
+     * over the algebra's signature which evaluate to the given value.<p>
+     *
+     * The default implementation of this method returns a generic decomposition
+     * automaton which supports only bottom-up queries for automaton rules. This
+     * automaton will allow you to parse values of your algebra with an IRTG that
+     * uses your algebra, but not necessarily very efficiently. Consider overwriting
+     * this method with one which returns more efficient decomposition automata
+     * which exploit the structure of your algebra.
      *
      * @param value
      * @return
@@ -212,7 +219,12 @@ public abstract class Algebra<E> implements Serializable {
      * Returns a Swing component that visualizes an object of this algebra. The
      * default implementation simply returns a JLabel containing a string
      * representation of the algebra object. Override this method to provide
-     * more human-readable graphical presentations.
+     * more human-readable graphical presentations.<p>
+     *
+     * The primary use of this method is to generate Swing components to be
+     * used in the "Show Language" command of the Alto GUI. Thus, by overwriting
+     * this method, you can change the way in which values of your algebra are
+     * rendered in the Alto GUI.
      *
      * @param object
      * @return
