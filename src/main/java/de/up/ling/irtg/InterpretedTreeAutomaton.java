@@ -501,7 +501,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param listener
      */
     public void trainEM(Corpus trainingData, ProgressListener listener) {
-        trainEM(trainingData, 0, 1E-5, listener);
+        trainEM(trainingData, -1, 1E-5, listener);
     }
 
     /**
@@ -528,7 +528,7 @@ public class InterpretedTreeAutomaton implements Serializable {
             System.err.println("EM training can only be performed on a corpus with attached charts.");
             return;
         }
-        if (iterations <= 0 && threshold < 0) {
+        if (iterations < 0 && threshold < 0) {
             System.err.println("EM training needs either a valid threshold or a valid number of iterations.");
         }
         if (debug) {
