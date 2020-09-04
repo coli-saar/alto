@@ -518,18 +518,17 @@ public class InterpretedTreeAutomaton implements Serializable {
      *
      *
      * @param trainingData
-     * @param iterations maximum number of iterations allowed
-     * @param threshold minimum change in log-likelihood that prevents stopping
-     * of the iterations
+     * @param iterations maximum number of iterations allowed. If negative, only the threshold is taken into account
+     * @param threshold minimum change in log-likelihood that prevents stopping the algorithm. If non-positive, only the number
+     * of iterations is taken into account. If the threshold is non-positive and iterations is negative, an error is thrown.
      * @param listener
      */
     public void trainEM(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
-            System.err.println("EM training can only be performed on a corpus with attached charts.");
-            return;
+            throw new IllegalArgumentException("EM training can only be performed on a corpus with attached charts.");
         }
-        if (iterations < 0 && threshold < 0) {
-            System.err.println("EM training needs either a valid threshold or a valid number of iterations.");
+        if (iterations < 0 && threshold <= 0) {
+            throw new IllegalArgumentException("EM training needs either a valid threshold or a valid number of iterations.");
         }
         if (debug) {
             System.out.println("\n\nInitial model:\n" + automaton);
