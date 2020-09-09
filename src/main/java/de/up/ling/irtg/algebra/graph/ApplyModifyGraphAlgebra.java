@@ -681,15 +681,25 @@ public class ApplyModifyGraphAlgebra extends Algebra<Pair<SGraph, ApplyModifyGra
             }
             // return value is all sources in this type that are not in subtype
             Set<String> ret = Sets.difference(graph.vertexSet(), subtype.graph.vertexSet());
-            // but if any source s in ret is a descendant of a node t in subtype,
-            // then we can't remove s via apply without removing t before.
-            // Can check for that by just looking at the children of the nodes in subtype.
-            for (String t : subtype.graph.vertexSet()) {
-                if (!Sets.intersection(getChildren(t), ret).isEmpty()) {
-                    return null;
+            boolean changed = true;
+            Type termType = new Type(this.graph);
+            
+            while (changed){
+                changed = false;
+                Set<String> currentOrigins = new HashSet(termType.origins); 
+                for (String o : currentOrigins){
+                    if (ret.contains(o)){
+                        changed = true;
+                        termType.graph.removeVertex(o);
+                        boolean success = termType.processUpdates();
+                        if (!success) {
+                            throw new RuntimeException("removing a node in type led to invalid type: "+termType.toString());
+                        }
+                    }
                 }
             }
-            return ret;
+            if (termType.equals(subtype)) return ret;
+            return null;
         }
         
         

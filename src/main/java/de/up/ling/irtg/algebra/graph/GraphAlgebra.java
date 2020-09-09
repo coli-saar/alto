@@ -35,7 +35,8 @@ import java.util.logging.Logger;
 import javax.swing.JComponent;
 
 /**
- * The algebra of s-graphs. The values of this algebra are s-graphs,
+ * The HR algebra of s-graphs, as defined e.g. by <a href="http://www.labri.fr/perso/courcell/Book/TheBook.pdf">Courcelle
+ * and Engelfriet (2011)</a>. The values of this algebra are s-graphs,
  * i.e. objects of class {@link SGraph} (which see). The algebra interprets
  * the following operations (where G, G1, G2 are s-graphs, and a, b are source names):
  * <ul>
