@@ -5,11 +5,23 @@
 package de.up.ling.irtg.semiring;
 
 /**
+ * A semiring that does arithmetic over doubles, represented as their logarithms.
+ * The "add" and "multiply" methods of the semiring add and multiply the underlying
+ * values. Thus, if x and y are the logarithms of those values, "multiply" simply adds
+ * x and y. Because of this property, the semiring can also be (ab)used for situations
+ * where the semiring multiplication should be interpreted as addition, and the
+ * semiring addition is not used.
  *
- * @author koller
  */
 public class LogDoubleArithmeticSemiring implements Semiring<Double> {
-    
+
+    /**
+     * Approximately computes log(exp(x) + exp(y)).
+     *
+     * @param x
+     * @param y
+     * @return
+     */
     public Double add(Double x, Double y) {
         if (x == infinity() || y == infinity()) {
             return infinity();
@@ -28,14 +40,31 @@ public class LogDoubleArithmeticSemiring implements Semiring<Double> {
         }
     }
 
+    /**
+     * Computes exp(log(x) * log(y)) = x + y.
+     *
+     * @param x
+     * @param y
+     * @return
+     */
     public Double multiply(Double x, Double y) {
         return x + y;
     }
 
+    /**
+     * Returns +infinity (which is actually the number positive infinity).
+     *
+     * @return
+     */
     public Double infinity() {
         return Double.POSITIVE_INFINITY;
     }
 
+    /**
+     * Returns the neutral element of addition, which is -infinity.
+     *
+     * @return
+     */
     public Double zero() {
         return Double.NEGATIVE_INFINITY;
     }
