@@ -41,7 +41,7 @@ public class LogDoubleArithmeticSemiring implements Semiring<Double> {
     }
 
     /**
-     * Computes exp(log(x) * log(y)) = x + y.
+     * Computes log(exp(x) * exp(y)) = x + y.
      *
      * @param x
      * @param y
