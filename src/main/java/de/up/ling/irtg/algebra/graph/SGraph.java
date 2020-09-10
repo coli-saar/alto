@@ -110,9 +110,10 @@ public class SGraph {
     /**
      * Adds a node with the given name and label to the s-graph.
      * The label may be null to indicate that the node does not
-     * have a label (yet). If a node with the given name and a null
-     * label already exists in the graph, this method sets the label
-     * of that node.
+     * have a label (yet). If a node with the given name already
+     * exists in the graph and the label parameter is not null,
+     * this method sets the label of that node.
+     *
      * 
      * @param name
      * @param label

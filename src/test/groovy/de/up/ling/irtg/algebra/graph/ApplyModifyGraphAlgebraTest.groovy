@@ -194,6 +194,7 @@ class ApplyModifyGraphAlgebraTest {
         runTestApplySet(renameTypeString, sString, Sets.newHashSet("o2", "o"));
         runTestApplySet(renameTypeString, oString, Sets.newHashSet("o2", "s"));
         runTestApplySet(renameTypeString, o2String, null);
+        runTestApplySet("(o(s_UNIFY_s))", "(o(),s())", null);
     }
 
     @Test

@@ -3295,7 +3295,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param ruleHereToDataRules for each automaton in the data, this maps each rule in this automaton to all corresponding
      *                            rules in the data automaton.
      * @param iterations maximum number of steps run. If negative, uses Integer.MAX_VALUE instead, relying on threshold to stop
-     * @param threshold if the change in inside score in one run is less than this, the process will stop early
+     * @param threshold if the change in inside score in one run is less than this, the process will stop early. If non-positive,
+     *                  will rely on the iterations parameter instead. If threshold is non-positive and iterations is negative,
+     *                  an IllegalArgumentException is thrown.
      * @param debug if true, prints lots of debug information
      * @param listener progress listener if you want to keep track of how things are progressing (may be null)
      * @return returns a pair of number of iterations run (1-based) and difference in inside in the last step
@@ -3303,6 +3305,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public Pair<Integer, Double> trainEM(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
                         ListMultimap<Rule, Rule> ruleHereToDataRules, int iterations, double threshold, boolean debug,
                         ProgressListener listener) {
+        if (iterations < 0 && threshold <= 0) {
+            throw new IllegalArgumentException("EM training needs either a valid threshold or a valid number of iterations.");
+        }
         LogDoubleArithmeticSemiring semiring = new LogDoubleArithmeticSemiring();
         Map<Rule, Double> globalRuleCount = new HashMap<>();
         // Threshold parameters
