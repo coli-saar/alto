@@ -90,7 +90,6 @@ public class SGraph {
     /**
      * Creates an s-graph with the given underlying graph, and no sources.
      * 
-     * @param graph 
      */
     SGraph(DirectedMultigraph<GraphNode, GraphEdge> graph) {
         this.graph = graph;
@@ -115,8 +114,6 @@ public class SGraph {
      * this method sets the label of that node.
      *
      * 
-     * @param name
-     * @param label
      * @return the newly created node
      */
     public GraphNode addNode(String name, String label) {
@@ -139,8 +136,6 @@ public class SGraph {
     /**
      * safely removes a node. Returns true if successful, false if not
      * (may not remove a node with a source).
-     * @param name
-     * @return 
      */
     public boolean removeNode(String name) {
         if (!nameToNode.keySet().contains(name) || isSourceNode(name)) {
@@ -158,7 +153,6 @@ public class SGraph {
      * "_u". It is therefore a good idea to avoid the use of explicitly
      * named nodes whose names start with _u.
      * 
-     * @param label
      * @return the newly created node
      */
     public GraphNode addAnonymousNode(String label) {
@@ -173,9 +167,6 @@ public class SGraph {
     /**
      * Adds an edge with the given label between the two nodes to the s-graph.
      * 
-     * @param src
-     * @param tgt
-     * @param label
      * @return the newly created edge
      */
     public GraphEdge addEdge(GraphNode src, GraphNode tgt, String label) {
@@ -199,8 +190,6 @@ public class SGraph {
      * Designates the node with the given name as the source for the
      * given source name.
      * 
-     * @param sourceName
-     * @param nodename 
      */
     public void addSource(String sourceName, String nodename) {
         sourceToNodename.put(sourceName, nodename);
@@ -212,8 +201,6 @@ public class SGraph {
      * Returns the node for the given source name. If there is no
      * source with this name, returns null.
      * 
-     * @param sourceName
-     * @return 
      */
     public String getNodeForSource(String sourceName) {
         return sourceToNodename.get(sourceName);
@@ -223,8 +210,6 @@ public class SGraph {
      * Returns the node in this s-graph with the given name. If there
      * is no node with this name, returns null.
      * 
-     * @param name
-     * @return 
      */
     public GraphNode getNode(String name) {
         return nameToNode.get(name);
@@ -233,7 +218,6 @@ public class SGraph {
     /**
      * Returns the collection of all node names in this s-graph.
      * 
-     * @return 
      */
     public Collection<String> getAllNodeNames() {
         return nameToNode.keySet();
@@ -242,8 +226,6 @@ public class SGraph {
     /**
      * Checks if a node with the given name exists in this s-graph.
      * 
-     * @param name
-     * @return 
      */
     public boolean containsNode(String name) {
         return nameToNode.containsKey(name);
@@ -251,7 +233,6 @@ public class SGraph {
 
     /**
      * Returns true iff at least one node in the graph has a label.
-     * @return 
      */
     public boolean hasLabelledNode() {
         Iterator<GraphNode> it = nameToNode.values().iterator();
@@ -278,7 +259,6 @@ public class SGraph {
      * are not modified. It renames the nodes of the "other" s-graph to fresh
      * node names to avoid accidental fusing of nodes.
      * 
-     * @param other
      * @return a new s-graph representing the merge of the two original s-graphs
      */
     public SGraph merge(SGraph other) {
@@ -324,9 +304,6 @@ public class SGraph {
      * This method returns a new s-graph object; the original s-graph
      * is not modified.
      * 
-     * @param oldName
-     * @param newName
-     * @return 
      */
     public SGraph renameSource(String oldName, String newName) {
         if (!sourceToNodename.containsKey(oldName)) {
@@ -394,8 +371,6 @@ public class SGraph {
      * The method returns a new s-graph object; the original s-graph
      * is not modified.
      * 
-     * @param retainedSources
-     * @return 
      */
     public SGraph forgetSourcesExcept(Set<String> retainedSources) {
         // make fast, shallow copy of sgraph; this is okay if this sgraph
@@ -423,7 +398,6 @@ public class SGraph {
     /**
      * Returns the set of all source names in this s-graph (e.g. {"root", "subject"}).
      * 
-     * @return 
      */
     public Set<String> getAllSources() {
         return sourceToNodename.keySet();
@@ -432,7 +406,6 @@ public class SGraph {
     /**
      * Returns the set of all node names of this s-graph that 
      * are an "a"-source for any source "a". (E.g. {u17, u28}.)
-     * @return 
      */
     public Iterable<String> getAllSourceNodenames() {
         return nodenameToSources.keySet();
@@ -442,7 +415,6 @@ public class SGraph {
      * Returns the set of all node names of this s-graph that
      * are not sources. This set is the complement of {@link #getAllNonSourceNodenames() }.
      * 
-     * @return 
      */
     public Iterable<String> getAllNonSourceNodenames() {
         return Sets.difference(nameToNode.keySet(), nodenameToSources.keySet());
@@ -463,7 +435,6 @@ public class SGraph {
      * Returns a copy in this s-graph in which all node names have been
      * assigned fresh names.
      * 
-     * @return 
      */
     public SGraph withFreshNodenames() {
         Map<String, String> renaming = new HashMap<>();
@@ -527,8 +498,6 @@ public class SGraph {
     /**
      * Checks if the node with the given name is a source.
      * 
-     * @param nodename
-     * @return 
      */
     public boolean isSourceNode(String nodename) {
         return nodenameToSources.containsKey(nodename);
@@ -539,8 +508,6 @@ public class SGraph {
      * of the given node. This representation contains all the source names
      * for which this node is a source, separated by commas.
      * 
-     * @param nodename
-     * @return 
      */
     public String getSourceLabel(String nodename) {
         return "<" + nodenameToSources.get(nodename).stream().collect(Collectors.joining(",")) + ">";
@@ -551,8 +518,6 @@ public class SGraph {
      * for which the given node is a source. The method returns
      * null if the node is not a source.
      * 
-     * @param nodename
-     * @return 
      */
     public Collection<String> getSourcesAtNode(String nodename) {
         return nodenameToSources.get(nodename);
@@ -608,7 +573,6 @@ public class SGraph {
      * Returns a string representation of this s-graph in the format
      * of the ISI AMR-Bank. 
      * 
-     * @return 
      */
     public String toIsiAmrString() {
         return new SgraphAmrOutputCodec().asString(this);
@@ -618,7 +582,6 @@ public class SGraph {
      * Returns a string representation of this s-graph in the format
      * of the ISI AMR-Bank. 
      * 
-     * @return 
      */
     public String toIsiAmrStringWithSources() {
         return new SgraphAmrWithSourcesOutputCodec().asString(this);
@@ -647,9 +610,6 @@ public class SGraph {
     
     /**
      * Returns a string representation of the graph.
-     * @param graph
-     * @param nra
-     * @return 
      */
     static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph, NodeRepresentationAppender nra) {
         StringBuilder buf = new StringBuilder();
@@ -717,7 +677,6 @@ public class SGraph {
      * using identity or isomorphy.
      * 
      * @see #equals(java.lang.Object) 
-     * @param equalsMeansIsomorphy 
      */
     public void setEqualsMeansIsomorphy(boolean equalsMeansIsomorphy) {
         this.equalsMeansIsomorphy = equalsMeansIsomorphy;
@@ -744,8 +703,6 @@ public class SGraph {
      * the two s-graphs, and then checks for node labels, edges, and sources
      * relative to this mapping. In other words, this mode ignores node names.
      * 
-     * @param obj
-     * @return 
      */
     @Override
     public boolean equals(Object obj) {
@@ -773,8 +730,6 @@ public class SGraph {
      * This corresponds to evaluating {@link #equals(java.lang.Object) }
      * in the mode where "equals means isomorphy" is set to false.
      * 
-     * @param other
-     * @return 
      */
     public boolean isIdentical(SGraph other) {
         if (this == other) {
@@ -786,8 +741,6 @@ public class SGraph {
 
     /**
      * Checks whether this graph is identical to the other graph, ignoring source assignments.
-     * @param other
-     * @return 
      */
     public boolean isIdenticalExceptSources(SGraph other) {
         if (this == other) {
@@ -821,8 +774,6 @@ public class SGraph {
      * Checks whether two s-graphs have any nodes in common that are not sources.
      * The method returns true if there is such an overlap, and false otherwise.
      * 
-     * @param other
-     * @return 
      */
     public boolean overlapsOnlyInSources(SGraph other) {
         Sets.SetView<String> sharedNodeNames = Sets.intersection(nameToNode.keySet(), other.nameToNode.keySet());
@@ -850,8 +801,6 @@ public class SGraph {
      * each s-graph have the same node name. It returns true if this is true
      * for all shared source names, and false otherwise.
      * 
-     * @param other
-     * @return 
      */
     public boolean nodenamesForSourcesAgree(SGraph other) {
         Sets.SetView<String> sharedSources = Sets.intersection(sourceToNodename.keySet(), other.sourceToNodename.keySet());
@@ -870,9 +819,6 @@ public class SGraph {
      * The map "nodeRenaming" is a mapping of node names in the subgraph to
      * node names in the s-graph.
      * 
-     * @param subgraph
-     * @param nodeRenaming
-     * @return 
      */
     public boolean containsAsSubgraph(DirectedGraph<GraphNode, GraphEdge> subgraph, Map<String, String> nodeRenaming) {
         // check that all nodes in subgraph exist in supergraph,
@@ -933,8 +879,6 @@ public class SGraph {
      * Returns a list of matching subgraphs.
      * 
      * @see #foreachMatchingSubgraph(de.up.ling.irtg.algebra.graph.SGraph, java.util.function.Consumer) 
-     * @param subgraph
-     * @return 
      */
     public List<SGraph> getMatchingSubgraphs(SGraph subgraph) {
         final List<SGraph> ret = new ArrayList<>();
@@ -975,8 +919,6 @@ public class SGraph {
      * is applied will all be isomorphic to the "subgraph", but with its
      * nodes renamed to node names of this s-graph.
      * 
-     * @param subgraph
-     * @param fn 
      */
     public void foreachMatchingSubgraph(SGraph subgraph, Consumer<SGraph> fn) {
         Map<String, Collection<String>> possibleNodeRenamings = new HashMap<>();
@@ -1077,8 +1019,6 @@ public class SGraph {
      * evaluating {@link #equals(java.lang.Object) } in the mode where
      * "equals means isomorphy" is true. Does not check edge labels.
      * 
-     * @param other
-     * @return 
      */
     public boolean isIsomorphic(SGraph other) {
         GraphIsomorphismInspector iso
@@ -1116,8 +1056,6 @@ public class SGraph {
      * "equals means isomorphy" is true. Also compares whether edges are
      * labelled equally.
      * 
-     * @param other
-     * @return 
      */
     public boolean isIsomorphicAlsoEdges(SGraph other) {
         GraphIsomorphismInspector iso
@@ -1178,7 +1116,6 @@ public class SGraph {
      * One should therefore avoid actually using HashMaps or HashSets of s-graphs,
      * because performance will be poor.
      * 
-     * @return 
      */
     @Override
     public int hashCode() {
@@ -1208,8 +1145,6 @@ public class SGraph {
     /**
      * Checks whether two s-graphs have a source name in common.
      * 
-     * @param other
-     * @return 
      */
     public boolean hasCommonSource(SGraph other) {
         if (getGraph().vertexSet().isEmpty() || other.getGraph().vertexSet().isEmpty()) {

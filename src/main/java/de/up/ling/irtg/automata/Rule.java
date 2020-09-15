@@ -82,7 +82,6 @@ public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
      * Retrieves the auxiliary information from this rule.
      * 
      * @see #setExtra(java.lang.Object) 
-     * @return 
      */
     public Object getExtra() {
         return extra;
@@ -92,7 +91,6 @@ public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
      * Stores auxiliary information within this rule. Do not use this
      * unless you know what you're doing.
      * 
-     * @param extra 
      */
     public void setExtra(Object extra) {
         this.extra = extra;
@@ -167,8 +165,6 @@ public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
      * automaton, as otherwise states might be encoded by different
      * interners.
      * 
-     * @param obj
-     * @return 
      */
     @Override
     public boolean equals(Object obj) {

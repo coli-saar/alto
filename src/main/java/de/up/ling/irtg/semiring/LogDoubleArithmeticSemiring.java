@@ -18,9 +18,6 @@ public class LogDoubleArithmeticSemiring implements Semiring<Double> {
     /**
      * Approximately computes log(exp(x) + exp(y)).
      *
-     * @param x
-     * @param y
-     * @return
      */
     public Double add(Double x, Double y) {
         if (x == infinity() || y == infinity()) {
@@ -43,9 +40,6 @@ public class LogDoubleArithmeticSemiring implements Semiring<Double> {
     /**
      * Computes log(exp(x) * exp(y)) = x + y.
      *
-     * @param x
-     * @param y
-     * @return
      */
     public Double multiply(Double x, Double y) {
         return x + y;
@@ -54,7 +48,6 @@ public class LogDoubleArithmeticSemiring implements Semiring<Double> {
     /**
      * Returns +infinity (which is actually the number positive infinity).
      *
-     * @return
      */
     public Double infinity() {
         return Double.POSITIVE_INFINITY;
@@ -63,7 +56,6 @@ public class LogDoubleArithmeticSemiring implements Semiring<Double> {
     /**
      * Returns the neutral element of addition, which is -infinity.
      *
-     * @return
      */
     public Double zero() {
         return Double.NEGATIVE_INFINITY;

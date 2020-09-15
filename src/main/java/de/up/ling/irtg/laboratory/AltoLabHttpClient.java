@@ -57,9 +57,6 @@ public class AltoLabHttpClient {
      * as JSON data. If anything went wrong, throws an IOException. Otherwise,
      * returns the body of the HTTP response.
      *
-     * @param url
-     * @param json
-     * @return
      * @throws IOException
      */
     String postJson(String url, Object data) throws IOException {
@@ -83,8 +80,6 @@ public class AltoLabHttpClient {
      * If anything went wrong, throws an IOException. Otherwise,
      * returns the body of the HTTP response.
      * 
-     * @param url
-     * @return
      * @throws IOException 
      */
     String get(String url) throws IOException {

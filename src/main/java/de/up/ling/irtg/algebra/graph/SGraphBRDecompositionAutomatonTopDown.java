@@ -47,8 +47,6 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
     
     /**
      * Initializes a decomposition automaton for {@code completeGraph} with respect to {@code algebra}.
-     * @param completeGraph
-     * @param algebra 
      */
     public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra) {
         super(algebra.getSignature());

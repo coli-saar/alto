@@ -70,7 +70,6 @@ public class GraphEdge{
     /**
      * Based on source and target, and label. The check on the
      * label is new in August 2017 -JG
-     * @return 
      */
     @Override
     public int hashCode() {
@@ -84,8 +83,6 @@ public class GraphEdge{
     /**
      * Checks whether source and target, and label are equal. The check on the
      * label is new in August 2017 -JG
-     * @param obj
-     * @return
      */
     @Override
     public boolean equals(Object obj) {
@@ -111,8 +108,6 @@ public class GraphEdge{
     /**
      * Checks whether source and target, and label are equal. The check on the
      * label is new in August 2017 -JG
-     * @param obj
-     * @return 
      */
     
     

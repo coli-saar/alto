@@ -67,7 +67,6 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
      * elements (so a get(targetIndex) will be successful). Newly added elements
      * will be filled with null.
      *
-     * @param targetIndex
      */
     private void ensureSize(int targetIndex) {
         if (values.size() <= targetIndex) {

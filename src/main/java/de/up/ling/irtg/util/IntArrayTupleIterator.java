@@ -27,7 +27,6 @@ public class IntArrayTupleIterator implements Iterator {
      * same array every time. If you need a persistent copy of the array,
      * be sure to clone it yourself.
      * 
-     * @param fn 
      */
     public void foreach(Consumer<int[]> fn) {
         boolean done = isEmpty;
@@ -107,7 +106,6 @@ public class IntArrayTupleIterator implements Iterator {
      * Returns the same int[] in each call. If you need copies,
      * be sure to clone the array.
      *
-     * @return
      */
     @Override
     public int[] next() {

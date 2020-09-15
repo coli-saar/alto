@@ -58,11 +58,6 @@ public class InductionController {
 
     /**
      * 
-     * @param automataFolderString
-     * @param alignmentFolderString
-     * @param nonterminalFolderString
-     * @param mainSignatureLocationString
-     * @return 
      */
     private static Iterable<Pair<TreeAutomaton<String>, Pair<Function<String, IntSet>, Function<String, String>>>> makeDataIterable(String automataFolderString, String alignmentFolderString, String nonterminalFolderString, String mainSignatureLocationString) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -70,9 +65,6 @@ public class InductionController {
 
     /**
      * 
-     * @param stringData
-     * @param stringRestrictionSpecification
-     * @return 
      */
     private static Iterable<Pair<TreeAutomaton<String>, Pair<Function<String, IntSet>, Function<String, String>>>> makeRestrictedIterable(Iterable<Pair<TreeAutomaton<String>, Pair<Function<String, IntSet>, Function<String, String>>>> stringData, String stringRestrictionSpecification) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

@@ -36,11 +36,8 @@ public class CorpusWriter extends AbstractCorpusWriter {
     /**
      *
      *
-     * @param comment
      * @param commentPrefix - string with which each line of comments is
      * prefixed; set to null to suppress comments in output
-     * @param printingPolicy
-     * @param writer
      */
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) {
         super(printingPolicy, false);

@@ -37,8 +37,6 @@ public class SComponentRepresentation {
     /**
      * Creates a component representation of the complete (input) graph
      * without sources.
-     * @param completeGraph
-     * @param alg
      */
     public SComponentRepresentation(SGraph completeGraph, GraphAlgebra alg) {
         components = new HashSet<>();
@@ -51,9 +49,6 @@ public class SComponentRepresentation {
     /**
      * Creates an s-component representation defined by the given source assignment sourceToNodename and the set of s-components.
      * It is assumed that this is only called for compatible sets of source nodes and sets of s-components.
-     * @param sourceToNodename
-     * @param components
-     * @param completeGraphInfo
      */
     public SComponentRepresentation(int[] sourceToNodename, Set<SComponent> components, GraphInfo completeGraphInfo) {
         this.sourceToNodename = sourceToNodename;
@@ -90,9 +85,6 @@ public class SComponentRepresentation {
     /**
      * Creates an s-component representation of the s-graph {@code graph}, with respect to the supergraph represented by {@code completeGraphInfo}.
      * Checks with {@code storedComponents} whether any of the s-components in the new representation is already stored, in which case it uses the already stored object.
-     * @param graph
-     * @param storedComponents
-     * @param completeGraphInfo
      */
     public SComponentRepresentation(SGraph graph, Map<SComponent, SComponent> storedComponents, GraphInfo completeGraphInfo) {
         components = new HashSet<>();
@@ -191,7 +183,6 @@ public class SComponentRepresentation {
 
     /**
      * Returns true iff the sub-s-graph corresponding to this s-component representation is connected.
-     * @return
      */
     public boolean isConnected() {
         Set<SComponent> found = new HashSet<>();
@@ -213,8 +204,6 @@ public class SComponentRepresentation {
     
     /**
      * Returns the source node to which {@code source} is assigned in this representation.
-     * @param source
-     * @return
      */
     int getSourceNode(int source) {
         return sourceToNodename[source];
@@ -222,9 +211,6 @@ public class SComponentRepresentation {
     
     /**
      * Returns the unique s-component representation C such that renaming source name {@code from} to source name {@code to} in C yields this representation.
-     * @param from
-     * @param to
-     * @return
      */
     SComponentRepresentation renameReverse(int from, int to) {
         //keep in mind that this is REVERTING the rename from "from" to "to"
@@ -244,11 +230,6 @@ public class SComponentRepresentation {
      * Returns the unique s-component representation C such that forgetting source name {@code source} in C yields this representation, and {@code source} is assigned to node {@code vNr} in C.
      * This function is meant for the case where promoting {@code vNr} to a source splits the s-component {@source oldComponent} it is contained in, and {@source oldComponent}, as well as 
      * the components {@source replacingComponents} which replace {@source oldComponent} after the promotion, are already known.
-     * @param source
-     * @param vNr
-     * @param oldComponent
-     * @param replacingComponents
-     * @return
      */
     public SComponentRepresentation forgetReverse(int source, int vNr, SComponent oldComponent, Set<SComponent> replacingComponents) {
         if (sourceToNodename[source] != -1) {
@@ -268,11 +249,6 @@ public class SComponentRepresentation {
      * Returns the unique s-component representation C such that forgetting source name {@code source} in C yields this representation, and {@code source} is assigned to node {@code vNr} in C.
      * This function is meant for the case where promoting {@code vNr} to a source does not split the s-component {@source oldComponent} it is contained in, and {@source oldComponent}, as well as 
      * the component {@source replacingComponent} which replace {@source oldComponent} after the promotion, are already known.
-     * @param source
-     * @param vNr
-     * @param oldComponent
-     * @param replacingComponent
-     * @return
      */
     public SComponentRepresentation forgetReverse(int source, int vNr, SComponent oldComponent, SComponent replacingComponent) {
         if (sourceToNodename[source] != -1) {
@@ -290,8 +266,6 @@ public class SComponentRepresentation {
     /**
      * Returns the s-component representation which is equal to this one, but contains only a subset {@source childComponents} of the components and has its source assignment restricted accordingly.
      * This is used in the top-down merge operation.
-     * @param childComponents
-     * @return
      */
     SComponentRepresentation getChildFromComponents(Set<SComponent> childComponents) {
         int[] childSource2Nodename = new int[sourceToNodename.length];
@@ -314,8 +288,6 @@ public class SComponentRepresentation {
     
     /**
      * Returns true iff the source assignments and the set of components are equal.
-     * @param other
-     * @return 
      */
     @Override
     public boolean equals(Object other) {

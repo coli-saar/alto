@@ -59,8 +59,6 @@ public abstract class InputCodec<E> {
     /**
      * Reads an object from an input stream.
      * 
-     * @param is
-     * @return
      * @throws CodecParseException if an error occurred while decoding
      * the input stream into an object
      * @throws IOException if an error occurred while reading
@@ -78,8 +76,6 @@ public abstract class InputCodec<E> {
      * frequent special case where the object is represented
      * as a string of some kind.
      * 
-     * @param s
-     * @return
      * @throws CodecParseException
      */
     public E read(String s) throws CodecParseException {
@@ -95,7 +91,6 @@ public abstract class InputCodec<E> {
     /**
      * Returns the metadata for this input codec.
      * 
-     * @return 
      */
     public CodecMetadata getMetadata() {
         return getClass().getAnnotation(CodecMetadata.class);
@@ -109,7 +104,6 @@ public abstract class InputCodec<E> {
      * in the IRTG source code repository. Note: It is usually a better idea
      * to call {@link #getInputCodecs(java.lang.Class) } to ensure type-safety.
      * 
-     * @return 
      */
     public static Iterable<InputCodec> getAllInputCodecs() {
         return ServiceLoader.load(InputCodec.class);
@@ -125,8 +119,6 @@ public abstract class InputCodec<E> {
      * <code>type</code> field in the codec's metadata annotation.
      * 
      * @param <T>
-     * @param forClass
-     * @return 
      */
     public static <T> List<InputCodec<T>> getInputCodecs(Class<T> forClass) {
         List<InputCodec<T>> ret = new ArrayList<>();
@@ -145,8 +137,6 @@ public abstract class InputCodec<E> {
      * the codec metadata's <code>name</code> field). If
      * no codec with this name can be found, returns null.
      * 
-     * @param name
-     * @return 
      */
     public static InputCodec getInputCodecByName(String name) {
         if (codecByName == null) {
@@ -165,8 +155,6 @@ public abstract class InputCodec<E> {
      * <code>extension</code> field). If no codec for
      * this extension can be found, returns null.
      * 
-     * @param extension
-     * @return 
      */
     public static InputCodec getInputCodecByExtension(String extension) {
         if (codecByExtension == null) {
@@ -187,9 +175,6 @@ public abstract class InputCodec<E> {
      * codec from the filename extension of the (non-null) filename argument.
      * If this is not possible, or both arguments are null, throws an exception.
      * 
-     * @param filename
-     * @param codecName
-     * @return
      * @throws Exception 
      */
     public static InputCodec getInputCodecByNameOrExtension(String filename, String codecName) throws CodecLookupException {
@@ -229,7 +214,6 @@ public abstract class InputCodec<E> {
      * You can call this method with a null argument
      * to disable progress updates.
      * 
-     * @param listener 
      */
     public void setProgressListener(ProgressListener listener) {
         this.progressListener = listener;

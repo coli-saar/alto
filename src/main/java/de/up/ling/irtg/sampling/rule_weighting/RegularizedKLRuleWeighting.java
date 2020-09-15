@@ -126,10 +126,6 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
      * Creates a new instance with the regularization given by the specified values.
      * 
-     * @param basis
-     * @param regularizationExponent
-     * @param regularizationDivisor
-     * @param rate 
      */
     public RegularizedKLRuleWeighting(TreeAutomaton basis, int regularizationExponent,
                                         double regularizationDivisor, LearningRate rate) {
@@ -290,8 +286,6 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
      * Ensures that we have looked up the rules for a state and returns them.
      * 
-     * @param state
-     * @return 
      */
     private Rule[] ensureRules(int state) {
         Rule[] arr = this.listRules.get(state);
@@ -320,9 +314,6 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
      * Adds the weighted counts for the start states and the rules for adaption.
      * 
-     * @param treSamp
-     * @param stateCounts
-     * @param ruleCounts 
      */
     private double makeAmounts(TreeSample<Rule> treSamp, Int2DoubleOpenHashMap stateCounts,
                             Object2DoubleOpenHashMap ruleCounts, double[] startCount, boolean deterministic) {
@@ -351,9 +342,6 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
      * Adds the weighted counts of rules.
      * 
-     * @param instance
-     * @param stateCounts
-     * @param ruleCounts 
      */
     private void addAmounts(Tree<Rule> instance, Int2DoubleOpenHashMap stateCounts,
             Object2DoubleOpenHashMap ruleCounts, double contribution) {
@@ -371,9 +359,6 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
      * Adapts the weights for a rule given the weighted counts.
      * 
-     * @param rr
-     * @param ruleCounts
-     * @param stateCounts 
      */
     private void adapt(int position, Rule rr, double[] parameters,
             Object2DoubleOpenHashMap ruleCounts, Int2DoubleOpenHashMap stateCounts,
@@ -395,11 +380,6 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
      * Adapts the weights for the start state proposals.
      * 
-     * @param parameters
-     * @param position
-     * @param startCount
-     * @param wholeCount
-     * @param startProbability 
      */
     private void updateStart(double[] parameters, int position, double[] startCount, double wholeCount,
             double startProbability) {

@@ -66,8 +66,6 @@ public class MultiIntersectionAutomaton extends TreeAutomaton<List> {
      * Crates a new instance which represents the intersection of the two given
      * automata.
      *
-     * @param left
-     * @param rightAutomata
      */
     public MultiIntersectionAutomaton(TreeAutomaton left, List<TreeAutomaton> rightAutomata, MultiFOM fom) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -99,7 +97,6 @@ public class MultiIntersectionAutomaton extends TreeAutomaton<List> {
      * The listener will be informed whenever a new state is visited for the
      * first time.
      *
-     * @param listener
      */
     public void setStateDiscoveryListener(StateDiscoveryListener listener) {
         this.stateDiscoveryListener = listener;
@@ -110,8 +107,6 @@ public class MultiIntersectionAutomaton extends TreeAutomaton<List> {
      * automaton) to the label ID of the right automaton for the same label.
      * Returns 0 if the right automaton does not define this label.
      *
-     * @param leftLabelId
-     * @return
      */
     protected int remapLabel(int rightIndex, int leftLabelId) {
         return labelRemap[rightIndex][leftLabelId];
@@ -123,8 +118,6 @@ public class MultiIntersectionAutomaton extends TreeAutomaton<List> {
      * represents a pair (p,q) of a state p in the left automaton and a state q
      * in the right automaton. This method returns the int-ID of p.
      *
-     * @param outputState
-     * @return
      */
     public int getLeftState(int outputState) {
         return stateToLeftState.get(outputState);
@@ -136,8 +129,6 @@ public class MultiIntersectionAutomaton extends TreeAutomaton<List> {
      * represents a pair (p,q) of a state p in the left automaton and a state q
      * in the right automaton. This method returns the int-ID of q.
      *
-     * @param outputState
-     * @return
      */
     public int getRightState(int rightIndex, int outputState) {
         return stateToRightState[rightIndex].get(outputState);

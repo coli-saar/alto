@@ -29,7 +29,6 @@ public class OnTheFlyCharts implements ChartAttacher {
      * Creates an instance that will provide an iterator over charts by iterating
      * over the instances and computing charts as they are needed.
      * 
-     * @param irtg
      */
     public OnTheFlyCharts(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
@@ -52,7 +51,6 @@ public class OnTheFlyCharts implements ChartAttacher {
 
         /**
          * 
-         * @param main 
          */
         public It(Iterator<Instance> main) {
             this.main = main;

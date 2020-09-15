@@ -35,8 +35,6 @@ public class VariableLengthNumberCodec implements NumberCodec {
     /**
      * This method only works for value ≥ 0. To encode
      * a value that may be negative, use {@link #writeSignedLong(long) }.
-     * @param value
-     * @return
      * @throws IOException 
      */
     @Override

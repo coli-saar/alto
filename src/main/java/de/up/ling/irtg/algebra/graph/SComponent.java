@@ -33,14 +33,12 @@ public class SComponent {
  
     /**
      * Returns the set of boundary vertices of the component.
-     * @return
      */
     IntSet getBVertices() {
         return bVertices;
     }
     /**
      * Returns the set of inboundary edges of this BRepComponent, encoded according to GraphInfo.
-     * @return
      */
     IntSet getInBEdges() {
         return inBEdges;
@@ -60,8 +58,6 @@ public class SComponent {
     
     /**
      * Returns true iff the set of boundary vertices is identical, and the smallest in-boundary edge is equal (the two imply that the components are identical, if they are on the same graph).
-     * @param other
-     * @return 
      */
     @Override
     public boolean equals(Object other) {
@@ -155,7 +151,6 @@ public class SComponent {
     
     /**
      * Based on the set of boundary vertices and the smallest in-boundary edge.
-     * @return 
      */
     @Override
     public int hashCode() {
@@ -169,11 +164,6 @@ public class SComponent {
      * Creates a new BRepComponent with the given data, the default way to create a BRepComponent.
      * Checks if a component with the same data already exists in storedComponents, and in that cases returns this already existing
      * BRepComponent, which may already contain some computations.
-     * @param bVertices
-     * @param inBEdges
-     * @param storedComponents
-     * @param graphInfo
-     * @return
      */
     static SComponent makeComponent(IntSet bVertices, IntSet inBEdges, Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
         SComponent ret = new SComponent(bVertices, inBEdges);
@@ -193,9 +183,6 @@ public class SComponent {
     
     /**
      * Provides a map that assigns to each cut vertex the set of components it cuts this component into.
-     * @param storedComponents
-     * @param graphInfo
-     * @return
      */
     public Int2ObjectMap<Set<SComponent>> getAllSplits(Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
         //try {
@@ -207,9 +194,6 @@ public class SComponent {
     
     /**
      * Provides a map that assigns to each non-cut vertex a version of this BRepComponent where that non-cut vertex became a source.
-     * @param storedComponents
-     * @param graphInfo
-     * @return
      */
     public Int2ObjectMap<SComponent> getAllNonSplits(Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
         return splitManager.getAllNonSplits(storedComponents, graphInfo);
@@ -218,8 +202,6 @@ public class SComponent {
     
     /**
      * Returns true iff the other BRepComponent shares a boundary vertex with this one.
-     * @param other
-     * @return
      */
     boolean sharesVertex(SComponent other) {
         return !Sets.intersection(bVertices, other.bVertices).isEmpty();
@@ -236,9 +218,7 @@ public class SComponent {
         
         /**
          * Note that {@code v} must be the source, and {@code v1} must be the target.
-         * @param v
          * @param v1
-         * @return 
          */
         @Override
         public Integer createEdge(Integer v, Integer v1) {
@@ -250,8 +230,6 @@ public class SComponent {
     /**
      * Returns a string representing this component with node and edge names.
      * Use this over the default {@code toString()} function for readability.
-     * @param completeGraphInfo
-     * @return
      */
     public String toString(GraphInfo completeGraphInfo) {
        StringJoiner sjv = new StringJoiner(",");

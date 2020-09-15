@@ -117,7 +117,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * unary hyperedges.
      *
      * @see #setConvertUnaryEdgesToNodeLabels(boolean)
-     * @return
      */
     public boolean isConvertUnaryEdgesToNodeLabels() {
         return convertUnaryEdgesToNodeLabels;
@@ -129,7 +128,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * encoded as node labels. If the argument is "false", unary hyperedges are
      * encoded as labeled loops.
      *
-     * @param convertUnaryEdgesToNodeLabels
      */
     public void setConvertUnaryEdgesToNodeLabels(boolean convertUnaryEdgesToNodeLabels) {
         this.convertUnaryEdgesToNodeLabels = convertUnaryEdgesToNodeLabels;
@@ -156,7 +154,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * This method turns a given HRG grammar into an IRTG.
      * 
      * @param hrg the grammar that needs to be translated.
-     * @return 
      */
     private InterpretedTreeAutomaton makeIrtg(BolinasHrgGrammar hrg) {
         // create the automaton, algebra and homomorphisms that we will
@@ -316,11 +313,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     /**
      * This method handles RHSs that only consist of a single node + name.
      * 
-     * @param r
-     * @param stso
-     * @param ta
-     * @param certainOuter
-     * @param hom
      * @throws IllegalStateException
      */
     private void handleSingleNode(BolinasRule r, String prefix,
@@ -365,8 +357,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     /**
      * This method allows us create a new LHS symbol in a uniform way.
      * 
-     * @param nwh
-     * @return
      */
     static String makeLHS(NonterminalWithHyperedge nwh) {
         return nwh.getNonterminal() + "$" + nwh.getEndpoints().size();
@@ -374,8 +364,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     /**
      *
-     * @param hrgContext
-     * @param grammar
      */
     private void doHrg(BolinasHrgParser.HrgContext hrgContext, BolinasHrgGrammar grammar) {
         boolean isFirstRule = true;
@@ -393,8 +381,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     /**
      *
-     * @param ruleContext
-     * @return
      */
     private BolinasRule doHrgRule(BolinasHrgParser.HrgRuleContext ruleContext) {
         BolinasRule ret = new BolinasRule();
@@ -435,11 +421,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     /**
      *
-     * @param term
-     * @param rule
-     * @param externalNodeNames
-     * @param nameToNode
-     * @return
      */
     private String doTerm(BolinasHrgParser.TermContext term, BolinasRule rule,
             Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
@@ -758,10 +739,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * Returns the number of nodes that could be eliminated if the two graphs
         * where merged.
         * 
-        * @param other
         * @param held nodes that cannot be eliminated, because they are needed
         * elsewhere
-        * @return 
         */
        int joinSize(EdgeTree other, Set<String> held)
        {
@@ -777,7 +756,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * This will add +1 to the given counter for every node that is still active
         * after the construction of this subgraph.
         * 
-        * @param counter 
         */
        void addCounts(Object2IntOpenHashMap counter)
        {
@@ -833,7 +811,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * @param seenNodes contains a node if its name is generated elsewhere
         * @param ordering legacy variable that is not used in the current version
         * @param n the node we want to represent
-        * @return 
         */
        private String addNode(Set<GraphNode> seenNodes, List<String> ordering, 
                GraphNode n) {
@@ -867,7 +844,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * @param from original source assignments
         * @param to goal source assignments
         * @param main tree to extend
-        * @return 
         */
        private static Tree<String> rename(SortedSet<String> f, SortedSet<String> t, Tree<String> main) {
            BiMap<String,Integer> from = HashBiMap.create();
@@ -893,7 +869,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * @param combined original source assignments
         * @param outer goal source assignments
         * @param main tree to extend
-        * @return 
         */
        private static Tree<String> rename(SortedSet<String> combined, List<String> outer, Tree<String> main) {
            BiMap<String,Integer> from = HashBiMap.create();
@@ -943,10 +918,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * are as in from; then builds a more complicated tree that adds operations
         * to get the source assignments as in to.
         * 
-        * @param from
-        * @param to
-        * @param main
-        * @return 
         */
        private static Tree<String> rename(BiMap<String,Integer> from, BiMap<String,Integer> to,
                            Tree<String> main)
@@ -994,7 +965,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
        /**
         * Converts this tree into a more readable form for debugging.
         * 
-        * @return 
         */
        @Override
        public String toString()
@@ -1021,7 +991,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * therefor not be merged.
         * 
         * @param et2
-        * @return 
         */
        boolean disjoint(EdgeTree et2) {
            return Collections.disjoint(nodes, et2.nodes);
@@ -1036,7 +1005,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * generated the labels.
         * @param br the rule we are converting, necessary to look up e.g. node
         * labels.
-        * @return 
         */
        private Tree<String> transform(AtomicInteger variableNumbers,
                Set<GraphNode> seenNodes, List<String> rhs, BolinasRule br) {
@@ -1059,9 +1027,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
        /**
         * Returns a tree that represents a single edge.
         * 
-        * @param seenNodes
-        * @param br
-        * @return 
         */
        private Tree<String> handleEdge(Set<GraphNode> seenNodes, BolinasRule br) {
            StringBuilder sb = new StringBuilder();
@@ -1085,10 +1050,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
        /**
         * Returns a tree that represents a single nonterminal edge.
         * 
-        * @param seenNodes
-        * @param rhs
-        * @param variableNumbers
-        * @return 
         */
        private Tree<String> handleNonterminal(Set<GraphNode> seenNodes, List<String> rhs,
                AtomicInteger variableNumbers, BolinasRule br) {
@@ -1146,10 +1107,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         * Part of this process includes calling the children in order to have them
         * compute their representation first.
         * 
-        * @param variableNumbers
-        * @param seenNodes
-        * @param rhs
-        * @return 
         */
        private Tree<String> handleCombination(AtomicInteger variableNumbers,
                Set<GraphNode> seenNodes, List<String> rhs, BolinasRule br) {

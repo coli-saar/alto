@@ -41,7 +41,6 @@ public class Logging {
      * Thus it is probably good practice to set the logger level first,
      * and then set the handler.
      * 
-     * @param handler 
      */
     public static void setHandler(Handler handler) {
         setUp();

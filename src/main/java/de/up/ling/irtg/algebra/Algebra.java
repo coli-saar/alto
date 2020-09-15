@@ -69,9 +69,6 @@ public abstract class Algebra<E> implements Serializable {
      * Applies the operation with name "label" to the given arguments, and
      * returns the result.
      *
-     * @param label
-     * @param childrenValues
-     * @return
      */
     protected abstract E evaluate(String label, List<E> childrenValues);
 
@@ -82,8 +79,6 @@ public abstract class Algebra<E> implements Serializable {
      * method always returns true. You may override it to make the decomposition
      * automata smaller (e.g. by rejecting null values).
      *
-     * @param value
-     * @return
      */
     protected boolean isValidValue(E value) {
         return true;
@@ -94,7 +89,6 @@ public abstract class Algebra<E> implements Serializable {
      *
      * @param t a term (= tree whose nodes are labeled with algebra operation
      * symbols)
-     * @return
      */
     @OperationAnnotation(code = "eval")
     public E evaluate(Tree<String> t) {
@@ -119,7 +113,6 @@ public abstract class Algebra<E> implements Serializable {
     /**
      * Returns the signature of this algebra.
      *
-     * @return
      */
     public Signature getSignature() {
         return signature;
@@ -137,8 +130,6 @@ public abstract class Algebra<E> implements Serializable {
      * this method with one which returns more efficient decomposition automata
      * which exploit the structure of your algebra.
      *
-     * @param value
-     * @return
      */
     @OperationAnnotation(code = "decomp")
     public TreeAutomaton decompose(E value) {
@@ -161,8 +152,6 @@ public abstract class Algebra<E> implements Serializable {
      * objects of type E, so this ensures that the signature is always
      * up-to-date.
      *
-     * @param representation
-     * @return
      * @throws ParserException
      */
     abstract public E parseString(String representation) throws ParserException;
@@ -175,7 +164,6 @@ public abstract class Algebra<E> implements Serializable {
      * reader that provides a string representation of this external data using
      * this method. See {@link SetAlgebra} for an example.
      *
-     * @param optionReader
      */
     public void readOptions(Reader optionReader) throws Exception {
 
@@ -187,7 +175,6 @@ public abstract class Algebra<E> implements Serializable {
      * }.
      *
      * @see #readOptions(java.io.Reader)
-     * @param string
      * @throws Exception
      */
     public void setOptions(String string) throws Exception {
@@ -198,7 +185,6 @@ public abstract class Algebra<E> implements Serializable {
      * Writes the options of the current algebra object to a Writer.
      *
      * @see #readOptions(java.io.Reader)
-     * @param optionWriter
      * @throws Exception
      */
     public void writeOptions(Writer optionWriter) throws Exception {
@@ -209,7 +195,6 @@ public abstract class Algebra<E> implements Serializable {
      * Returns true if the algebra implementation has options that would make
      * sense to be set using {@link #setOptions(java.lang.String) }.
      *
-     * @return
      */
     public boolean hasOptions() {
         return false;
@@ -226,8 +211,6 @@ public abstract class Algebra<E> implements Serializable {
      * this method, you can change the way in which values of your algebra are
      * rendered in the Alto GUI.
      *
-     * @param object
-     * @return
      */
     public JComponent visualize(E object) {
         return new JLabel(representAsString(object));
@@ -241,8 +224,6 @@ public abstract class Algebra<E> implements Serializable {
      * algebra an object belongs, it will attempt to call this method instead of
      * the generic toString to produce algebra-specific string representations.
      *
-     * @param object
-     * @return
      */
     public String representAsString(E object) {
         return object.toString();
@@ -258,7 +239,6 @@ public abstract class Algebra<E> implements Serializable {
      * By overriding the method to return more specific classes than Object, you
      * make more output codecs available in those places.
      *
-     * @return
      */
     public Class getClassOfValues() {
         return Object.class;
@@ -269,7 +249,6 @@ public abstract class Algebra<E> implements Serializable {
      *
      * This is used for finding all available types of algebras.
      *
-     * @return
      */
     public static Iterator<Class> getAllAlgebraClasses() {
         ServiceLoader<Algebra> algebraLoader = ServiceLoader.load(Algebra.class);

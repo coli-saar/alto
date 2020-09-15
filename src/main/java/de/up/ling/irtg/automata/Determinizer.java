@@ -47,7 +47,6 @@ public class Determinizer<State> {
     /**
      * Creates a new instance for the given instance.
      * 
-     * @param originalAutomaton 
      */
     public Determinizer(TreeAutomaton<State> originalAutomaton) {
         this.originalAutomaton = originalAutomaton;
@@ -62,7 +61,6 @@ public class Determinizer<State> {
      * after the algorithm finishes (set) is cleared by algorithm before adding sets. If the
      * new state has id x then the corresponding set will be in newStateToOldStateSet.get(x). First
      * entry is null.
-     * @return 
      */
     public TreeAutomaton<Set<State>> determinize(List<IntSet> newStateToOldStateSet) {
         ConcreteTreeAutomaton<Set<State>> ret = new ConcreteTreeAutomaton<>(originalAutomaton.getSignature());

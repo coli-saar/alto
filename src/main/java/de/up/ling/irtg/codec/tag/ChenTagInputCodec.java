@@ -417,8 +417,6 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * Generates the list of child states, in the same order as
      * {@link #convertElementaryTree(de.up.ling.irtg.codec.tag.LexiconEntry, de.up.ling.irtg.automata.ConcreteTreeAutomaton, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.algebra.TagStringAlgebra, java.util.Set) }.
      *
-     * @param etree
-     * @return
      */
     private static List<String> getChildStates(String etreeName, TagGrammar tagg) {
         final List<String> childStates = new ArrayList<>();

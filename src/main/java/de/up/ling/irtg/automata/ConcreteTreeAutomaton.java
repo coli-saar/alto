@@ -47,7 +47,6 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
      * 
      * This instance will use the given signature.
      * 
-     * @param signature 
      */
     public ConcreteTreeAutomaton(Signature signature) {
         super(signature);
@@ -62,8 +61,6 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
      * 
      * Only use this if you know what you're doing.
      * 
-     * @param signature
-     * @param interner 
      */
     public ConcreteTreeAutomaton(Signature signature, Interner<State> interner) {
         super(signature, interner);
@@ -86,7 +83,6 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
      * The rule should be constructed with one of the createRule methods of
      * the automaton to ensure that it is interpreted correctly.
      * 
-     * @param rule 
      */
     public void addRule(Rule rule) {
         storeRuleBottomUp(rule);
@@ -119,7 +115,6 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
      * This is an old helper function to get debug info when parsing with the
      * sibling finder method. This function is in this code for legacy reasons
      * (such that older AltoLab tasks can still run).
-     * @return 
      */
     @Deprecated
     @OperationAnnotation(code ="countRhsStates")

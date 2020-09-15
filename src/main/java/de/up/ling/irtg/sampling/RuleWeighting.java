@@ -25,9 +25,6 @@ public interface RuleWeighting {
      * 
      * The value should be those computed by the last prepareProbability call.
      * 
-     * @param state
-     * @param number
-     * @return 
      */
     double getLogProbability(int state, int number);
     
@@ -36,7 +33,6 @@ public interface RuleWeighting {
      * 
      * If it is certain that they have not changed, then it is acceptable to do nothing.
      * 
-     * @param state
      */
     void prepareProbability(int state);
     
@@ -46,9 +42,6 @@ public interface RuleWeighting {
      * 
      * May throw an error if there is no such rule.
      * 
-     * @param state
-     * @param choicePoint
-     * @return 
      */
     int getRuleNumber(int state, double choicePoint);
     
@@ -57,9 +50,6 @@ public interface RuleWeighting {
      * 
      * May throw an error if there is no such rule.
      * 
-     * @param state
-     * @param number
-     * @return 
      */
     Rule getRuleByNumber(int state, int number);
     
@@ -70,8 +60,6 @@ public interface RuleWeighting {
      * May throw an error if there is no such state. The value is always the
      * last one computed by prepareStartProbability.
      * 
-     * @param number
-     * @return 
      */
     double getStateStartLogProbability(int number);
 
@@ -80,8 +68,6 @@ public interface RuleWeighting {
      * 
      * May throw an error if there is no such state.
      * 
-     * @param number
-     * @return 
      */
     int getStartStateByNumber(int number);
     
@@ -91,8 +77,6 @@ public interface RuleWeighting {
      * 
      * May throw an error if there is no such state.
      * 
-     * @param choicePoint
-     * @return 
      */
     int getStartStateNumber(double choicePoint);
     
@@ -107,7 +91,6 @@ public interface RuleWeighting {
     /**
      * Returns the overall number of start states available.
      * 
-     * @return 
      */
     int getNumberOfStartStates();
     
@@ -121,7 +104,6 @@ public interface RuleWeighting {
      * treSamp is an importance sample generated from this proposal distribution.
      * 
      * 
-     * @param treSamp
      * @param deterministic  indicates whether we can assume the underlying
      * automaton to be unambiguous.
      */
@@ -131,7 +113,6 @@ public interface RuleWeighting {
      * Returns the underlying tree automaton from which the rules and start
      * states are drawn.
      * 
-     * @return 
      */
     TreeAutomaton getAutomaton();
     
@@ -139,16 +120,12 @@ public interface RuleWeighting {
      * Returns the unnormalized probability of the given tree in the target
      * distribution.
      * 
-     * @param sample
-     * @return 
      */
     double getLogTargetProbability(Tree<Rule> sample);
 
     /**
      * Returns the proposal probability of the given rule given its parent.
      * 
-     * @param r
-     * @return 
      */
     double getLogProbability(Rule r);
 }

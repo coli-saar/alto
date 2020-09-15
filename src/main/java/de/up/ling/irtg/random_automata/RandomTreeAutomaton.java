@@ -71,7 +71,6 @@ public class RandomTreeAutomaton {
     /**
      * Generates a weight for a rule by drawing from the gamma distribution and adding a minimum value to make sure it is non-zero.
      * 
-     * @return 
      */
     private double makeWeight() {
         double d = this.rg.sample()+Double.MIN_VALUE;

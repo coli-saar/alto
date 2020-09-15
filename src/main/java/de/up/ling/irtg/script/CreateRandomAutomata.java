@@ -21,7 +21,6 @@ import java.util.Properties;
 public class CreateRandomAutomata {
     /**
      * 
-     * @param args 
      * @throws java.io.IOException 
      */
     public static void main(String... args) throws IOException {

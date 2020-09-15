@@ -103,7 +103,6 @@ public class TupleIterator<T> implements Iterator<T[]>{
      * Be careful, since this always returns the same backing array,
      * calling it again will modify that array.
      * 
-     * @return 
      */
     @Override
     public T[] next() {

@@ -64,8 +64,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
     /**
      * Initializes a decomposition automaton for {@code completeGraph} with respect to {@code algebra}.
-     * @param completeGraph
-     * @param algebra 
      */
     public SGraphBRDecompositionAutomatonBottomUp(SGraph completeGraph, GraphAlgebra algebra) {
         super(algebra.getSignature());
@@ -257,10 +255,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     /**
      * This caches rules for future reference, if the same bottom-up
      * question is asked again.
-     * @param rules
-     * @param labelID
-     * @param children
-     * @return 
      */
     protected Collection<Rule> cacheRules(Collection<Rule> rules, int labelID, int[] children) {
 //        System.err.println("cache: " + rules.size() + " " + Util.mapToList(rules, rule -> rule.toString(this)));
@@ -326,7 +320,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     
     /**
      * Is true iff the merge operation is the only binary operation in the algebras signature.
-     * @return 
      */
     private boolean isAlgebraPure() {
         if (algebraIsPure == null) {
@@ -347,7 +340,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     
     /**
      * returns the ID of the merge label in the algebra.
-     * @return 
      */
     int getMergeLabelID() {
         if (algebraIsPure == null) {
@@ -448,21 +440,16 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     interface SinglesideMergePartnerFinder {
         /**
          * stores the graph state represented by the int, for future reference
-         * @param graph
          */
         void insert(int graph);
 
         /**
          * returns all graph states that are potential merge partners for the parameter graph.
-         * @param graph
-         * @return
          */
         IntList getAllMergePartners(int graph);
 
         /**
          * prints all stored graphs, and the structure how they are stored, via System.out
-         * @param prefix
-         * @param indent
          */
         void print(String prefix, int indent);
 
@@ -587,8 +574,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
         /**
          * Top level constructor.
-         * @param vertices
-         * @param auto 
          */
         public EdgeMPF(IntSet vertices, SGraphBRDecompositionAutomatonBottomUp auto) {
             currentIndex = -1;
@@ -609,9 +594,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
          * Nested constructor.
          * @param local2Global
          * @param global2Local
-         * @param currentIndex
-         * @param auto
-         * @param parentEdge 
          */
         private EdgeMPF(int[] local2Global, Int2IntMap global2Local, int currentIndex, SGraphBRDecompositionAutomatonBottomUp auto, int parentEdge) {
             local2GlobalEdgeIDs = local2Global;
@@ -924,8 +906,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * There are no rename operations on states only reachable via rename.
      * Rules of the form {@literal c-> m(a, b)} and {@literal c-> m(b,a)} are both written into the
      * writer (this is different from previous implementations).
-     * @param writer
-     * @return
      */
     public boolean writeAutomatonRestricted(Writer writer) {
         count = 0;
@@ -1217,7 +1197,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * 7. targetFolderPath: The folder into which the automata are written.
      * 8. 'onlyBolinas' or 'all', depending on whether only graphs expressible
      * in the Bolinas format should be examined.
-     * @param args
      * @throws Exception 
      */
     public static void main(String[] args) throws Exception {

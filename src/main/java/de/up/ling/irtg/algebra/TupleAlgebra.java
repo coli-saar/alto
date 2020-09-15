@@ -52,7 +52,6 @@ class TupleAlgebra<E> extends Algebra<List<E>>{
      * Create a new instance with a new signature and based on the given underlying
      * algebra.
      * 
-     * @param underlyingAlgebra 
      */
     public TupleAlgebra(Algebra<E> underlyingAlgebra) {
         this.underlyingAlgebra = underlyingAlgebra;

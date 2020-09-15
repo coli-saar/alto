@@ -204,8 +204,6 @@ class SplitManager {
      * equal component was stored earlier, this earlier instance is used
      * instead of a new copy. The map is an identity map, to retrieve the stored
      * component after testing for equality.
-     * @param graphInfo
-     * @return
      */
     public Int2ObjectMap<Set<SComponent>> getAllSplits(Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
         Int2ObjectMap<Set<SComponent>> ret = new Int2ObjectOpenHashMap<>();
@@ -244,8 +242,6 @@ class SplitManager {
      * equal component was stored earlier, this earlier instance is used instead
      * of a new copy. The map is an identity map, to retrieve the stored
      * component after testing for equality.
-     * @param graphInfo
-     * @return
      */
     public Int2ObjectMap<SComponent> getAllNonSplits(Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
         Int2ObjectMap<SComponent> ret = new Int2ObjectOpenHashMap<>();

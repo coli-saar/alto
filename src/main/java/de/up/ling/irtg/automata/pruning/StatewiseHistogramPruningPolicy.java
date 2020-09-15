@@ -75,9 +75,6 @@ public class StatewiseHistogramPruningPolicy implements PruningPolicy {
      * total FOM of each (leftstate,rightstate) pair. The method uses arrays
      * and the Fastutil merge-sort method to sort the left partners in place.
      * 
-     * @param rightParent
-     * @param leftPartners
-     * @return 
      */
     private int[] getSortedLeftPartners(int rightParent, IntSet leftPartners) {
         final int[] aPartners = new int[leftPartners.size()];

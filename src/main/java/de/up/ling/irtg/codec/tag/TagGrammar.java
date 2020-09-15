@@ -278,12 +278,6 @@ public class TagGrammar {
 
     /**
      *
-     * @param lex
-     * @param auto
-     * @param th
-     * @param sh
-     * @param tsa
-     * @param adjunctionNonterminals
      */
     private void convertElementaryTree(LexiconEntry lex, ConcreteTreeAutomaton<String> auto, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, Homomorphism fh, final Set<String> adjunctionNonterminals) {
         final List<String> childStates = new ArrayList<>();
@@ -520,7 +514,6 @@ public class TagGrammar {
      * labels match this condition are replaced by *E* when constructing the
      * string homomorphism in {@link #toIrtg() }.
      *
-     * @param traceP
      */
     public void setTracePredicate(Predicate<String> traceP) {
         this.traceP = traceP;
@@ -531,8 +524,6 @@ public class TagGrammar {
      * predicate set by {@link #setTracePredicate(java.util.function.Predicate)
      * }.
      *
-     * @param nodeLabel
-     * @return
      */
     public boolean isTrace(String nodeLabel) {
         return (traceP != null) && traceP.test(nodeLabel);

@@ -32,8 +32,6 @@ public abstract class BottomUpRuleIndex {
      * second time does not actually change the set of rules; in this case, the
      * method returns true.)
      *
-     * @param rule
-     * @return
      */
     public boolean add(Rule rule) {
         Collection<Rule> rulesHere = get(rule.getLabel(), rule.getChildren());

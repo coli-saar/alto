@@ -21,9 +21,6 @@ public class LogSpaceOperations {
     /**
      * Adds to numbers that are given via their natural logarithm, the result is the natural logarithm of the addition.
      * 
-     * @param first
-     * @param second
-     * @return 
      */
     public static double add(double first, double second){
         double max = Math.max(first, second);

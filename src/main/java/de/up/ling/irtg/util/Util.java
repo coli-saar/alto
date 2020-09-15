@@ -334,10 +334,6 @@ public class Util {
     /**
      * Appends the suffix to all strings in the set, returning a new set with those
      * strings. If keepOld is true, the new set also contains the original strings.
-     * @param set
-     * @param suffix
-     * @param keepOld
-     * @return 
      */
     public static Set<String> appendToAll(Set<String> set, String suffix, boolean keepOld) {
         Set<String> ret = new HashSet<>();
@@ -355,11 +351,6 @@ public class Util {
      * strings. If keepOld is true, the new set also contains the original strings.
      * In this version, the suffix is only added to the strings which test true
      * with addIf; for other strings the original is kept.
-     * @param set
-     * @param suffix
-     * @param keepOld
-     * @param addIf
-     * @return 
      */
     public static Set<String> appendToAll(Set<String> set, String suffix, boolean keepOld, Predicate<String> addIf) {
         if (addIf == null) {

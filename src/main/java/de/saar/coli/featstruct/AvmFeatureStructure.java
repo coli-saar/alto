@@ -22,8 +22,6 @@ public class AvmFeatureStructure extends FeatureStructure {
     /**
      * Adds an attribute-value pair to this AVM.
      *
-     * @param attribute
-     * @param value
      */
     public void put(String attribute, FeatureStructure value) {
         avm.put(attribute, value);
@@ -32,7 +30,6 @@ public class AvmFeatureStructure extends FeatureStructure {
     /**
      * Returns the set of attributes defined in this AVM.
      *
-     * @return
      */
     public Set<String> getAttributes() {
         return avm.keySet();
@@ -41,8 +38,6 @@ public class AvmFeatureStructure extends FeatureStructure {
     /**
      * Returns the value stored under the given attribute.
      *
-     * @param attribute
-     * @return
      */
     public FeatureStructure get(String attribute) {
         return avm.get(attribute);
@@ -284,7 +279,6 @@ public class AvmFeatureStructure extends FeatureStructure {
      * Not quite certain if this works correctly if the FS contains nodes
      * which are not instances of {@link AvmFeatureStructure} or {@link PlaceholderFeatureStructure}.
      *
-     * @return
      */
     @Override
     public FeatureStructure deepCopy() {

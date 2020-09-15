@@ -30,7 +30,6 @@ public class AdaGrad implements LearningRate {
     /**
      * Create a new instance with the given base rate.
      *  
-     * @param baseRate
      */
     public AdaGrad(double baseRate) {
         this.sums = new Long2DoubleOpenHashMap();

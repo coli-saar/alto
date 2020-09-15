@@ -217,8 +217,6 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         /**
          * Returns the number of bytes written to the stream.
          *
-         * @param os
-         * @return
          * @throws IOException
          */
         public long write(ObjectOutputStream os) throws IOException {
@@ -300,7 +298,6 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
 
     /**
      * Translates the specified .irtg file to a .irtb file at the same location.
-     * @param args 
      */
     public static void main(String[] args) throws IOException {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.fromPath(args[0]);

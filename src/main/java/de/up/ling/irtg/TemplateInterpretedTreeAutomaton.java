@@ -71,7 +71,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Adds a rule template to the template IRTG.
      *
-     * @param trule
      */
     public void addRuleTemplate(TemplateRule trule) {
         ruleTemplates.add(trule);
@@ -80,9 +79,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Adds a declaration of a constructure feature to the template IRTG.
      *
-     * @param id
-     * @param featureClass
-     * @param arguments
      */
     public void addConstructorFeatureDeclaration(String id, String featureClass, List<String> arguments) {
         addFeatureDeclaration(id, featureClass, null, arguments);
@@ -91,10 +87,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Adds a declaration of a static-method feature to the template IRTG.
      *
-     * @param id
-     * @param featureClass
-     * @param featureMethod
-     * @param arguments
      */
     public void addStaticFeatureDeclaration(String id, String featureClass, String featureMethod, List<String> arguments) {
         addFeatureDeclaration(id, featureClass, featureMethod, arguments);
@@ -112,8 +104,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Declares an interpretation.
      *
-     * @param interpretation
-     * @param className
      */
     public void addAlgebraClass(String interpretation, String className) {
         getAlgebraClasses().put(interpretation, className);
@@ -124,8 +114,6 @@ public class TemplateInterpretedTreeAutomaton {
      * enumerating valid instances of each foreach-rule in the given first-order
      * model (see the documentation for the class as a whole).
      *
-     * @param model
-     * @return
      * @throws ClassNotFoundException
      * @throws InstantiationException
      * @throws IllegalAccessException
@@ -233,7 +221,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Returns the number of feature declarations this IRTG contains.
      *
-     * @return
      */
     public int getNumFeatures() {
         return (features == null ? 0 : features.size());
@@ -242,7 +229,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Returns a list of ids of the feature declarations this IRTG contains.
      *
-     * @return
      */
     public List<String> getFeatureIds() {
         return features.stream().map(f -> {
@@ -285,8 +271,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Returns an specific entry for the feature weights.
      *
-     * @param i
-     * @return
      */
     public double getFeatureWeight(int i) {
         if (featureWeights != null && i < featureWeights.length) {
@@ -299,8 +283,6 @@ public class TemplateInterpretedTreeAutomaton {
     /**
      * Allows for setting a single entry for the feature weights.
      *
-     * @param index
-     * @param weight
      */
     public void setFeatureWeight(int index, double weight) {
         featureWeights[index] = weight;

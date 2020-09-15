@@ -19,8 +19,6 @@ public interface FineToCoarseMapping {
      * Maps a nonterminal to its coarser version or itself if there is no coarser
      * version.
      * 
-     * @param symbol
-     * @return 
      */
     String coarsify(String symbol);
     
@@ -30,7 +28,6 @@ public interface FineToCoarseMapping {
      * This must include a level for the finest resulution, i.e. the original
      * nonterminals.
      * 
-     * @return 
      */
     int numLevels();
 }

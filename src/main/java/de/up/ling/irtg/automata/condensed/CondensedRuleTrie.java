@@ -32,8 +32,6 @@ public class CondensedRuleTrie {
     /**
      * Stores a sequence of ints (the Array) in the Trie 
      * and maps the final state to the given rule.
-     * @param childstates
-     * @param rule 
      */
     public void put(int[] childstates, int labelSetID, CondensedRule rule) {
         put(childstates, labelSetID, rule, 0);
@@ -44,9 +42,6 @@ public class CondensedRuleTrie {
     /**
      * Recursive version of put.
      * Go as deep as the length of the given array.
-     * @param childstates
-     * @param rule
-     * @param index 
      */
     private void put(int[] childstates, int labelSetID, CondensedRule rule, int index) {
         if( index == childstates.length) {
@@ -81,8 +76,6 @@ public class CondensedRuleTrie {
     /**
      * Returns a set of values, that is mapped to the final state
      * we reach with the sequence of transitions in childstates.
-     * @param childstates
-     * @return 
      */
     public Set<CondensedRule> get(int[] childstates, int labelSetID) {
         return get(childstates, labelSetID, 0);
@@ -108,8 +101,6 @@ public class CondensedRuleTrie {
     
     /**
      * Returns the Trie at the final state of the given childstates.
-     * @param childstates
-     * @return
      */
     protected CondensedRuleTrie getFinalTrie(int [] childstates) {
         return getFinalTrie(childstates, 0); 
@@ -133,8 +124,6 @@ public class CondensedRuleTrie {
      * Returns the subtrie that we reach with a transition with the given
      * symbol.
      *
-     * @param id
-     * @return
      */
     public CondensedRuleTrie getSubtrie(int id) {
         return map.get(id);
@@ -156,7 +145,6 @@ public class CondensedRuleTrie {
     
     /**
      * Returns an IntSet with the symbols for all outgoing transitions.
-     * @return 
      */
     public IntSet getBranches() {
         return map.keySet();

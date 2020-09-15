@@ -79,7 +79,6 @@ public class FirstOrderModel {
      * ["b"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }
      *
      *
-     * @param optionReader
      * @throws Exception
      */
     public static FirstOrderModel read(Reader optionReader) throws Exception {
@@ -162,7 +161,6 @@ public class FirstOrderModel {
     
     /**
      * Returns all true atoms in this model, as terms.
-     * @return 
      */
     public Iterable<Tree<String>> getTrueAtoms() {
         List<Tree<String>> ret = new ArrayList<>();

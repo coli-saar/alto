@@ -70,11 +70,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
      * Creates a new Condensed Rule with parentState, labels and children
      * already resolved to int values.
      *
-     * @param parent
-     * @param labelSetID
-     * @param children
-     * @param weight
-     * @return
      */
     public CondensedRule createRuleRaw(int parent, int labelSetID, int[] children, double weight) {
         return new CondensedRule(parent, labelSetID, children, weight);
@@ -134,7 +129,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
      * Saves a CondensedRule in the internal data structures for TopDown and
      * BottomUp access
      *
-     * @param rule
      */
     protected void storeRule(CondensedRule rule) {
         // Store rules for bottom-up access
@@ -270,8 +264,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
      * Returns an Iterable over all CondensedRules that have a given
      * parentstate.
      *
-     * @param parentState
-     * @return
      */
     public Iterable<CondensedRule> getCondensedRulesByParentState(int parentState) {
         makeAllRulesCondensedExplicit();
@@ -287,7 +279,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
     /**
      * Returns a set of all rules, that are part of this automaton.
      *
-     * @return
      */
     public Set<CondensedRule> getCondensedRuleSet() {
         makeAllRulesCondensedExplicit();
@@ -314,7 +305,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
      * Returns a graphic representation of this Automaton that shows the actual
      * CondensedRules
      *
-     * @return
      */
     public String toString() {
         StringBuilder buf = new StringBuilder();

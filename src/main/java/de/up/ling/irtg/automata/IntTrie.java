@@ -57,7 +57,6 @@ public class IntTrie<E> implements Serializable {
      * This can be used to optimize performance by changing the way mappings
      * between nodes in the trie are stored.
      * 
-     * @param factory 
      */
     public IntTrie(MapFactory factory) {
         this(0, factory);
@@ -74,7 +73,6 @@ public class IntTrie<E> implements Serializable {
      * The value counter is used to map entries in the try into longs, which
      * can then be added up to get some summary statistics.
      * 
-     * @param valueCounter 
      */
     public void setValueCounter(ToLongFunction<E> valueCounter) {
         this.valueCounter = valueCounter;
@@ -100,9 +98,6 @@ public class IntTrie<E> implements Serializable {
      * Returns the previously known entry, or null if an entry for this key was
      * not known.
      *
-     * @param key
-     * @param value
-     * @return
      */
     public E put(int[] key, E value) {
         E ret = put(0, key, value);
@@ -134,8 +129,6 @@ public class IntTrie<E> implements Serializable {
 
     /**
      * Returns the value associate with the key, or null if there is no such value.
-     * @param key
-     * @return 
      */
     public E get(int[] key) {
         //ParseTester.averageLogger.increaseCount("IntTrieGet1");
@@ -161,8 +154,6 @@ public class IntTrie<E> implements Serializable {
     /**
      * Obtais the subtrie reached with the given key.
      * 
-     * @param oneStepKey
-     * @return 
      */
     public IntTrie<E> step(int oneStepKey) {
         return nextStep.get(oneStepKey);
@@ -174,8 +165,6 @@ public class IntTrie<E> implements Serializable {
      * 
      * If a key is not associated with a value, then it is ignored.
      * 
-     * @param keySets
-     * @param fn 
      */
     public void foreachValueForKeySets(List<IntSet> keySets, Consumer<E> fn) {
         foreachValueForKeySets(0, keySets, fn);
@@ -213,7 +202,6 @@ public class IntTrie<E> implements Serializable {
 
     /**
      * Applies the given consumer to all the values in this map.
-     * @param fn 
      */
     public void foreach(Consumer<E> fn) {
         if (value != null) {
@@ -237,7 +225,6 @@ public class IntTrie<E> implements Serializable {
 
     /**
      * Applies the given visitor to every key value pair stored in the trie.
-     * @param visitor 
      */
     public void foreachWithKeys(EntryVisitor<E> visitor) {
         IntList keys = new IntArrayList();
@@ -274,7 +261,6 @@ public class IntTrie<E> implements Serializable {
 
     /**
      * Returns a collection of all the values stored in the trie.
-     * @return 
      */
     public Collection<E> getValues() {
         final List<E> allValues = new ArrayList<>();
@@ -367,8 +353,6 @@ public class IntTrie<E> implements Serializable {
      * 
      * The keyToString function is applied to keys and their depth in order to encode them.
      * 
-     * @param keyToString
-     * @param valueToString 
      */
     public void print(BiFunction<Integer,Integer,String> keyToString, Function<E,String> valueToString) {
         print(0, keyToString, valueToString);

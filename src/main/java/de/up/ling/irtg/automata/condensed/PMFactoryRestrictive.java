@@ -708,11 +708,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
      * labelSetID2StartStateRules and then handled later depending on
      * computeCompleteMatcher.
      *
-     * @param labelSetID
-     * @param childStates
-     * @param parent
-     * @param sym
-     * @param matcherAuto
      */
     private void addRuleWithChildren(int labelSetID, String[] childStates, String parent, String sym, ConcreteTreeAutomaton<String> matcherAuto) {
 
@@ -741,9 +736,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
      * computeCompleteMatcher. Used in the initial construction of the
      * restrictive matcher.
      *
-     * @param rule
-     * @param labelSetID
-     * @param startStateRepPositions
      */
     private void storeRuleTemp(Rule rule, int labelSetID, int pos) {
         List<Pair<Rule, Integer>> storedRules = labelSetID2StartStateRules.get(labelSetID);

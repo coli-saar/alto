@@ -21,7 +21,6 @@ public interface EdgeEvaluator {
      * subclasses might implement some other behavior, e.g. to keep
      * track of inside probabilities of states.
      * 
-     * @param rule 
      */
     default void ruleAdded(Rule rule) {
         
@@ -39,9 +38,6 @@ public interface EdgeEvaluator {
      * and {@link IntersectionAutomaton#getRightState(int) } with the
      * "auto" argument to obtain p and q.
      * 
-     * @param outputState
-     * @param auto
-     * @return 
      */
     double evaluate(int outputState, IntersectionAutomaton auto);
 }

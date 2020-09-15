@@ -89,7 +89,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
      * Creates a new instance with a new signature and model, which adds the
      * given atomicInterpretations to the model.
      * 
-     * @param atomicInterpretations 
      */
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
         this();
@@ -156,7 +155,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
      * ["b"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }
      *
      *
-     * @param optionReader
      * @throws Exception
      */
     @Override

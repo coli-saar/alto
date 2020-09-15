@@ -48,8 +48,6 @@ public class CondensedRule implements AbstractRule {
     /**
      * Returns a Set of Strings for the labels of this rule.
      *
-     * @param auto
-     * @return
      */
     public Collection<String> getLabelStrings(CondensedTreeAutomaton auto) {
         Set<String> ret = new HashSet<>();
@@ -75,7 +73,6 @@ public class CondensedRule implements AbstractRule {
      * Retrieves the auxiliary information from this rule.
      *
      * @see #setExtra(java.lang.Object)
-     * @return
      */
     public Object getExtra() {
         return extra;
@@ -85,7 +82,6 @@ public class CondensedRule implements AbstractRule {
      * Stores auxiliary information within this rule. Do not use this unless you
      * know what you're doing.
      *
-     * @param extra
      */
     public void setExtra(Object extra) {
         this.extra = extra;
@@ -204,8 +200,6 @@ public class CondensedRule implements AbstractRule {
      * if the two rules belong to the same automaton, as otherwise states might
      * be encoded by different interners.
      *
-     * @param obj
-     * @return
      */
     @Override
     public boolean equals(Object obj) {

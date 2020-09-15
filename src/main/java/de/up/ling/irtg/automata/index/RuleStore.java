@@ -111,7 +111,6 @@ public class RuleStore implements Serializable {
      *
      * This function does nothing if doStore is false.
      *
-     * @param rule
      */
     private void storeRule(Rule rule) {
         DEBUG(() -> "store: " + rule.toString(auto));
@@ -208,7 +207,6 @@ public class RuleStore implements Serializable {
      * Use this method to access the bottom-up index,
      * in a way that guarantees that all rules have been indexed in it.
      * 
-     * @return 
      */
     private BottomUpRuleIndex bu() {
         processNewBottomUpRules();
@@ -218,9 +216,6 @@ public class RuleStore implements Serializable {
     /**
      * Returns null if such rules were never cached.
      * 
-     * @param labelId
-     * @param childStates
-     * @return 
      */
     public Iterable<Rule> getRulesBottomUpRaw(int labelId, int[] childStates) {
         return bu().get(labelId, childStates);
@@ -234,9 +229,6 @@ public class RuleStore implements Serializable {
      * Like getRulesBottomUp, but only looks for rules in the cache of
      * previously discovered rules.
      *
-     * @param labelId
-     * @param childStates
-     * @return
      */
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
 //        processNewBottomUpRules();        
@@ -279,9 +271,6 @@ public class RuleStore implements Serializable {
      * Like getRulesTopDown, but only looks for rules in the cache of previously
      * discovered rules.
      *
-     * @param labelId
-     * @param parentState
-     * @return
      */
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
         Iterable<Rule> ret = topDown.getRules(labelId, parentState);
@@ -335,9 +324,6 @@ public class RuleStore implements Serializable {
      * Checks whether the cache contains a bottom-up rule for the given parent
      * label and children states.
      *
-     * @param label
-     * @param childStates
-     * @return
      */
     public boolean useCachedRuleBottomUp(int label, int[] childStates) {
         if (explicit) {
@@ -358,9 +344,6 @@ public class RuleStore implements Serializable {
      * Checks whether the cache contains a top-down rule for the given parent
      * label and state.
      *
-     * @param label
-     * @param parent
-     * @return
      */
     public boolean useCachedRuleTopDown(int label, int parent) {
         // Even when the automaton has been computed explicitly, not all labels
@@ -409,8 +392,6 @@ public class RuleStore implements Serializable {
      * second time does not actually change the set of rules; in this case, the
      * method returns true.)
      *
-     * @param rule
-     * @return
      */
 //    private boolean storeRuleInTrie(Rule rule) {
 //        return bottomUp.add(rule);        

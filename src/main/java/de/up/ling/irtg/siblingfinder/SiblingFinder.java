@@ -39,8 +39,6 @@ public abstract class SiblingFinder {
     /**
      * Adds a state to the indexing structure, making it available for future
      * calls to <code>getPartners</code>.
-     * @param stateID
-     * @param pos 
      */    
     public void addState(int stateID, int pos) {
         if (!seen[pos].get(stateID)) {
@@ -52,14 +50,11 @@ public abstract class SiblingFinder {
     /**
      * Override this to implement indexing. The <code>addState</code> method
      * is just a wrapper.
-     * @param stateID
-     * @param pos 
      */
     protected abstract void performAddState(int stateID, int pos);
     
     /**
      * Creates a new sibling finder for an operation with given arity.
-     * @param arity 
      */
     public SiblingFinder(int arity) {
         seen = new BitSet[arity];
@@ -100,9 +95,6 @@ public abstract class SiblingFinder {
          
         /**
          *
-         * @param stateID
-         * @param pos
-         * @return 
          */
         @Override
         public Iterable<int[]> getPartners(int stateID, int pos) {

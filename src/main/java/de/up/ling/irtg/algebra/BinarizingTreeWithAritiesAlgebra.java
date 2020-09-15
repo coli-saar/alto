@@ -31,7 +31,6 @@ public class BinarizingTreeWithAritiesAlgebra extends BinarizingAlgebra<Tree<Str
      * Creates a new instance with a use specified concatenation symbol and
      * a new signature.
      * 
-     * @param appendSymbol 
      */
     public BinarizingTreeWithAritiesAlgebra(String appendSymbol) {
         super(new TreeWithAritiesAlgebra(), appendSymbol);

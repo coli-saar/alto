@@ -22,8 +22,6 @@ class PairwiseShortestPaths {//this class computes (and stores) pairwise shortes
     /**
      * Initializes and then runs the Floyd-Warshall algorithm, runtime O(n^3).
      *
-     * @param wholeGraph
-     * @param graphInfo
      */
     public PairwiseShortestPaths(SGraph wholeGraph, GraphInfo graphInfo) {
         graphSize = wholeGraph.getGraph().vertexSet().size();
@@ -98,7 +96,6 @@ class PairwiseShortestPaths {//this class computes (and stores) pairwise shortes
      *
      * @param node1
      * @param node2
-     * @return
      */
     public Integer getDistance(int node1, int node2) {
         return pwShortestPaths[node1][node2];
@@ -108,9 +105,6 @@ class PairwiseShortestPaths {//this class computes (and stores) pairwise shortes
      * Returns the last edge on the shortest path from {@code startNode} to
      * {@code endNode}. Precomputed, has constant runtime.
      *
-     * @param startNode
-     * @param endNode
-     * @return
      */
     public int getEdge(int startNode, int endNode) {
         return edges[startNode][endNode];

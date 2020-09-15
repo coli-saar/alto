@@ -32,8 +32,6 @@ public class CodecUtilities {
     /**
      * Removes the first and last character from a string.
      * 
-     * @param s
-     * @return 
      */
     public static String stripOuterChars(String s) {
         assert s.length() >= 2 : "string -" + s + "- should have length at least 2";
@@ -45,9 +43,6 @@ public class CodecUtilities {
      * If the name is surrounded by quotes, the quotes are stripped off.
      * Otherwise, the name is returned verbatim.
      * 
-     * @param context
-     * @param isQuoted
-     * @return 
      */
     public static String extractName(RuleContext context, boolean isQuoted) {
         if (isQuoted) {
@@ -66,10 +61,6 @@ public class CodecUtilities {
      * into the element string, and the anonymous state is added to the returned
      * state list.
      * 
-     * @param auto
-     * @param children
-     * @param states
-     * @return 
      */
     public List<String> introduceAnonymousStates(ConcreteTreeAutomaton<String> auto, List<String> children, Set<String> states) {
         List<String> ret = new ArrayList<>();
@@ -92,8 +83,6 @@ public class CodecUtilities {
      * Generate a new string with the given prefix. The string is guaranteed
      * to be different form all other gensym'ed strings that came from the
      * same instance of CodecUtilities.
-     * @param prefix
-     * @return 
      */
     public String gensym(String prefix) {
         return prefix + (gensymNext++);
@@ -109,10 +98,6 @@ public class CodecUtilities {
      * @param <I>
      * @param <C>
      * @param <O>
-     * @param context
-     * @param extractList
-     * @param map
-     * @return 
      */
     public static <I,C extends ParserRuleContext, O> List<O> processList(C context, Function<C,List<I>> extractList, Function<I,O> map) {
         List<O> ret = new ArrayList<>();
@@ -135,9 +120,6 @@ public class CodecUtilities {
      * the method returns 1.
      * 
      * @param <C>
-     * @param weight
-     * @param extractStr
-     * @return 
      */
     public static <C extends ParserRuleContext> double weight(C weight, Function<C,String> extractStr) {
         if( weight == null ) {
@@ -156,10 +138,6 @@ public class CodecUtilities {
      * 
      * @param <O>
      * @param <C>
-     * @param context
-     * @param label
-     * @param children
-     * @return 
      */
     public static <O, C extends ParserRuleContext> Tree<O> processTree(C context, Function<C,O> label, Function<C, List<C>> children) {
         List<C> cChildren = children.apply(context);
@@ -178,9 +156,6 @@ public class CodecUtilities {
      * The method then looks for a constructor for this class with "n" parameters
      * of type String.
      * 
-     * @param className
-     * @param n
-     * @return
      * @throws ClassNotFoundException no subclass of FeatureFunction could be found
      * @throws NoSuchMethodException  no constructor with n String parameters could be found
      */
@@ -199,10 +174,6 @@ public class CodecUtilities {
      * The method looks for a static method className#methodName with
      * n parameters of type String, and returns it.
      * 
-     * @param className
-     * @param methodName
-     * @param n
-     * @return
      * @throws ClassNotFoundException the class could not be found
      * @throws NoSuchMethodException  no method with this name of parameter list could be found
      */

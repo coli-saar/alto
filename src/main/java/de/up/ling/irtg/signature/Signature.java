@@ -54,8 +54,6 @@ public class Signature implements Serializable {
      * Obtains a signature mapper between this signature on the given other
      * signature.
      *
-     * @param other
-     * @return
      */
     public SignatureMapper getMapperTo(Signature other) {
         return interner.getMapperTo(other.interner);
@@ -65,7 +63,6 @@ public class Signature implements Serializable {
      * Obtains an identity mapper for this signature (every id is mapped to
      * itself).
      *
-     * @return
      */
     public SignatureMapper getIdentityMapper() {
         return new IdentitySignatureMapper(interner);
@@ -86,7 +83,6 @@ public class Signature implements Serializable {
     /**
      * Obtains a collection of all the symbols known to the signature.
      *
-     * @return
      */
     public Collection<String> getSymbols() {
         return interner.getKnownObjects();
@@ -97,8 +93,6 @@ public class Signature implements Serializable {
      *
      * The return value will be -1 if the symbol is not known.
      *
-     * @param symbol
-     * @return
      */
     public int getArityForLabel(String symbol) {
         return arities.get(interner.resolveObject(symbol));
@@ -109,8 +103,6 @@ public class Signature implements Serializable {
      *
      * The return value will be -1 if the id is not known.
      *
-     * @param symbolId
-     * @return
      */
     public int getArity(int symbolId) {
         return arities.get(symbolId);
@@ -120,8 +112,6 @@ public class Signature implements Serializable {
      * Returns the symbol associated with the given id, or null if no such
      * symbol exists.
      *
-     * @param id
-     * @return
      */
     public String resolveSymbolId(int id) {
         return interner.resolveId(id);
@@ -132,8 +122,6 @@ public class Signature implements Serializable {
      *
      * If an id is not known, then null will be present in the collection.
      *
-     * @param ids
-     * @return
      */
     public Collection<String> resolveSymbolIDs(IntCollection ids) {
         List<String> ret = new ArrayList<>();
@@ -146,8 +134,6 @@ public class Signature implements Serializable {
      *
      * Returns 0 if the symbol is not known.
      *
-     * @param symbol
-     * @return
      */
     public int getIdForSymbol(String symbol) {
         return interner.resolveObject(symbol);
@@ -156,8 +142,6 @@ public class Signature implements Serializable {
     /**
      * Returns true if the symbol is known to this signature.
      *
-     * @param symbol
-     * @return
      */
     public boolean contains(String symbol) {
         return interner.isKnownObject(symbol);
@@ -169,9 +153,6 @@ public class Signature implements Serializable {
      * If the symbol is already assigned a different arity, then an
      * UnsupportedOperationException will be thrown.
      *
-     * @param symbol
-     * @param arity
-     * @return
      */
     public int addSymbol(String symbol, int arity) {
         int ret = interner.addObject(symbol);
@@ -192,7 +173,6 @@ public class Signature implements Serializable {
     /**
      * Can be used to check whether this signature can be printed.
      *
-     * @return
      */
     public boolean isWritable() {
         return true;
@@ -203,7 +183,6 @@ public class Signature implements Serializable {
      * Iterate over all symbol IDs by iterating from 1 to getMaxSymbolId()
      * (inclusively).
      *
-     * @return
      */
     public int getMaxSymbolId() {
         return interner.getNextIndex() - 1;
@@ -213,7 +192,6 @@ public class Signature implements Serializable {
      * Returns a map which contains the pairs of symbols and arities known to
      * this signature.
      *
-     * @return
      */
     public Map<String, Integer> getSymbolsWithArities() {
         Map<String, Integer> ret = new HashMap<>();
@@ -233,8 +211,6 @@ public class Signature implements Serializable {
      * null trees will result in a RuntimeException. If a symbol is unknown then
      * the string "null" will be inserted.
      *
-     * @param tree
-     * @return
      */
     public Tree<String> resolve(Tree<Integer> tree) {
         if (tree == null) {
@@ -262,8 +238,6 @@ public class Signature implements Serializable {
      * The arities for the symbols will be the number of children they have in
      * the tree.
      *
-     * @param tree
-     * @return
      */
     public Tree<Integer> addAllSymbols(Tree<String> tree) {
         return tree.dfs((Tree<String> node, List<Tree<Integer>> childrenValues) -> {
@@ -278,8 +252,6 @@ public class Signature implements Serializable {
      * exist in this signature; otherwise the method will throw a
      * {@link NullPointerException}.
      *
-     * @param tree
-     * @return
      */
     public Tree<Integer> mapSymbolsToIds(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<Integer>>() {
@@ -303,7 +275,6 @@ public class Signature implements Serializable {
      * HomomorphismSymbol will be added. The arities are given by the number of
      * children.
      *
-     * @param tree
      */
     public void addAllConstants(Tree<HomomorphismSymbol> tree) {
         tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Void>() {
@@ -340,8 +311,6 @@ public class Signature implements Serializable {
      * the same as the symbol with ID x[i] in the other signature. If the symbol
      * does not exist in the other signature, x[i] will be 0.
      *
-     * @param other
-     * @return
      */
     public int[] remap(Signature other) {
         return interner.remap(other.interner);
@@ -350,7 +319,6 @@ public class Signature implements Serializable {
     /**
      * Returns the maximum arity of any symbol in this signature.
      *
-     * @return
      */
     public int getMaxArity() {
         int ret = 0;

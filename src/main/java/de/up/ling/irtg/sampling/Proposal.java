@@ -32,7 +32,6 @@ public class Proposal {
     /**
      * Create a new instance with the given random number sequence.
      * 
-     * @param rg 
      */
     public Proposal(RandomGenerator rg) {
         this.rg = rg;
@@ -41,7 +40,6 @@ public class Proposal {
     /**
      * Create a new instance with a WELL RNG with the given seed.
      * 
-     * @param seed 
      */
     public Proposal(long seed) {
         this(new Well44497a(seed));
@@ -62,9 +60,6 @@ public class Proposal {
     /**
      * Get a sample of trees with label IDs for the rules sampled. 
      * 
-     * @param guide
-     * @param sampleSize
-     * @return 
      */
     public TreeSample<Integer> getRawTreeSample(RuleWeighting guide, int sampleSize) {
        return this.getTreeSample(RAW_MAPPING, guide, sampleSize);
@@ -73,9 +68,6 @@ public class Proposal {
     /**
      * Returns a sample of rule trees.
      * 
-     * @param guide
-     * @param sampleSize
-     * @return 
      */
     public TreeSample<Rule> getTreeSample(RuleWeighting guide, int sampleSize) {
         return this.getTreeSample(null, guide, sampleSize);
@@ -90,9 +82,6 @@ public class Proposal {
     /**
      * Returns a sample of string trees by transforming sampled rule trees.
      * 
-     * @param guide
-     * @param sampleSize
-     * @return 
      */
     public TreeSample<String> getStringTreeSample(RuleWeighting guide, int sampleSize) {
         return this.getTreeSample(STRING_MAPPING, guide, sampleSize);
@@ -106,10 +95,6 @@ public class Proposal {
      * the rules from which the tree is derived.
      * 
      * @param <Type> The label type of the trees.
-     * @param mapping
-     * @param guide
-     * @param numberOfSamples
-     * @return 
      */
     public <Type> TreeSample<Type> getTreeSample(BiFunction<Rule,TreeAutomaton,Type> mapping,
                                                     RuleWeighting guide, int numberOfSamples) {
@@ -140,11 +125,6 @@ public class Proposal {
      * 
      * 
      * @param <Type>
-     * @param state
-     * @param guide
-     * @param mapping
-     * @param logPropProb
-     * @return 
      */
     private <Type> Tree<Type> sampleTree(int state, RuleWeighting guide, BiFunction<Rule, TreeAutomaton, Type> mapping, MutableDouble logPropProb) {
         guide.prepareProbability(state);

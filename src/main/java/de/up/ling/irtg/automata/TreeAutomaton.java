@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  * starting at 1. You can translate between numeric state IDs and the actual
  * state objects (of the class State which is given as a type parameter to the
  * class) using {@link #getStateForId(int)} and
- * {@link #getIdForState(java.lang.Object)}. You can translate between numeric
+ * {@link #getIdForState(Object)}. You can translate between numeric
  * label IDs and the actual labels (of class String) using the automaton's
  * signature, obtained by calling {@link #getSignature()}
  * .<p>
@@ -119,9 +119,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Returns the numeric ID for the given state. If the automaton does not
      * have a state of the given name, the method returns 0.
-     *
-     * @param state
-     * @return
      */
     public int getIdForState(State state) {
         return stateInterner.resolveObject(state);
@@ -130,9 +127,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Returns the state for the given numeric state ID. If the automaton does
      * not have a state with this ID, the method returns null.
-     *
-     * @param stateId
-     * @return
      */
     public State getStateForId(int stateId) {
         return stateInterner.resolveId(stateId);
@@ -149,15 +143,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     protected int addState(State state) {
-        int ret = stateInterner.addObject(state);
-//        allStates.add(ret);
-        return ret;
+        return stateInterner.addObject(state);
     }
 
     /**
      * Returns the signature of the automaton.
-     *
-     * @return
      */
     public Signature getSignature() {
         return signature;
@@ -165,8 +155,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * returns whether storeRule actually stores the rule or does nothing.
-     *
-     * @return
      */
     public boolean isStoring() {
         return ruleStore.isStoring();
@@ -174,8 +162,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * sets whether storeRule actually stores the rule or does nothing.
-     *
-     * @param doStore
      */
     public void setStoring(boolean doStore) {
         ruleStore.setStoring(doStore);
@@ -187,20 +173,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * used to assign a state to the parent node. The parent label is a numeric
      * symbol ID, which represents a terminal symbol according to the
      * automaton's signature.
-     *
-     * @param labelId
-     * @param childStates
-     * @return
      */
     abstract public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates);
 
     /**
      * Finds automaton rules bottom-up. This is like {@link #getRulesBottomUp(int, int[])
      * }, but with a List rather than an array of child states.
-     *
-     * @param labelId
-     * @param childStates
-     * @return
      */
     public Iterable<Rule> getRulesBottomUp(int labelId, List<Integer> childStates) {
         // Needs to stay List<Integer>, because it is called using a CartesianIterator<Integer>.
@@ -214,10 +192,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * given set of parent labels. The method returns an iterable which contains
      * all rules that have the given child states and whose label is contained
      * in the "labelIds" set.
-     *
-     * @param labelIds
-     * @param childStates
-     * @return
      */
     public Iterable<Rule> getRulesBottomUp(IntSet labelIds, List<Integer> childStates) {
         List<Iterable<Rule>> ruleSets = new ArrayList<>();
@@ -235,7 +209,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     // TODO Test this function!
     public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
-        labelIds.forEach((java.util.function.IntConsumer) labelId -> {
+        labelIds.forEach((IntConsumer) labelId -> {
             if (signature.getArity(labelId) == childStateSets.size()) {
                 FastutilUtils.forEachIntCartesian(childStateSets, childStates -> {
                                               Iterable<Rule> rules = getRulesBottomUp(signatureMapper.remapForward(labelId), childStates);
@@ -273,10 +247,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * makes all rules of the automaton explicit and calls {@link #getRulesTopDown(int, int)
      * }
      * in the process, leading to an infinite recursion.
-     *
-     * @param labelId
-     * @param parentState
-     * @return
      */
     abstract public Iterable<Rule> getRulesTopDown(int labelId, int parentState);
 
@@ -288,9 +258,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * parentState, but does no further copying of rules beyond this. Due to the
      * way the top-down index data structures are implemented, this method is
      * significantly faster if the tree automaton is explicit.
-     *
-     * @param parentState
-     * @return
      */
     public Iterable<Rule> getRulesTopDown(int parentState) {
         if (ruleStore.isExplicit()) {
@@ -312,9 +279,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * this iteration can be a bit faster than iterating over {@link #getRulesTopDown(int)
      * }. Due to the way the top-down index data structures are implemented,
      * this method is significantly faster if the tree automaton is explicit.
-     *
-     * @param parentState
-     * @param fn
      */
     public void foreachRuleTopDown(int parentState, Consumer<Rule> fn) {
         if (ruleStore.isExplicit()) {
@@ -333,8 +297,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Determines whether the automaton is deterministic if read as a bottom-up
      * automaton.
-     *
-     * @return
      */
     abstract public boolean isBottomUpDeterministic();
 
@@ -353,9 +315,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * Subclasses (especially lazy automata) may replace this with more specific
      * implementations.
-     *
-     * @param parentState
-     * @return
      */
     public IntIterable getLabelsTopDown(int parentState) {
         if (ruleStore.isExplicit()) {
@@ -376,8 +335,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * occur in rules of this automaton. The default implementation simply
      * returns the set of all symbols in the signature. Derived classes are
      * encouraged to overwrite this with a tighter upper bound.
-     *
-     * @return
      */
     public IntSet getAllLabels() {
         IntSet ret = new IntOpenHashSet();
@@ -397,10 +354,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * overestimate the existence of rules. The default implementation always
      * returns true. Derived automaton classes for which an efficient, more
      * precise test is available may override this method appropriately.
-     *
-     * @param label
-     * @param prefixOfChildren
-     * @return
      */
     public boolean hasRuleWithPrefix(int label, List<Integer> prefixOfChildren) {
         return true;
@@ -408,8 +361,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * Returns the IDs of the final states of the automaton.
-     *
-     * @return
      */
     public IntSet getFinalStates() {
         return finalStates;
@@ -420,8 +371,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * lazy implementation, it is required to make all rules explicit before
      * returning, to the extent that it is necessary to list all states. This
      * may be slow.
-     *
-     * @return
      */
     public IntSet getAllStates() {
         makeAllRulesExplicit();
@@ -433,7 +382,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         finalStates.add(state);
     }
 
-    /**
+    /*
      * *********** RULE CACHING ************
      */
     /**
@@ -444,8 +393,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * states that are mentioned in the rule object to these normalized states.
      *
      * This function does nothing if doStore is false.
-     *
-     * @param rule
      */
 //    protected void storeRule(Rule rule) {
 //        ruleStore.storeRule(rule);
@@ -546,10 +493,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Like getRulesBottomUp, but only looks for rules in the cache of
      * previously discovered rules.
-     *
-     * @param labelId
-     * @param childStates
-     * @return
      */
     protected Iterable<Rule> getRulesBottomUpFromExplicit(int labelId, int[] childStates) {
         return ruleStore.getRulesBottomUp(labelId, childStates);
@@ -558,10 +501,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Like getRulesTopDown, but only looks for rules in the cache of previously
      * discovered rules.
-     *
-     * @param labelId
-     * @param parentState
-     * @return
      */
     protected Iterable<Rule> getRulesTopDownFromExplicit(int labelId, int parentState) {
         return ruleStore.getRulesTopDown(labelId, parentState);
@@ -587,8 +526,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * all rules, and then returns the set of all rules in the rule store. You
      * can therefore break its functionality if you override
      * makeAllRulesExplicit carelessly.
-     *
-     * @return
      */
     public Iterable<Rule> getRuleSet() {
         makeAllRulesExplicit();
@@ -631,8 +568,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 //    }
     /**
      * Returns true if the
-     *
-     * @return
      */
     public boolean hasStoredConstants() {
         return hasStoredConstants;
@@ -643,9 +578,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * signature, more precisely if hasStoredConstants() returns true, then this
      * returns the states corresponding to the constant described by the label
      * ID in the signature.
-     *
-     * @param labelID
-     * @return
      */
     public Set<State> getStoredConstantsForID(int labelID) {
         throw new UnsupportedOperationException("This automaton does not pre-store constants!");
@@ -669,8 +601,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Returns the set of all rules, indexed by parent label and children
      * states.
-     *
-     * @return
      */
 //    private Map<Integer, Map<int[], Set<Rule>>> getAllRules() {
 //        Map<Integer, Map<int[], Set<Rule>>> ret = new HashMap<Integer, Map<int[], Set<Rule>>>();
@@ -704,9 +634,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      *
-     * @param state
-     * @param children
-     * @return
      */
     private boolean exploreForCyclicity(int state, Int2ObjectMap<IntSet> children) {
         IntSet kids = new IntOpenHashSet();
@@ -736,8 +663,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * this is faster than computing the entire language. The method only works
      * if the automaton is acyclic, and only returns correct results if the
      * automaton is bottom-up deterministic.
-     *
-     * @return
      */
     public long countTrees() {
         Map<Integer, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), (Rule rule) -> 1L);
@@ -752,8 +677,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Returns a map representing the inside probability of each reachable
      * state.
-     *
-     * @return
      */
     public Int2ObjectMap<Double> inside() {
         return evaluateInSemiring(new DoubleArithmeticSemiring(), Rule::getWeight);
@@ -762,8 +685,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Returns a map representing the inside log-probability of each reachable
      * state.
-     *
-     * @return
      */
     public Int2ObjectMap<Double> logInside() {
         return evaluateInSemiring(new LogDoubleArithmeticSemiring(), (Rule rule) -> Math.log(rule.getWeight()));
@@ -774,7 +695,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * state.
      *
      * @param inside a map representing the inside probability of each state.
-     * @return
      */
     public Map<Integer, Double> outside(final Map<Integer, Double> inside) {
         return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<Double>() {
@@ -801,7 +721,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * state.
      *
      * @param logInside a map representing the inside logprobability of each state.
-     * @return
      */
     public Map<Integer, Double> logOutside(final Map<Integer, Double> logInside) {
         return evaluateInSemiringTopDown(new LogDoubleArithmeticSemiring(), new RuleEvaluatorTopDown<Double>() {
@@ -827,8 +746,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Computes the highest-weighted tree in the language of this (weighted)
      * automaton, using the Viterbi algorithm. If the language is empty, return
      * null.
-     *
-     * @return
      */
     @OperationAnnotation(code = "viterbi")
     public Tree<String> viterbi() {
@@ -875,8 +792,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * null. Unlike {@link #viterbi() }, this method returns a tree whose nodes
      * are labeled with label IDs, as opposed to the labels (Strings)
      * themselves. It also returns the weight of the top-ranked tree.
-     *
-     * @return
      */
     public WeightedTree viterbiRaw() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
@@ -956,8 +871,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * trees are labeled with numeric symbol IDs. Notice that if the language is
      * infinite, this method will not terminate. Get a languageIterator() in
      * this case, in order to enumerate as many trees as you want.
-     *
-     * @return
      */
     public Set<Tree<Integer>> languageRaw() {
         Set<Tree<Integer>> ret = new HashSet<>();
@@ -975,8 +888,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * language is infinite, this method will not terminate. Get a
      * languageIterator() in this case, in order to enumerate as many trees as
      * you want.
-     *
-     * @return
      */
     public Set<Tree<String>> language() {
         Set<Tree<String>> ret = new HashSet<>();
@@ -996,8 +907,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * f(B1,...,Bn) is the weight of that rule, divided by the sum of all
      * weights for rules with left-hand side A. If the automaton has multiple
      * final states, one of these is chosen with uniform probability.
-     *
-     * @return
      */
     public Tree<String> getRandomTree() {
         Random rnd = new Random();
@@ -1185,8 +1094,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * used in the {@link #toString()} method to decide which rules are included
      * in the string representation for the automaton. You can use this to
      * suppress the presentation of rules you don't care about.
-     *
-     * @param filter
      */
     public void setRulePrintingFilter(Predicate<Rule> filter) {
         this.filter = filter;
@@ -1220,9 +1127,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * The implementation of this method is currently very slow, and should only
      * be used for small automata (e.g. in unit tests).
-     *
-     * @param o
-     * @return
      */
     @Override
     public boolean equals(Object o) {
@@ -1308,7 +1212,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * elaborates the rules of the automaton in a top-down fashion, starting
      * with the final states and working from parents to children.
      *
-     * @return
      */
     @Override
     public String toString() {
@@ -1354,7 +1257,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * from children to parents. It may be useful as an alternative to
      * {@link #toString()} when debugging lazy automata.
      *
-     * @return
      */
     public String toStringBottomUp() {
         return new UniversalAutomaton(getSignature()).intersect(this).toString();
@@ -1418,8 +1320,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * a {@link ConcreteTreeAutomaton} that is equals to the given automaton.
      * The method enumerates the rules of the automaton top-down, so it will
      * only work if {@link #getRulesTopDown(int, int) } is implemented.
-     *
-     * @return
      */
     public ConcreteTreeAutomaton<State> asConcreteTreeAutomaton() {
         ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<>();
@@ -1448,7 +1348,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * returned automaton are always strings. This is mostly useful for testing,
      * when automata with string states are read from string literals.
      *
-     * @return
      */
     public ConcreteTreeAutomaton<String> asConcreteTreeAutomatonWithStringStates() {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();
@@ -1479,7 +1378,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * a {@link ConcreteTreeAutomaton} that is equals to the given automaton.
      * The method enumerates the rules of the automaton bottom-up.
      *
-     * @return
      */
     public ConcreteTreeAutomaton<State> asConcreteTreeAutomatonBottomUp() {        
         ConcreteTreeAutomaton ret = new ConcreteTreeAutomaton(getSignature(),this.stateInterner);
@@ -1493,10 +1391,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Checks whether the cache contains a bottom-up rule for the given parent
      * label and children states.
-     *
-     * @param label
-     * @param childStates
-     * @return
      */
     protected boolean useCachedRuleBottomUp(int label, int[] childStates) {
         return ruleStore.useCachedRuleBottomUp(label, childStates);
@@ -1505,10 +1399,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Checks whether the cache contains a top-down rule for the given parent
      * label and state.
-     *
-     * @param label
-     * @param parent
-     * @return
      */
     protected boolean useCachedRuleTopDown(int label, int parent) {
         return ruleStore.useCachedRuleTopDown(label, parent);
@@ -1557,10 +1447,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Intersects this automaton with another one, using a bottom-up algorithm.
      * This intersection algorithm queries both automata for rules bottom-up.
-     *
-     * @param <OtherState>
-     * @param other
-     * @return
      */
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectBottomUp(TreeAutomaton<OtherState> other) {
         TreeAutomaton<Pair<State, OtherState>> ret = new IntersectionAutomaton<>(this, other);
@@ -1615,10 +1501,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * intersection algorithm. This intersection algorithm queries this
      * automaton for rules top-down (= Predict steps) and the other automaton
      * bottom-up (= Complete steps).
-     *
-     * @param <OtherState>
-     * @param other
-     * @return
      */
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectEarley(TreeAutomaton<OtherState> other) {
         IntersectionAutomaton<State, OtherState> ret = new IntersectionAutomaton<>(this, other);
@@ -1651,9 +1533,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Computes the image of this automaton under a homomorphism. This will only
      * work if the homomorphism is linear.
-     *
-     * @param hom
-     * @return
      */
     public TreeAutomaton homomorphism(Homomorphism hom) {
         return new HomAutomaton(this, hom);
@@ -1664,9 +1543,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * IDs. The nodes of the tree are assumed to be labeled with numeric symbol
      * IDs, which represent terminal symbols according to the automaton's
      * signature.
-     *
-     * @param tree
-     * @return
      */
     public boolean acceptsRaw(final Tree<Integer> tree) {
         IntIterable resultStates = runRaw(tree);
@@ -1687,8 +1563,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Determines whether the automaton accepts the given tree. The tree nodes
      * are assumed to be labeled with strings specifying the terminal symbols.
      *
-     * @param tree
-     * @return
      */
     public boolean accepts(Tree<String> tree) {
         return acceptsRaw(getSignature().addAllSymbols(tree));
@@ -1701,10 +1575,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * the tree is a derivation tree. If this is not the case, the method throws
      * an exception with some debugging information. If the automaton does not
      * accept the tree at all, the method returns null.
-     *
-     * @param derivationTree
-     * @return
-     * @throws Exception
      */
     public Tree<Rule> getRuleTree(Tree<Integer> derivationTree) throws Exception {
         Tree<Rule> ret = null;
@@ -1760,9 +1630,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Runs the automaton bottom-up on the given tree and returns the set of
      * possible states for the root. The nodes of the tree are assumed to be
      * labeled with strings specifying the terminal symbols.
-     *
-     * @param tree
-     * @return
      */
     public Iterable<State> run(Tree<String> tree) {
         return getStatesFromIds(runRaw(getSignature().addAllSymbols(tree)));
@@ -1812,9 +1679,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * returns the set of possible states for the root. The nodes of the tree
      * are assumed to be labeled with numeric symbol IDs, which represent
      * terminal symbols according to the automaton's signature.
-     *
-     * @param tree
-     * @return
      */
     public IntIterable runRaw(final Tree<Integer> tree) {
         return run(tree, INTEGER_IDENTITY, t -> 0);
@@ -1850,12 +1714,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * for a certain node, the return value is directly assigned as the state of
      * that node. This mechanism can be used, for instance, to assign states to
      * variable nodes.
-     *
-     * @param <TreeLabels>
-     * @param node
-     * @param labelIdSource
-     * @param subst
-     * @return
      */
     public <TreeLabels> IntIterable run(final Tree<TreeLabels> node, final ToIntFunction<TreeLabels> labelIdSource, final ToIntFunction<Tree<TreeLabels>> subst) {
         if (isBottomUpDeterministic()) {
@@ -2148,9 +2006,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * The labels of the nodes of the tree are assumed to be numeric symbol IDs,
      * which specify node labels according to the automaton's signature.
-     *
-     * @param tree
-     * @return
      */
     public double getWeightRaw(final Tree<Integer> tree) {
         final List<Integer> children = new ArrayList<>();
@@ -2209,8 +2064,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * The labels of the nodes of the tree are assumed to be strings.
      *
-     * @param tree
-     * @return
      */
     @OperationAnnotation(code = "getWeight")
     public double getWeight(final Tree<String> tree) {
@@ -2227,7 +2080,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * are removed. The method returns a new automaton with the same signature
      * as this one. The method only works if the automaton is acyclic.
      *
-     * @return
      */
     public TreeAutomaton<State> reduceTopDown() {
         if (isKnownToBeTopDownReduced) {
@@ -2275,7 +2127,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * it can be visited through recursively expanding a final state top-down
      * using the rules of this automaton.
      *
-     * @return
      */
     public IntSet getReachableStates() {
         return new IntOpenHashSet(getStatesInBottomUpOrder());
@@ -2317,9 +2168,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * loop only lead to worse results, e.g. in Viterbi for PCFGs.
      *
      * @param <E>
-     * @param semiring
-     * @param evaluator
-     * @return
      */
     private <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
         final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<>();
@@ -2401,8 +2249,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * bottom-up order. Only reachable states are assigned a value.
      *
      * @param <E>
-     * @param semiring
-     * @param evaluator
      * @return a map assigning values in the semiring to all reachable states.
      */
     public <E> Int2ObjectMap<E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator) {
@@ -2420,8 +2266,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * top-down order. Only reachable states are assigned a value.
      *
      * @param <E>
-     * @param semiring
-     * @param evaluator
      * @return a map assigning values in the semiring to all reachable states.
      */
     public <E> Map<Integer, E> evaluateInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown< E> evaluator) {
@@ -2471,7 +2315,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Note that only states that are reachable top-down from the final states
      * are included in the list that is returned.
      *
-     * @return
      */
     public List<Integer> getStatesInBottomUpOrder() {
         List<Integer> ret = new ArrayList<>();
@@ -2711,7 +2554,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * infinite. If the automaton is weighted, the trees are iterated in
      * descending order of weights.
      *
-     * @return
      */
     public Iterable<Tree<String>> languageIterable() {
         return this::languageIterator;
@@ -2724,7 +2566,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * also works if the language is infinite. If the automaton is weighted, the
      * trees are iterated in descending order of weights.
      *
-     * @return
      */
     public Iterator<Tree<Integer>> languageIteratorRaw() {
 //        makeAllRulesExplicit();
@@ -2734,7 +2575,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Determines whether the language accepted by this automaton is empty.
      *
-     * @return
      */
     public boolean isEmpty() {
         // replacing test via sortLanguageIterator by much faster null-test for Viterbi
@@ -2748,7 +2588,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * iterated in descending order of weights. Therefore, to compute the k-best
      * trees, you can simply enumerate the first k elements of this iterator.
      *
-     * @return
      */
     public Iterator<Tree<String>> languageIterator() {
         return Iterators.transform(languageIteratorRaw(), getSignature()::resolve);
@@ -2763,7 +2602,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * string-labeled trees using
      * {@link Signature#resolve(de.up.ling.tree.Tree)}.
      *
-     * @return
      */
     public Iterator<WeightedTree> sortedLanguageIterator() {
         return new SortedLanguageIterator<>(this);
@@ -2803,7 +2641,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Returns the number of rules in this automaton. The default implementation
      * iterates over all rules, and can thus be quite slow.
      *
-     * @return
      */
     @OperationAnnotation(code = "countRules")
     public long getNumberOfRules() {
@@ -2856,11 +2693,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * less efficient) alternative, consider {@link #createRule(java.lang.Object, java.lang.String, Object[], double)
      * }.
      *
-     * @param parent
-     * @param label
-     * @param children
-     * @param weight
-     * @return
      */
     public Rule createRule(int parent, int label, int[] children, double weight) {
         return new Rule(parent, label, children, weight);
@@ -2872,11 +2704,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * less efficient) alternative, consider
      * {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double)}.
      *
-     * @param parent
-     * @param label
-     * @param children
-     * @param weight
-     * @return
      */
     public Rule createRule(int parent, int label, List<Integer> children, double weight) {
         return new Rule(parent, label, intListToArray(children), weight);
@@ -2891,7 +2718,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param label the terminal symbol used in the rule
      * @param children the child states, from left to right (as an array)
      * @param weight the rule weight
-     * @return
      */
     public Rule createRule(State parent, String label, State[] children, double weight) {
 //        System.err.println("createrule: " + parent + "/" + label + "/" + StringTools.join(children, ","));
@@ -2910,7 +2736,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param label the terminal symbol used in the rule
      * @param children the child states, from left to right (as a list)
      * @param weight the rule weight
-     * @return
      */
     public Rule createRule(State parent, String label, List<State> children, double weight) {
         return createRule(parent, label, (State[]) children.toArray(), weight);
@@ -2927,7 +2752,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param parent the rule's parent state
      * @param label the terminal symbol used in the rule
      * @param children the child states, from left to right (as an array)
-     * @return
      */
     public Rule createRule(State parent, String label, State[] children) {
         return createRule(parent, label, children, 1);
@@ -2938,13 +2762,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * not already known in the automaton's signature, it is added to the
      * signature using the number of children as the arity. The rule creates an
      * unweighted rule by calling
-     * {@link #createRule(Object, String, java.util.List, double)}
+     * {@link #createRule(Object, String, List, double)}
      * with a weight of 1.
      *
      * @param parent the rule's parent state
      * @param label the terminal symbol used in the rule
      * @param children the child states, from left to right (as a list)
-     * @return
      */
     public Rule createRule(State parent, String label, List<State> children) {
         return createRule(parent, label, children, 1);
@@ -2980,7 +2803,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Returns the state interner for this tree automaton. You should only use
      * this method if you know what you're doing.
      *
-     * @return
      */
     public Interner getStateInterner() {
         return stateInterner;
@@ -3006,7 +2828,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Iterates through all rules top-down, applying processingFunction to each
      * rule found.
      *
-     * @param processingFunction
      */
     public void processAllRulesTopDown(Consumer<Rule> processingFunction) {
         BitSet seenStates = new BitSet();
@@ -3044,8 +2865,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Iterates through all rules top-down, applying processingFunction to each
      * rule found. Returns true if a final state was found.
      *
-     * @param processingFunction
-     * @return
      */
     public boolean processAllRulesBottomUp(Consumer<Rule> processingFunction) {
         try {
@@ -3060,9 +2879,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Iterates through all rules top-down, applying processingFunction to each
      * rule found. Returns true if a final state was found.
      *
-     * @param processingFunction
      * @param maxMS cancel after this amount of milliseconds has passed. Ignored if negative or 0.
-     * @return
      */
     public boolean processAllRulesBottomUp(Consumer<Rule> processingFunction, int maxMS) throws InterruptedException {
         CpuTimeStopwatch watch = new CpuTimeStopwatch();
@@ -3160,8 +2977,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Applies the ruleConsumer and loopRuleConsumer to all rules in bottom-up order.
      * Applies loopRuleConsumer to rules where isLoop is true, and ruleConsumer to
      * all other rules. Note: this calls makeAllRulesExplicit.
-     * @param ruleConsumer
-     * @param loopRuleConsumer 
      */
     public void ckyDfsInBottomUpOrder(Consumer<Rule> ruleConsumer, Consumer<Rule> loopRuleConsumer) {
         makeAllRulesExplicit();
@@ -3175,11 +2990,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Recursively expands the state q top-down, applying ruleConsumer to all
      * encountered productive rules in bottom-up order.
      * Returns true iff q is productive.
-     * @param q
-     * @param visited
-     * @param depth
-     * @param ruleConsumer
-     * @return 
      */
     private boolean ckyDfsInBottomUpOrder(int q, Int2BooleanMap visited, int depth, Consumer<Rule> ruleConsumer, Consumer<Rule> loopRuleConsumer) {
         List<Rule> loopRules = new ArrayList<>();
@@ -3253,8 +3063,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * all previously entered potential siblings, override and use
      * automaton-specific indexing for faster parsing.
      *
-     * @param labelID
-     * @return
      */
     public SiblingFinder newSiblingFinder(int labelID) {
         return new SiblingFinder.SetPartnerFinder(signature.getArity(labelID));
@@ -3266,7 +3074,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * true, if your automaton has a non-trivial sibling finder implementation
      * you want to use.
      *
-     * @return
      */
     public boolean useSiblingFinder() {
         return false;
@@ -3275,7 +3082,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Writes the string representation of this automaton to file in the given
      * path, overriding the file in the process.
-     * @param filename
      * @throws IOException 
      */
     public void dumpToFile(String filename) throws IOException {
@@ -3405,12 +3211,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * This method assumes that the automaton is top-down reduced (see {@link TreeAutomaton#reduceTopDown()
      * }).
      *
-     * @param parses
-     * @param globalRuleCount
-     * @param intersectedRuleToOriginalRule
-     * @param listener
-     * @param iteration
-     * @return
      */
     private double estep(List<TreeAutomaton<?>> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule,
                         ProgressListener listener, int iteration, boolean debug) {
@@ -3559,14 +3359,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * This method implements the algorithm from Jones et al., "Semantic Parsing
      * with Bayesian Tree Transducers", ACL 2012.
      *
-     * @param data
-     * @param dataRuleToRuleHere
      * @param iterations the maximum number of iterations allowed. If negative, uses Integer.MAX_VALUE instead, relying on threshold to stop
      * @param threshold the minimum change in the ELBO before iterations are
      * stopped
      * @param listener a progress listener that will be given information about
      * the progress of the optimization.
-     * @param debug
      */
     public void trainVB(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere, int iterations,
                         double threshold, ProgressListener listener, boolean debug) {

@@ -34,7 +34,6 @@ public class GuiUtils {
     /**
      * Copies the given string to the system clipboard.
      *
-     * @param s
      */
     public static void copyToClipboard(String s) {
         StringSelection selection = new StringSelection(s);
@@ -50,10 +49,6 @@ public class GuiUtils {
      * console setting.
      * 
      * @param <E>
-     * @param width
-     * @param strm
-     * @param worker
-     * @return
      * @throws Exception 
      */
     public static <E> E withConsoleProgressBar(int width, PrintStream strm, ProgressBarWorker<E> worker) throws Exception {
@@ -73,11 +68,6 @@ public class GuiUtils {
      * Execute this on the EDT.
      *
      * @param <E>
-     * @param parent
-     * @param title
-     * @param description
-     * @param worker
-     * @param andThen
      */
     public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
         if (parent != null && !parent.isVisible()) {
@@ -187,7 +177,6 @@ public class GuiUtils {
      * Mac, but should be mapped to Ctrl-based accelerators for
      * Windows or Linux.
      * 
-     * @param mb 
      */
     public static void replaceMetaByCtrl(JMenuBar mb) {
         for (int i = 0; i < mb.getMenuCount(); i++) {

@@ -99,8 +99,6 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
      * = 0 (only items that are explicitly requested from the outside are
      * computed).
      *
-     * @param beamSizePerState
-     * @param beamWidthPerState
      */
     public void ensureBeam(int beamSizePerState, double beamWidthPerState) {
         this.beamSizePerState = beamSizePerState;
@@ -126,8 +124,6 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
      * a while to compute (this operation initializes internal data structures),
      * you can pass a {@link ProgressListener} to track the progress.
      *
-     * @param listener
-     * @return
      */
     public WeightedTree next(ProgressListener listener) {
         progressListener = listener;
@@ -191,7 +187,6 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         /**
          * Returns the k-best item for this state.
          *
-         * @param k
          * @return null if the state has less than k items or the k-th best item
          * cannot be generated at this point
          */
@@ -502,7 +497,6 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
          * Checks whether this stream is finished. A stream is finished if it
          * contains neither evaluated nor unevaluated items.
          *
-         * @return
          */
         @Override
         public boolean isFinished() {

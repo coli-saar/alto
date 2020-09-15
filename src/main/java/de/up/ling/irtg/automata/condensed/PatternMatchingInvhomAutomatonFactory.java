@@ -57,7 +57,6 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
     /**
      * Initializes a new {@code PatternMatchingInvhomAutomatonFactory} with
      * respect to the homomorphism {@code hom}.
-     * @param hom 
      */
     public PatternMatchingInvhomAutomatonFactory(Homomorphism hom) {
         this.hom = hom;
@@ -161,8 +160,6 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
     /**
      * Computes the image under inverse homomorphism of the decomposition
      * automaton {@code rhs}.
-     * @param rhs
-     * @return
      */
     public CondensedTreeAutomaton<State> invhom(TreeAutomaton<State> rhs) {
         if (!computeCompleteMatcher) {

@@ -97,10 +97,6 @@ public class SiblingFinderInvhom<State> implements Intersectable<State> {
      * Returns all rules with label 'label' and child childState at position pos.
      * The rules are then explicitly stored.
      * The returned iterable is the same object as is stored, so do not modify it.
-     * @param childState
-     * @param pos
-     * @param label
-     * @return 
      */
     public Iterable<Rule> getRulesBottomUp(int childState, int pos, int label) {
         addState(childState);

@@ -63,8 +63,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * Crates a new instance which represents the intersection of the two given
      * automata.
      *
-     * @param left
-     * @param right
      */
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right, FOM fom) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -93,7 +91,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * The listener will be informed whenever a new state is visited for the
      * first time.
      *
-     * @param listener
      */
     public void setStateDiscoveryListener(StateDiscoveryListener listener) {
         this.stateDiscoveryListener = listener;
@@ -104,8 +101,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * automaton) to the label ID of the right automaton for the same label.
      * Returns 0 if the right automaton does not define this label.
      *
-     * @param leftLabelId
-     * @return
      */
     protected int remapLabel(int leftLabelId) {
         return labelRemap[leftLabelId];
@@ -117,8 +112,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * represents a pair (p,q) of a state p in the left automaton and a state q
      * in the right automaton. This method returns the int-ID of p.
      *
-     * @param outputState
-     * @return
      */
     public int getLeftState(int outputState) {
         return stateToLeftState.get(outputState);
@@ -130,8 +123,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * represents a pair (p,q) of a state p in the left automaton and a state q
      * in the right automaton. This method returns the int-ID of q.
      *
-     * @param outputState
-     * @return
      */
     public int getRightState(int outputState) {
         return stateToRightState.get(outputState);
@@ -877,9 +868,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * Helper method which creates an intersection automaton and makes all rules
      * explicit with the default algorithm.
      *
-     * @param lhs
-     * @param rhs
-     * @return
      */
     @OperationAnnotation(code = "buIntersect")
     public static IntersectionAutomaton intersectBottomUpNaive(TreeAutomaton lhs, TreeAutomaton rhs) {
@@ -892,9 +880,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * Helper method which creates an intersection automaton and makes all rules
      * explicit with the CKY algorithm.
      *
-     * @param lhs
-     * @param rhs
-     * @return
      */
     @OperationAnnotation(code = "tdbuIntersect")
     public static IntersectionAutomaton intersectTopDownBottomUpCKY(TreeAutomaton lhs, TreeAutomaton rhs) {
@@ -985,7 +970,6 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * This is an old helper function to get debug info when parsing.
      * This function is in this code for legacy reasons
      * (such that older AltoLab tasks can still run).
-     * @return 
      */
     @Deprecated
     @OperationAnnotation(code ="countRhsStates")

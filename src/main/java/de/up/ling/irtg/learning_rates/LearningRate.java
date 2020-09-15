@@ -21,10 +21,6 @@ public interface LearningRate {
      * 
      * The gradient passed should be the gradient in the current iterate.
      * 
-     * @param group
-     * @param number
-     * @param gradient
-     * @return 
      */
     double getLearningRate(int group, int number, double gradient);
     

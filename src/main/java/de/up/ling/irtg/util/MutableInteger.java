@@ -24,7 +24,6 @@ public class MutableInteger {
 
     /**
      * Creates a new instance with value equal to what is given.
-     * @param value 
      */
     public MutableInteger(int value) {
         this.value = value;
@@ -32,7 +31,6 @@ public class MutableInteger {
 
     /**
      * Returns the current value.
-     * @return 
      */
     public int getValue() {
         return value;
@@ -40,7 +38,6 @@ public class MutableInteger {
 
     /**
      * Changes the value to one given.
-     * @param value 
      */
     public void setValue(int value) {
         this.value = value;
@@ -48,7 +45,6 @@ public class MutableInteger {
     
     /**
      * Increases the value by 1 and returns the old value.
-     * @return 
      */
     public int incValue() {
         return value++;
@@ -56,7 +52,6 @@ public class MutableInteger {
     
     /**
      * Returns the maximum of the current value and the one given.
-     * @param value 
      */
     public void max(int value) {
         this.value = Math.max(value, this.value);
@@ -73,8 +68,6 @@ public class MutableInteger {
      * 
      * This is used to generate sequences of unique symbols.
      * 
-     * @param prefix
-     * @return 
      */
     public String gensym(String prefix) {
         return prefix + incValue();

@@ -39,7 +39,6 @@ public class GraphNode {
 
     /**
      * Returns a string representation of the node, for debugging.
-     * @return 
      */
     String repr() {
         return name + ":" + (label == null ? "<null>" : label);
@@ -70,7 +69,6 @@ public class GraphNode {
 
     /**
      * Returns the node's label.
-     * @return 
      */
     @Override
     public String toString() {
@@ -86,8 +84,6 @@ public class GraphNode {
 
     /**
      * Returns true iff both nodes have the same name.
-     * @param obj
-     * @return 
      */
     @Override
     public boolean equals(Object obj) {

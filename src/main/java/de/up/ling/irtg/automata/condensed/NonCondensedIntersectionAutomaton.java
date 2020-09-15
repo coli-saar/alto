@@ -71,8 +71,6 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
     
     /**
      * Assumes the signatures are identical.
-     * @param left
-     * @param right 
      */
     @OperationAnnotation(code = "nonCondensedIntersection")
     public NonCondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right) {
@@ -458,7 +456,6 @@ public class NonCondensedIntersectionAutomaton<LeftState, RightState> extends Tr
      * /path/to/result_file, "Additional comment"
      *
      * @param args CMD arguments
-     * @param showViterbiTrees
      * @param icall what intersection should be used?
      * @throws FileNotFoundException
      * @throws IOException

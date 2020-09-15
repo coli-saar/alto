@@ -54,10 +54,6 @@ public class HomomorphismSymbol implements Serializable {
      * The symbol is added to the given signature with the given
      * arity if needed.
      * 
-     * @param name
-     * @param signature
-     * @param arity
-     * @return 
      */
     public static HomomorphismSymbol createConstant(String name, Signature signature, int arity) {
         return new HomomorphismSymbol(signature.addSymbol(name, arity), Type.CONSTANT);
@@ -66,8 +62,6 @@ public class HomomorphismSymbol implements Serializable {
     /**
      * Creates a constant HomomorphismSymbol for the given symbol ID.
      * 
-     * @param symbolId
-     * @return 
      */
     public static HomomorphismSymbol createConstant(int symbolId) {
         return new HomomorphismSymbol(symbolId, Type.CONSTANT);
@@ -102,9 +96,6 @@ public class HomomorphismSymbol implements Serializable {
      * Constants that are not known in the signature will be added to the
      * signature, with the number of children in the tree as the arity.
      *
-     * @param tree
-     * @param signature
-     * @return
      */
     public static Tree<HomomorphismSymbol> treeFromNames(Tree<String> tree, final Signature signature) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<HomomorphismSymbol>>() {
@@ -121,9 +112,6 @@ public class HomomorphismSymbol implements Serializable {
      * signature. The tree returned by this method can be converted back into a
      * tree of HomomorphismSymbols using treeFromNames.
      *
-     * @param tree
-     * @param signature
-     * @return
      */
     public static Tree<String> toStringTree(Tree<HomomorphismSymbol> tree, final Signature signature) {
         if (tree == null) {

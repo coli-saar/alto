@@ -293,7 +293,6 @@ class DBLoader {
     /**
      * Gets all tasks available in the given database. Use connect() beforehand
      * to connect to a database.
-     * @return
      * @throws java.lang.Exception
      */
     /*
@@ -316,7 +315,6 @@ class DBLoader {
     /**
      * Gets all grammars available in the given database. Use connect() beforehand
      * to connect to a database.
-     * @return
      * @throws SQLException
      */
     /*
@@ -339,7 +337,6 @@ class DBLoader {
     /**
      * Gets all grammars available in the given database. Use connect() beforehand
      * to connect to a database.
-     * @return
      * @throws SQLException
      */
     /*
@@ -482,7 +479,6 @@ class DBLoader {
     
     /**
      * 
-     * @param task
      * @return the task ID of the uploaded task
      * @throws SQLException 
      */

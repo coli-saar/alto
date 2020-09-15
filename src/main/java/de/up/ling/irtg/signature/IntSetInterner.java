@@ -23,9 +23,6 @@ public class IntSetInterner extends Interner<it.unimi.dsi.fastutil.ints.IntSet>{
      * The method returns true if such a set exists and false otherwise. In the
      * latter case nothing is changed within the interner.
      * 
-     * @param index
-     * @param newValue
-     * @return 
      */
     public boolean addValueToSetByID(int index, int newValue) {
         IntSet toChange = resolveId(index);

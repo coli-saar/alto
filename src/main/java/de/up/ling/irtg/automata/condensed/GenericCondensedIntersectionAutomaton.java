@@ -433,7 +433,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
      * /path/to/result_file, "Additional comment"
      *
      * @param args CMD arguments
-     * @param showViterbiTrees
      * @param icall what intersection should be used?
      * @throws FileNotFoundException
      * @throws IOException

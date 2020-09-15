@@ -77,7 +77,6 @@ public class Corpus implements Iterable<Instance> {
 
     /**
      * Returns true if there are gold annotations for each instance.
-     * @return 
      */
     public boolean isAnnotated() {
         return isAnnotated;
@@ -86,7 +85,6 @@ public class Corpus implements Iterable<Instance> {
     /**
      * Returns true if the instances in this corpus are associated with parse
      * charts.
-     * @return 
      */
     public boolean hasCharts() {
         return charts != null;
@@ -98,7 +96,6 @@ public class Corpus implements Iterable<Instance> {
      * Different ChartAttachers may have different strategies for this. A
      * OnTheFlyCharts attacher will compute the parse charts when they are requested.
      * 
-     * @param charts 
      */
     public void attachCharts(ChartAttacher charts) {
         this.charts = charts;
@@ -107,7 +104,6 @@ public class Corpus implements Iterable<Instance> {
     /**
      * Reads charts from a file and attaches them to this corpus.
      *
-     * @param filename
      */
     public void attachCharts(String filename) {
         attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
@@ -115,7 +111,6 @@ public class Corpus implements Iterable<Instance> {
 
     /**
      * Returns the number of instances contained in this corpus.
-     * @return 
      */
     public int getNumberOfInstances() {
         return instances.size();
@@ -135,7 +130,6 @@ public class Corpus implements Iterable<Instance> {
      * 
      * If the instance is not annotated, it will change set the whole corpus to
      * being unAnnotated.
-     * @param instance 
      */
     public void addInstance(Instance instance) {
         instances.add(instance);
@@ -151,7 +145,6 @@ public class Corpus implements Iterable<Instance> {
     /**
      * Returns a string describing the source of the corpus, if this was passed
      * to the corpus at some point.
-     * @return 
      */
     public String getSource() {
         return source;
@@ -159,7 +152,6 @@ public class Corpus implements Iterable<Instance> {
 
     /**
      * This sets a value for the source of the corpus.
-     * @param source 
      */
     public void setSource(String source) {
         this.source = source;
@@ -196,9 +188,6 @@ public class Corpus implements Iterable<Instance> {
      * Reads a corpus from a string format available via a reader. Loads all interpretations
      * shared by corpus and grammar. There must be at least one such interpretation,
      * or an error is thrown.
-     * @param reader
-     * @param irtg
-     * @return
      * @throws IOException
      * @throws CorpusReadingException 
      */
@@ -221,9 +210,6 @@ public class Corpus implements Iterable<Instance> {
      * Loads all interpretations
      * shared by corpus and grammar. There must be at least one such interpretation,
      * or an error is thrown.
-     * @param reader
-     * @param irtg
-     * @return
      * @throws IOException
      * @throws CorpusReadingException 
      */
@@ -410,7 +396,6 @@ public class Corpus implements Iterable<Instance> {
     /**
      * Re-orders the instances in this corpus according to the order induced by
      * the comparator.
-     * @param comparator 
      */
     public void sort(Comparator<Instance> comparator) {
         instances.sort(comparator);

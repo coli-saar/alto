@@ -27,8 +27,6 @@ public class SignatureMapper {
      * 
      * It will map ids to each other which correspond to the same string.
      * 
-     * @param input
-     * @param output 
      */
     public SignatureMapper(Interner input, Interner output) {
         this.input = input;
@@ -42,8 +40,6 @@ public class SignatureMapper {
      * the symbol with ID "symbolID" in the input signature is the same as the
      * symbol with ID remapForward(symbolID) in the output signature.
      *
-     * @param symbolID
-     * @return
      */
     public int remapForward(int symbolID) {
         return forward[symbolID];
@@ -54,8 +50,6 @@ public class SignatureMapper {
      * the symbol with ID "symbolID" in the output signature is the same as the
      * symbol with ID remapBackward(symbolID) in the input signature.
      *
-     * @param symbolID
-     * @return
      */
     public int remapBackward(int symbolID) {
         return backward[symbolID];

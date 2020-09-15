@@ -193,10 +193,6 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * Look up a tree family by name. If the family is not defined, throw an exception with the given
      * error message.
      *
-     * @param familyName
-     * @param errorMessage
-     * @param errorArgs
-     * @return
      * @throws CodecParseException
      */
     private List<String> lookupFamily(String familyName, String errorMessage, String... errorArgs) throws CodecParseException {
@@ -213,9 +209,6 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * Check that an elementary tree with the given name exists. If the tree name is not defined, throw an
      * exception with the given error message.
      *
-     * @param etreeName
-     * @param errorMessage
-     * @param errorArgs
      * @throws CodecParseException
      */
     private void checkTreeExists(String etreeName, String errorMessage, String... errorArgs) throws CodecParseException {

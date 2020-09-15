@@ -483,7 +483,6 @@ public class JLanguageViewer extends javax.swing.JFrame implements NodeSelection
      * Adds a view with the specified interpretation. If interpretation is null,
      * the view will show the derivation tree.
      *
-     * @param interpretation
      */
     public void addView(String interpretation) {
         JDerivationViewer dv = new JDerivationViewer(this);

@@ -28,8 +28,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends Gener
     
     /**
      * Assumes the signatures are identical.
-     * @param left
-     * @param right 
      */
     @OperationAnnotation(code = "condensedIntersection")
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right) {
@@ -62,7 +60,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends Gener
      * This is an old helper function to get debug info when parsing.
      * This function is in this code for legacy reasons
      * (such that older AltoLab tasks can still run).
-     * @return 
      */
     @Deprecated
     @OperationAnnotation(code ="countRhsStates")

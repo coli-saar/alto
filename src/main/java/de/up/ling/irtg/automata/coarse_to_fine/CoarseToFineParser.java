@@ -91,9 +91,6 @@ public class CoarseToFineParser {
      * is a single interpretation in the IRTG which serves as the source of inputs.
      * This interpretation is specified at this step.
      * 
-     * @param irtg
-     * @param inputInterpretation
-     * @param ftc
      * @param theta threshold, if the outside+inside+ruleweight for any given rule
      * is less than the total inside weight of a all parses for a given level of coarseness times theta,
      * then the rule is ignored for the following refinement step.
@@ -135,8 +132,6 @@ public class CoarseToFineParser {
      * which also takes care of decoding the string representation of the input into
      * a suitable object.
      * 
-     * @param input
-     * @return
      * @throws ParserException 
      */
     public TreeAutomaton parse(String input) throws ParserException {
@@ -194,8 +189,6 @@ public class CoarseToFineParser {
      * it might improve performance to use the sibling finder algorithm instead
      * as implemented by {@link #parseInputObjectWithSF(java.lang.Object)}
      * 
-     * @param inputObject
-     * @return 
      */
     @OperationAnnotation(code = "parseInputObject")
     public TreeAutomaton parseInputObject(Object inputObject) {
@@ -221,11 +214,6 @@ public class CoarseToFineParser {
      * Returns the Viterbi tree of the tree automaton encoded by the lists.
      * Used in debugging only.
      * 
-     * @param coarseNodes
-     * @param partnerInvhomRules
-     * @param invhom
-     * @param productivityChecker
-     * @return 
      */
     private String viterbi(int level, List<RuleRefinementNode> coarseNodes, List<CondensedRule> partnerInvhomRules, CondensedTreeAutomaton invhom, ProductiveRulesChecker productivityChecker)  {
         // at coarsest level, use default productivity checker
@@ -264,8 +252,6 @@ public class CoarseToFineParser {
      * the sibling finder algorithm intersection for the coarsest level of parsing
      * which can be helpful for grammars with more complex homomorphic images.
      * 
-     * @param inputObject
-     * @return 
      */
     @OperationAnnotation(code = "parseInputObjectWithSF")
     public TreeAutomaton parseInputObjectWithSF(Object inputObject) {
@@ -373,8 +359,6 @@ public class CoarseToFineParser {
     /**
      * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
      * most users will not need it.
-     * @param inputObject
-     * @return 
      */
     @OperationAnnotation(code = "parseInputObjectWithSFSizes")
     public Combination parseInputObjectWithSFTrackSizes(Object inputObject) {
@@ -633,8 +617,6 @@ public class CoarseToFineParser {
     /**
      * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
      * most users will not need it.
-     * @param inputObject
-     * @return 
      */
     @OperationAnnotation(code = "parseInputObjectWithSFTimes")
     public Combination parseInputObjectWithSFTrackTimes(Object inputObject) {
@@ -746,8 +728,6 @@ public class CoarseToFineParser {
     /**
      * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
      * most users will not need it.
-     * @param inputObject
-     * @return
      */
     @OperationAnnotation(code = "parseInputObjectSizes")
     public Combination parseInputObjectTrackSizes(Object inputObject) {
@@ -1002,8 +982,6 @@ public class CoarseToFineParser {
     /**
      * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
      * most users will not need it.
-     * @param inputObject
-     * @return
      */
     @OperationAnnotation(code = "parseInputObjectTimes")
     public Combination parseInputObjectTrackTimes(Object inputObject) {
@@ -1393,9 +1371,7 @@ public class CoarseToFineParser {
      * @param irtg grammar corresponding to finest level of analysis
      * @param interpretation interpretation which the objects to be parsed will
      * come from
-     * @param ftcMap
      * @param theta pruning threshold as described for the constructor
-     * @return
      * @throws FileNotFoundException
      * @throws IOException
      * @throws ParseException 

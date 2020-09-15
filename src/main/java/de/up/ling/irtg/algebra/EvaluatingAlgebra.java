@@ -64,9 +64,6 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
      * Applies the operation with name "label" to the given arguments,
      * and returns the result.
      * 
-     * @param label
-     * @param childrenValues
-     * @return 
      */
     @Override
     protected abstract E evaluate(String label, List<E> childrenValues);
@@ -76,8 +73,6 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
      * will only contain rules in which the parent and all child states
      * are valid values, as defined by this method.
      * 
-     * @param value
-     * @return 
      */
     @Override
     protected abstract boolean isValidValue(E value);

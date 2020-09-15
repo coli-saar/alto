@@ -28,7 +28,6 @@ public class NumbersCombine {
      *
      * @param arg1
      * @param arg2
-     * @return
      */
     public static long combine(int arg1, int arg2) {
         // cast first number to long
@@ -45,7 +44,6 @@ public class NumbersCombine {
      *
      * @param arg1
      * @param arg2
-     * @return
      */
     public static int combine(short arg1, short arg2) {
         // cast first number to int
@@ -60,8 +58,6 @@ public class NumbersCombine {
      * returns the unique int i that has some number j such that code =
      * combine(i,j)
      *
-     * @param code
-     * @return
      */
     public static int getFirst(long code) {
         return (int) (code >>> Integer.SIZE);
@@ -71,8 +67,6 @@ public class NumbersCombine {
      * returns the unique int i that has some number j such that code =
      * combine(j,i)
      *
-     * @param code
-     * @return
      */
     public static int getSecond(long code) {
         return (int) code;
@@ -82,8 +76,6 @@ public class NumbersCombine {
      * returns the unique short i that has some number j such that code =
      * combine(i,j)
      *
-     * @param code
-     * @return
      */
     public static short getFirst(int code) {
         return (short) (code >>> Short.SIZE);
@@ -93,8 +85,6 @@ public class NumbersCombine {
      * returns the unique short i that has some number j such that code =
      * combine(j,i)
      *
-     * @param code
-     * @return
      */
     public static short getSecond(int code) {
         return (short) code;

@@ -33,7 +33,6 @@ public class AdaptiveImportanceSampler {
      * Create a new instance that will use the given seed to initialize the
      * random number generation.
      * 
-     * @param seed
      */
     public AdaptiveImportanceSampler(long seed) {
         this.prop = new Proposal(seed);
@@ -173,7 +172,6 @@ public class AdaptiveImportanceSampler {
          * Creates a new instance with default parameters and based on the given
          * RuleWeightings
          * 
-         * @param rwSource
          */
         public Configuration(Function<TreeAutomaton, RuleWeighting> rwSource) {
             this.rwSource = rwSource;
@@ -182,7 +180,6 @@ public class AdaptiveImportanceSampler {
         /**
          * Set to true if the underlying automata may be ambiguous.
          * 
-         * @param deterministic
          */
         public void setDeterministic(boolean deterministic) {
             this.deterministic = deterministic;
@@ -190,7 +187,6 @@ public class AdaptiveImportanceSampler {
 
         /**
          *
-         * @param rounds
          */
         public void setRounds(int rounds) {
             this.rounds = rounds;
@@ -199,7 +195,6 @@ public class AdaptiveImportanceSampler {
         /**
          * Used to set the population size used in sampling.
          * 
-         * @param populationSize
          */
         public void setPopulationSize(int populationSize) {
             this.populationSize = populationSize;
@@ -208,7 +203,6 @@ public class AdaptiveImportanceSampler {
         /**
          * Used to configure the seeds used to initialize the sampler.
          * 
-         * @param seeds
          */
         public void setSeeds(LongSupplier seeds) {
             this.seeds = seeds;
@@ -217,8 +211,6 @@ public class AdaptiveImportanceSampler {
         /**
          * Runs an importance sampler once for the given configuration.
          * 
-         * @param ta
-         * @return
          */
         public List<TreeSample<Rule>> run(TreeAutomaton ta) {
             RuleWeighting rw = this.rwSource.apply(ta);

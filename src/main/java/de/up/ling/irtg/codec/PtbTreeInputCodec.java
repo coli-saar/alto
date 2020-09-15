@@ -41,8 +41,6 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
     /**
      * Reads a single tree in PTB format. 
      * 
-     * @param is
-     * @return
      * @throws CodecParseException
      * @throws IOException 
      */
@@ -79,8 +77,6 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
      * pair of brackets, as in the original Penn Treebank, and strips
      * these away before reading the tree.
      * 
-     * @param is
-     * @return
      * @throws CodecParseException
      * @throws IOException 
      */

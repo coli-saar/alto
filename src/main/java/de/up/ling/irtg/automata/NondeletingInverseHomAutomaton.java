@@ -98,9 +98,6 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
      * Checks whether the cache contains a bottom-up rule for the given termID
      * and children states.
      *
-     * @param termID
-     * @param childStates
-     * @return
      */
     protected boolean useCachedRuleBottomUpWithTermID(int termID, int[] childStates) {
         int childHash = Arrays.hashCode(childStates);

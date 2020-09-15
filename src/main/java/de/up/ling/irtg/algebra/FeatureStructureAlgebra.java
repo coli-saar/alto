@@ -146,7 +146,6 @@ public class FeatureStructureAlgebra extends Algebra<FeatureStructure> implement
      * Unifying #1 [ft: #2] with #2 [] will fail because it introduced a cycle. This is the
      * cause behind issue #46.
      *
-     * @return
      */
     @Override
     public TreeAutomaton nullFilter() {

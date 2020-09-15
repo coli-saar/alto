@@ -21,7 +21,6 @@ public interface Operation {
      * Applies the operation.
      * @param input These inputs are used as parameters for the operation, in the
      * order in which they occur in the list.
-     * @return
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      * @throws InstantiationException 
@@ -30,7 +29,6 @@ public interface Operation {
     
     /**
      * Returns the Class of the object this operation returns.
-     * @return 
      */
     Class getReturnType();
     
@@ -47,8 +45,6 @@ public interface Operation {
         /**
          * Creates a new MethodOperation for Method m. It is necessary to specify
          * whether m is static or not.
-         * @param m
-         * @param isStatic 
          */
         public MethodOperation(Method m, boolean isStatic) {
             this.m = m;
@@ -61,9 +57,6 @@ public interface Operation {
          * whether <code>m</code> is static or not. This constructor allows to specify a return type
          * more specific than the return type of <code>m</code>. This is useful e.g. if
          * we know that in fact an overridden implementation of <code>m</code> is called.
-         * @param m
-         * @param returnTypeOverride
-         * @param isStatic 
          */
         public MethodOperation(Method m, Class returnTypeOverride, boolean isStatic) {
             this.m = m;
@@ -110,7 +103,6 @@ public interface Operation {
         
         /**
          * Creates a new ConstructorOperation with the given constructor.
-         * @param m 
          */
         public ConstructorOperation(Constructor m) {
             this.m = m;
@@ -147,7 +139,6 @@ public interface Operation {
          * Tries to parse <code>s</code>, in this order, into a:
          * boolean, byte, short, integer, long, float, double. Returns the first
          * successful parse and throws an Error if all fail.
-         * @param s
          * @throws NumberFormatException 
          */
         public PrimitiveTypeOperation(String s) throws NumberFormatException {
@@ -218,7 +209,6 @@ public interface Operation {
         
         /**
          * <code>s</code> will be the returned string.
-         * @param s 
          */
         public StringOperation(String s) {
             this.s = s;
@@ -259,7 +249,6 @@ public interface Operation {
          * @param resultsTypeTracker Here, during type checking the types of the
          * variables are stored. Contains the type of the base irtg at index 0,
          * followed by the inputs.
-         * @param index 
          * @param extra store extra information, currently used to distinguish global from local lookups
          */
         public LookupVariableOperation(Object[] computedObjectsTracker, Class[] resultsTypeTracker, int index, String extra) {
@@ -350,8 +339,6 @@ public interface Operation {
      * Runs a tree of operations. Simple bottom-up execution:
      * Leaves are given empty input lists, and results
      * are fed into parent nodes in the tree.
-     * @param tree
-     * @return
      * @throws Throwable 
      */
     static Object executeTree(Tree<Operation> tree) throws Throwable {

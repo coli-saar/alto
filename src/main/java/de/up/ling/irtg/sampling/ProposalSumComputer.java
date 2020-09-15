@@ -33,8 +33,6 @@ public class ProposalSumComputer {
      * Computes the proposal probability for each tree in the sample assuming the
      * given rule weightings and sets it as the log sum weight of the sample.
      * 
-     * @param sample
-     * @param rw 
      */
     public void fillInsides(TreeSample<Rule> sample, RuleWeighting rw) {
         for(int i=0;i<sample.populationSize();++i) {
@@ -47,9 +45,6 @@ public class ProposalSumComputer {
      * Computes the proposal probability for the given tree assuming the given
      * rule weights.
      * 
-     * @param input
-     * @param weights
-     * @return 
      */
     public double computeInside(Tree<Rule> input, RuleWeighting weights) {
         double logSum = Double.NEGATIVE_INFINITY;
@@ -77,10 +72,6 @@ public class ProposalSumComputer {
      * Computes the proposal probability for the given tree assuming the given
      * rule weights and assuming that we start at the given state.
      * 
-     * @param input
-     * @param state
-     * @param weights
-     * @return 
      */
     public double computeInside(Tree<Rule> input, int state, RuleWeighting weights) {
         if(this.containsCombination(state, input)) {
@@ -125,9 +116,6 @@ public class ProposalSumComputer {
 
     /**
      * Returns true if we have already seen the tree derived from the given state.
-     * @param startState
-     * @param input
-     * @return 
      */
     private boolean containsCombination(int startState, Tree<Rule> input) {
         Object2DoubleMap<Tree<Rule>> inner = this.insides.get(startState);
@@ -143,9 +131,6 @@ public class ProposalSumComputer {
      * Returns the cached probability for generating the given tree starting
      * at the given state.
      * 
-     * @param startState
-     * @param input
-     * @return 
      */
     private double getCombination(int startState, Tree<Rule> input) {
         Object2DoubleMap<Tree<Rule>> inner = this.insides.get(startState);

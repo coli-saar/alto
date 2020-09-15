@@ -17,11 +17,6 @@ public interface ResultManager {
     
     /**
      * Accpets a result for the variable with the given name, for the given instance.
-     * @param result
-     * @param instanceID
-     * @param name
-     * @param doExport
-     * @param isGlobal 
      * @param isNumeric whether the result is of numeric value (double, int,... or the wrapper class). Relevant mostly if result is null.
      */
     void acceptResult(Object result, int instanceID, String name, boolean doExport, boolean isGlobal, boolean isNumeric);
@@ -29,21 +24,12 @@ public interface ResultManager {
     /**
      * Accepts a runtime for the watch with the given name, for the given instance.
      * Time is in ms.
-     * @param time
-     * @param instanceID
-     * @param name 
-     * @param isGlobal 
      */
     void acceptTime(long time, int instanceID, String name, boolean isGlobal);
     
     /**
      * If an error occurred during the computation of the variable with the given name,
      * this is called. AcceptResult is still called with result null.
-     * @param error
-     * @param instanceID
-     * @param name
-     * @param doExport
-     * @param isGlobal 
      */
     void acceptError(Throwable error, int instanceID, String name, boolean doExport, boolean isGlobal);
     
@@ -61,7 +47,6 @@ public interface ResultManager {
     /**
      * Returns the experiment ID in this result manager.
      * 
-     * @return 
      */
     int getExperimentID();
     

@@ -62,7 +62,6 @@ public class ArrayInt2DoubleMap extends AbstractInt2DoubleMap {
      * elements (so a get(targetIndex) will be successful). Newly added elements
      * will be filled with the default return value.
      *
-     * @param targetIndex
      */
     private void ensureSize(int targetIndex) {
         if (values.size() <= targetIndex) {

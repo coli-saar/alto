@@ -381,7 +381,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         /**
          * Returns the string representing the operation in question.
          * 
-         * @return 
          */
         public String label() {
             return binop.getName();
@@ -390,7 +389,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         /**
          * Returns the number of arguments the operation accepts.
          * 
-         * @return 
          */
         public int arity() {
             return binop.getArity();
@@ -412,7 +410,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     /**
      * Returns the wrapping operation for pairs of strings and a string.
      * 
-     * @return 
      */
     public static String WRAP21() {
         return Operation.WRAP21.label();
@@ -421,7 +418,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     /**
      * Returns the wrapping operation for two pairs of strings.
      * 
-     * @return 
      */
     public static String WRAP22() {
         return Operation.WRAP22.label();
@@ -432,7 +428,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
      * 
      * @param i parameter is ignored
      * @param j used to switch between wrapping operations (j=1 means wrap21, all else mean wrap22)
-     * @return 
      */
     public static String WRAP(int i, int j) {
         if (j == 1) {
@@ -445,7 +440,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     /**
      * Returns simple string concatenation.
      * 
-     * @return 
      */
     public static String CONCAT11() {
         return Operation.CONC11.label();
@@ -454,7 +448,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     /**
      * Return the concat operation for a pair and a string.
      * 
-     * @return 
      */
     public static String CONCAT21() {
         return Operation.CONC21.label();
@@ -463,7 +456,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     /**
      * Returns the concat operation for a string and a pair.
      * 
-     * @return 
      */
     public static String CONCAT12() {
         return Operation.CONC12.label();
@@ -474,7 +466,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
      * 
      * @param i parameter is used to switch between concat1 and concat2
      * @param j used to switch between concat operations (j=1 means concat11/concat21, all else mean concat12/concat22)
-     * @return 
      */
     public static String CONCAT(int i, int j) {
         if (i == 1) {
@@ -495,7 +486,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     /**
      * Returns the constant that represents a pair of empty strings.
      * 
-     * @return 
      */
     public static String EE() {
         return Operation.EPSILON_EPSILON.label();
@@ -504,7 +494,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     /**
      * Returns the constant representing an empty string.
      * 
-     * @return 
      */
     public static String E() {
         return Operation.EPSILON.label();
@@ -627,8 +616,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
      * 
      * @param <E>
      * @param <F>
-     * @param pair
-     * @return 
      */
     public static <E, F> int _arity(Pair<E, F> pair) {
         return pair.right == null ? 1 : 2;
@@ -647,7 +634,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
          * Constructs an instance which contains all possible terms for the given
          * sequence of words.
          * 
-         * @param words 
          */
         public TagDecompositionAutomaton(List<String> words) {
             super(TagStringAlgebra.this.getSignature());
@@ -726,8 +712,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
          * which consists of a pair of strings.
          * 
          * @deprecated 
-         * @param state
-         * @return 
          */
         public Pair<Span, Span> parseState(String state) {
             String[] parts = state.split("[-,]");

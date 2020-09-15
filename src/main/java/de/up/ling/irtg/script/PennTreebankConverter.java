@@ -370,8 +370,6 @@ public class PennTreebankConverter {
      * Returns a function that applies fn to each node of a tree. If fn returns
      * null, the subtree is removed.
      *
-     * @param fn
-     * @return
      */
     private static Function<Tree<String>, Tree<String>> t(Function<String, String> fn) {
         return tree -> {
@@ -394,8 +392,6 @@ public class PennTreebankConverter {
      * leaves, which are left unchanged. If fn returns null, the subtree is
      * removed.
      *
-     * @param fn
-     * @return
      */
     private static Function<Tree<String>, Tree<String>> tnl(Function<String, String> fn) {
         return tree -> {

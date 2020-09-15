@@ -32,8 +32,6 @@ public class FastutilUtils {
      * boxing+unboxing that is entailed by the usual for/colon iteration idiom,
      * while being only a little more verbose in code.
      *
-     * @param iter
-     * @param visitor
      */
     public static void forEach(IntIterable iter, IntConsumer visitor) {
         IntIterator it = iter.iterator();
@@ -48,8 +46,6 @@ public class FastutilUtils {
      * for lists. The method assumes an array-based implementation of lists, in which
      * {@link IntList#getInt(int) } is fast.
      * 
-     * @param list
-     * @param visitor 
      */
     public static void forEach(IntList list, IntConsumer visitor) {
         for( int i = 0; i < list.size(); i++ ) {
@@ -67,8 +63,6 @@ public class FastutilUtils {
      * iterables. The consumer fn is passed this tuple in an array which is
      * reused in each call for efficiency.
      *
-     * @param iterables
-     * @param fn
      */
     public static void forEachIntCartesian(List<? extends IntIterable> iterables, Consumer<int[]> fn) {
         new IntCartesianForeach(iterables).forEach(fn);
@@ -125,8 +119,6 @@ public class FastutilUtils {
      * reused in each call for efficiency.
      *
      * @param <E>
-     * @param iterables
-     * @param fn
      */
     public static <E> void forEachCartesian(List<Iterable<E>> iterables, Consumer<E[]> fn) {
         new CartesianForeach<>(iterables).forEach(fn);
@@ -165,8 +157,6 @@ public class FastutilUtils {
      * iterator over its key-entry pairs. 
      * 
      * @param <E>
-     * @param map
-     * @param fn 
      */
     public static <E> void foreachFastEntry(Int2ObjectMap<E> map, Int2ObjectEntryConsumer<E> fn) {
         ObjectSet<Int2ObjectMap.Entry<E>> entrySet = map.int2ObjectEntrySet();

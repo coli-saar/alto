@@ -30,7 +30,6 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
      * The automaton will contain no rules or final states.
      * The automaton might add to the signature when it creates new rules.
      * 
-     * @param sig 
      */
     public ConcreteCondensedTreeAutomaton(Signature sig) {
         super(sig);
@@ -63,8 +62,6 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
      * but differ in their label, will be merged to form a CondensedRule
      *
      * @param <E>
-     * @param origin
-     * @return 
      */
     public static <E> ConcreteCondensedTreeAutomaton<E> fromTreeAutomaton(TreeAutomaton<E> origin) {
         ConcreteCondensedTreeAutomaton<E> ret = new ConcreteCondensedTreeAutomaton<>();
@@ -112,7 +109,6 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
 
     /**
      * Copies all rules from a TreeAutomaton to this automaton. Merges rules which can be condensed.
-     * @param auto
      */
     public void absorbTreeAutomaton(TreeAutomaton<State> auto) {
         for (Rule rule : auto.getRuleSet()) {
@@ -124,8 +120,6 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     /**
      * Creates a condensed rule based on a given rule and the automaton, that has created it.
      * The new rule will be stored in the internal data structures, see storeRule
-     * @param rule
-     * @param auto
      */
     private void storeRule(Rule rule, TreeAutomaton<State> auto) {
         // condense

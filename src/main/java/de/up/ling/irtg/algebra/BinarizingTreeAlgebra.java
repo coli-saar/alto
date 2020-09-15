@@ -27,7 +27,6 @@ public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
     
     /**
      * Creates a new instance with its own signature and a user specified concatenation symbol.
-     * @param appendSymbol 
      */
     public BinarizingTreeAlgebra(String appendSymbol) {
         super(new TreeAlgebra(), appendSymbol);

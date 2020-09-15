@@ -55,7 +55,6 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
      * This algebra will use the underlying algebra to evaluate trees after
      * removing the _@_ symbol.
      * 
-     * @param underlyingAlgebra 
      */
     public BinarizingAlgebra(Algebra<E> underlyingAlgebra) {
         this(underlyingAlgebra, "_@_");
@@ -67,8 +66,6 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
      * This algebra will use the underlying algebra to evaluate trees after
      * removing the _@_ symbol.
      * 
-     * @param underlyingAlgebra
-     * @param appendSymbol 
      */
     public BinarizingAlgebra(Algebra<E> underlyingAlgebra, String appendSymbol) {
         this.underlyingAlgebra = underlyingAlgebra;
@@ -81,7 +78,6 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
     /**
      * Returns the concatenation symbol used by this algebra.
      * 
-     * @return 
      */
     public String getAppendSymbol() {
         return appendSymbol;
@@ -93,9 +89,6 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
      * This is the case since some intermediate values would have to be lists,
      * which does not match the declared type.
      * 
-     * @param label
-     * @param childrenValues
-     * @return 
      */
     @Override
     protected E evaluate(String label, List<E> childrenValues) {
@@ -157,8 +150,6 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
      * This method is mainly intended to take decomposition automata from other
      * algebras and turn them into decomposition automata for a Binarizing Algebra.
      * 
-     * @param underlyingAutomaton
-     * @return 
      */
     public TreeAutomaton binarizeTreeAutomaton(TreeAutomaton<? extends Object> underlyingAutomaton) {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();

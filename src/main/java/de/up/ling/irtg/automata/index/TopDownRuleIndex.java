@@ -23,7 +23,6 @@ public interface TopDownRuleIndex {
     /**
      * Adds a rule to the index.
      * 
-     * @param rule 
      */
     void add(Rule rule);
     
@@ -33,8 +32,6 @@ public interface TopDownRuleIndex {
      * and there is a rule q -&gt; f(q1,...,qn) for any terminal
      * symbol f, then the returned iterable will contain this rule.
      * 
-     * @param parentState
-     * @return 
      */
     Iterable<Rule> getRules(final int parentState);
     
@@ -45,8 +42,6 @@ public interface TopDownRuleIndex {
      * is a rule q -&gt; f(q1,...,qn) in the automaton, then
      * the returned iterable will contain f.
      * 
-     * @param parentState
-     * @return 
      */
     IntIterable getLabelsTopDown(int parentState);
     
@@ -56,9 +51,6 @@ public interface TopDownRuleIndex {
      * symbol f, and there is a rule q -&gt; f(q1,...,qn), then the
      * returned iterable will contain that rule.
      * 
-     * @param labelId
-     * @param parentState
-     * @return 
      */
     Iterable<Rule> getRules(final int labelId, final int parentState);
     
@@ -71,9 +63,6 @@ public interface TopDownRuleIndex {
      * combination. Otherwise it returns false, and the automaton should
      * recompute the rules (and add them to the index).
      * 
-     * @param label
-     * @param parent
-     * @return 
      */
     boolean useCachedRule(int label, int parent);
 

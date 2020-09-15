@@ -19,7 +19,6 @@ public interface AbstractRule {
      * Retrieves the auxiliary information from this rule.
      *
      * @see #setExtra(java.lang.Object)
-     * @return
      */
     Object getExtra();
 
@@ -33,7 +32,6 @@ public interface AbstractRule {
      * Stores auxiliary information within this rule. Do not use this unless you
      * know what you're doing.
      *
-     * @param extra
      */
     void setExtra(Object extra);
 

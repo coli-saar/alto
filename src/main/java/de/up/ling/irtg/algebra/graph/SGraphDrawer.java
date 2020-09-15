@@ -115,8 +115,6 @@ public class SGraphDrawer {
      * Returns a Swing component that displays the
      * given s-graph.
      * 
-     * @param sgraph
-     * @return 
      */
     public static JComponent makeComponent(SGraph sgraph) {
         JGraphModelAdapter<GraphNode, GraphEdge> adapter = 
@@ -150,8 +148,6 @@ public class SGraphDrawer {
      * Opens a new Swing window with the given title
      * and draws the s-graph in it.
      * 
-     * @param sgraph
-     * @param title 
      */
     public static void draw(SGraph sgraph, String title) {
         JComponent jgraph = makeComponent(sgraph);

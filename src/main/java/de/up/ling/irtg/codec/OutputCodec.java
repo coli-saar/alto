@@ -60,8 +60,6 @@ public abstract class OutputCodec<E> {
      * Writes a string representation of a given object to an output stream.
      * Implement this method to implement your own concrete encoding.
      *
-     * @param object
-     * @param ostream
      * @throws IOException if something went wrong with I/O
      * @throws UnsupportedOperationException if a problem occurred in computing
      * the representation of the object
@@ -74,8 +72,6 @@ public abstract class OutputCodec<E> {
      * function is called, so any errors that occur when encoding will only
      * happen at that time.
      *
-     * @param object
-     * @return
      */
     public Supplier<String> asStringSupplier(E object) {
         return () -> asString(object);
@@ -86,8 +82,6 @@ public abstract class OutputCodec<E> {
      * method calls {@link #write(java.lang.Object, java.io.OutputStream) }
      * and writes a representation into a string.
      *
-     * @param object
-     * @return
      * @throws UnsupportedOperationException if a problem occurred in computing
      * the representation of the object
      */
@@ -112,7 +106,6 @@ public abstract class OutputCodec<E> {
      * code repository. Note: It is usually a better idea to call {@link #getOutputCodecs(java.lang.Class)
      * } to ensure type-safety.
      *
-     * @return
      */
     public static Iterable<OutputCodec> getAllOutputCodecs() {
         return ServiceLoader.load(OutputCodec.class);
@@ -123,8 +116,6 @@ public abstract class OutputCodec<E> {
      * class.
      *
      * @param <T>
-     * @param forClass
-     * @return
      */
     public static <T> List<OutputCodec<T>> getOutputCodecs(Class<T> forClass) {
         List<OutputCodec<T>> ret = new ArrayList<>();
@@ -144,8 +135,6 @@ public abstract class OutputCodec<E> {
      * metadata's <code>name</code> field). If no codec with this name can be
      * found, returns null.
      *
-     * @param name
-     * @return
      */
     public static OutputCodec getOutputCodecByName(String name) {
         if (codecByName == null) {
@@ -174,7 +163,6 @@ public abstract class OutputCodec<E> {
     /**
      * Returns the metadata associated with this output object.
      *
-     * @return
      */
     public CodecMetadata getMetadata() {
         return getClass().getAnnotation(CodecMetadata.class);

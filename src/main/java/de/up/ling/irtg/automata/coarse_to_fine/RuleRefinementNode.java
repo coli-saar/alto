@@ -101,7 +101,6 @@ public class RuleRefinementNode {
     /**
      * Returns an arbitrary label from this node's label set.
      * 
-     * @return 
      */
     public int getRepresentativeLabel() {
         return labelSet.iterator().nextInt();

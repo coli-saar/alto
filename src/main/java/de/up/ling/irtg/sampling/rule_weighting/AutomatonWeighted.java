@@ -26,10 +26,6 @@ public class AutomatonWeighted extends RegularizedKLRuleWeighting {
      * 
      * The adaption is implemented by the parent class.
      * 
-     * @param basis
-     * @param regularizationExponent
-     * @param regularizationDivisor
-     * @param rate 
      */
     public AutomatonWeighted(TreeAutomaton basis, int regularizationExponent, double regularizationDivisor, LearningRate rate) {
         super(basis, regularizationExponent, regularizationDivisor, rate);

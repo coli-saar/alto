@@ -106,10 +106,6 @@ public class InsideRuleFactory implements BinaryRuleFactory {
      * of all leaves of the entire tree. First leaf = 0.
      * 
      * @param <E>
-     * @param tree
-     * @param pathToNode
-     * @param positionInPath
-     * @return 
      */
     static <E> int getFirstLeafPositionBelow(Tree<E> tree, int[] pathToNode, int positionInPath) {
         if( positionInPath == pathToNode.length ) {

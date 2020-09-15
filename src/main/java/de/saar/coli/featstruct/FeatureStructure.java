@@ -53,7 +53,6 @@ public abstract class FeatureStructure {
      * Returns all feature paths that are defined in this FS.
      * This method is pretty inefficient.
      * 
-     * @return 
      */
     abstract public List<List<String>> getAllPaths();
     
@@ -62,8 +61,6 @@ public abstract class FeatureStructure {
      * Returns the FS at the endpoint of a given path.
      * Returns null if no such path exists.
      * 
-     * @param path
-     * @return 
      */
     public FeatureStructure get(List<String> path) {
         return get(path, 0); // dereference().getD(path, 0);
@@ -73,8 +70,6 @@ public abstract class FeatureStructure {
      * Returns the FS at the endpoint of a given path.
      * Returns null if no such path exists.
      * 
-     * @param path
-     * @return 
      */
     public FeatureStructure get(String... path) {
         return FeatureStructure.this.get(Arrays.asList(path));
@@ -89,7 +84,6 @@ public abstract class FeatureStructure {
      * This returns the primitive value if the FS is primitive,
      * and null otherwise.
      * 
-     * @return 
      */
     abstract public Object getValue();
 
@@ -122,8 +116,6 @@ public abstract class FeatureStructure {
      * by need. Returns the unification of the two FSs if it exists, null
      * otherwise.
      *
-     * @param other
-     * @return
      */
     public FeatureStructure unify(FeatureStructure other) {
         return unify0(other, globalCopyTimestamp++);
@@ -144,9 +136,6 @@ public abstract class FeatureStructure {
      * copies of any FS. Returns true iff the two FSs are unifiable. This is
      * Tomabechi's function "unify1".
      *
-     * @param other
-     * @param currentTimestamp
-     * @return
      */
     protected boolean unify1(FeatureStructure other, long currentTimestamp) {
         FeatureStructure dg1 = dereference(currentTimestamp);
@@ -184,8 +173,6 @@ public abstract class FeatureStructure {
      * }. If a copy was made previously, this copy is returned.
      * This is Tomabechi's function "copy-dg-with-comp-arcs".
      *
-     * @param currentTimestamp
-     * @return
      */
     protected FeatureStructure copyWithCompArcs(long currentTimestamp) {
         FeatureStructure dg = dereference(currentTimestamp);
@@ -202,16 +189,12 @@ public abstract class FeatureStructure {
      * Implementation of Tomabechi's function "copy-dg-with-comp-arcs"
      * for the different types of feature structures.
      * 
-     * @param currentTimestamp
-     * @return 
      */
     abstract protected FeatureStructure makeCopyWithCompArcs(long currentTimestamp);
     
     /**
      * Follows forward pointers that are still valid for the current timestamp.
      * 
-     * @param timestamp
-     * @return 
      */
     protected FeatureStructure dereference(long timestamp) {
         if (forward == null) {
@@ -226,8 +209,6 @@ public abstract class FeatureStructure {
     /**
      * Sets a forward pointer.
      * 
-     * @param other
-     * @param currentTimestamp 
      */
     protected void setForward(FeatureStructure other, long currentTimestamp) {
         forward = other;
@@ -237,8 +218,6 @@ public abstract class FeatureStructure {
     /**
      * Stores a copy.
      * 
-     * @param fs
-     * @param timestamp 
      */
     protected void setCopy(FeatureStructure fs, long timestamp) {
         copy = fs;
@@ -269,8 +248,6 @@ public abstract class FeatureStructure {
      * Checks whether this FS subsumes another, i.e. whether all information
      * in this FS is also present in the other.
      * 
-     * @param other
-     * @return 
      */
     public boolean subsumes(FeatureStructure other) {
         return (checkSubsumptionBothWays(other) & SUBSUMES_FORWARD) != 0;
@@ -286,8 +263,6 @@ public abstract class FeatureStructure {
      * two FSs, using the algorithm from Malouf/Carroll/Copestake, "Efficient
      * feature structure operations without compilation", JNLE 2000.
      * 
-     * @param other
-     * @return 
      */
     public int checkSubsumptionBothWays(FeatureStructure other) {
         return checkSubsumptionBothWays(other, globalCopyTimestamp++, SUBSUMES_FORWARD | SUBSUMES_BACKWARD);
@@ -339,8 +314,6 @@ public abstract class FeatureStructure {
      * {@link #checkSubsumptionBothWays(de.saar.coli.featstruct.FeatureStructure) },
      * and runs in linear time in the size of the two FSs.
      *
-     * @param obj
-     * @return
      */
     @Override
     public boolean equals(Object obj) {
@@ -365,7 +338,6 @@ public abstract class FeatureStructure {
      * may become invalid. If you need this, you will need to change
      * the caching mechanism.
      * 
-     * @return 
      */
     @Override
     public int hashCode() {
@@ -389,7 +361,6 @@ public abstract class FeatureStructure {
      * The default implementation is really slow; derived classes
      * are encouraged to provide faster specialized implementations.
      *
-      * @return
      */
     public FeatureStructure deepCopy() {
         try {

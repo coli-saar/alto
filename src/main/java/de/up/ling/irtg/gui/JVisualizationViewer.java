@@ -33,8 +33,6 @@ public class JVisualizationViewer extends javax.swing.JFrame {
     /**
      * Creates new form JVisualizationViewer, displaying the object as visualized
      * by the algebra.
-     * @param alg
-     * @param object
      */
     public JVisualizationViewer(Algebra alg, String object) {
         initComponents();

@@ -82,7 +82,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Constructs a new IRTG with the given derivation tree automaton.
      *
-     * @param automaton
      */
     public InterpretedTreeAutomaton(TreeAutomaton<String> automaton) {
         this.automaton = automaton;
@@ -92,8 +91,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Adds an interpretation with a given name.
      *
-     * @param name
-     * @param interp
      */
 	@Deprecated
     public void addInterpretation(String name, Interpretation interp) {
@@ -103,7 +100,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Adds an interpretation using the name stored int interp
      *
-     * @param interp
      */
     public void addInterpretation(Interpretation interp) {
         interpretations.put(interp.name, interp);
@@ -112,7 +108,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Adds all interpretations in the map, with their respective names.
      *
-     * @param interps
      */
     public void addAllInterpretations(Map<String, Interpretation<?>> interps) {
         interpretations.putAll(interps);
@@ -121,7 +116,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Returns the derivation tree automaton.
      *
-     * @return
      */
     @OperationAnnotation(code = "auto")
     public TreeAutomaton<String> getAutomaton() {
@@ -132,7 +126,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * Returns a map from which the interpretations can be retrieved using their
      * names.
      *
-     * @return
      */
     public Map<String, Interpretation<?>> getInterpretations() {
         return interpretations;
@@ -141,8 +134,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Returns the interpretation with the given name.
      *
-     * @param interp
-     * @return
      */
     @OperationAnnotation(code = "interp")
 	@SuppressWarnings("unchecked")
@@ -154,9 +145,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * Interprets the given derivation tree in the interpretation with the given
      * name, and returns an object of the algebra.
      *
-     * @param derivationTree
-     * @param interpretationName
-     * @return
      */
     public Object interpret(Tree<String> derivationTree, String interpretationName) {
         return getInterpretation(interpretationName).interpret(derivationTree);
@@ -171,8 +159,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * evaluates them. The method returns a mapping of interpretation names to
      * objects in the respective algebras.
      *
-     * @param derivationTree
-     * @return
      */
     public Map<String, Object> interpret(Tree<String> derivationTree) {
         if (derivationTree == null) {
@@ -199,9 +185,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * }
      * on that algebra.
      *
-     * @param interpretation
-     * @param representation
-     * @return
      * @throws ParserException
      */
     public Object parseString(String interpretation, String representation) throws ParserException {
@@ -230,8 +213,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * resulting tree automaton. Depending on the way parsing was done, it may
      * still contain states that are unreachable or unproductive.
      *
-     * @param representations
-     * @return
      * @throws ParserException
      */
     public TreeAutomaton<?> parse(Map<String, String> representations) throws ParserException {
@@ -250,7 +231,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      *
      * @param interpretationName name of the interpretation from which the
      * object comes.
-     * @param input
      * @return a tree automaton containing all possible derivation trees that
      * are mapped to the input by the interpretation.
      */
@@ -272,7 +252,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      *
      * @param interpretationName name of the interpretation from which the
      * object comes.
-     * @param input
      * @return a tree automaton containing all possible derivation trees that
      * are mapped to the input by the interpretation.
      * @throws ParserException
@@ -288,7 +267,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * sibling finder in the intersection.
      *
      * @param interpretation the interpretation from which the object comes.
-     * @param input
      * @return a tree automaton containing all possible derivation trees that
      * are mapped to the input by the interpretation.
      */
@@ -325,8 +303,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * interpretation names to pre-constructed objects of the respective
      * algebras.
      *
-     * @param inputs
-     * @return
      */
     public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
         TreeAutomaton ret = automaton;
@@ -366,9 +342,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * algebra. This language is the homomorphic image of the parse chart under
      * the homomorphism of the given output interpretation.
      *
-     * @param outputInterpretation
-     * @param parseChart
-     * @return
      */
     public TreeAutomaton decodeToAutomaton(String outputInterpretation, TreeAutomaton parseChart) {
         return decodeToAutomaton(interpretations.get(outputInterpretation), parseChart);
@@ -386,9 +359,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * and evaluates each term in the language of the term chart to an object in
      * the output algebra. The method returns the set of all of these objects.
      *
-     * @param outputInterpretation
-     * @param representations
-     * @return
      * @throws ParserException
      */
     public Set<?> decode(String outputInterpretation, Map<String, String> representations) throws ParserException {
@@ -421,7 +391,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * given annotated corpus. In the context of an IRTG, "annotated corpus"
      * means that the derivation tree is annotated for each training instance.
      *
-     * @param trainingData
      * @throws UnsupportedOperationException
      */
     public void trainML(Corpus trainingData) throws UnsupportedOperationException {
@@ -479,7 +448,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * The algorithm terminates as soon as the rate of the likelihood increases
      * drops below 1E-5.
      *
-     * @param trainingData
      */
     public void trainEM(Corpus trainingData) {
         trainEM(trainingData, null);
@@ -497,8 +465,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * The algorithm terminates as soon as the rate of the likelihood increases
      * drops below 1E-5.
      *
-     * @param trainingData
-     * @param listener
      */
     public void trainEM(Corpus trainingData, ProgressListener listener) {
         trainEM(trainingData, -1, 1E-5, listener);
@@ -517,11 +483,9 @@ public class InterpretedTreeAutomaton implements Serializable {
      * the rate the likelihood increases drops below a given threshold.
      *
      *
-     * @param trainingData
      * @param iterations maximum number of iterations allowed. If negative, only the threshold is taken into account
      * @param threshold minimum change in log-likelihood that prevents stopping the algorithm. If non-positive, only the number
      * of iterations is taken into account. If the threshold is non-positive and iterations is negative, an error is thrown.
-     * @param listener
      */
     public void trainEM(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
@@ -638,10 +602,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * "originalRulesToIntersectedRules" to null if you don't care about this
      * mapping.
      *
-     * @param trainingData
-     * @param parses
-     * @param intersectedRuleToOriginalRule
-     * @param originalRuleToIntersectedRules
      */
     private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton<?>> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
         parses.clear();
@@ -704,7 +664,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Switches debugging output on or off.
      *
-     * @param debug
      */
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -716,8 +675,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * The corpus must define a subset of the interpretations which this IRTG
      * defines.
      *
-     * @param reader
-     * @return
      * @throws IOException
      * @throws CorpusReadingException
      */
@@ -731,9 +688,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * }
      * with an instance filter that always returns true.
      *
-     * @param input
-     * @param corpusConsumer
-     * @param listener
      */
     public void bulkParse(Corpus input, Consumer<Instance> corpusConsumer, ProgressListener listener) {
         bulkParse(input, null, corpusConsumer, listener);
@@ -755,10 +709,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * Note that the output corpus may contain fewer instances than the input
      * corpus, if the "filter" returned false on some of the input instances.
      *
-     * @param input
-     * @param filter
-     * @param corpusConsumer
-     * @param listener
      */
     public void bulkParse(Corpus input, Predicate<Instance> filter, Consumer<Instance> corpusConsumer, ProgressListener listener) {
         int N = input.getNumberOfInstances();
@@ -830,7 +780,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      *
      * The IRTG is given in the same format that the IrtgInputCodec understands.
      *
-     * @return
      */
     @Override
     public String toString() {
@@ -866,8 +815,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * homomorphisms are equal; (4) for each interpretation name, the
      * intepretations use the same algebra class.
      *
-     * @param obj
-     * @return
      */
     @Override
     public boolean equals(Object obj) {
@@ -899,8 +846,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * {@link de.up.ling.irtg.codec.IrtgInputCodec#read read} from an IRTG input
      * codec.
      *
-     * @param r
-     * @return
      * @throws IOException
      * @throws CodecParseException
      */
@@ -913,8 +858,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * {@link de.up.ling.irtg.codec.IrtgInputCodec#read read} from an IRTG input
      * codec.
      *
-     * @param s
-     * @return
      * @throws IOException
      * @throws CodecParseException
      */
@@ -928,8 +871,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * with {@link de.up.ling.irtg.codec.IrtgInputCodec#read read} from an IRTG
      * input codec.
      *
-     * @param path
-     * @return
      * @throws IOException
      * @throws CodecParseException
      */
@@ -943,8 +884,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * automaton with no rules, and one interpretation for each entry of the
      * given map, with the given name and the given algebra.
      *
-     * @param algebras
-     * @return
      */
     public static InterpretedTreeAutomaton forAlgebras(Map<String, Algebra> algebras) {
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
@@ -966,9 +905,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * is applicable and much more efficient. It is recommend it to use it instead
      * of this method whenever applicable (read its documentation carefully).
      * 
-     * @param interpName
-     * @param input
-     * @return
      */
 
 	@SuppressWarnings("unchecked")
@@ -1077,9 +1013,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * {@link de.up.ling.irtg.InterpretedTreeAutomaton#filterForAppearingConstants(java.lang.String, java.lang.Object)}
      * instead.
      *
-     * @param interpName
-     * @param input
-     * @return
      */
     @OperationAnnotation(code = "filterBinarized")
     public InterpretedTreeAutomaton filterBinarizedForAppearingConstants(String interpName, Object input) {
@@ -1212,8 +1145,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * structure that records, in addition to the derivation tree and the term,
      * a mapping from nodes of the derivation tree to nodes of the term.
      *
-     * @param derivationTree
-     * @return
      */
     public TreeWithInterpretations interpretWithPointers(Tree<String> derivationTree) {
         TreeWithInterpretations ret = new TreeWithInterpretations(derivationTree);

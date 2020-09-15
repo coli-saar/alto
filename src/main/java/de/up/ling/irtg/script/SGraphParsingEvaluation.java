@@ -63,7 +63,6 @@ public class SGraphParsingEvaluation {
     /**
      * Benchmarks the s-graph parsing algorithm. Execute without arguments to get more detailed instructions.
      * The interpretation corresponding to the s-graph algebra must be named <i>int</i>.
-     * @param args
      */
     public static void main(String[] args) {
         
@@ -569,9 +568,6 @@ public class SGraphParsingEvaluation {
     
     /**
      * Computes the s-separability, brute force.
-     * @param graph
-     * @param alg
-     * @return 
      */
     private static int getD(SGraph graph, GraphAlgebra alg) {
         Map<SComponent, SComponent> storedComponents = new HashMap<>();

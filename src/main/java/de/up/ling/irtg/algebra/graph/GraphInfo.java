@@ -60,9 +60,6 @@ public class GraphInfo {
     * Sets up usage of the source names in additionalSourceNames for use in rename etc operations in BoundaryRepresentations
     * based on this GraphInfo object.
     * Also computes distances between nodes using Floyd-Warshall , runtime O(n^3).
-    * @param completeGraph
-    * @param algebra
-     * @param additionalSourceNames
     */
     public GraphInfo(SGraph completeGraph, GraphAlgebra algebra, Set<String> additionalSourceNames) {
         this.graph = completeGraph;
@@ -205,8 +202,6 @@ public class GraphInfo {
     * Creates a {@code GraphInfo} object representing {@code completeGraph}, with respect to the given algebra.
     * Equivalent to calling the other constructor with an empty set of additional source names.
     * Also computes distances between nodes using Floyd-Warshall , runtime O(n^3).
-    * @param completeGraph
-    * @param algebra
     */
     public GraphInfo(SGraph completeGraph, GraphAlgebra algebra) {
         this(completeGraph, algebra, null);
@@ -232,8 +227,6 @@ public class GraphInfo {
     
     /**
      * Returns the integer ID for {@code source}.
-     * @param source
-     * @return 
      */
     public final int getIntForSource(String source) {
         if (!sourcenameToInt.containsKey(source)) {
@@ -245,8 +238,6 @@ public class GraphInfo {
 
     /**
      * Returns the integer ID for the node with name {@code nodename}.
-     * @param nodename
-     * @return 
      */
     public int getIntForNode(String nodename) {
         return nodenameToInt.get(nodename);
@@ -254,8 +245,6 @@ public class GraphInfo {
 
     /**
      * Returns the source name corresponding to {@code sourceID}.
-     * @param sourceID
-     * @return 
      */
     public String getSourceForInt(int sourceID) {
         return intToSourcename.get(sourceID);
@@ -263,8 +252,6 @@ public class GraphInfo {
 
     /**
      * Returns the node name corresponding to {@code nodeID}.
-     * @param nodeID
-     * @return 
      */
     public String getNodeForInt(int nodeID) {
         return intToNodename[nodeID];
@@ -272,7 +259,6 @@ public class GraphInfo {
 
     /**
      * Gives the total number of sources used in the algebra.
-     * @return 
      */
     public int getNrSources() {
         return intToSourcename.size();
@@ -280,8 +266,6 @@ public class GraphInfo {
 
     /**
      * Returns the IDs of all edges incident to any vertex in the set {@code vertices}.
-     * @param vertices
-     * @return 
      */
     public int[] getAllIncidentEdges(IntSet vertices) {
         IntSet res = new IntOpenHashSet();
@@ -302,8 +286,6 @@ public class GraphInfo {
     
     /**
      * Returns the IDs of all edges incident to the node given by {@code nodeID}.
-     * @param nodeID
-     * @return 
      */
     public int[] getIncidentEdges(int nodeID) {
         return incidentEdges[nodeID];
@@ -311,7 +293,6 @@ public class GraphInfo {
     
     /**
      * Returns the total number of nodes in the represented graph.
-     * @return
      */
     public final int getNrNodes() {
         return intToNodename.length;
@@ -319,8 +300,6 @@ public class GraphInfo {
     
     /**
      * Returns the IDs of all sources appearing in the algebra label given by {@source labelId}.
-     * @param labelId
-     * @return
      */
     public int[] getlabelSources(int labelId){
         return labelSources.get(labelId);
@@ -328,7 +307,6 @@ public class GraphInfo {
     
     /**
      * Returns the total number of edges in the represented graph.
-     * @return
      */
     public final int getNrEdges() {
         return edgeSources.length;
@@ -336,9 +314,6 @@ public class GraphInfo {
     
     /**
      * Returns true iff {@code edge} is incident to {@code vertex}.
-     * @param vertex
-     * @param edge
-     * @return
      */
     public final boolean isIncident(int vertex, int edge) {
         return (edgeSources[edge] == vertex || edgeTargets[edge] == vertex);
@@ -346,8 +321,6 @@ public class GraphInfo {
     
     /**
      * Returns the ID for {@code edge}.
-     * @param edge
-     * @return
      */
     public int getEdgeId(GraphEdge edge) {
         return edgeToId.getInt(edge);
@@ -355,7 +328,6 @@ public class GraphInfo {
     
     /**
      * Returns the array containing the IDs of all edges in the represented graph.
-     * @return
      */
     public final int[] getAllEdges() {
         return allEdges;
@@ -364,9 +336,6 @@ public class GraphInfo {
     /**
      * The edge {@code e} has a source and a target, if {@code v} is one, this returns the other.
      * Otherwise, i.e. if {@code e} is not incident to {@code v}, this returns -1.
-     * @param e
-     * @param v
-     * @return
      */
     public int getOtherNode(int e, int v) {
         int source = edgeSources[e];
@@ -382,8 +351,6 @@ public class GraphInfo {
     
     /**
      * Returns the source vertex of {@code e}. 
-     * @param e
-     * @return
      */
     public int getEdgeSource(int e) {
         return edgeSources[e];
@@ -391,8 +358,6 @@ public class GraphInfo {
     
     /**
      * Returns the target vertex of {@code e}.
-     * @param e
-     * @return
      */
     public int getEdgeTarget(int e) {
         return edgeTargets[e];
@@ -400,9 +365,6 @@ public class GraphInfo {
     
     /**
      * Returns the ID of the edge with the given {@code source} and {@code target} if it exists. Otherwise returns -1.
-     * @param source
-     * @param target
-     * @return
      */
     public IntSet getEdges(int source, int target) {
         return edgesBySourceAndTarget[source][target];
@@ -423,8 +385,6 @@ public class GraphInfo {
     
     /**
      * Returns the edge corresponding to {@code edgeID}.
-     * @param edgeID
-     * @return
      */
     public GraphEdge getEdge(int edgeID) {
         return idToEdge[edgeID];
@@ -432,7 +392,6 @@ public class GraphInfo {
     
     /**
      * Returns the represented {@code SGraph}.
-     * @return
      */
     public SGraph getSGraph() {
         return graph;
@@ -440,7 +399,6 @@ public class GraphInfo {
 
     /**
      * Returns the maximum degree in the represented SGraphs (loops count once).
-     * @return
      */
     public int getMaxDegree() {
         return maxDegree;
@@ -448,7 +406,6 @@ public class GraphInfo {
     
     /**
      * describes whether we should use shorts or bytes to represent edges and vertices (depends purely on graph size).
-     * @return 
      */
     public boolean useBytes() {
         return useBytes;
@@ -458,9 +415,6 @@ public class GraphInfo {
      * Returns the last edge on the shortest path from node {@code v} to a node in {@code vSet}.
      * Uses the previously stored information computed via Floyd-Warshall.
      * Runtime is linear in the size of {@code vSet}.
-     * @param vSet
-     * @param v
-     * @return
      */
     public int getDecidingEdgePWSP(int[] vSet, int v) {
         int k = getNrNodes();
@@ -482,7 +436,6 @@ public class GraphInfo {
      * Precomputed via Floyd-Warshall, has constant runtime.
      * @param vNr1
      * @param vNr2
-     * @return
      */
     public int dist(int vNr1, int vNr2) {
         return pwsp.getDistance(vNr1, vNr2);

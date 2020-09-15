@@ -43,7 +43,6 @@ public class EvaluateSamplingFromRules {
     * 
     * This is the class used for the evaluation in our paper.
     * 
-    * @param args
     * @throws IOException 
     */
     public static void main(String... args) throws IOException {
@@ -129,9 +128,6 @@ public class EvaluateSamplingFromRules {
      * Computes the expected value for all the different evaluation rounds in a single repetition.
      * 
      * @param <Type>
-     * @param ta
-     * @param config
-     * @return 
      */
     public static <Type> DoubleList computeTargetFunction(TreeAutomaton<Type> ta, AdaptiveImportanceSampler.Configuration config) {
         DoubleArrayList dal = new DoubleArrayList();
@@ -156,10 +152,6 @@ public class EvaluateSamplingFromRules {
      * of expected values per round for each repetition.
      * 
      * @param <Type>
-     * @param ta
-     * @param config
-     * @param repetitions
-     * @param printTracking
      * @return  first element are the average expected value estimates for each round
      * second element is a list for each repetition, which contains the estiamte for
      * each round.

@@ -49,8 +49,6 @@ public class TestingTools {
      * are resolved relative to the root of the given classpath; thus files in
      * src/test/resources can be addressed as "foo.txt" etc.
      *
-     * @param filename
-     * @return
      */
     public static InputStream rs(String filename) {
         return TestingTools.class.getClassLoader().getResourceAsStream(filename);
@@ -200,9 +198,7 @@ public class TestingTools {
 
     /**
      * Serialize an object to a byte array. Code from https://stackoverflow.com/questions/3840356/how-to-test-in-java-that-a-class-implements-serializable-correctly-not-just-is
-     * @param obj
      * @param <T>
-     * @return
      * @throws IOException
      */
     private static <T extends Serializable> byte[] pickle(T obj) throws IOException {
@@ -216,10 +212,7 @@ public class TestingTools {
     /**
      * Deserialize an object from a byte array.
      *
-     * @param b
-     * @param cl
      * @param <T>
-     * @return
      * @throws IOException
      * @throws ClassNotFoundException
      */

@@ -53,8 +53,6 @@ public abstract class RegularSeed {
      * f(q1,...,qn) where f is not of the form ?i).</li>
      * </ul>
      *
-     * @param symbol
-     * @return
      */
     public abstract TreeAutomaton<String> binarize(String symbol);
 
@@ -68,8 +66,6 @@ public abstract class RegularSeed {
      * ?i (i.e., the i-th variable), then all occurrences of q in the automaton
      * are replaced by the final state of the binarization automaton for ti.
      *
-     * @param term
-     * @return
      */
     public TreeAutomaton<String> binarize(Tree<String> term) {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();
@@ -183,7 +179,6 @@ public abstract class RegularSeed {
     /**
      * Returns an iterator over all subclasses of RegularSeed.
      *
-     * @return
      */
     public static Iterator<Class> getAllRegularSeedClasses() {
         ServiceLoader<RegularSeed> rsLoader = ServiceLoader.load(RegularSeed.class);

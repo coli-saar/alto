@@ -94,7 +94,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 
     /**
      * Describes whether this algebra uses top-down or bottom-up decomposition automata.
-     * @return 
      */
     public boolean usesTopDownAutomaton() {
         return useTopDownAutomaton;
@@ -102,7 +101,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     /**
      * Sets whether this algebra uses top-down or bottom-up decomposition automata.
-     * @param useTopDownAutomaton
      */
     public void setUseTopDownAutomaton(boolean useTopDownAutomaton) {
         this.useTopDownAutomaton= useTopDownAutomaton;
@@ -118,7 +116,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     /**
      * the returned map maps all constant labels in this algebra's signature to their corresponding SGraphs.
      * This returns the original set stored in the algebra, so it must not be modified.
-     * @return
      */
     Int2ObjectMap<SGraph> getAllConstantLabelInterpretations() {
         if (constantLabelInterpretations == null) {
@@ -132,7 +129,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     /**
      * returns the set of all source names occurring in the algebra's signature.
      * This returns the original set stored in the algebra, so it must not be modified.
-     * @return
      */
     Set<String> getAllSourceNames() {
         if (sources == null) {
@@ -150,7 +146,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     /**
      * Creates a graph algebra with the given signature.
-     * @param signature 
      */
     public GraphAlgebra(Signature signature) {
         super();
@@ -180,8 +175,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * Returns a bottom-up or a top-down decomposition automaton for the s-graph
      * {@code value} (which one can be set via {@code setUseTopDownAutomaton}, 
      * default is bottom-up).
-     * @param value
-     * @return 
      */
     @Override
     public TreeAutomaton decompose(SGraph value) {
@@ -193,9 +186,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     /**
      * Given an SGraph, this returns the corresponding decomposition automaton of class c.
-     * @param value
-     * @param c
-     * @return
      */
     public TreeAutomaton decompose(SGraph value, Class c){
         //try {
@@ -224,9 +214,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * To avoid cycles, there are no rename operations on states only reachable
      * via rename. Rules of the form {@literal c-> m(a, b)} and {@literal c-> m(b,a)} are both written
      * into the writer.
-     * @param value
-     * @param writer
-     * @return
      * @throws Exception
      */
     public boolean writeRestrictedAutomaton(SGraph value, Writer writer) throws Exception{
@@ -242,10 +229,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * To avoid cycles, there are no rename operations on states only reachable
      * via rename. Rules of the form {@literal c-> m(a, b)} and {@literal c-> m(b,a)} are both written
      * into the writer.
-     * @param value
-     * @param sourceCount
-     * @param writer
-     * @return
      * @throws Exception
      */
     public static boolean writeRestrictedDecompositionAutomaton(SGraph value, int sourceCount, Writer writer) throws Exception{
@@ -257,9 +240,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     /**
      * Returns all sources that are forgotten if {@code opString} is applied to {@code sgraph}.
      * Only works if {@code opString} is one of the forget operations (includeing forget all etc).
-     * @param opString
-     * @param sgraph
-     * @return 
      */
     static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
         if ( opString.startsWith(OP_FORGET)) { //|| opString.startsWith(OP_FORGET_EXCEPT)) {
@@ -352,8 +332,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     /**
      * Parses a string into an s-graph, using {@link IsiAmrParser#parse(java.io.Reader) }.
      * 
-     * @param representation
-     * @return
      * @throws ParserException 
      */
     @Override
@@ -375,8 +353,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * graph drawing library.
      * 
      * @see TikzSgraphOutputCodec
-     * @param graph
-     * @return 
      */
     @Override
     public JComponent visualize(SGraph graph) {
@@ -397,9 +373,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * Computes the smatch score of the two given graphs. Uses the python implementation
      * from ISI ({@url http://amr.isi.edu/evaluation.html}), the python file must
      * be in the current working directory.
-     * @param graph
-     * @param gold
-     * @return 
      * @throws java.io.IOException 
      */
     @OperationAnnotation(code = "smatch")
@@ -436,9 +409,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * Computes the smatch score of the two given arrays of graphs. Uses the python implementation
      * from ISI ({@url http://amr.isi.edu/evaluation.html}), the python file must
      * be in the current working directory.
-     * @param graphs
-     * @param gold
-     * @return 
      * @throws java.io.IOException 
      */
     @OperationAnnotation(code = "globalSmatch")
@@ -480,8 +450,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     /**
      * Returns the set of all source names appearing in {@code signature}.
-     * @param signature
-     * @return 
      */
     private static Set<String> getAllSourcesFromSignature(Signature signature) {
         //find all sources used in algebra:
@@ -538,9 +506,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * rename. It is encouraged to use {@code makeIncompleteDecompositionAlgebra}
      * instead, since its result is equally expressive and smaller (due to
      * less spurious constants).
-     * @param graph
-     * @param nrSources
-     * @return
      */
     @Deprecated
     public static GraphAlgebra makeCompleteDecompositionAlgebra(SGraph graph, int nrSources) //only add empty algebra!!
@@ -591,10 +556,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * incident to the edge with these two sources are included).
      * Further, the merge operation and all possible versions of forget and 
      * rename.
-     * @param graph
-     * @param nrSources
      * @throws Exception
-     * @return
      */
     public static GraphAlgebra makeIncompleteDecompositionAlgebra(SGraph graph, int nrSources)//only add empty algebra!!
     {
@@ -656,8 +618,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * The one final state is S, the one nonfinal state is X.
      * 
      * @param alg empty GraphAlgebra, carries the result.
-     * @param graph
-     * @param nrSources
      */
     // @todo Keep this only until a more elegant solution based on
     // makeIncompleteDecompositionAlgebra is found.

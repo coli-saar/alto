@@ -81,8 +81,6 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
      * Annotates each label in the given tree with its arity. Thus, the
      * tree A(B(C), D) will be converted to A_2(B_1(C_0), D_0).
      * 
-     * @param tree
-     * @return 
      */
     public static Tree<String> addArities(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
@@ -105,8 +103,6 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
      * xxx consists of digits. Thus, this method is the inverse
      * of {@link #addArities(de.up.ling.tree.Tree) }.
      * 
-     * @param tree
-     * @return 
      */
     public static Tree<String> stripArities(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {

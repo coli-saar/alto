@@ -27,7 +27,6 @@ class BRComparator implements IntComparator{
      * in the other results, simply rep1-rep2 is returned, i.e. 0 iff the ints are identical.
      * @param rep1
      * @param rep2
-     * @return
      */
     @Override
     public int compare (int rep1, int rep2){

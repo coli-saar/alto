@@ -15,7 +15,6 @@ public class IdentitySignatureMapper extends SignatureMapper {
     
     /**
      * Creates a new instance for the given interner.
-     * @param interner 
      */
     public IdentitySignatureMapper(Interner interner) {
         forward = null;

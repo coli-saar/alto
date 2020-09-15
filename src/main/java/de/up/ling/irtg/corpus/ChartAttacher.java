@@ -21,8 +21,6 @@ public interface ChartAttacher {
      * iterator which only returns instances that are copies of the original with
      * charts attached.
      * 
-     * @param source
-     * @return 
      */
     Iterator<Instance> attach(Iterator<Instance> source);
 }

@@ -44,8 +44,6 @@ public class Interpretation<E> implements Serializable {
     /**
      * Constructs  new instance with the given algebra and homomorphism.
      * 
-     * @param algebra
-     * @param hom 
      */
 	@Deprecated
     public Interpretation(Algebra<E> algebra, Homomorphism hom) {
@@ -58,9 +56,6 @@ public class Interpretation<E> implements Serializable {
     /**
      * Constructs  new instance with the given algebra, homomorphism and name.
      *
-     * @param algebra
-     * @param hom
-     * @param name
      */
     public Interpretation(Algebra<E> algebra, Homomorphism hom, String name) {
         this.algebra = algebra;
@@ -73,8 +68,6 @@ public class Interpretation<E> implements Serializable {
      * Applies the homomorphism to the derivation tree "t" and evaluates it in
      * the algebra.
      *
-     * @param t
-     * @return
      */
     @OperationAnnotation(code = "interpret")
     public E interpret(Tree<String> t) {
@@ -88,7 +81,6 @@ public class Interpretation<E> implements Serializable {
     /**
      * Obtains the algebra used by the interpretation.
      * 
-     * @return 
      */
     @OperationAnnotation(code = "alg")
     public Algebra<E> getAlgebra() {
@@ -98,7 +90,6 @@ public class Interpretation<E> implements Serializable {
     /**
      * Obtains the homomorphism used by the interpretation.
      * 
-     * @return 
      */
     @OperationAnnotation(code = "hom")
     public Homomorphism getHomomorphism() {
@@ -110,8 +101,6 @@ public class Interpretation<E> implements Serializable {
      *
      * This is based on the homomorphism of this interpretation. 
      * 
-     * @param auto
-     * @return
      */
     @OperationAnnotation(code = "invhom")
     public Intersectable invhom(TreeAutomaton auto) {
@@ -157,8 +146,6 @@ public class Interpretation<E> implements Serializable {
      * 
      * If the homomorphism is in fact deleting, then behavior is not well defined.
      * 
-     * @param auto
-     * @return 
      */
     @OperationAnnotation(code = "basicNonDelInvHom")
     public <T> TreeAutomaton<T> basicNonDelInvHom(TreeAutomaton<T> auto) {
@@ -172,8 +159,6 @@ public class Interpretation<E> implements Serializable {
      * This means that the decomposition automaton under the algebra of this
      * interpretation is found and then inverse of the homomorphism is applied.
      * 
-     * @param object
-     * @return 
      */
     public Intersectable<E> parse(E object) {
         TreeAutomaton<E> decompositionAutomaton = algebra.decompose(object);
@@ -191,8 +176,6 @@ public class Interpretation<E> implements Serializable {
      * This means that the decomposition automaton under the algebra of this
      * interpretation is found and then inverse of the homomorphism is applied.
      * 
-     * @param object
-     * @return 
      */
     public CondensedTreeAutomaton parseToCondensed(E object) {
         return algebra.decompose(object).inverseCondensedHomomorphism(hom);
@@ -202,7 +185,6 @@ public class Interpretation<E> implements Serializable {
      * Returns a string containing the algebra class and homomorphism used
      * by this interpretation.
      * 
-     * @return 
      */
     @Override
     public String toString() {
@@ -214,8 +196,6 @@ public class Interpretation<E> implements Serializable {
      * class of algebra and an homomorphism that is equals to the homomorphism
      * for this interpretation.
      * 
-     * @param obj
-     * @return 
      */
     @Override
     public boolean equals(Object obj) {
@@ -237,7 +217,6 @@ public class Interpretation<E> implements Serializable {
      * the pattern matching factory is logged.
      * 
      * 
-     * @param name 
      */
     public void setPmLogName(String name) {
         pmFactory.logTitle = name;
@@ -248,8 +227,6 @@ public class Interpretation<E> implements Serializable {
      * This is only supported if the algebra in this interpretation
      * implements {@link NullFilterAlgebra}.
      * 
-     * @param chart
-     * @return 
      */
     public TreeAutomaton filterNull(TreeAutomaton chart) {
         if (algebra instanceof NullFilterAlgebra) {

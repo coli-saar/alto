@@ -122,8 +122,6 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
      * caching involved, because usually this method is called only once for
      * each parentState.
      *
-     * @param parentState
-     * @return
      */
     @Override
     public Iterable<CondensedRule> getCondensedRulesByParentState(int parentState) {

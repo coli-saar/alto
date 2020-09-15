@@ -27,9 +27,6 @@ public class BasicOperations {
     /**
      * Computes the average of values, weighted by weights. The arrays must be of
      * equal length and must contain Doubles.
-     * @param values
-     * @param weights
-     * @return 
      */
     @OperationAnnotation(code = "weightedAverageWithIntWeights")
     public static Double weightedAverageWithIntWeights(Object[] values, Object[] weights) {
@@ -54,8 +51,6 @@ public class BasicOperations {
     /**
      * Computes the average value of the doubles. The entries in values must be
      * Integer, Long, Short, Float, Byte or Double.
-     * @param values
-     * @return 
      */
     @OperationAnnotation(code = "average")
     public static double average(Object[] values) {
@@ -91,9 +86,6 @@ public class BasicOperations {
 
     /**
      * Standard division. Both denominator and divisor must be Doubles.
-     * @param denominator
-     * @param divisor
-     * @return 
      */
     @OperationAnnotation(code = "div")
     public static Double div(Object denominator, Object divisor) {
@@ -105,9 +97,6 @@ public class BasicOperations {
 
     /**
      * Computes F1-score (standard F-score) from precision and recall.
-     * @param precision
-     * @param recall
-     * @return 
      */
     @OperationAnnotation(code = "f1")
     public static double f1(double precision, double recall) {
@@ -120,8 +109,6 @@ public class BasicOperations {
 
     /**
      * Returns 0 if object is null, and 1 if it is not null.
-     * @param object
-     * @return 
      */
     @OperationAnnotation(code = "isNotNull")
     public static double isNotNull(Object object) {
@@ -131,9 +118,6 @@ public class BasicOperations {
     /**
      * Returns 1 if object and other are both null, or both not null and equal.
      * Returns 0 otherwise.
-     * @param object
-     * @param other
-     * @return 
      */
     @OperationAnnotation(code = "equals")
     public static double equals(Object object, Object other) {
@@ -152,7 +136,6 @@ public class BasicOperations {
      * If either is null, it is replaced by 0. If d1 is 0 or null, returns 0.
      * @param d1
      * @param d2
-     * @return 
      */
     @OperationAnnotation(code = "selfNormDifference") 
     public static double selfNormDifference(Object d1, Object d2) {
@@ -172,8 +155,6 @@ public class BasicOperations {
      * -- if that is the case, returns a DoubleList with i-th entry the sum of
      * the i-th entries of the input lists.
      * returns 
-     * @param list
-     * @return 
      */
     @OperationAnnotation(code = "sumDoubleLists")
     public static DoubleList sumLists(Object[] list) {
@@ -199,8 +180,6 @@ public class BasicOperations {
      * -- if that is the case, returns a DoubleList with i-th entry the average of
      * the i-th entries of the input lists.
      * returns 
-     * @param list
-     * @return 
      */
     @OperationAnnotation(code = "averageDoubleLists")
     public static DoubleList averageLists(Object[] list) {

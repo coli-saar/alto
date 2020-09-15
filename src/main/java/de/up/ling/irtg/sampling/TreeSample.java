@@ -52,7 +52,6 @@ public class TreeSample<Type> {
     /**
      * Adds a sample with all the weights set to 0.0. 
      * 
-     * @param sample 
      */
     public void addSample(Tree<Type> sample) {
         this.samplesDrawn.add(sample);
@@ -66,8 +65,6 @@ public class TreeSample<Type> {
      * Sets the value of the log of the sum of the proposal probabilities for
      * the given entry.
      * 
-     * @param entry
-     * @param amount 
      */
     public void setLogSumWeight(int entry, double amount) {
         this.sumProposalWeight.set(entry, amount);
@@ -76,8 +73,6 @@ public class TreeSample<Type> {
     /**
      * Sets the log of the proposal probability for the given entry.
      * 
-     * @param entry
-     * @param amount 
      */
     public void setLogPropWeight(int entry, double amount) {
         this.proposalWeight.set(entry, amount);
@@ -86,8 +81,6 @@ public class TreeSample<Type> {
     /**
      * Sets the log of the target weight for the given entry.
      * 
-     * @param entry
-     * @param amount
      */
     public void setLogTargetWeight(int entry, double amount) {
         this.targetWeights.set(entry, amount);
@@ -95,8 +88,6 @@ public class TreeSample<Type> {
     
     /**
      * Returns the log of the proposal probability for the given entry.
-     * @param entry
-     * @return 
      */
     public double getLogPropWeight(int entry) {
         return this.proposalWeight.getDouble(entry);
@@ -106,8 +97,6 @@ public class TreeSample<Type> {
      * Returns the value of the log of the sum of the proposal probabilities for
      * the given entry.
      * 
-     * @param entry
-     * @return 
      */
     public double getLogSumWeight(int entry) {
         return this.sumProposalWeight.getDouble(entry);
@@ -116,8 +105,6 @@ public class TreeSample<Type> {
     /**
      * Returns the log of the target weight for the given entry.
      * 
-     * @param entry
-     * @return 
      */
     public double getLogTargetWeight(int entry) {
         return this.targetWeights.getDouble(entry);
@@ -126,8 +113,6 @@ public class TreeSample<Type> {
     /**
      * Returns the weight derived by the different self normalization approaches.
      * 
-     * @param entry
-     * @return 
      */
     public double getSelfNormalizedWeight(int entry) {
         return this.selfNormalizedWeight.getDouble(entry);
@@ -136,8 +121,6 @@ public class TreeSample<Type> {
     /**
      * Returns the sample in the given position.
      * 
-     * @param number
-     * @return 
      */
     public Tree<Type> getSample(int number) {
         return this.samplesDrawn.get(number);
@@ -150,7 +133,6 @@ public class TreeSample<Type> {
      * Deterministic decides whether we use the log proposal weight or the log
      * sum of proposals in order to compute the unnormalized importance weight.
      * 
-     * @param deterministic 
      */
     public void expoNormalize(boolean deterministic){
         double sum = 0.0;
@@ -182,7 +164,6 @@ public class TreeSample<Type> {
     /**
      * Returns the size of the underlying population.
      * 
-     * @return 
      */
     public int populationSize() {
         return this.samplesDrawn.size();
@@ -193,9 +174,6 @@ public class TreeSample<Type> {
      * 
      * First applies resampleWithNormalize.
      * 
-     * @param rg
-     * @param size
-     * @param deterministic 
      */
     public void flatten(RandomGenerator rg, int size, boolean deterministic) {
         this.resampleWithNormalize(rg, size, deterministic);
@@ -226,9 +204,6 @@ public class TreeSample<Type> {
      * Note that this makes the weight settings (except for self normalized)
      * invalid.
      * 
-     * @param rg
-     * @param size
-     * @param deterministic 
      */
     public void resampleWithNormalize(RandomGenerator rg, int size, boolean deterministic) {
         this.expoNormalize(deterministic);
@@ -239,8 +214,6 @@ public class TreeSample<Type> {
      * Resamples the trees assuming that getSelfNormalized weight already returns the
      * correct values.
      * 
-     * @param rg
-     * @param size 
      */
     public void resample(RandomGenerator rg, int size) {
         double dsize = (double) size;
@@ -301,9 +274,6 @@ public class TreeSample<Type> {
      * intended to prevent underflow before we exponentiate. The resulting 
      * importance weights are the accessible by getSelfNormalizedWeight.
      * 
-     * @param deterministic
-     * @param originalBase
-     * @return 
      */
     public double makeMaxBase(boolean deterministic, double originalBase) {
         double max = Double.NEGATIVE_INFINITY;

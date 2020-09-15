@@ -44,9 +44,6 @@ public class BestFirstIntersectionAutomaton<LeftState, RightState> extends Inter
      * If the score provided by the evaluator is an upper bound, then makeAllRulesExplicit
      * will implement A*-search.
      * 
-     * @param left
-     * @param right
-     * @param evaluator 
      */
     public BestFirstIntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right, EdgeEvaluator evaluator) {
         super(left, right);

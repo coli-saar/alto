@@ -149,9 +149,6 @@ public class AutomatonWeightedTest {
     
     /**
      * 
-     * @param auw
-     * @param tr
-     * @return 
      */
     private double computeProb(AutomatonWeighted auw, Tree<Rule> tr) {
         double sum = 0.0;

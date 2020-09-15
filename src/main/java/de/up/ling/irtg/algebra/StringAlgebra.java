@@ -446,8 +446,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         /**
          * Creates a new instance with the given start and end.
          * 
-         * @param start
-         * @param end 
          */
         public Span(int start, int end) {
             this.start = start;
@@ -457,7 +455,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         /**
          * Returns the number of symbols covered by this span.
          * 
-         * @return 
          */
         public int length() {
             return end - start;
@@ -497,7 +494,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
      * 
      * This is important for non-binary string algebras which extend this class.
      * 
-     * @return 
      */
     public String getBinaryConcatenation() {
         return CONCAT;
@@ -524,7 +520,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
          * Creates a new instance which will produce inverse homomorphic
          * images for the given homomorphism.
          * 
-         * @param hom 
          */
         public InvhomDecompFactory(Homomorphism hom) {
             this.hom = hom;
@@ -568,8 +563,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         /**
          * Used to obtain the inverse image automaton for the given value.
          * 
-         * @param sentence
-         * @return 
          */
         public CondensedTreeAutomaton<Span> getInvDecomp(List<String> sentence) {
             ConcreteCondensedTreeAutomaton<Span> ret = new ConcreteCondensedTreeAutomaton<>(hom.getSourceSignature());

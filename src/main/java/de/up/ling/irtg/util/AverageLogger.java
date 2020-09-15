@@ -61,7 +61,6 @@ public class AverageLogger {
 
     /**
      * Increases the value of the variable with the given label by 1.
-     * @param label
      */
     public static void increaseValue(String label) {
         loggerInUse.increaseValue(label);
@@ -70,8 +69,6 @@ public class AverageLogger {
     /**
      * Increases the value of the variable with the given label by the given
      * amount.
-     * @param label
-     * @param increase
      */
     public static void increaseValueBy(String label, int increase) {
         loggerInUse.increaseValueBy(label, increase);
@@ -80,7 +77,6 @@ public class AverageLogger {
     /**
      * Increases the number of instances (i.e the divisor for the average) of
      * the variable with the given label by 1.
-     * @param label
      */
     public static void increaseCount(String label) {
         loggerInUse.increaseCount(label);
@@ -89,8 +85,6 @@ public class AverageLogger {
     /**
      * Increases the number of instances (i.e the divisor for the average) of
      * the variable with the given label by the given value.
-     * @param label
-     * @param increase
      */
     public static void increaseCountBy(String label, int increase) {
         loggerInUse.increaseCountBy(label, increase);
@@ -99,7 +93,6 @@ public class AverageLogger {
     /**
      * Sets the default number of instances for variables where the count has
      * not been set via {@code increaseCount}/{@code increaseCountBy}.
-     * @param newDefaultCount
      */
     public static void setDefaultCount(int newDefaultCount) {
         loggerInUse.setDefaultCount(newDefaultCount);

@@ -44,9 +44,6 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
 
     /**
      * 
-     * @param left
-     * @param right
-     * @param sigMapper 
      */
     public CondensedBottomUpIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         super(left.getSignature()); // TODO = should intersect this with the (remapped) right signature

@@ -37,8 +37,6 @@ public class AMDependencyTree {
 
     /**
      * Combines addEdge and AMDependencyTree constructor for the argument in one function.
-     * @param operation
-     * @param graph
      * @return the new AMDependency tree just added as a child.
      */
     public AMDependencyTree addEdge(String operation, Pair<SGraph, Type> graph) throws ParserException {
@@ -51,8 +49,6 @@ public class AMDependencyTree {
     /**
      * Returns a copy of Adds the childTree as a child to this tree, with the given operation. Note that this modifies the childTree
      * to now contain the operation at the top level.
-     * @param operation
-     * @param childTree
      */
     public void addEdge(String operation, AMDependencyTree childTree) {
         operationsAndChildren.add(new Pair(operation, childTree));
@@ -63,7 +59,6 @@ public class AMDependencyTree {
      * If multiple children are equal (same operation and same AMDependencyTree below), then only one is removed.
      * If no such child is in this tree, the tree remains unchanged. Returns true iff such a child was contained in this tree.
      * (Overall, the behaviour is aimed to be the one of List#remove.)
-     * @param childTree
      */
     public boolean removeEdge(String operation, AMDependencyTree childTree) {
         // note that operations.size() == children.size()
@@ -72,7 +67,6 @@ public class AMDependencyTree {
 
     /**
      * Changes the head graph of this AMDependencyTree.
-     * @param newHeadGraph
      */
     public void setHeadGraph(Pair<SGraph, Type> newHeadGraph) {
         this.headGraph = newHeadGraph;
@@ -81,7 +75,6 @@ public class AMDependencyTree {
     
     /**
      * Returns null if the dependency tree is not well typed.
-     * @return 
      */
     public Pair<SGraph, Type> evaluate() {
         ApplyModifyGraphAlgebra alg = new ApplyModifyGraphAlgebra();
@@ -154,7 +147,6 @@ public class AMDependencyTree {
     /**
      * Returns all subtrees of this dependency tree (including the full tree). The Multiset has no order, and contains
      * identical subtrees as often as they occur as subtrees.
-     * @return
      */
     public Multiset<AMDependencyTree> getAllSubtrees() {
         Multiset<AMDependencyTree> ret = HashMultiset.create();
@@ -168,7 +160,6 @@ public class AMDependencyTree {
     /**
      * The returned multiset contains, for each child of this tree, a pair of the child (left) and the operation
      * connecting this parent to the child (right).
-     * @return
      */
     public Multiset<Pair<String, AMDependencyTree>> getOperationsAndChildren() {
         Multiset<Pair<String, AMDependencyTree>> ret = HashMultiset.create();
@@ -178,7 +169,6 @@ public class AMDependencyTree {
 
     /**
      * Returns the as-graph at the head of this dependency tree.
-     * @return
      */
     public Pair<SGraph, Type> getHeadGraph() {
         return headGraph;

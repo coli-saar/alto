@@ -230,8 +230,6 @@ public class Program {
      * only timer commands) and returns a list of all operation-lines, i.e the
      * actual program.
      *
-     * @param input
-     * @return
      */
     private List<String> preprocessCode(List<String> input, Map<String, String> varRemapper) throws VariableNotDefinedException {
         List<String> ret = new ArrayList<>();
@@ -281,8 +279,6 @@ public class Program {
      * Takes the raw code string (a list of the lines) and returns the
      * corresponding command trees (the commands are still strings).
      *
-     * @param input
-     * @return
      */
     private List<Tree<String>> getTreesFromCommandCode(List<String> input) {
         List<Tree<String>> ret = new ArrayList<>();
@@ -403,9 +399,6 @@ public class Program {
      * Takes a tree of commands (commands are still strings) and turns them into
      * operations.
      *
-     * @param codeTree
-     * @param variableTypeTracker
-     * @return
      */
     private Tree<Operation> getOperationsFromCodeTree(Tree<String> codeTree, Class[] variableTypeTracker, boolean lineIsGlobal) {
         Map<String, Method> allAnnotatedStaticMethods = getAllAnnotatedStaticMethods();
@@ -688,7 +681,6 @@ public class Program {
     /**
      * Runs the program on all instances in the corpus.
      *
-     * @param corpus
      * @param resMan Determines what happens with the results
      * @param onInstanceSuccess What to do once an instance is done (for example
      * giving the user feedback).

@@ -91,7 +91,6 @@ public class CommandLineInterface {
      * namely the task ID. For a list of optional arguments, run with option --help.
      * For more information on Alto Lab, see <a href = "https://bitbucket.org/tclup/alto/wiki/AltoLab">
      * bitbucket.org/tclup/alto/wiki/AltoLab</a>
-     * @param args
      * @throws Exception 
      */
     public static void main(String[] args) throws Exception {
@@ -104,8 +103,6 @@ public class CommandLineInterface {
      * This is what is executed by the main function and the scripts/alab
      * bash script.
      *
-     * @param args
-     * @return
      * @throws java.lang.Exception
      */
     //TODO: better exception handling

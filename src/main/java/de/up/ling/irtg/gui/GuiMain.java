@@ -272,9 +272,6 @@ public class GuiMain extends javax.swing.JFrame {
      * the file does not exist, or if it exists and is to be overwritten.
      * Otherwise it returns null.
      *
-     * @param filter
-     * @param parent
-     * @return
      */
     public static File chooseFileForSaving(FileFilter filter, Component parent) {
         JFileChooser fc = new JFileChooser(previousDirectory);

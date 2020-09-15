@@ -56,8 +56,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * 
      * It will map ids to each other if they correspond to the same object.
      * 
-     * @param other
-     * @return 
      */
     public SignatureMapper getMapperTo(Interner<E> other) {
         if( equals(other)) {
@@ -89,8 +87,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * into "trusting mode" (see {@link #setTrustingMode(boolean) })
      * to skip the exists-check for improved efficiency.
      * 
-     * @param object
-     * @return 
      */
     public int addObject(E object) {
         if (trustingMode) {
@@ -137,9 +133,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * Later additions to the interner are still guaranteed not to
      * collide with your additions.
      * 
-     * @param index
-     * @param object
-     * @return 
      */
     public int addObjectWithIndex(int index, E object) {
         objectToInt.put(object, index);
@@ -156,8 +149,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * Retrieves the numeric ID of the given object.
      * If the object is not known, the method returns 0.
      * 
-     * @param object
-     * @return 
      */
     public int resolveObject(E object) {
         processUncachedObjects();
@@ -168,8 +159,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * Retrieves the object for the given numeric ID.
      * If the ID is not known, the method returns null.
      * 
-     * @param index
-     * @return 
      */
     public E resolveId(int index) {
         return intToObject.get(index);
@@ -179,8 +168,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * Returns an iterable over the objects corresponding
      * to the given collection of numeric IDs.
      * 
-     * @param indices
-     * @return 
      */
     public Iterable<E> resolveIds(Collection<Integer> indices) {
         return Iterables.transform(indices, (Integer f) -> resolveId(f));
@@ -189,8 +176,6 @@ public class Interner<E> implements Serializable, Cloneable {
     /**
      * Checks whether the object is known.
      * 
-     * @param object
-     * @return 
      */
     public boolean isKnownObject(E object) {
         processUncachedObjects();
@@ -200,7 +185,6 @@ public class Interner<E> implements Serializable, Cloneable {
     /**
      * Returns the set of all known objects.
      * 
-     * @return 
      */
     public Set<E> getKnownObjects() {
         processUncachedObjects();
@@ -213,8 +197,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * If "object" was previously unknown to the
      * interner, it is added.
      * 
-     * @param object
-     * @return 
      */
     public E normalize(E object) {
         int id = addObject(object);
@@ -224,7 +206,6 @@ public class Interner<E> implements Serializable, Cloneable {
     /**
      * Returns the set of known numeric IDs.
      * 
-     * @return 
      */
     public IntSet getKnownIds() {
         // no need to processUncachedObjects:
@@ -236,7 +217,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * Returns the numeric ID that will be assigned
      * to the next object.
      * 
-     * @return 
      */
     public int getNextIndex() {
         return nextIndex;
@@ -245,7 +225,6 @@ public class Interner<E> implements Serializable, Cloneable {
     /**
      * Returns the number of known objects.
      * 
-     * @return 
      */
     public int size() {
         return intToObject.size();
@@ -255,7 +234,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * Returns a map from the objects known to the interner to the ids
      * by which the objects are known.
      * 
-     * @return 
      */
     public Object2IntMap<E> getSymbolTable() {
         processUncachedObjects();
@@ -269,8 +247,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * does not exist in the other interner, x[i]
      * will be 0.
      * 
-     * @param other
-     * @return 
      */
     public int[] remap(Interner<E> other) {
         processUncachedObjects();
@@ -310,7 +286,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * This removes from the interner all the objects that do not corresponds to ids
      * in this given set.
      * 
-     * @param retainedIds 
      */
     public void retainOnly(IntSet retainedIds) {
         processUncachedObjects();
@@ -346,7 +321,6 @@ public class Interner<E> implements Serializable, Cloneable {
     /**
      * Returns whether the interner is currently in trusting mode, meaning it assumes
      * that there will be no attempts to add the same object twice.
-     * @return 
      */
     public boolean isTrustingMode() {
         return trustingMode;
@@ -360,7 +334,6 @@ public class Interner<E> implements Serializable, Cloneable {
      * twice, there will be two objects with the same ID. By default, interners
      * start in trusting mode = false.
      *
-     * @param trustingMode
      */
     public void setTrustingMode(boolean trustingMode) {
         if (!trustingMode) {

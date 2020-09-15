@@ -51,8 +51,6 @@ public class BoundaryRepresentation {
     //}
     /**
      * creates a new BoundaryRepresentation for a subgraph T of the graph represented by completeGraphInfo.
-     * @param subgraph
-     * @param completeGraphInfo 
      */
     public BoundaryRepresentation(SGraph subgraph, GraphInfo completeGraphInfo) {
         if (completeGraphInfo.useBytes()) {
@@ -107,14 +105,6 @@ public class BoundaryRepresentation {
     
     /**
      * Creates a new BoundaryRepresentation with the given data.
-     * @param inBoundaryEdges
-     * @param sourceToNodename
-     * @param innerNodeCount
-     * @param sourcesAllBottom
-     * @param isSourceNode
-     * @param edgeID
-     * @param vertexID
-     * @param completeGraphInfo 
      */
     BoundaryRepresentation(IdBasedEdgeSet inBoundaryEdges, int[] sourceToNodename, int innerNodeCount, boolean sourcesAllBottom, BitSet isSourceNode, BitSet isInBoundaryEdge, GraphInfo completeGraphInfo) {
         this.completeGraphInfo = completeGraphInfo;
@@ -131,7 +121,6 @@ public class BoundaryRepresentation {
 
     /**
      * Returns the SGraph corresponding to this BoundaryRepresentation.
-     * @return 
      */
     public SGraph getGraph() {
         SGraph wholeGraph = completeGraphInfo.getSGraph();
@@ -242,7 +231,6 @@ public class BoundaryRepresentation {
 
     /**
      * Returns the in-boundary edges of this BoundaryRepresentation.
-     * @return 
      */
     IdBasedEdgeSet getInBoundaryEdges() {
         return inBoundaryEdges;
@@ -251,8 +239,6 @@ public class BoundaryRepresentation {
     /**
      * Returns true iff the edge with ID edgeID is in the graph represented by this
      * BoundaryRepresentation.
-     * @param edgeID
-     * @return 
      */
     public boolean containsEdge(int edgeID) {
         return inBoundaryEdges.contains(edgeID) || isInternalNode(completeGraphInfo.getEdgeSource(edgeID)) || isInternalNode(completeGraphInfo.getEdgeTarget(edgeID));
@@ -261,8 +247,6 @@ public class BoundaryRepresentation {
     /**
      * returns a new BoundaryRepresentation that is the result of merging this BoundaryRepresentation with other.
      * only call if the merge is actually allowed!
-     * @param other
-     * @return 
      */
     BoundaryRepresentation merge(BoundaryRepresentation other)
     {
@@ -284,9 +268,6 @@ public class BoundaryRepresentation {
     /**
      * Returns a new BoundaryRepresentation that is the result of forgetting sourceToForget in this BoundaryRepresentation.
      * only call if this forget is actually allowed.
-     * @param sourceToForget
-     * @param completeGraphInfo
-     * @return 
      */
     BoundaryRepresentation forget(int sourceToForget, GraphInfo completeGraphInfo)
     {
@@ -321,10 +302,6 @@ public class BoundaryRepresentation {
     /**
      * Returns a new BoundaryRepresentation that is the result of renaming oldSource into newSource in this BoundaryRepresentation.
      * returns null if this is not possible.
-     * @param oldSource
-     * @param newSource
-     * @param allowSelfRename
-     * @return 
      */
     BoundaryRepresentation rename(int oldSource, int newSource, boolean allowSelfRename) {
         if (allowSelfRename && newSource == oldSource) {
@@ -353,10 +330,6 @@ public class BoundaryRepresentation {
     /**
      * Returns a new BoundaryRepresentation that is the result of renaming oldSource into newSource in this BoundaryRepresentation.
      * returns null if this is not possible.
-     * @param oldSource
-     * @param newSource
-     * @param allowSelfRename
-     * @return 
      */
     BoundaryRepresentation addSource(int addAtThisSource, int newSource) {
         if ((newSource <sourceToNode.length && sourceToNode[newSource] != -1)
@@ -383,9 +356,6 @@ public class BoundaryRepresentation {
     /**
      * Returns a new BoundaryRepresentation that is the result of swapping the two given sources.
      * Returns null if one of the sources is not assigned in the graph.
-     * @param oldSource
-     * @param newSource
-     * @return 
      */
     private BoundaryRepresentation swap(int oldSource, int newSource) {
         if (newSource >= sourceToNode.length || oldSource >= sourceToNode.length
@@ -403,8 +373,6 @@ public class BoundaryRepresentation {
 
     /**
      * checks whether this BoundaryRepresentation can be legally merged with other.
-     * @param other
-     * @return 
      */
     boolean isMergeable(BoundaryRepresentation other) {
         if (!hasCommonSourceNode(other)) {
@@ -437,8 +405,6 @@ public class BoundaryRepresentation {
     /**
      * merge check that skips the test whether there is a common source node and whether sources assigned in both graphs are assigned to the same source.
      * to be used when we know these are true before we even check the merge, as is true when using an MPF.
-     * @param other
-     * @return 
      */
     boolean isMergeableMPF(BoundaryRepresentation other) {
         return (commonNodesHaveCommonSourceNames(other)
@@ -478,8 +444,6 @@ public class BoundaryRepresentation {
 
     /**
      * returns true iff vNr is a a non-source node of this subgraph. 
-     * @param vNr
-     * @return
      */
     boolean isInternalNode(int vNr) {
         if (sourcesAllBottom) {
@@ -494,8 +458,6 @@ public class BoundaryRepresentation {
 
     /**
      * returns true iff vNr is a node (source or non-source) of this subgraph.
-     * @param vNr
-     * @return
      */
     boolean contains(int vNr) {
         return (isSource(vNr) || isInternalNode(vNr));
@@ -594,10 +556,6 @@ public class BoundaryRepresentation {
 
     /**
      * returns true iff the given source may be forgotten in this subgraph.
-     * @param source
-     * @param completeGraph
-     * @param completeGraphInfo
-     * @return
      */
     boolean isForgetAllowed(int source) {
 
@@ -621,7 +579,6 @@ public class BoundaryRepresentation {
     /**
      * returns true iff this graph is the complete graph.
      * Checks this via the internally stored GraphInfo, by testing whether all edges incident to source nodes are in the subgraph.
-     * @return
      */
     boolean isCompleteGraph() {
         for (int source = 0; source < sourceToNode.length; source++) {
@@ -639,10 +596,7 @@ public class BoundaryRepresentation {
     /**
      * returns a new BoundaryRepresentation, which is the result of applying the forget, rename or swap operation given by label.
      * returns null if label is not one of the above.
-     * @param label
-     * @param labelId
      * @param allowSelfRename if this is false, then label=r_x_x, where x is a source name, returns null.
-     * @return
      */
     BoundaryRepresentation applyForgetRename(String label, int labelId, boolean allowSelfRename)//maybe this should be in algebra? This should probably be int-based? i.e. make new int-based algebra for BR  -- only call this after checking if forget is allowed!!
     {
@@ -711,9 +665,6 @@ public class BoundaryRepresentation {
     /**
      * given a label, if the label is a forget operation, this returns the indices of all sources that are forgotten if that operation is applied to this BoundaryRepresentation.
      * If the label is merge, this returns null. If it is rename or swap, it returns an empty set. Otherwise (constants or unknown labels), it also returns null.
-     * @param label
-     * @param labelId
-     * @return
      */
     IntSet getForgottenSources(String label, int labelId)//maybe this should be in algebra?
     {
@@ -882,7 +833,6 @@ public class BoundaryRepresentation {
      * Returns all source names in a consecutive string, in order of their
      * index, and thus provides a signature of this BoundaryRepresentation
      * concerning its source names.
-     * @return
      */
     public String allSourcesToString() {
         StringJoiner sj = new StringJoiner("", "", "");
@@ -897,7 +847,6 @@ public class BoundaryRepresentation {
     
     /**
      * Returns all source names used in this subgraph.
-     * @return
      */
     Set<String> getAllSourceNames() {
         Set<String> ret = new HashSet<>();
@@ -913,7 +862,6 @@ public class BoundaryRepresentation {
     private IntList allSources = null;
     /**
      * Returns all sources (in form of their indices) used in this subgraph.
-     * @return
      */
     IntList getAllSources() {
         if (allSources == null) {
@@ -931,7 +879,6 @@ public class BoundaryRepresentation {
     
     /**
      * returns the indices of all in-boundary edges used in this BoundaryRepresentation, in increasing order.
-     * @return
      */
     IntList getSortedInBEdges() {
         if (sortedBoundaryEdges == null) {
@@ -944,7 +891,6 @@ public class BoundaryRepresentation {
 
     /**
      * returns the number of inner nodes (i.e. nodes in the subgraph that are not source nodes)
-     * @return
      */
     int getInnerNodeCount() {
         return innerNodeCount;
@@ -952,7 +898,6 @@ public class BoundaryRepresentation {
 
     /**
      * returns the total number of sources used in this subgraph.
-     * @return
      */
     int getSourceCount() {
         return sourceCount;
@@ -960,7 +905,6 @@ public class BoundaryRepresentation {
 
     /**
      * returns the largest source index used in this subgraph.
-     * @return
      */
     int getLargestSource() {
         return largestSource;

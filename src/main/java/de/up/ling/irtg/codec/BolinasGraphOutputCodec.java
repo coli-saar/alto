@@ -110,7 +110,6 @@ public class BolinasGraphOutputCodec extends OutputCodec<SGraph> {
      * The AMR bank must be in the Alto Corpus format and contain a "graph"
      * and "string" interpretation.
      * 
-     * @param args
      * @throws ParseException
      * @throws IOException 
      * @throws de.up.ling.irtg.corpus.CorpusReadingException 

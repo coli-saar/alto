@@ -222,9 +222,6 @@ class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
 
     /**
      *
-     * @param labelId
-     * @param parentState
-     * @return
      */
     public Iterable<Rule> getRules(final int labelId, final int parentState) {
         processNewTopDownRules();
@@ -243,9 +240,6 @@ class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
 
     /**
      *
-     * @param label
-     * @param parent
-     * @return
      */
     public boolean useCachedRule(int label, int parent) {
         processNewTopDownRules();
