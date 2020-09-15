@@ -5,7 +5,7 @@
 
 package de.up.ling.irtg.automata
 
-
+import de.up.ling.irtg.semiring.AdditiveViterbiSemiring
 import org.junit.*
 import java.util.*
 import java.util.function.Consumer
@@ -580,6 +580,33 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         Tree t = pt("f(a,a)");
         
         assert Math.abs(auto.getWeight(t)) < 0.001;
+    }
+
+    @Test
+    public void testSetWeights() {
+        setAutomaton("p0! -> f(x) [0.5] \n x -> y [0.5]")
+        // TODO is there a difference between obtaining rules bottom up and top down?
+        Map<String,Double> newWeights = new HashMap<>();
+        newWeights.put("f", 2.0d)
+        newWeights.put("y", 2.0d)
+        auto.setWeights(newWeights, true)
+        for (Rule r: auto.getRuleSet()) {
+            assertEquals(r.weight, 2.0d, 0.001d)
+        }
+    }
+
+    @Test
+    public void testAdditiveSemiring() {
+        setAutomaton("p0! -> f(x) [1.0] \n x -> g(y) [0.5] \n y -> z [0.1] \n x -> a [0.5]")
+	// Normal viterbi with multiplication should choose the shortest tree here
+        def t = auto.viterbi()
+        assertEquals(t.toString(), "f(a)")
+        assertEquals(0.5, auto.getWeight(t), 0.001d)
+	// but additive viterbi should choose the larger tree
+        t = auto.viterbi(AdditiveViterbiSemiring.INSTANCE)
+        assertEquals(t.toString(), "f(g(z))")
+	// TODO the getWeight method still has multiplication hard-coded
+        assertEquals(0.05, auto.getWeight(t), 0.001d)
     }
     
     @Test
