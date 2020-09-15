@@ -950,8 +950,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         double selectWeight = rnd.nextDouble() * totalWeight;
         double cumulativeWeight = 0;
 
-        for (int i = 0; i < rulesHere.size(); i++) {
-            Rule rule = rulesHere.get(i);
+        for (Rule rule : rulesHere) {
             cumulativeWeight += rule.getWeight();
 
             if (cumulativeWeight >= selectWeight) {
@@ -998,8 +997,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         double selectWeight = rnd.nextDouble() * inside.get(state);
         double cumulativeWeight = 0;
 
-        for (int i = 0; i < rulesHere.size(); i++) {
-            Rule rule = rulesHere.get(i);
+        for (Rule rule : rulesHere) {
             double insideChildren = Util.mult(Arrays.stream(rule.getChildren()).mapToDouble(inside::get));
 
             cumulativeWeight += rule.getWeight() * insideChildren;
