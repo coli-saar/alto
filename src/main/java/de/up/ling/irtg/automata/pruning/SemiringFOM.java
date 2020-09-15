@@ -69,6 +69,6 @@ public class SemiringFOM implements FOM {
     
     @OperationAnnotation(code = "insideFom")
     public static FOM createInsideFom() {
-        return new SemiringFOM(new DoubleArithmeticSemiring());
+        return new SemiringFOM(DoubleArithmeticSemiring.INSTANCE);
     }
 }

@@ -665,7 +665,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * automaton is bottom-up deterministic.
      */
     public long countTrees() {
-        Map<Integer, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), (Rule rule) -> 1L);
+        Map<Integer, Long> map = evaluateInSemiring(LongArithmeticSemiring.INSTANCE, (Rule rule) -> 1L);
 
         long ret = 0L;
         for (int f : getFinalStates()) {
@@ -679,7 +679,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * state.
      */
     public Int2ObjectMap<Double> inside() {
-        return evaluateInSemiring(new DoubleArithmeticSemiring(), Rule::getWeight);
+	return evaluateInSemiring(DoubleArithmeticSemiring.INSTANCE, Rule::getWeight);
     }
 
     /**
@@ -687,7 +687,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * state.
      */
     public Int2ObjectMap<Double> logInside() {
-        return evaluateInSemiring(new LogDoubleArithmeticSemiring(), (Rule rule) -> Math.log(rule.getWeight()));
+        return evaluateInSemiring(LogDoubleArithmeticSemiring.INSTANCE, (Rule rule) -> Math.log(rule.getWeight()));
     }
 
     /**
@@ -697,7 +697,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param inside a map representing the inside probability of each state.
      */
     public Map<Integer, Double> outside(final Map<Integer, Double> inside) {
-        return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<Double>() {
+        return evaluateInSemiringTopDown(DoubleArithmeticSemiring.INSTANCE, new RuleEvaluatorTopDown<Double>() {
                                      @Override
                                      public Double initialValue() {
                                          return 1.0;
@@ -723,7 +723,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param logInside a map representing the inside logprobability of each state.
      */
     public Map<Integer, Double> logOutside(final Map<Integer, Double> logInside) {
-        return evaluateInSemiringTopDown(new LogDoubleArithmeticSemiring(), new RuleEvaluatorTopDown<Double>() {
+        return evaluateInSemiringTopDown(LogDoubleArithmeticSemiring.INSTANCE, new RuleEvaluatorTopDown<Double>() {
             @Override
             public Double initialValue() {
                 return 0.0;
@@ -749,7 +749,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     @OperationAnnotation(code = "viterbi")
     public Tree<String> viterbi() {
-        WeightedTree raw = viterbiRaw();
+        return viterbi(ViterbiWithBackpointerSemiring.INSTANCE);
+    }
+
+    public Tree<String> viterbi(Semiring<Pair<Double, Rule>>  semiring) {
+        WeightedTree raw = viterbiRaw(semiring);
 
         if (raw == null) {
             return null;
@@ -794,11 +798,15 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * themselves. It also returns the weight of the top-ranked tree.
      */
     public WeightedTree viterbiRaw() {
+        return viterbiRaw(ViterbiWithBackpointerSemiring.INSTANCE);
+    }
+
+    public WeightedTree viterbiRaw(Semiring<Pair<Double, Rule>>  semiring) {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
 
         Int2ObjectMap<Pair<Double, Rule>> map
-                = evaluateInSemiring2(new ViterbiWithBackpointerSemiring(),
-                                      rule -> new Pair(rule.getWeight(), rule));
+                = evaluateInSemiring2(semiring,
+                                      rule -> new Pair<>(rule.getWeight(), rule));
 
         // find final state with highest weight
         int bestFinalState = -1;
@@ -2600,7 +2608,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * labels which are numeric symbol IDs, which represent node labels
      * according to the automaton's signature. They can be resolved to
      * string-labeled trees using
-     * {@link Signature#resolve(de.up.ling.tree.Tree)}.
+     * {@link Signature#resolve(Tree)}.
      *
      */
     public Iterator<WeightedTree> sortedLanguageIterator() {
@@ -2690,7 +2698,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Creates a new rule. Note that this method only creates the rule object;
      * it does not add it to the automaton. For a more convenient (if slightly
-     * less efficient) alternative, consider {@link #createRule(java.lang.Object, java.lang.String, Object[], double)
+     * less efficient) alternative, consider {@link #createRule(Object, String, Object[], double)
      * }.
      *
      */
@@ -2702,7 +2710,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Creates a new rule. Note that this method only creates the rule object;
      * it does not add it to the automaton. For a more convenient (if slightly
      * less efficient) alternative, consider
-     * {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double)}.
+     * {@link #createRule(Object, String, List, double)}.
      *
      */
     public Rule createRule(int parent, int label, List<Integer> children, double weight) {
@@ -3114,7 +3122,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         if (iterations < 0 && threshold <= 0) {
             throw new IllegalArgumentException("EM training needs either a valid threshold or a valid number of iterations.");
         }
-        LogDoubleArithmeticSemiring semiring = new LogDoubleArithmeticSemiring();
+        LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
         Map<Rule, Double> globalRuleCount = new HashMap<>();
         // Threshold parameters
         if (iterations < 0) {
@@ -3214,7 +3222,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     private double estep(List<TreeAutomaton<?>> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule,
                         ProgressListener listener, int iteration, boolean debug) {
-        LogDoubleArithmeticSemiring semiring = new LogDoubleArithmeticSemiring();
+        LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
 
         double logLikelihood = 0.0;
 

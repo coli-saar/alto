@@ -13,7 +13,11 @@ import de.up.ling.irtg.automata.Rule;
  * @author koller
  */
 public class ViterbiWithBackpointerSemiring implements Semiring<Pair<Double, Rule>> {
-    private static final double ZERO = Double.NEGATIVE_INFINITY;
+    
+    public static final ViterbiWithBackpointerSemiring INSTANCE = new ViterbiWithBackpointerSemiring();
+    
+    protected static final double ZERO = Double.NEGATIVE_INFINITY;
+    protected static final Pair<Double, Rule> ZERO_PAIR = new Pair<>(ZERO, null);
 
     // max
     public Pair<Double, Rule> add(Pair<Double, Rule> x, Pair<Double, Rule> y) {
@@ -38,7 +42,7 @@ public class ViterbiWithBackpointerSemiring implements Semiring<Pair<Double, Rul
 
     @Override
     public Pair<Double, Rule> zero() {
-        return new Pair<>(ZERO, null);
+        return ZERO_PAIR;
     }
 
 }

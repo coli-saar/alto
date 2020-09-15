@@ -15,6 +15,8 @@ package de.up.ling.irtg.semiring;
  */
 public class LogDoubleArithmeticSemiring implements Semiring<Double> {
 
+    public static LogDoubleArithmeticSemiring INSTANCE = new LogDoubleArithmeticSemiring();
+
     /**
      * Approximately computes log(exp(x) + exp(y)).
      *

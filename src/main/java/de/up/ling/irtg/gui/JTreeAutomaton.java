@@ -552,7 +552,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                                          break;
 
                                                      case BEAM_SEARCH:
-                                                         pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), jpd.getPruningThreshold());
+                                                         pp = new QuotientPruningPolicy(new SemiringFOM(DoubleArithmeticSemiring.INSTANCE), jpd.getPruningThreshold());
                                                          break;
 
                                                      default:

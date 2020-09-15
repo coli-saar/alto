@@ -10,6 +10,8 @@ package de.up.ling.irtg.semiring;
  */
 public class LongArithmeticSemiring implements Semiring<Long> {
 
+    public static LongArithmeticSemiring INSTANCE = new LongArithmeticSemiring();
+
     public Long add(Long x, Long y) {
         if (x == infinity() || y == infinity()) {
             return infinity();

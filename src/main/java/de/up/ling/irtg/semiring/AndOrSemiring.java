@@ -10,6 +10,9 @@ package de.up.ling.irtg.semiring;
  * @author koller
  */
 public class AndOrSemiring implements Semiring<Boolean> {
+
+    public static AndOrSemiring INSTANCE = new AndOrSemiring();
+
     public Boolean add(Boolean x, Boolean y) {
         return x || y;
     }

@@ -10,6 +10,8 @@ package de.up.ling.irtg.semiring;
  */
 public class DoubleArithmeticSemiring implements Semiring<Double> {
     
+    public static DoubleArithmeticSemiring INSTANCE = new DoubleArithmeticSemiring();
+
     public Double add(Double x, Double y) {
         if (x == infinity() || y == infinity()) {
             return infinity();
