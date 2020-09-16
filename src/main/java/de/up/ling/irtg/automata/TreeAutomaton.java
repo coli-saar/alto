@@ -1435,6 +1435,10 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Intersects this automaton with another one. This is a default
      * implementation, which currently performs bottom-up intersection.
      *
+     * All intersection methods multiply rule weights by arithmetic multiplication.
+     * Keep this in mind when intersecting automata that have weights != 1.0 on
+     * both sides.
+     *
      * @param <OtherState> the state type of the other automaton.
      * @param other the other automaton.
      * @return an automaton representing the intersected language.
