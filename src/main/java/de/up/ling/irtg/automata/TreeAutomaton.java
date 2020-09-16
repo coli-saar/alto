@@ -537,6 +537,27 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return ruleStore.getAllRulesTopDown();
     }
 
+    /**
+     * Sets all weights of the automaton rules to the ones supplied by ruleWeights.
+     * Calling this function makes all rules explicit.
+     * @param ruleWeights A map from rule labels to weights
+     * @param enforceCompleteUpdate enforces that *all* rules of the automaton are updated
+     */
+    public void setWeights(Map<String, Double> ruleWeights, boolean enforceCompleteUpdate) {
+        for (Rule rule: getAllRulesTopDown()) {
+            String label = rule.getLabel(this);
+            Double newWeight = ruleWeights.get(label);
+            if (newWeight == null) {
+                if (enforceCompleteUpdate) {
+                    throw new RuntimeException("No weight supplied for " + label);
+                } else {
+                    continue;
+                }
+            }
+            rule.setWeight(newWeight);
+        }
+    }
+
 //    /**
 //     * Returns an iterable over the rules of this automaton. Each request to
 //     * provide an iterator returns a fresh instance of {@link #getRuleIterator()
