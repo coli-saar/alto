@@ -61,8 +61,11 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         PcfgAsIrtgLexer l = new PcfgAsIrtgLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         PcfgAsIrtgParser p = new PcfgAsIrtgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {

@@ -38,8 +38,11 @@ public class RdgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         RdgLexer l = new RdgLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         RdgParser p = new RdgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         
         try {

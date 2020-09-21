@@ -6,12 +6,12 @@
 package de.saar.coli.featstruct;
 
 import de.up.ling.irtg.codec.CodecUtilities;
-import de.up.ling.irtg.codec.ExceptionErrorStrategy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.up.ling.irtg.codec.ThrowingErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
@@ -26,9 +26,11 @@ class FsParser {
 
     public FeatureStructure parse(InputStream is) throws IOException, FsParsingException {
         FeatStructLexer l = new FeatStructLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         FeatStructParser p = new FeatStructParser(new CommonTokenStream(l));
-
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         FeatStructParser.FeatstructContext result = p.featstruct();

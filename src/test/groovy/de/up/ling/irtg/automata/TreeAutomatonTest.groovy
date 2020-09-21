@@ -608,6 +608,15 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
 	// TODO the getWeight method still has multiplication hard-coded
         assertEquals(0.05, auto.getWeight(t), 0.001d)
     }
+
+    @Test
+    public void testNegativeWeights() {
+        try {
+            setAutomaton("p0! -> f(x) [-1.0] \n x -> g(y) [-0.5] \n y -> z [0.1] \n x -> a [0.5]")
+        } catch (Exception e) {
+            assertTrue(e.toString(),false)
+        }
+    }
     
     @Test
     public void testRun1() {

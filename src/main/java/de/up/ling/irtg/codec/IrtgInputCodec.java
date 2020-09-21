@@ -68,8 +68,11 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws IOException, CodecParseException {
         IrtgLexer l = new IrtgLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         IrtgParser p = new IrtgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         automaton = new ConcreteTreeAutomaton<>();

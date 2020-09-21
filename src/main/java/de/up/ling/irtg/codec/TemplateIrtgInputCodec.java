@@ -48,8 +48,11 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
     @Override
     public TemplateInterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         TemplateIrtgLexer l = new TemplateIrtgLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         TemplateIrtgParser p = new TemplateIrtgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         tirtg = new TemplateInterpretedTreeAutomaton();

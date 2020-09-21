@@ -11,7 +11,7 @@ NAME: [a-zA-Z_*$@+] ([a-zA-Z0-9_<>*$@+/.-]*);
 QUOTED_NAME: ['] (~['])* ['];
 DOUBLE_QUOTED_NAME: ["] (~["])* ["];
 VARIABLE : [?] [a-zA-Z0-9_-]*;
-NUMBER : [0-9.] ([0-9.eE-]*);
+NUMBER : '-'? [0-9.] ([0-9.eE-]*);
 
 FIN_MARK : '!' | '\u00b0';
 ARROW    : '->';
@@ -30,8 +30,11 @@ COMMENT
         ) -> skip
     ;
 
+//Two intended top-level rules:
+// 1. an interpreted regular tree grammar
 irtg       : interpretation_decl+ feature_decl* irtg_rule+;
-
+// 2. a tree automaton
+fta        : auto_rule+;
 
 interpretation_decl: INTERPRETATION name ':' name;
 

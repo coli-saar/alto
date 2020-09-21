@@ -136,8 +136,11 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         BolinasHrgLexer l = new BolinasHrgLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         BolinasHrgParser p = new BolinasHrgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         BolinasHrgParser.HrgContext result = p.hrg();

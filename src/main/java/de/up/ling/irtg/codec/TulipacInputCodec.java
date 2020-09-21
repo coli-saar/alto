@@ -52,8 +52,11 @@ public class TulipacInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private void parseFile(InputStream is) throws CodecParseException, IOException {
         TulipacLexer l = new TulipacLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         TulipacParser p = new TulipacParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         l.removeErrorListeners();

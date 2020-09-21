@@ -55,8 +55,11 @@ public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
     @Override
     public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         BottomUpTreeAutomatonLexer l = new BottomUpTreeAutomatonLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         BottomUpTreeAutomatonParser p = new BottomUpTreeAutomatonParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         
         automaton = new ConcreteTreeAutomaton<>();

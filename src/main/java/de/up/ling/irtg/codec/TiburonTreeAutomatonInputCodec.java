@@ -7,11 +7,6 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.CodecMetadata;
-import de.up.ling.irtg.codec.CodecParseException;
-import de.up.ling.irtg.codec.CodecUtilities;
-import de.up.ling.irtg.codec.ExceptionErrorStrategy;
-import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.tiburon_treeautomaton.TiburonTreeAutomatonLexer;
 import de.up.ling.irtg.codec.tiburon_treeautomaton.TiburonTreeAutomatonParser;
 import java.io.IOException;
@@ -55,8 +50,11 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     @Override
     public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         TiburonTreeAutomatonLexer l = new TiburonTreeAutomatonLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         TiburonTreeAutomatonParser p = new TiburonTreeAutomatonParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         
         automaton = new ConcreteTreeAutomaton<>();

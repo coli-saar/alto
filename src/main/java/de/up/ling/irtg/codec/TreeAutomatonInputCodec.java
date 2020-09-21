@@ -7,8 +7,8 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.treeautomaton.TreeAutomatonLexer;
-import de.up.ling.irtg.codec.treeautomaton.TreeAutomatonParser;
+import de.up.ling.irtg.codec.irtg.IrtgLexer;
+import de.up.ling.irtg.codec.irtg.IrtgParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -45,17 +45,20 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
 
     @Override
     public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
-        TreeAutomatonLexer l = new TreeAutomatonLexer(CharStreams.fromStream(is));
-        TreeAutomatonParser p = new TreeAutomatonParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        IrtgLexer l = new IrtgLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
+        IrtgParser p = new IrtgParser(new CommonTokenStream(l));
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         
         automaton = new ConcreteTreeAutomaton<>();
 
         try {
-            TreeAutomatonParser.FtaContext result = p.fta();
+            IrtgParser.FtaContext result = p.fta();
 
-            for (TreeAutomatonParser.Auto_ruleContext ruleContext : result.auto_rule()) {
+            for (IrtgParser.Auto_ruleContext ruleContext : result.auto_rule()) {
                 autoRule(ruleContext);
             }
 
@@ -65,7 +68,7 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         }
     }
 
-    private String autoRule(TreeAutomatonParser.Auto_ruleContext auto_rule) {
+    private String autoRule(IrtgParser.Auto_ruleContext auto_rule) {
         String parent = state(auto_rule.state());
         List<String> children = statelist(auto_rule.state_list());
         String label = name(auto_rule.name());
@@ -76,11 +79,11 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         return label;
     }
 
-    private List<String> statelist(TreeAutomatonParser.State_listContext rule_args) {
+    private List<String> statelist(IrtgParser.State_listContext rule_args) {
         List<String> ret = new ArrayList<>();
 
         if (rule_args != null) {
-            for (TreeAutomatonParser.StateContext sc : rule_args.state()) {
+            for (IrtgParser.StateContext sc : rule_args.state()) {
                 ret.add(state(sc));
             }
         }
@@ -88,7 +91,7 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         return ret;
     }
 
-    private String state(TreeAutomatonParser.StateContext sc) {
+    private String state(IrtgParser.StateContext sc) {
         String ret = name(sc.name());
         int state = automaton.addState(ret);
 
@@ -99,15 +102,15 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         return ret;
     }
 
-    private String name(TreeAutomatonParser.NameContext nc) {
-        boolean isQuoted = (nc instanceof TreeAutomatonParser.QUOTEDContext);
+    private String name(IrtgParser.NameContext nc) {
+        boolean isQuoted = (nc instanceof IrtgParser.QUOTEDContext);
 
         assert !isQuoted || nc.getText().startsWith("'") || nc.getText().startsWith("\"") : "invalid symbol: -" + nc.getText() + "- " + nc.getClass();
 
         return CodecUtilities.extractName(nc, isQuoted);
     }
 
-    private double weight(TreeAutomatonParser.WeightContext weight) {
+    private double weight(IrtgParser.WeightContext weight) {
         if (weight == null) {
             return 1;
         } else {

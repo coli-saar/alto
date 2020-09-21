@@ -47,8 +47,11 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
     @Override
     public Tree<String> read(InputStream is) throws CodecParseException, IOException {
         PtbTreeLexer l = new PtbTreeLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         PtbTreeParser p = new PtbTreeParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {
@@ -82,8 +85,11 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
      */
     public List<Tree<String>> readCorpus(InputStream is) throws CodecParseException, IOException {
         PtbTreeLexer l = new PtbTreeLexer(CharStreams.fromStream(is));
+        l.removeErrorListeners();
+        l.addErrorListener(ThrowingErrorListener.INSTANCE);
         PtbTreeParser p = new PtbTreeParser(new CommonTokenStream(l));
-        p.setErrorHandler(new ExceptionErrorStrategy());
+        p.removeErrorListeners();
+        p.addErrorListener(ThrowingErrorListener.INSTANCE);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {
