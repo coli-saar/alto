@@ -13,7 +13,7 @@ public class DoubleArithmeticSemiring implements Semiring<Double> {
     public static DoubleArithmeticSemiring INSTANCE = new DoubleArithmeticSemiring();
 
     public Double add(Double x, Double y) {
-        if (x == infinity() || y == infinity()) {
+        if (x.equals(infinity()) || y.equals(infinity())) {
             return infinity();
         } else {
             return x + y;
@@ -32,4 +32,8 @@ public class DoubleArithmeticSemiring implements Semiring<Double> {
         return 0.0;
     }
     
+    public Double one() {
+        return 1.0;
+    }
+
 }

@@ -13,7 +13,7 @@ public class LongArithmeticSemiring implements Semiring<Long> {
     public static LongArithmeticSemiring INSTANCE = new LongArithmeticSemiring();
 
     public Long add(Long x, Long y) {
-        if (x == infinity() || y == infinity()) {
+        if (x.equals(infinity()) || y.equals(infinity())) {
             return infinity();
         } else {
             return x + y;
@@ -30,5 +30,9 @@ public class LongArithmeticSemiring implements Semiring<Long> {
 
     public Long zero() {
         return 0L;
+    }
+
+    public Long one() {
+        return 1L;
     }
 }

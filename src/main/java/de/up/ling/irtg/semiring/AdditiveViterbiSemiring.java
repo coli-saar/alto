@@ -13,6 +13,12 @@ public class AdditiveViterbiSemiring extends ViterbiWithBackpointerSemiring {
 
     @Override
     public Pair<Double, Rule> multiply(Pair<Double, Rule> x, Pair<Double, Rule> y) {
+        if (x == ONE_PAIR) {
+            return y;
+        }
+        if (y == ONE_PAIR) {
+            return x;
+        }
         if (x.left == ZERO || y.left == ZERO) {
             // ensure that zero * x = x * zero = zero;
             // otherwise could get zero * zero = +Infinity

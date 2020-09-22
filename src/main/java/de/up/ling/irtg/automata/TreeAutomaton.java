@@ -2039,6 +2039,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * which specify node labels according to the automaton's signature.
      */
     public double getWeightRaw(final Tree<Integer> tree) {
+        return getWeightRaw(tree, DoubleArithmeticSemiring.INSTANCE);
+    }
+    public double getWeightRaw(final Tree<Integer> tree, Semiring<Double> semiring) {
         final List<Integer> children = new ArrayList<>();
 
         Set<Pair<Integer, Double>> weights = tree.dfs(new TreeVisitor<Integer, Void, Set<Pair<Integer, Double>>>() {
@@ -2056,16 +2059,16 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
                     while (it.hasNext()) {
                         List<Pair<Integer, Double>> pairs = it.next();
-                        double childWeights = 1;
+                        double childWeights = semiring.one();
                         children.clear();
 
                         for (Pair<Integer, Double> pair : pairs) {
-                            childWeights *= pair.right;
+                            childWeights = semiring.multiply(childWeights, pair.right);
                             children.add(pair.left);
                         }
 
                         for (Rule rule : getRulesBottomUp(f, children)) {
-                            ret.add(new Pair<>(rule.getParent(), childWeights * rule.getWeight()));
+                            ret.add(new Pair<>(rule.getParent(), semiring.multiply(childWeights, rule.getWeight())));
                         }
                     }
                 }
@@ -2098,10 +2101,13 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     @OperationAnnotation(code = "getWeight")
     public double getWeight(final Tree<String> tree) {
+        return getWeight(tree, DoubleArithmeticSemiring.INSTANCE);
+    }
+    public double getWeight(final Tree<String> tree, Semiring<Double> semiring) {
         if (tree == null) {
             return 0;
         } else {
-            return getWeightRaw(getSignature().addAllSymbols(tree));
+            return getWeightRaw(getSignature().addAllSymbols(tree), semiring);
         }
     }
 

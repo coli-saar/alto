@@ -293,6 +293,10 @@ public class SurfaceRealizer {
             return Integer.MAX_VALUE;
         }
 
+        @Override
+        public Integer one() {
+            return 0;
+        }
     }
 
     private static void cmdlineUsage(String errorMessage) {

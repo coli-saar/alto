@@ -63,6 +63,8 @@ public class LogDoubleArithmeticSemiring implements Semiring<Double> {
         return Double.NEGATIVE_INFINITY;
     }
 
-
+    public Double one() {
+        return 0.0;
+    }
 
 }

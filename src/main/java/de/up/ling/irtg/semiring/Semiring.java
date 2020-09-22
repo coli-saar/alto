@@ -21,4 +21,5 @@ public interface Semiring<E> {
     E add(E x, E y);
     E multiply(E x, E y);
     E zero();     // a value such that zero + x = x for all x
+    E one();
 }

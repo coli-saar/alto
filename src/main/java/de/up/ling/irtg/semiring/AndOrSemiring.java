@@ -29,4 +29,8 @@ public class AndOrSemiring implements Semiring<Boolean> {
         return false;
     }
 
+    public Boolean one() {
+        return true;
+    }
+
 }

@@ -18,6 +18,7 @@ public class ViterbiWithBackpointerSemiring implements Semiring<Pair<Double, Rul
     
     protected static final double ZERO = Double.NEGATIVE_INFINITY;
     protected static final Pair<Double, Rule> ZERO_PAIR = new Pair<>(ZERO, null);
+    protected static final Pair<Double, Rule> ONE_PAIR = new Pair<>(1.0, null);
 
     // max
     public Pair<Double, Rule> add(Pair<Double, Rule> x, Pair<Double, Rule> y) {
@@ -31,6 +32,12 @@ public class ViterbiWithBackpointerSemiring implements Semiring<Pair<Double, Rul
     // Multiply. Rule backpointer is passed on from first argument.
     @Override
     public Pair<Double, Rule> multiply(Pair<Double, Rule> x, Pair<Double, Rule> y) {
+        if (x == ONE_PAIR) {
+            return y;
+        }
+        if (y == ONE_PAIR) {
+            return x;
+        }
         if (x.left == ZERO || y.left == ZERO) {
             // ensure that zero * x = x * zero = zero;
             // otherwise could get zero * zero = +Infinity
@@ -45,4 +52,8 @@ public class ViterbiWithBackpointerSemiring implements Semiring<Pair<Double, Rul
         return ZERO_PAIR;
     }
 
+    @Override
+    public Pair<Double, Rule> one() {
+        return ONE_PAIR;
+    }
 }

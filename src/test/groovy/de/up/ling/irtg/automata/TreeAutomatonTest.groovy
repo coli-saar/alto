@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata
 
 import de.up.ling.irtg.semiring.AdditiveViterbiSemiring
+import de.up.ling.irtg.semiring.LogDoubleArithmeticSemiring
 import org.junit.*
 import java.util.*
 import java.util.function.Consumer
@@ -598,15 +599,14 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     @Test
     public void testAdditiveSemiring() {
         setAutomaton("p0! -> f(x) [1.0] \n x -> g(y) [0.5] \n y -> z [0.1] \n x -> a [0.5]")
-	// Normal viterbi with multiplication should choose the shortest tree here
+        // Normal viterbi with multiplication should choose the shortest tree here
         def t = auto.viterbi()
         assertEquals(t.toString(), "f(a)")
         assertEquals(0.5, auto.getWeight(t), 0.001d)
-	// but additive viterbi should choose the larger tree
+        // but additive viterbi should choose the larger tree
         t = auto.viterbi(AdditiveViterbiSemiring.INSTANCE)
         assertEquals(t.toString(), "f(g(z))")
-	// TODO the getWeight method still has multiplication hard-coded
-        assertEquals(0.05, auto.getWeight(t), 0.001d)
+        assertEquals(1.6, auto.getWeight(t, LogDoubleArithmeticSemiring.INSTANCE), 0.001d)
     }
 
     @Test
