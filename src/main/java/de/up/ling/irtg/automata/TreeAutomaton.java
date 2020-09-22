@@ -2391,6 +2391,40 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
+     * Evaluates the states of a tree automaton in a semiring. The method returns an array whose
+     * i-th entry is the semiring value for state i. It assumes that the rules are presented in
+     * an order that guarantees that if the rule has child state i, then all rules with
+     * parent state i occur earlier in the list (i.e. bottom-up order). If a state is not
+     * reachable bottom-up, then its semiring value will be semiring zero.
+     *
+     * @param semiring
+     * @param evaluator
+     * @param rulesInBottomUpOrder
+     * @param <E>
+     * @return
+     */
+    public static <E> E[] evaluateRuleListInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator, List<Rule> rulesInBottomUpOrder, int maxStateIndexPlusOne) {
+        E[] ret = (E[]) new Object[maxStateIndexPlusOne];
+
+        for( int i = 0; i < ret.length; i++ ) {
+            ret[i] = semiring.zero();
+        }
+
+        for( Rule rule : rulesInBottomUpOrder ) {
+            E valueThisRule = evaluator.evaluateRule(rule);
+
+            for (int child : rule.getChildren()) {
+                valueThisRule = semiring.multiply(valueThisRule, ret[child]);
+            }
+
+            E oldValue = ret[rule.getParent()];
+            ret[rule.getParent()] = semiring.add(oldValue, valueThisRule);
+        }
+
+        return ret;
+    }
+
+    /**
      * Evaluates all states of the automaton bottom-up in a semiring. The
      * evaluation of a state is the semiring sum of semiring zero plus the
      * evaluations of all rules in which it is the parent. The evaluation of a
