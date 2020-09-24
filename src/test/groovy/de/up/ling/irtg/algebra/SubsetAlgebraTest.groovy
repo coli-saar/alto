@@ -66,13 +66,23 @@ class SubsetAlgebraTest {
         BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'rabbit(r1) + sleep(e,r1)')"))
         assertThat(a.toSet(result), nullValue())
     }
+
+    @Test
+    public void testEvaluateExtendingUnion() {
+        Set s = SubsetAlgebra.parseStringSet("a+b+c")
+        SubsetAlgebra<String> a = new SubsetAlgebra(s);
+        BitSet result = a.evaluate(TreeParser.parse("eunion(a+b+c,b+c)"))
+        assertThat(a.toSet(result), nullValue())
+
+        result = a.evaluate(TreeParser.parse("eunion(a+b,b+c)"))
+        assertThat(a.toSet(result), is(s))
+    }
     
     @Test(expected=RuntimeException)
     public void testEvaluateNotElement() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
         SubsetAlgebra<String> a = new SubsetAlgebra(s)
         BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r2)')"))
-//        assertThat(result, nullValue())
     }
     
     @Test

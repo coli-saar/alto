@@ -31,8 +31,9 @@ import java.util.Set;
  * A simple algebra performing union and disjoint union on sets.
  *
  * Sets are represented as elem1+elem2+elem3 and can be combined
- * using either dunion (disjoint) or union (non-disjoint).
+ * using eunion (extending union) dunion (disjoint) or union (non-disjoint).
  * Combining two non-disjoint sets using dunion results in the empty set.
+ * Combining a set with a subset of itself with eunion results in an empty set.
  */
 public class SubsetAlgebra extends Algebra<BitSet> {
 
@@ -42,6 +43,10 @@ public class SubsetAlgebra extends Algebra<BitSet> {
 
     public static final String DISJOINT_UNION = "dunion";
 	public static final String UNION = "union";
+    /** Extending Union.  returns the union if both sets contribute to the result
+     * (i.e. none is a superset of the other)
+     */
+	public static final String EUNION = "eunion";
     public static final String EMPTYSET = "EMPTYSET";
     private static final String SEPARATOR_RE = "\\s*\\+\\s*";
     public static final String SEPARATOR = " + ";
@@ -98,6 +103,23 @@ public class SubsetAlgebra extends Algebra<BitSet> {
                 ret.or(bs);
             }
             return ret;
+        }
+
+        if (EUNION.equals(label)) {
+            assert childrenValues.size() == 2;
+            BitSet s1 = childrenValues.get(0);
+            BitSet s2 = childrenValues.get(1);
+            if (s1 == null || s2 == null) {
+                return null;
+            }
+            BitSet result = new BitSet();
+            result.or(s1);
+            result.or(s2);
+            if (result.cardinality() == s1.cardinality() || result.cardinality() == s2.cardinality()) {
+                // s1 was a superset of s2 or vice versa
+                return null;
+            }
+            return result;
         }
 
         if (DISJOINT_UNION.equals(label)) {
