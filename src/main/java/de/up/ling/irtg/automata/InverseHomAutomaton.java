@@ -64,20 +64,30 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
             System.err.println("Warning: Using InverseHomAutomaton, which might contain bugs.");
             usageWarningShown = true;
         }
-        this.rhsAutomaton = rhsAutomaton;
+
+        // Below, we need to enumerate the states of the rhsAutomaton. This can
+        // only be done easily if it supports top-down queries. If it does not,
+        // we convert it into a concrete tree automaton here.  This is costly,
+        // but InverseHomAutomaton needs to be fixed anyway.
+        if( rhsAutomaton.supportsTopDownQueries() ) {
+            this.rhsAutomaton = rhsAutomaton;
+        } else {
+            this.rhsAutomaton = rhsAutomaton.asConcreteTreeAutomatonBottomUp();
+        }
+
         this.hom = hom;
 
-        labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
+        labelsRemap = hom.getTargetSignature().remap(this.rhsAutomaton.getSignature());
 
         // TODO replace by sig mapper
         remappingHomSymbolToIntFunction = f -> labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().applyAsInt(f)];
 
         computedLabels = new HashSet<>();
 
-        this.stateInterner = (Interner) rhsAutomaton.stateInterner;
-        this.allStates = new IntOpenHashSet(rhsAutomaton.getAllStates());
+        this.stateInterner = (Interner) this.rhsAutomaton.stateInterner;
+        this.allStates = new IntOpenHashSet(this.rhsAutomaton.getAllStates());
 
-        finalStates.addAll(rhsAutomaton.getFinalStates());
+        finalStates.addAll(this.rhsAutomaton.getFinalStates());
         failStateId = addState(FAIL_STATE);
 
         // Record a provisional set of states, which is sure to be a
@@ -85,7 +95,7 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         // This is necessary to avoid calling getAllStates in getRulesTopDown
         // (i.e. at a time before the automaton has been made explicit).
         provisionalStateSet = new IntOpenHashSet();
-        provisionalStateSet.addAll(rhsAutomaton.getAllStates());
+        provisionalStateSet.addAll(this.rhsAutomaton.getAllStates());
         provisionalStateSet.add(failStateId);
     }
 
