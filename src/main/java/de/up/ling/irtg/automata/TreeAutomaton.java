@@ -419,13 +419,13 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Returns the IDs of all states in this automaton. If the automaton is a
      * lazy implementation, it is required to make all rules explicit before
      * returning, to the extent that it is necessary to list all states. This
-     * may be slow.
+     * may be slow, and currently only works for automata that support
+     * top-down queries.
      *
      * @return
      */
     public IntSet getAllStates() {
         makeAllRulesExplicit();
-//        return allStates;
         return stateInterner.getKnownIds();
     }
 
@@ -1364,7 +1364,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Computes all rules in this automaton and stores them in the cache. This
      * only makes a difference for lazy automata, in which rules are only
      * computed by need. After calling this function, it is guaranteed that all
-     * rules are in the cache.
+     * rules are in the cache.<p>
+     * 
+     * Note that this method is currently only implemented for automata that
+     * support top-down queries. If the automaton does not support top-down
+     * queries, this method throws an {@link UnsupportedOperationException}.
      */
     public void makeAllRulesExplicit() {
         if (!ruleStore.isExplicit()) {
@@ -1406,7 +1410,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                     //storeRuleTopDown(rule);
                 });
                 
-                System.err.println("** WARNING ** Invalid use of TreeAutomaton#makeAllRulesExplicit.");
+                throw new UnsupportedOperationException("TreeAutomaton#makeAllRulesExplicit is only implemented for automata that support top-down queries.");
             }
 
             ruleStore.setExplicit(true);
@@ -2287,6 +2291,14 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         void visit(int state, Iterable<Rule> rulesTopDown);
     }
 
+    /**
+     * Visits all states of the automaton and offers them to the given visitor.
+     * The states are visited in bottom-up order, i.e. each child state of each
+     * rule is guaranteed to be visited before the parent of that rule.
+     * The method asks top-down queries to the automaton.
+     * 
+     * @param visitor
+     */
     public void foreachStateInBottomUpOrder(BottomUpStateVisitor visitor) {
         IntSet visited = new IntOpenHashSet();
         getFinalStates().forEach((IntConsumer) q -> foreachStateInBottomUpOrder(q, visited, visitor));
@@ -2562,6 +2574,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
     }
 
+    /**
+     * Returns a mapping from states to the list of rules in which
+     * the state appears as a child state.
+     * 
+     * @return
+     */
     protected ListMultimap<Integer, Rule> getRuleByChildStateMap() {
         ListMultimap<Integer, Rule> ret = ArrayListMultimap.create();
 
@@ -2882,6 +2900,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
         System.err.println("\nRule store statistics:");
         ruleStore.printStatistics();
+
+        ruleStore.diagnostics();
     }
 
     /**

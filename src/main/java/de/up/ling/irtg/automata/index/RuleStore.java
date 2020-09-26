@@ -6,6 +6,8 @@
 package de.up.ling.irtg.automata.index;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -20,7 +22,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -390,64 +394,31 @@ public class RuleStore implements Serializable {
     public Iterable<Rule> getAllRulesTopDown() {
         return topDown.getAllRules();
     }
+
+    /**
+     * Performs diagnostics on the rule store. This method is used only for debugging
+     * the rule store class.
+     */
+    public void diagnostics() {
+        List<Rule> topDownRules = Lists.newArrayList(getAllRulesTopDown());
+        List<Rule> bottomUpRules = Lists.newArrayList(getAllRulesBottomUp());
+
+        Set<Rule> x = new HashSet<>(topDownRules);
+        x.removeAll(bottomUpRules);
+        
+        System.err.println("Rules that are top-down, but not bottom-up:");
+        for( Rule r : x ) {
+            System.err.println(r);
+        }
+
+        x = new HashSet<>(bottomUpRules);
+        x.removeAll(topDownRules);
+        System.err.println("Rules that are bottom-up, but not top-down:");
+        for( Rule r : x ) {
+            System.err.println(r);
+        }
+
+    }
 }
 
 
-
-
-//    // XXX
-//    private IntTrie<Int2ObjectMap<Collection<Rule>>> getExplicitRulesBottomUp() {
-//        processNewBottomUpRules();
-//        return (IntTrie) explicitRulesBottomUp;
-//    }
-
-    /**
-     * Returns false if adding this rule makes the automaton bottom-up
-     * nondeterministic. That is: when q → f(q1,...,qn) is added, the method
-     * returns true; when subsequently q' → f(q1,...,qn) is added, with q !=
-     * q', the method returns false. (However, adding q → f(q1,...,qn) for a
-     * second time does not actually change the set of rules; in this case, the
-     * method returns true.)
-     *
-     * @param rule
-     * @return
-     */
-//    private boolean storeRuleInTrie(Rule rule) {
-//        return bottomUp.add(rule);        
-        
-//        Collection<Rule> knownRuleMap = bottomUp.getRulesLike(rule);
-//        boolean ret = true;
-//        
-//        if( knownRuleMap == null ) {
-//            
-//        }
-//        
-//        
-//        
-//        
-//        
-////        bottomUp.add(rule);
-//        
-//        
-//        Int2ObjectMap<Collection<Rule>> knownRuleMap = getAllRulesBottomUp().get(rule.getChildren());
-//        boolean ret = true;
-//
-//        if (knownRuleMap == null) {
-//            knownRuleMap = new Int2ObjectOpenHashMap<Set<Rule>>();
-//            explicitRulesBottomUp.put(rule.getChildren(), knownRuleMap);
-//        }
-//
-//        Set<Rule> knownRules = knownRuleMap.get(rule.getLabel());
-//
-//        if (knownRules == null) {
-//            // no rules known at all for this RHS => always return true
-//            knownRules = new HashSet<Rule>();
-//            knownRuleMap.put(rule.getLabel(), knownRules);
-//            knownRules.add(rule);
-//        } else {
-//            // some rules were known for this RHS => return false if the new rule is new
-//            ret = !knownRules.add(rule);  // add returns true iff rule is new
-//        }
-//
-//        return ret;
-//    }
