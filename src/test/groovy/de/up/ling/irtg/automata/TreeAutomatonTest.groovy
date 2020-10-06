@@ -407,7 +407,28 @@ class TreeAutomatonTest{
         assertEquals(1.0, outside.get(auto.getIdForState("q")), 0.001);
         assertEquals(5.5, outside.get(auto.getIdForState("q1")), 0.001);
     }
-    
+
+    @Test
+    public void testOutside2() {
+        TreeAutomaton auto = parse("A! -> r_1(B)   [1.0]\n" +
+                "C -> r_3(B)   [1.0]\n" +
+                "B -> r_2        [1.0]");
+        Map inside = auto.inside();
+        Map outside = auto.outside(inside);
+        assertAlmostEquals(1.0, outside.get(auto.getIdForState("B")))
+        assertAlmostEquals(0.0, outside.getOrDefault(auto.getIdForState("C"), 0.0))
+    }
+
+    @Test
+    public void testOutside3() {
+        TreeAutomaton auto = parse("A! -> r_1(B)   [1.0]\n" +
+                "C! -> r_3(B)   [1.0]\n" +
+                "B -> r_2        [1.0]");
+        Map inside = auto.inside();
+        Map outside = auto.outside(inside);
+        assertAlmostEquals(2.0, outside.get(auto.getIdForState("B")))
+    }
+
     @Test
     public void testLanguage() {
         setAutomaton("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
