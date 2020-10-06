@@ -2276,6 +2276,96 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
+     * Evaluates the states of a tree automaton bottom-up in a semiring. The method returns an array whose
+     * i-th entry is the semiring value for state i (i being the ID in the state interner).
+     * It assumes that the rules are presented in
+     * an order that guarantees that if the rule has child state i, then all rules with
+     * parent state i occur earlier in the list (i.e. bottom-up order). If a state is not
+     * reachable bottom-up, then its semiring value will be semiring zero.
+     * Since this returns (and uses) a continuous array with an entry for every number below maxStateIndexPlusOne,
+     * this function is inefficient if the states are not stored with contiguous IDs in the state interner.
+     *
+     * The purpose of this function is that inside can be computed without keeping the automaton in memory (it
+     * may also be faster)
+     *
+     * @param semiring a semiring over objects of class E
+     * @param evaluator Evaluates rules to objects in the semiring's domain, i.e. objects of class E
+     * @param rulesInBottomUpOrder A list of rules such that if the rule has child state i, then all rules with
+     *      parent state i occur earlier in the list
+     * @param maxStateIndexPlusOne for a TreeAutomaton, this would be stateInterner.getNextIndex()
+     * @param <E> The return type of the semiring
+     * @return
+     */
+    public static <E> E[] evaluateRuleListInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator, List<Rule> rulesInBottomUpOrder, int maxStateIndexPlusOne) {
+        E[] ret = (E[]) new Object[maxStateIndexPlusOne];
+
+        for( int i = 0; i < ret.length; i++ ) {
+            ret[i] = semiring.zero();
+        }
+
+        for( Rule rule : rulesInBottomUpOrder ) {
+            E valueThisRule = evaluator.evaluateRule(rule);
+
+            for (int child : rule.getChildren()) {
+                valueThisRule = semiring.multiply(valueThisRule, ret[child]);
+            }
+
+            E oldValue = ret[rule.getParent()];
+            ret[rule.getParent()] = semiring.add(oldValue, valueThisRule);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Evaluates the states of a tree automaton top-down in a semiring. The method returns an array whose
+     * i-th entry is the semiring value for state i (i being the ID in the state interner).
+     * It assumes that the rules are presented in
+     * an order that guarantees that if the rule has child state i, then all rules with
+     * parent state i occur earlier in the list (i.e. bottom-up order). If a state is not
+     * reachable top-down, then its semiring value will be semiring zero.
+     * Since this returns (and uses) a continuous array with an entry for every number below maxStateIndexPlusOne,
+     * this function is inefficient if the states are not stored with contiguous IDs in the state interner.
+     *
+     * The purpose of this function is that outside can be computed without keeping the automaton in memory (it
+     * may also be faster)
+     *
+     * @param semiring a semiring over objects of class E
+     * @param evaluator Evaluates rules to objects in the semiring's domain, i.e. objects of class E
+     * @param rulesInBottomUpOrder A list of rules such that if the rule has child state i, then all rules with
+     *      parent state i occur earlier in the list
+     * @param maxStateIndexPlusOne for a TreeAutomaton, this would be stateInterner.getNextIndex()
+     * @param finalStates The final states of the automaton.
+     * @param <E> The return type of the semiring
+     * @return
+     */
+    public static <E> E[] evaluateRuleListInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown<E> evaluator,
+                                                            List<Rule> rulesInBottomUpOrder, int maxStateIndexPlusOne,
+                                                            IntSet finalStates) {
+        E[] ret = (E[]) new Object[maxStateIndexPlusOne];
+
+        for (int i = 0; i < ret.length; i++ ) {
+            if (finalStates.contains(i)) {
+                // For the states that are never children, their outside probability is the initial value of the evaluator.
+                ret[i] = evaluator.initialValue();
+            } else {
+                // For other states, we initialize to zero and add up values below
+                ret[i] = semiring.zero();
+            }
+        }
+
+        for(Rule rule : Lists.reverse(rulesInBottomUpOrder)) {
+            E parentValue = ret[rule.getParent()];
+
+            for (int child : rule.getChildren()) {
+                ret[child] = semiring.add(ret[child], semiring.multiply(parentValue, evaluator.evaluateRule(rule, child)));
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Evaluates all states of the automaton bottom-up in a semiring. The
      * evaluation of a state is the semiring sum of semiring zero plus the
      * evaluations of all rules in which it is the parent. The evaluation of a
@@ -2307,6 +2397,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public <E> Map<Integer, E> evaluateInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown< E> evaluator) {
         Map<Integer, E> ret = new HashMap<>();
+        // get only top-down reachable states, in bottom-up order and then reverse the order
         List<Integer> statesInOrder = getStatesInBottomUpOrder();
         Collections.reverse(statesInOrder);
 
@@ -2315,6 +2406,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             E accu = semiring.zero();
 
             if (ruleStore.hasRulesForRhsState(s)) {
+                // since s is top-down reachable, this is equivalent to s being a final state
                 List<Iterable<Rule>> rules = ruleStore.getRulesForRhsState(s);
                 for (Rule rule : Iterables.concat(rules)) {
                     E parentValue = ret.get(rule.getParent());
@@ -2380,6 +2472,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return ret;
     }
 
+
+
     private void dfsForStatesInBottomUpOrder(int q, SetMultimap<Integer, Integer> children, Set<Integer> visited, List<Integer> ret) {
         if (!visited.contains(q)) {
             visited.add(q);
@@ -2405,6 +2499,45 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             }
 
             ret.add(q);
+        }
+    }
+
+    /**
+     * Gets a list of all rules in the automaton such that if rule r_1 has the parent of rule r_2 as its child,
+     * then r_1 is after r_2 in the list.
+     * @return
+     */
+    public List<Rule> getAllRulesInBottomUpOrder() {
+        List<Rule> ret = new ArrayList<>();
+        Set<Integer> visited = new HashSet<>();
+
+        // perform topological sort
+        for (int q : getFinalStates()) {
+            dfsForRulesInBottomUpOrder(q, visited, ret);
+        }
+
+        return ret;
+    }
+
+    /**
+     * See getAllRulesInBottomUpOrder
+     * @param q
+     * @param visitedStates
+     * @param ret
+     */
+    private void dfsForRulesInBottomUpOrder(int q, Set<Integer> visitedStates, List<Rule> ret) {
+        if (!visitedStates.contains(q)) {
+            visitedStates.add(q);
+
+            for (int label : getLabelsTopDown(q)) {
+                for (Rule rule : getRulesTopDown(label, q)) {
+                    for (int child : rule.getChildren()) {
+                        dfsForRulesInBottomUpOrder(child, visitedStates, ret);
+                    }
+                    ret.add(rule);
+                }
+            }
+
         }
     }
 

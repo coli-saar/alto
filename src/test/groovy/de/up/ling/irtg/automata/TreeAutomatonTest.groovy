@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata
 
 import de.up.ling.irtg.semiring.AdditiveViterbiSemiring
+import de.up.ling.irtg.semiring.DoubleArithmeticSemiring
 import de.up.ling.irtg.semiring.LogDoubleArithmeticSemiring
 import org.junit.*
 import java.util.*
@@ -400,12 +401,51 @@ class TreeAutomatonTest{
     }
 
     @Test
+    public void testInsideWithRuleList() {
+        TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
+        List<Rule> rulesInBottomUpOrder = auto.getAllRulesInBottomUpOrder()
+
+        Double[] inside = TreeAutomaton.evaluateRuleListInSemiring(DoubleArithmeticSemiring.INSTANCE,
+                { Rule rule -> rule.getWeight() }, rulesInBottomUpOrder, auto.getStateInterner().nextIndex)
+        assertEquals(7.0, inside[auto.getIdForState("q")], 0.001);
+        assertEquals(2.0, inside[auto.getIdForState("q1")], 0.001);
+    }
+
+    @Test
     public void testOutside() {
         TreeAutomaton auto = parse("q1 -> a  [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         Map inside = auto.inside();
         Map outside = auto.outside(inside);
         assertEquals(1.0, outside.get(auto.getIdForState("q")), 0.001);
         assertEquals(5.5, outside.get(auto.getIdForState("q1")), 0.001);
+    }
+
+    @Test
+    public void testOutsideWithRuleList() {
+        TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
+        List<Rule> rulesInBottomUpOrder = auto.getAllRulesInBottomUpOrder()
+
+        Double[] inside = TreeAutomaton.evaluateRuleListInSemiring(DoubleArithmeticSemiring.INSTANCE,
+                { Rule rule -> rule.getWeight() }, rulesInBottomUpOrder, auto.getStateInterner().nextIndex)
+        TreeAutomaton.evaluateRuleListInSemiringTopDown(DoubleArithmeticSemiring.INSTANCE, new RuleEvaluatorTopDown<Double>() {
+            @Override
+            public Double initialValue() {
+                return 1.0;
+            }
+
+            @Override
+            public Double evaluateRule(Rule rule, int i) {
+                Double ret = rule.getWeight();
+                for (int j = 0; j < rule.getArity(); j++) {
+                    if (j != i) {
+                        ret = ret * inside[rule.getChildren()[j]];
+                    }
+                }
+                return ret;
+            }
+        }, rulesInBottomUpOrder, auto.getStateInterner().nextIndex, auto.getFinalStates());
+        assertEquals(7.0, inside[auto.getIdForState("q")], 0.001);
+        assertEquals(2.0, inside[auto.getIdForState("q1")], 0.001);
     }
 
     @Test
