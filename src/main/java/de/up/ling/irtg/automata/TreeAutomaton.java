@@ -30,6 +30,7 @@ import it.unimi.dsi.fastutil.ints.*;
 import org.apache.commons.math3.special.Gamma;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
@@ -2288,6 +2289,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * The purpose of this function is that inside can be computed without keeping the automaton in memory (it
      * may also be faster)
      *
+     * @param eClass the class of the objects in the domain of the semiring
      * @param semiring a semiring over objects of class E
      * @param evaluator Evaluates rules to objects in the semiring's domain, i.e. objects of class E
      * @param rulesInBottomUpOrder A list of rules such that if the rule has child state i, then all rules with
@@ -2296,8 +2298,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param <E> The return type of the semiring
      * @return
      */
-    public static <E> E[] evaluateRuleListInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator, List<Rule> rulesInBottomUpOrder, int maxStateIndexPlusOne) {
-        E[] ret = (E[]) new Object[maxStateIndexPlusOne];
+    public static <E> E[] evaluateRuleListInSemiring(Class<E> eClass, Semiring<E> semiring, RuleEvaluator<E> evaluator, List<Rule> rulesInBottomUpOrder, int maxStateIndexPlusOne) {
+        @SuppressWarnings("unchecked")
+        E[] ret = (E[]) Array.newInstance(eClass, maxStateIndexPlusOne);
 
         for( int i = 0; i < ret.length; i++ ) {
             ret[i] = semiring.zero();
@@ -2330,6 +2333,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * The purpose of this function is that outside can be computed without keeping the automaton in memory (it
      * may also be faster)
      *
+     * @param eClass the class of the objects in the domain of the semiring
      * @param semiring a semiring over objects of class E
      * @param evaluator Evaluates rules to objects in the semiring's domain, i.e. objects of class E
      * @param rulesInBottomUpOrder A list of rules such that if the rule has child state i, then all rules with
@@ -2339,10 +2343,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param <E> The return type of the semiring
      * @return
      */
-    public static <E> E[] evaluateRuleListInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown<E> evaluator,
+    public static <E> E[] evaluateRuleListInSemiringTopDown(Class<E> eClass, Semiring<E> semiring, RuleEvaluatorTopDown<E> evaluator,
                                                             List<Rule> rulesInBottomUpOrder, int maxStateIndexPlusOne,
                                                             IntSet finalStates) {
-        E[] ret = (E[]) new Object[maxStateIndexPlusOne];
+        @SuppressWarnings("unchecked")
+        E[] ret = (E[]) Array.newInstance(eClass, maxStateIndexPlusOne);
 
         for (int i = 0; i < ret.length; i++ ) {
             if (finalStates.contains(i)) {
@@ -2357,8 +2362,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         for(Rule rule : Lists.reverse(rulesInBottomUpOrder)) {
             E parentValue = ret[rule.getParent()];
 
-            for (int child : rule.getChildren()) {
-                ret[child] = semiring.add(ret[child], semiring.multiply(parentValue, evaluator.evaluateRule(rule, child)));
+            for (int i = 0; i< rule.getChildren().length; i++) {
+                int child = rule.getChildren()[i];
+                ret[child] = semiring.add(ret[child], semiring.multiply(parentValue, evaluator.evaluateRule(rule, i)));
             }
         }
 

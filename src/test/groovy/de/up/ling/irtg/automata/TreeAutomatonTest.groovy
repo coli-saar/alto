@@ -405,7 +405,7 @@ class TreeAutomatonTest{
         TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         List<Rule> rulesInBottomUpOrder = auto.getAllRulesInBottomUpOrder()
 
-        Double[] inside = TreeAutomaton.evaluateRuleListInSemiring(DoubleArithmeticSemiring.INSTANCE,
+        Double[] inside = TreeAutomaton.evaluateRuleListInSemiring(Double.class, DoubleArithmeticSemiring.INSTANCE,
                 { Rule rule -> rule.getWeight() }, rulesInBottomUpOrder, auto.getStateInterner().nextIndex)
         assertEquals(7.0, inside[auto.getIdForState("q")], 0.001);
         assertEquals(2.0, inside[auto.getIdForState("q1")], 0.001);
@@ -425,9 +425,9 @@ class TreeAutomatonTest{
         TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         List<Rule> rulesInBottomUpOrder = auto.getAllRulesInBottomUpOrder()
 
-        Double[] inside = TreeAutomaton.evaluateRuleListInSemiring(DoubleArithmeticSemiring.INSTANCE,
+        Double[] inside = TreeAutomaton.evaluateRuleListInSemiring(Double.class, DoubleArithmeticSemiring.INSTANCE,
                 { Rule rule -> rule.getWeight() }, rulesInBottomUpOrder, auto.getStateInterner().nextIndex)
-        TreeAutomaton.evaluateRuleListInSemiringTopDown(DoubleArithmeticSemiring.INSTANCE, new RuleEvaluatorTopDown<Double>() {
+        Double[] outside = TreeAutomaton.evaluateRuleListInSemiringTopDown(Double.class, DoubleArithmeticSemiring.INSTANCE, new RuleEvaluatorTopDown<Double>() {
             @Override
             public Double initialValue() {
                 return 1.0;
@@ -444,8 +444,8 @@ class TreeAutomatonTest{
                 return ret;
             }
         }, rulesInBottomUpOrder, auto.getStateInterner().nextIndex, auto.getFinalStates());
-        assertEquals(7.0, inside[auto.getIdForState("q")], 0.001);
-        assertEquals(2.0, inside[auto.getIdForState("q1")], 0.001);
+        assertEquals(1.0, outside[auto.getIdForState("q")], 0.001);
+        assertEquals(5.5, outside[auto.getIdForState("q1")], 0.001);
     }
 
     @Test
