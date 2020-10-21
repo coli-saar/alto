@@ -930,67 +930,32 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return ret;
     }
 
+
+    
     /**
-     * Generates a random tree from the language of this tree automaton. The
-     * probability of a tree is the product of the probabilities of the rules
-     * that were used to build it. The probability for the rule A →
-     * f(B1,...,Bn) is the weight of that rule, divided by the sum of all
-     * weights for rules with left-hand side A. If the automaton has multiple
-     * final states, one of these is chosen with uniform probability.
+     * Generates a random tree of rules. The tree is generated as described in
+     * {@link #getRandomTree()}, but each node of the tree is labeled with the
+     * tree-automaton rule that was applied at that node (and not just the symbol
+     * in that rule, as in getRandomTree).
+     * 
+     * @return
      */
-    public Tree<String> getRandomTree() {
-        Random rnd = new Random();
-
-        if (getFinalStates().isEmpty()) {
-            return null;
-        } else {
-            int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
-            return getRandomTree(finalState, rnd, rule -> rule.getLabel(this));
-        }
-    }
-
     public Tree<Rule> getRandomRuleTree() {
-        Random rnd = new Random();
-
-        if (getFinalStates().isEmpty()) {
-            return null;
-        } else {
-            int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
-            return getRandomTree(finalState, rnd, rule -> rule);
-        }
-    }
-
-    private <E> Tree<E> getRandomTree(int state, Random rnd, Function<Rule, E> makeLabel) {
-        List<Rule> rulesHere = new ArrayList<>();
-        double totalWeight = 0;
-
-        for (Rule r : getRulesTopDown(state)) {
-            rulesHere.add(r);
-            totalWeight += r.getWeight();
-        }
-
-        double selectWeight = rnd.nextDouble() * totalWeight;
-        double cumulativeWeight = 0;
-
-        for (Rule rule : rulesHere) {
-            cumulativeWeight += rule.getWeight();
-
-            if (cumulativeWeight >= selectWeight) {
-                List<Tree<E>> subtrees = new ArrayList<>();
-                for (int j = 0; j < rule.getArity(); j++) {
-                    subtrees.add(getRandomTree(rule.getChildren()[j], rnd, makeLabel));
-                }
-                return Tree.create(makeLabel.apply(rule), subtrees);
-            }
-        }
-
-        // should be unreachable
-        return null;
-    }
-
-    public Tree<Rule> getRandomRuleTreeFromInside() {
-        Random rnd = new Random();
         Map<Integer, Double> inside = inside();
+        return getRandomRuleTree(inside);
+    }
+
+    /**
+     * Generates a random tree of rules. This method works exactly like
+     * {@link #getRandomRuleTree()}, but you can pass the inside probabilities
+     * of each state as a separate argument. This allows you to precompute
+     * the inside probabilities once (e.g. using {@link #inside()})) and then 
+     * sample multiple random trees.
+     * 
+     * @return
+     */
+    public Tree<Rule> getRandomRuleTree(Map<Integer, Double> inside) {
+        Random rnd = new Random();
 
         if (getFinalStates().isEmpty()) {
             return null;
@@ -1000,9 +965,35 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
     }
 
-    public Tree<String> getRandomTreeFromInside() {
-        Random rnd = new Random();
+    /**
+     * Generates a random tree from the language of this tree automaton. The
+     * probability of a tree is the product of the probabilities of the rules
+     * that were used to build it. The probability for the rule A →
+     * f(B1,...,Bn) is the weight of that rule, divided by the sum of all
+     * weights for rules with left-hand side A. If the automaton has multiple
+     * final states, one of these is chosen with probability proportional
+     * to the inside probability.<p>
+     * 
+     * Returns null if the automaton doesn't have a final state.
+     *
+     * @return
+     */
+    public Tree<String> getRandomTree() {
         Map<Integer, Double> inside = inside();
+        return getRandomTree(inside);
+    }
+
+    /**
+     * Generates a random tree. This method works exactly like {@link #getRandomTree()},
+     * but you can pass the inside probabilities
+     * of each state as a separate argument. This allows you to precompute
+     * the inside probabilities once (e.g. using {@link #inside()})) and then 
+     * sample multiple random trees.
+     * 
+     * @return
+     */
+    public Tree<String> getRandomTree(Map<Integer, Double> inside) {
+        Random rnd = new Random();
 
         if (getFinalStates().isEmpty()) {
             return null;
@@ -1011,6 +1002,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             return getRandomTreeFromInside(chosenFinalState, rnd, inside, rule -> rule.getLabel(this));
         }
     }
+
+
 
 
 
