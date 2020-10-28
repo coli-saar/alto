@@ -43,6 +43,11 @@ import javax.swing.JLabel;
  * the algebra. You may override the evaluate-term method with a specialized
  * implementation if this is more efficient.<p>
  *
+ * An algebra may be partial.  In that case, a non-applicable evaluation needs to
+ * return an a value x with isValidValue(x) == false.  Similarly, all calls to 
+ * {@link #evaluate(java.lang.String, java.util.List) } with an invalid child value
+ * need to return a value x with isValidValue(x) == false.
+ *
  * The Algebra class also provides a default implementation of decomposition
  * automata for this class. Decomposition automata are needed for parsing. The
  * default implementation uses values of the algebra as its states, and only
@@ -68,7 +73,8 @@ public abstract class Algebra<E> implements Serializable {
     /**
      * Applies the operation with name "label" to the given arguments, and
      * returns the result.
-     *
+     * Needs to return an invalid value if at least one of the chilren values
+     * is invalid.
      */
     protected abstract E evaluate(String label, List<E> childrenValues);
 
@@ -76,12 +82,10 @@ public abstract class Algebra<E> implements Serializable {
      * Checks whether "value" is a valid value. The decomposition automata will
      * only contain rules in which the parent and all child states are valid
      * values, as defined by this method. The default implementation of this
-     * method always returns true. You may override it to make the decomposition
-     * automata smaller (e.g. by rejecting null values).
-     *
+     * method returns iff value!=null.
      */
     protected boolean isValidValue(E value) {
-        return true;
+        return value != null;
     }
 
     /**
@@ -226,6 +230,9 @@ public abstract class Algebra<E> implements Serializable {
      *
      */
     public String representAsString(E object) {
+        if (object == null) {
+            return "<null>";
+        }
         return object.toString();
     }
 
@@ -290,7 +297,7 @@ public abstract class Algebra<E> implements Serializable {
                     E parents = evaluate(label, childValues);
 
                     // require that set in parent state must be non-empty; otherwise there is simply no rule
-                    if (parents != null && isValidValue(parents)) {
+                    if (isValidValue(parents)) {
                         int parentStateId = addState(parents);
 
                         Rule rule = createRule(parentStateId, labelId, childStates, 1);

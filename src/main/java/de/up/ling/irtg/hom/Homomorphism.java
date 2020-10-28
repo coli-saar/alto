@@ -246,7 +246,7 @@ public class Homomorphism implements Serializable {
      * homomorphism's source signature, and is expected to be known there. The
      * labels in the returned tree are elements of the homomorphism's target
      * signature. If necessary, the returned tree can be converted back to a
-     * tree of HomomorphismSymbols using HomomorphismSymbo.treeFromNames and the
+     * tree of HomomorphismSymbols using HomomorphismSymbol.treeFromNames and the
      * homomorphism's target signature.
      */
     public Tree<String> get(String label) {

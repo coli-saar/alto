@@ -39,6 +39,10 @@ import java.util.function.ToIntFunction;
  * a signature A to a signature B, and a TreeAutomaton T over B,
  * InverseHomAutomaton is a TreeAutomaton that generates exactly those
  * trees d over A for which hom(d) ∈ T.
+ *
+ * Note that this general version of an inverse homomorphism automaton
+ * probably contains bugs and is not used.  Whenever possible, use
+ * {@link NondeletingInverseHomAutomaton} instead.
  */
 public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
@@ -52,9 +56,14 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
     private final ToIntFunction<HomomorphismSymbol> remappingHomSymbolToIntFunction;
     private final IntSet provisionalStateSet;
 
+    private static boolean usageWarningShown = false;
+
     public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
-
+        if (!usageWarningShown) {
+            System.err.println("Warning: Using InverseHomAutomaton, which might contain bugs.");
+            usageWarningShown = true;
+        }
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
 

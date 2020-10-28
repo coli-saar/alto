@@ -191,6 +191,13 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) throws NoModelException {
         Set<List<String>> ret = null;
 
+	// propagate invalid values up
+	for (Set<List<String>> x: childrenValues) {
+	    if (!isValidValue(x)) {
+		return null;
+	    }
+	}
+	
         if (model == null) {
             throw new NoModelException("SetAlgebra has no model yet.");
         }
@@ -309,7 +316,7 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
 
     @Override
     protected boolean isValidValue(Set<List<String>> value) {
-        return !value.isEmpty();
+        return value != null && !value.isEmpty();
     }
 
     @Override

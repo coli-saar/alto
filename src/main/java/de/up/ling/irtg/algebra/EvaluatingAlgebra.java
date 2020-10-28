@@ -133,7 +133,7 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
                     E parents = evaluate(label, childValues);
 
                     // require that set in parent state must be non-empty; otherwise there is simply no rule
-                    if (parents != null && isValidValue(parents)) {
+                    if (isValidValue(parents)) {
                         int parentStateId = addState(parents);
                         
                         Rule rule = createRule(parentStateId, labelId, childStates, 1);

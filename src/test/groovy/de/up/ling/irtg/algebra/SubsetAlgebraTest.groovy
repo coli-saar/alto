@@ -81,14 +81,14 @@ class SubsetAlgebraTest {
     @Test(expected=RuntimeException)
     public void testEvaluateNotElement() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
-        SubsetAlgebra<String> a = new SubsetAlgebra(s)
+        SubsetAlgebra a = new SubsetAlgebra(s)
         BitSet result = a.evaluate(TreeParser.parse("dunion('rabbit(r1)', 'sleep(e,r2)')"))
     }
     
     @Test
     public void testParseEmptySetConstant() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")
-        SubsetAlgebra<String> a = new SubsetAlgebra(s)
+        SubsetAlgebra a = new SubsetAlgebra(s)
         BitSet result = a.evaluate(TreeParser.parse("EMPTYSET"))
         
         assertThat(a.toSet(result), is(empty()))
@@ -127,6 +127,27 @@ class SubsetAlgebraTest {
         // only "the white rabbit sleeps" should be left over
     }
     
+/*    @Test
+    public void testInvalidSubset() {
+        String irtgs = '''
+interpretation sem: de.up.ling.irtg.algebra.SubsetAlgebra
+
+Foo -> foo(Bar)
+  [sem] x
+  
+Bar -> bar
+  [sem] dunion(x,x)
+'''
+        def irtg = new IrtgInputCodec().read(irtgs);
+        def i = irtg.getInterpretation("sem")
+        SubsetAlgebra a = i.getAlgebra()
+        a.setOptions("x")
+        System.out.println(i.interpret(TreeParser.parse("foo(bar)")))
+        i.parse()
+        
+
+    }
+  */
     private static final String IRTG = """\n\
 
 interpretation ref: de.up.ling.irtg.algebra.SetAlgebra

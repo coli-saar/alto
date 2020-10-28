@@ -47,6 +47,11 @@ public class SubsetAlgebra extends Algebra<BitSet> {
      * (i.e. none is a superset of the other)
      */
 	public static final String EUNION = "eunion";
+    /**
+     * Evaluates to the first argument and ignores the rest
+     * if any argument is null, evaluates to null instead.
+     */
+	public static final String FIRST_ARG = "firstarg";
     public static final String EMPTYSET = "EMPTYSET";
     private static final String SEPARATOR_RE = "\\s*\\+\\s*";
     public static final String SEPARATOR = " + ";
@@ -97,9 +102,21 @@ public class SubsetAlgebra extends Algebra<BitSet> {
 
     @Override
     protected BitSet evaluate(String label, List<BitSet> childrenValues) {
+        if (childrenValues.contains(null)) {
+            return null;
+        }
+        if (FIRST_ARG.equals(label)) {
+            if (childrenValues.contains(null)) {
+                return null;
+            }
+            return childrenValues.get(0);
+        }
         if (UNION.equals(label)) {
             BitSet ret = new BitSet();
             for (BitSet bs: childrenValues) {
+                if (bs == null) {
+                    return null;
+                }
                 ret.or(bs);
             }
             return ret;
@@ -193,7 +210,7 @@ public class SubsetAlgebra extends Algebra<BitSet> {
 
     @Override
     protected boolean isValidValue(BitSet value) {
-        return emptyStatesAllowed || !value.isEmpty();
+        return value != null && (emptyStatesAllowed || !value.isEmpty());
     }
 
     @Override
