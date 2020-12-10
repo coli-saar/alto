@@ -2768,6 +2768,17 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
+     * Returns an iterator over the language of this automaton. This also works
+     * if the language is infinite. If the automaton is weighted, the trees are
+     * iterated in descending order of weights. Therefore, to compute the k-best
+     * trees, you can simply enumerate the first k elements of this iterator.
+     * weights are composed using{@link Semiring#multiply}, starting from {@link Semiring#one()}.
+     */
+    public Iterator<Tree<String>> languageIterator(Semiring<Double> semiring) {
+        return Iterators.transform(languageIteratorRaw(semiring), getSignature()::resolve);
+    }
+
+    /**
      * Returns an iterator over the weighted language of this automaton. The
      * iterator enumerates weighted trees, which are pairs of trees with their
      * weights, in descending order of weights. The tree in this pair has node
