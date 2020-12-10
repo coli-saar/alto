@@ -765,6 +765,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Computes the highest-weighted tree in the language of this (weighted)
      * automaton, using the Viterbi algorithm. If the language is empty, return
      * null.
+     *
+     * Only works correctly if the automaton has no cycles.
      */
     @OperationAnnotation(code = "viterbi")
     public Tree<String> viterbi() {
@@ -815,6 +817,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * null. Unlike {@link #viterbi() }, this method returns a tree whose nodes
      * are labeled with label IDs, as opposed to the labels (Strings)
      * themselves. It also returns the weight of the top-ranked tree.
+     *
+     * Only works correctly if the automaton has no cycles.
      */
     public WeightedTree viterbiRaw() {
         return viterbiRaw(ViterbiWithBackpointerSemiring.INSTANCE);
