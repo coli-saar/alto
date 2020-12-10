@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package de.up.ling.irtg.util;
 
 import com.google.common.collect.Iterables;
@@ -163,7 +159,7 @@ public class TestingTools {
     }
 
     // multiplies the item weight by a factor given by the rule label
-    public static class MultiplyMapItemEvaluator implements ItemEvaluator<Void> {
+    public static class MultiplyMapItemEvaluator implements ItemEvaluator {
         private Map<String, Double> factors;
         private Signature sig;
 
@@ -173,7 +169,7 @@ public class TestingTools {
         }
 
         @Override
-        public EvaluatedItem<Void> evaluate(Rule refinedRule, List<EvaluatedItem<Void>> children, UnevaluatedItem unevaluatedItem) {
+        public EvaluatedItem evaluate(Rule refinedRule, List<EvaluatedItem> children, UnevaluatedItem unevaluatedItem) {
             double weight = 1;
             List<Tree<Integer>> childTrees = new ArrayList<>();
             List<String> childNodeLabels = new ArrayList<>();
@@ -192,7 +188,7 @@ public class TestingTools {
                 itemWeight *= factors.get(ch);
             }
 
-            return new EvaluatedItem<>(unevaluatedItem, wtree, itemWeight, null);
+            return new EvaluatedItem(unevaluatedItem, wtree, itemWeight);
         }
     }
 

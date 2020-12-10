@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package de.up.ling.irtg.automata.language_iteration;
 
 import de.up.ling.irtg.automata.Rule;
@@ -44,6 +40,10 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
         this(auto, new IdentityRuleRefiner(), new TreeCombiningItemEvaluator());
+    }
+
+    public SortedLanguageIterator(TreeAutomaton<State> auto, ItemEvaluator itemEvaluator) {
+        this(auto, new IdentityRuleRefiner(), itemEvaluator);
     }
 
     public SortedLanguageIterator(TreeAutomaton<State> auto, RuleRefiner ruleRefiner, ItemEvaluator itemEvaluator) {

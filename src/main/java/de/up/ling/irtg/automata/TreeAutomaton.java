@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package de.up.ling.irtg.automata;
 
 import com.google.common.base.Function;
@@ -11,6 +7,7 @@ import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.condensed.*;
 import de.up.ling.irtg.automata.index.RuleStore;
+import de.up.ling.irtg.automata.language_iteration.SemiringItemEvaluator;
 import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.corpus.Corpus;
@@ -2729,16 +2726,26 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
-     * Returns an iterator over the language of this automaton, encoded using
-     * symbol IDs. The nodes of the trees are labeled with numeric symbol IDs,
-     * which encode node labels according to the automaton's signature. This
-     * also works if the language is infinite. If the automaton is weighted, the
-     * trees are iterated in descending order of weights.
-     *
+     * Returns an iterator over the language of this automaton,
+     * encoded using symbol IDs. The nodes of the trees are labeled
+     * with numeric symbol IDs, which encode node labels according to
+     * the automaton's signature. This also works if the language is
+     * infinite. If the automaton is weighted, the trees are iterated
+     * in descending order of weights; weights are composed using
+     * {@link Semiring#multiply}, starting from {@link
+     * Semiring#one()}.
+     */
+    public Iterator<Tree<Integer>> languageIteratorRaw(Semiring<Double> semiring) {
+        return new LanguageIterator(new SortedLanguageIterator(this, new SemiringItemEvaluator(semiring)));
+
+    }
+
+    /**
+     * As {@link #languageIteratorRaw(Semiring)}, but using the standard
+     * * and 1 instead of a configurable semiring.
      */
     public Iterator<Tree<Integer>> languageIteratorRaw() {
-//        makeAllRulesExplicit();
-        return new LanguageIterator(new SortedLanguageIterator<>(this));
+        return new LanguageIterator(new SortedLanguageIterator(this));
     }
 
     /**
@@ -2746,9 +2753,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      */
     public boolean isEmpty() {
-        // replacing test via sortLanguageIterator by much faster null-test for Viterbi
         return viterbiRaw() == null;
-//        return !sortedLanguageIterator().hasNext();
     }
 
     /**
