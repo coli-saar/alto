@@ -64,7 +64,6 @@ class SiblingFinderTest {
         int rightWithEdgesS = graphSig.addSymbol("(l / sleep-01 :ARG0 (j <0> / john ))", 0);
         GraphAlgebra alg = new GraphAlgebra(graphSig);
         TreeAutomaton decomp = alg.decompose(alg.parseString("(l / sleep-01 :ARG0 (j / john))"));
-        decomp.makeAllRulesExplicit();
         SiblingFinder test = decomp.newSiblingFinder(decomp.getSignature().getIdForSymbol(GraphAlgebra.OP_MERGE));
         
         int left = decomp.getRulesBottomUp(leftS, new int[0]).iterator().next().getParent();

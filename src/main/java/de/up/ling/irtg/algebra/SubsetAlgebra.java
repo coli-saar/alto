@@ -52,6 +52,10 @@ public class SubsetAlgebra extends Algebra<BitSet> {
      * if any argument is null, evaluates to null instead.
      */
 	public static final String FIRST_ARG = "firstarg";
+    /** returns first argument if it contains the second argument. */
+	public static final String CONTAINS = "contains";
+    /** returns first argument if it does not contain the second argument. */
+    public static final String NOT_CONTAINS = "not_contains";
     public static final String EMPTYSET = "EMPTYSET";
     private static final String SEPARATOR_RE = "\\s*\\+\\s*";
     public static final String SEPARATOR = " + ";
@@ -105,18 +109,26 @@ public class SubsetAlgebra extends Algebra<BitSet> {
         if (childrenValues.contains(null)) {
             return null;
         }
-        if (FIRST_ARG.equals(label)) {
-            if (childrenValues.contains(null)) {
-                return null;
+        if (NOT_CONTAINS.equals(label)) {
+            assert childrenValues.size() == 2;
+            if (! subset(childrenValues.get(1), childrenValues.get(0))) {
+                return childrenValues.get(1);
             }
+            return null;
+        }
+        if (CONTAINS.equals(label)) {
+            assert childrenValues.size() == 2;
+            if (subset(childrenValues.get(1), childrenValues.get(0))) {
+                return childrenValues.get(1);
+            }
+            return null;
+        }
+        if (FIRST_ARG.equals(label)) {
             return childrenValues.get(0);
         }
         if (UNION.equals(label)) {
             BitSet ret = new BitSet();
             for (BitSet bs: childrenValues) {
-                if (bs == null) {
-                    return null;
-                }
                 ret.or(bs);
             }
             return ret;
@@ -126,9 +138,6 @@ public class SubsetAlgebra extends Algebra<BitSet> {
             assert childrenValues.size() == 2;
             BitSet s1 = childrenValues.get(0);
             BitSet s2 = childrenValues.get(1);
-            if (s1 == null || s2 == null) {
-                return null;
-            }
             BitSet result = new BitSet();
             result.or(s1);
             result.or(s2);
@@ -144,14 +153,10 @@ public class SubsetAlgebra extends Algebra<BitSet> {
 
             BitSet s1 = childrenValues.get(0);
             BitSet s2 = childrenValues.get(1);
-
-            if (s1 == null || s2 == null) {
-                return null;
-            } else if (disjoint(s1, s2)) {
+            if (disjoint(s1, s2)) {
                 BitSet ret = new BitSet();
                 ret.or(s1);
                 ret.or(s2);
-                
                 return ret;
             } else {
                 return null;
@@ -161,7 +166,6 @@ public class SubsetAlgebra extends Algebra<BitSet> {
             return EMPTY_BITSET;
         } else {
             assert childrenValues.isEmpty();
-
             try {
                 BitSet ret = parseString(label);
                 
