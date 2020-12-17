@@ -78,6 +78,29 @@ class SubsetAlgebraTest {
         assertThat(a.toSet(result), is(s))
     }
     
+    @Test
+    public void testContains() {
+        Set s = SubsetAlgebra.parseStringSet("a+b+c")
+        SubsetAlgebra<String> a = new SubsetAlgebra(s);
+        BitSet result = a.evaluate(TreeParser.parse("contains(a+b,b+c)"))
+        assertThat(a.toSet(result), nullValue())
+
+        result = a.evaluate(TreeParser.parse("contains(a+b+c,b+c)"))
+        assertThat(a.toSet(result), is(s))
+    }
+
+    @Test
+    public void testNotContains() {
+        Set s = SubsetAlgebra.parseStringSet("a+b+c")
+        Set s2 = SubsetAlgebra.parseStringSet("a+b")
+        SubsetAlgebra<String> a = new SubsetAlgebra(s);
+        BitSet result = a.evaluate(TreeParser.parse("not_contains(a+b, b)"))
+        assertThat(a.toSet(result), nullValue())
+
+        result = a.evaluate(TreeParser.parse("not_contains(a+b, c)"))
+        assertThat(a.toSet(result), is(s2))
+    }
+
     @Test(expected=RuntimeException)
     public void testEvaluateNotElement() {
         Set s = SubsetAlgebra.parseStringSet("rabbit(r1) + sleep(e,r1)")

@@ -112,14 +112,14 @@ public class SubsetAlgebra extends Algebra<BitSet> {
         if (NOT_CONTAINS.equals(label)) {
             assert childrenValues.size() == 2;
             if (! subset(childrenValues.get(1), childrenValues.get(0))) {
-                return childrenValues.get(1);
+                return childrenValues.get(0);
             }
             return null;
         }
         if (CONTAINS.equals(label)) {
             assert childrenValues.size() == 2;
             if (subset(childrenValues.get(1), childrenValues.get(0))) {
-                return childrenValues.get(1);
+                return childrenValues.get(0);
             }
             return null;
         }
