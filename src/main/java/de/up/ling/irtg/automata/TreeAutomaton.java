@@ -558,37 +558,10 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
     }
 
-//    /**
-//     * Returns an iterable over the rules of this automaton. Each request to
-//     * provide an iterator returns a fresh instance of {@link #getRuleIterator()
-//     * }.
-//     *
-//     * @return
-//     */
-//    public Iterable<Rule> getRuleIterable() {
-//        return new Iterable<Rule>() {
-//            public Iterator<Rule> iterator() {
-//                return getRuleIterator();
-//            }
-//        };
-//    }
-//    /**
-//     * Returns an iterator over the rules of this automaton. Rules are computed
-//     * by need, so this rule requires a lower initial computational overhead
-//     * than {@link #getRuleSet() }. Of course, after the iteration has finished,
-//     * all rules of the automaton that can be reached top-down from the final
-//     * states have been computed explicitly anyway.<p>
-//     *
-//     * The implementation of this method accesses rules via
-//     * {@link #getRulesTopDown(int) }.
-//     *
-//     * @return
-//     */
-//    public Iterator<Rule> getRuleIterator() {
-//        return Iterators.concat(new RuleIterator(this));
-//    }
     /**
-     * Returns true if the
+     * Returns true if the automaton stores constants. See
+     * {@link #getStoredConstantsForID(int)}.
+     *
      */
     public boolean hasStoredConstants() {
         return hasStoredConstants;
@@ -596,7 +569,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
     /**
      * If this automaton has stored states for all the constants in its
-     * signature, more precisely if hasStoredConstants() returns true, then this
+     * signature, more precisely if {@link #hasStoredConstants()}  returns true, then this
      * returns the states corresponding to the constant described by the label
      * ID in the signature.
      */
@@ -604,48 +577,27 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         throw new UnsupportedOperationException("This automaton does not pre-store constants!");
     }
 
-//    
-//    public Iterable<Rule> getRuleIterable() {
-//        List<Iterable<Rule>> its = new ArrayList<Iterable<Rule>>();
-//        
-//        makeAllRulesExplicit();
-//
-//        for (StateListToStateMap map : explicitRulesBottomUp.values()) {
-//            for (Set<Rule> set : map.getAllRules().values()) {
-//                its.add(set);
-//            }
-//        }
-//        
-//        
-//        return Iterables.concat(its);
-//    }
     /**
-     * Returns the set of all rules, indexed by parent label and children
-     * states.
+     * Checks whether the automaton has cycles.
+     * 
+     * @return
      */
-//    private Map<Integer, Map<int[], Set<Rule>>> getAllRules() {
-//        Map<Integer, Map<int[], Set<Rule>>> ret = new HashMap<Integer, Map<int[], Set<Rule>>>();
-//
-//        makeAllRulesExplicit();
-//
-//        for (int f = 1; f <= getSignature().getMaxSymbolId(); f++) {
-//            ret.put(f, getAllRules(f));
-//        }
-//
-//        return ret;
-//    }
-//    private Map<int[], Set<Rule>> getAllRules(int label) {
-//        if (explicitRulesBottomUp.containsKey(label)) {
-//            return explicitRulesBottomUp.get(label).getAllRules();
-//        } else {
-//            return new HashMap<int[], Set<Rule>>();
-//        }
-//    }
     public boolean isCyclic() {
+        return isCyclic(false);
+    }
+
+    /**
+     * Checks whether the automaton has cycles. If ignoreLoops is set to true,
+     * loops q -> f(..., q, ...) do not count as cycles.
+     *
+     * @param ignoreLoops
+     * @return
+     */
+    public boolean isCyclic(boolean ignoreLoops) {
         Int2ObjectMap<IntSet> children = new Int2ObjectOpenHashMap<>();
 
         for (int f : getFinalStates()) {
-            if (exploreForCyclicity(f, children)) {
+            if (exploreForCyclicity(f, ignoreLoops, children)) {
                 return true;
             }
         }
@@ -653,20 +605,22 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return false;
     }
 
-    /**
-     *
-     */
-    private boolean exploreForCyclicity(int state, Int2ObjectMap<IntSet> children) {
+    private boolean exploreForCyclicity(int state, boolean ignoreLoops, Int2ObjectMap<IntSet> children) {
         IntSet kids = new IntOpenHashSet();
         children.put(state, kids);
 
         for (int label : getLabelsTopDown(state)) {
             for (Rule rule : getRulesTopDown(label, state)) {
                 for (int child : rule.getChildren()) {
+                    // if ignoreLoops, don't count loops q -> f(q) as cycles
+                    if( ignoreLoops && child == state ) {
+                        continue;
+                    }
+
                     kids.add(child);
 
                     if (!children.containsKey(child)) {
-                        if (this.exploreForCyclicity(child, children)) {
+                        if (this.exploreForCyclicity(child, ignoreLoops, children)) {
                             return true;
                         }
                     }
@@ -766,15 +720,28 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     /**
      * Computes the highest-weighted tree in the language of this (weighted)
      * automaton, using the Viterbi algorithm. If the language is empty, return
-     * null.
+     * null.<p>
      *
-     * Only works correctly if the automaton has no cycles.
+     * This method is designed for acyclic automata, and will yield unpredictable
+     * results if the automaton has cycles.
      */
     @OperationAnnotation(code = "viterbi")
     public Tree<String> viterbi() {
         return viterbi(ViterbiWithBackpointerSemiring.INSTANCE);
     }
 
+    /**
+     * Runs the Viterbi algorithm to compute the highest-weighted tree in the
+     * language of this automaton. "Highest-weighted" is with respect to the given
+     * semiring. We assume that the sum operation of this semiring is the "maximum"
+     * operation on the domain of the semiring; the product operation is unconstrained.
+     * For instance, using the {@link ViterbiWithBackpointerSemiring} will yield the
+     * regular Viterbi algorithm, whereas {@link AdditiveViterbiSemiring} will work
+     * for Viterbi on log-probabilities.<p>
+     * 
+     * This method is designed for acyclic automata, and will yield unpredictable
+     * results if the automaton has cycles.
+     */
     public Tree<String> viterbi(Semiring<Pair<Double, Rule>>  semiring) {
         WeightedTree raw = viterbiRaw(semiring);
 
@@ -783,49 +750,22 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         } else {
             return getSignature().resolve(raw.getTree());
         }
-
-//        // run Viterbi algorithm bottom-up, saving rules as backpointers
-//
-//        Int2ObjectMap<Pair<Double, Rule>> map
-//                = evaluateInSemiring2(new ViterbiWithBackpointerSemiring(),
-//                        rule -> new Pair(rule.getWeight(), rule));
-//
-//        // find final state with highest weight
-//        int bestFinalState = 0;
-//        double weightBestFinalState = Double.POSITIVE_INFINITY;
-//
-//        for (int s : getFinalStates()) {
-//            Pair<Double, Rule> result = map.get(s);
-//
-//            // ignore final states that (for some crazy reason) can't
-//            // be expanded
-//            if (result.right != null) {
-//                if (map.get(s).left < weightBestFinalState) {
-//                    bestFinalState = s;
-//                    weightBestFinalState = map.get(s).left;
-//                }
-//            }
-//        }
-//        
-//        //getSignature().resolveSymbolId(
-//
-//        // extract best tree from backpointers
-//        return extractTreeFromViterbi(bestFinalState, map);
     }
 
     /**
-     * Computes the highest-weighted tree in the language of this (weighted)
-     * automaton, using the Viterbi algorithm. If the language is empty, return
-     * null. Unlike {@link #viterbi() }, this method returns a tree whose nodes
-     * are labeled with label IDs, as opposed to the labels (Strings)
-     * themselves. It also returns the weight of the top-ranked tree.
-     *
-     * Only works correctly if the automaton has no cycles.
+     * Computes the highest-weighted tree and its weight. See {@link #viterbi()} for more details.
+     * 
      */
     public WeightedTree viterbiRaw() {
         return viterbiRaw(ViterbiWithBackpointerSemiring.INSTANCE);
     }
 
+    /**
+     * Computes the highest-weighted tree and its weight, with respect to the given semiring.
+     * See {@link #viterbi(Semiring)} for more details.
+     * @param semiring
+     * @return
+     */
     public WeightedTree viterbiRaw(Semiring<Pair<Double, Rule>>  semiring) {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
 
@@ -2208,7 +2148,14 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
-     * The method is only guaranteed to work on non-recursive automata. As a
+     * The method is only guaranteed to work on non-recursive automata. 
+     * As a general rule, this means that the automaton may not have cycles.
+     * Otherwise, the results of this method are undefined; if you run Alto
+     * with assertions enabled, cyclicity is checked and the assertion will fail
+     * if the automaton has a cycle.
+     * <p>
+     * 
+     * As a
      * special case, loop rules of the form q → f(q) are allowed, but they are
      * simply skipped. This is correct in automata in which traversals of the
      * loop only lead to worse results, e.g. in Viterbi for PCFGs.
@@ -2216,6 +2163,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param <E>
      */
     private <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
+        assert ! isCyclic(true) : "Automaton has non-loop cycles, semiring evaluation is not supported";
+
         final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<>();
 
         foreachStateInBottomUpOrder((state, rulesTopDown) -> {
