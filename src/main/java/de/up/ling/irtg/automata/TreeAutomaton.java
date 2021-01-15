@@ -2709,6 +2709,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * Semiring#one()}.
      */
     public Iterator<Tree<Integer>> languageIteratorRaw(Semiring<Double> semiring) {
+
         return new LanguageIterator(new SortedLanguageIterator(this, new SemiringItemEvaluator(semiring)));
 
     }

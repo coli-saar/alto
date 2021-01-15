@@ -8,6 +8,9 @@ import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,7 +30,7 @@ import java.util.Set;
 public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
     private Int2ObjectMap<StreamForState> streamForState;
-    private Set<Integer> visitedStates;
+    private IntSet visitedStates;
     private static final boolean DEBUG = false;
     private TreeAutomaton<State> auto;
     private Stream<EvaluatedItem> globalStream;
@@ -56,7 +59,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         this.progress = 0;
 
         // combine streams for the different start symbols
-        visitedStates = new HashSet<>();
+        visitedStates = new IntOpenHashSet();
         globalStream = new SortedMergedStream<>(EvaluatedItemComparator.INSTANCE);
         for (int q : auto.getFinalStates()) {
             StreamForState sq = getStreamForState(q);
@@ -343,7 +346,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
             // initalize the stream by adding an unevaluated item
             // <0, ..., 0>, indicating that the 1-best tree for this rule
-            // can be built from the 1-best trees of the child states
+            // can be built from the 1-best trees of the child states1ß
             List<Integer> listOfZeroes = new ArrayList<>();
             for (int i = 0; i < rule.getArity() + 1; i++) {
                 listOfZeroes.add(0);

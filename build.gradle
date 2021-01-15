@@ -7,7 +7,7 @@ plugins {
     id 'groovy'
     id 'antlr'
     id 'ca.coglinc.javacc' version '2.4.0'
-    id 'com.github.johnrengelman.shadow' version '5.0.0'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'idea'
 }
 
@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     antlr   'org.antlr:antlr4:4.7.2'
-    api 'com.github.coli-saar:basics:2909d4b20d9a9cb47ef'
+    api 'com.github.coli-saar:basics:9b78dde236d924e696671b586d7e6eb09309f253'
     api 'it.unimi.dsi:fastutil:8.2.2'
     implementation 'org.springframework:spring-jdbc:4.2.2.RELEASE'
     implementation 'mysql:mysql-connector-java:5.1.37'
@@ -71,7 +71,7 @@ scmVersion {
 group = 'com.github.coli-saar'
 version = scmVersion.version
 description = 'alto'
-sourceCompatibility = '1.8'
+sourceCompatibility = '1.11'
 mainClassName = 'de.up.ling.irtg.main.Alto'
 //mainClassName = 'de.up.ling.irtg.script.TulipacParser'
 
