@@ -353,11 +353,17 @@ public class InterpretedTreeAutomaton implements Serializable {
 
     /**
      * Decodes a map of input representations to a set of objects of the
-     * specified output algebra. This first computes a parse chart for the input
-     * representations, as per {@link #parse(java.util.Map) }. It then decodes
-     * the parse chart into an output term chart (see {@link #decodeToAutomaton(java.lang.String, de.up.ling.irtg.automata.TreeAutomaton)}
-     * and evaluates each term in the language of the term chart to an object in
-     * the output algebra. The method returns the set of all of these objects.
+     * specified output algebra.
+     *
+     * The map takes interpretation names as keys and human-readable inputs
+     * as values. These inputs are first converted to internal representations
+     * of the respective algebras, and then a parse chart for these inputs
+     * is computed. The parse chart is decoded
+     * into an output term chart (see {@link #decodeToAutomaton(java.lang.String, de.up.ling.irtg.automata.TreeAutomaton)},
+     * and each tree in its language is evaluated to an object of the given
+     * output algebra (as an internal value of that algebra, which can be
+     * converted back to human-readable form using {@link Algebra#representAsString(Object)}).
+     * The method returns the set of all these values.
      *
      * @throws ParserException
      */
