@@ -1,0 +1,38 @@
+/* Grammar for Chinese-English SCFG example from Chiang 2007 */
+
+/* example sentences are:
+
+   30 duonianlai de youhao hezuo
+   friendly cooperation over the past 30 years
+
+   In Alto, parse the Chinese sentence on the "left" interpretation
+   or the English sentence on the "right" interpretation.
+
+*/
+
+
+S
+
+
+S -> X
+S -> X
+
+X -> X de X
+X -> X[2] X[1]
+
+X -> X X
+X -> X[1] X[2]
+
+X -> X duonianlai
+X -> over the past X years
+
+X -> 30
+X -> 30
+
+X -> youhao
+X -> friendly
+
+X -> hezuo
+X -> cooperation
+
+
