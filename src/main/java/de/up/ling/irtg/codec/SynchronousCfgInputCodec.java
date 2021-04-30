@@ -26,6 +26,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+
+
+/**
+ * An input codec for (unweighted) synchronous context-free grammars.
+ * The first line of a file that this codec will read contains the start symbol of the grammar.
+ * The rest of the file specifies the rule pairs, with the left rule on one line
+ * and the corresponding right rule on the next. Rules are specified in the following form:<p>
+ *
+ * {@code A -> B c D}
+ *
+ * The right rule may only use nonterminal symbols that occur on the left rule.
+ * If the nonterminal occurs only once on the left-hand side, you can simply use
+ * that nonterminal in the right rule. If the nonterminal A occurs k > 1 times in the
+ * left rule, the right rule can use the nonterminal {@code A[i]} for an A nonterminal
+ * that corresponds to the i-th occurrence of A on the right-hand side of the left rule.<p>
+ *
+ * The codec infers which symbols are nonterminals by taking all symbols
+ * that occur on the left-hand side of a rule as nonterminals. This means
+ * that the terminal and nonterminal symbols must be disjoint sets, otherwise
+ * the grammar will not be equivalent to what you intended.<p>
+ *
+ * The codec represents the SCFG as an IRTG with four interpretations. The string
+ * interpretations "left" and "right" are over the {@link de.up.ling.irtg.algebra.StringAlgebra}.
+ * In addition, the interpretations "left_tree" and "right_tree" represent the
+ * phrase-structure parse trees on each side, using terms over the {@link de.up.ling.irtg.algebra.TreeAlgebra}.
+ *
+ * @author koller
+ */
 @CodecMetadata(name = "scfg", description = "Synchronous context-free grammars", extension = "scfg", type = InterpretedTreeAutomaton.class)
 public class SynchronousCfgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
