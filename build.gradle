@@ -19,9 +19,10 @@ javadoc.options.encoding = 'UTF-8'
 
 repositories {
     mavenCentral()
-    maven { url "http://akci.coli.uni-saarland.de/artifactory/external"
-            allowInsecureProtocol = true }
+//    maven { url "http://akci.coli.uni-saarland.de/artifactory/external"
+//            allowInsecureProtocol = true }
     maven {url 'https://jitpack.io'}
+    maven {url 'https://raw.github.com/coli-saar/alto/repository/'}
 }
 
 dependencies {
