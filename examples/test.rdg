@@ -1,5 +1,0 @@
-S -> <wird:101>(VP)
-VP -> <gegeben:1,20>(NP, NP)
-NP -> <hans:0>
-NP -> <kaesebrot:10>(Det)
-Det -> <ein:0>

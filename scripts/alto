@@ -1,7 +1,0 @@
-#! /bin/bash
-
-# alto = Alto GUI
-
-# Runs the Alto GUI.
-
-java -Xmx8G -jar $ALTO_JAR

@@ -1,7 +1,0 @@
-# IRTG unannotated corpus file, v1.0
-#
-# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
-
-john watches the woman with the telescope
-john watches the telescope with the telescope
-john watches the telescope with the woman
