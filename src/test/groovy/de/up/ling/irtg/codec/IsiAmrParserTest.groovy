@@ -103,20 +103,54 @@ class IsiAmrParserTest {
         SGraph graph = IsiAmrParser.parse(new StringReader(AMR_NAMES_TEST));
         
         assertEquals("boy", graph.getNode("b").getLabel());
-        assert graph.getNode("c") == null;
+
+        assert graph.getNode("c") != null;
+        assertEquals(null, graph.getNode("c").getLabel());
         
         GraphNode g = graph.getNode("g");
         boolean foundEdge = false;
         for( GraphEdge e : graph.getGraph().outgoingEdgesOf(g) ) {
             if( e.getLabel().equals("ARGx")) {
                 foundEdge = true;
-                assertEquals("c", e.getTarget().getLabel());
+                assertEquals("c", e.getTarget().getName());
             }
         }
         
         assert foundEdge;
     }
-    
+
+    @Test
+    public void testReentrancyFirst() {
+        SGraph graph = IsiAmrParser.parse(new StringReader(AMR1_REENTRANCY_FIRST));
+
+        assert graph.getGraph().vertexSet().size() == 3;
+
+        GraphNode goNode = graph.getNode("g");
+        for (GraphEdge e : graph.getGraph().outgoingEdgesOf(goNode)) {
+            if (e.getLabel().equals("ARG0")) {
+                assertEquals("boy", e.getTarget().getLabel());
+            }
+        }
+    }
+
+
+    @Test
+    public void testNodesWithNoNodenames() {
+        SGraph graph = IsiAmrParser.parse(new StringReader(AMR_NO_NODENAMES));
+        assert hasNodename(graph, "John");
+        assert hasNodename(graph, "1234");
+        assert hasNodename(graph, "-");
+        assert hasNodename(graph, "+");
+        assert hasNodename(graph, "interrogative");
+        assert hasNodename(graph, "a");
+        assert hasNodename(graph, "b2");
+    }
+
+    private static hasNodename(SGraph graph, String nodeName) {
+        return graph.getGraph().vertexSet().stream().anyMatch({ n -> n.getLabel().equals(nodeName) });
+    }
+
+
     private static final String AMR_ANONYMOUS_SRC = """
    (<root, coref1> / want-01
        :ARG0 (b<subj> / boy)
@@ -145,12 +179,30 @@ class IsiAmrParserTest {
           :ARG0 b))
 """;
     
-    // intended: b/boy, g -ARG0-> b, g -ARGx-> _u123/c
+    // intended: b/boy, g -ARG0-> b, g -ARGx-> c/null
     public static final String AMR_NAMES_TEST = """(w / want-01
         :ARG0 (b / boy)
         :ARG1 (g / go-01
                    :ARG0 b
                    :ARGx c))
+""";
+
+    public static final String AMR1_REENTRANCY_FIRST = """(w / want-01
+  :ARG1 (g / go-01
+          :ARG0 b)
+  :ARG0 (b / boy))
+""";
+
+    // makes no linguistic sense, just for testing
+    // all of John, 1234, - and interrogative should be node labels.
+    public static final String AMR_NO_NODENAMES = """(l / list
+  :op1 "John"
+  :op2 1234
+  :op3 "a"
+  :op4 "b2"
+  :polarity -
+  :polite +
+  :mode interrogative)
 """;
     
     public static final String AMR2 = """
