@@ -48,10 +48,14 @@ public class IsiAmrParser {
 	      if (graph.getNode(nodename) != null) {
 	          GraphNode existingNode = graph.getNode(nodename);
 	          if (existingNode.getLabel() != null){
-	              System.err.println("Warning: overwriting label" + existingNode.getLabel() +
-	                                    " of node " + nodename + " with " + nodelabel);
+	              if (nodelabel != null) {
+                      System.err.println("Warning: overwriting label" + existingNode.getLabel() +
+                                            " of node " + nodename + " with " + nodelabel);
+                      existingNode.setLabel(nodelabel);
+                  }
+	          } else {
+                  existingNode.setLabel(nodelabel);
 	          }
-	          existingNode.setLabel(nodelabel);
 	          return existingNode;
 	      } else {
               return graph.addNode(nodename, nodelabel);
