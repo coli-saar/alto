@@ -54,7 +54,7 @@ If you want to build against the latest version, use `master-SNAPSHOT` or a spec
 
 See the [Wiki](https://github.com/coli-saar/alto/wiki) for more details on how to use Alto. The [tutorials](https://github.com/coli-saar/alto/wiki/Tutorials) are a good way to get started. For advanced usage, you can check out the JavaDoc (see below).
 
-If you run into trouble, please feel free to ask for help on [our Google group](https://groups.google.com/forum/#!forum/alto-users), or you can [submit an issue](https://github.com/coli-saar/alto/issues/).
+If you run into trouble, please feel free to [submit an issue](https://github.com/coli-saar/alto/issues/).
 
 ## JavaDoc ##
 
