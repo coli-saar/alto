@@ -49,7 +49,9 @@ dependencies {
     compile group: "com.github.coli-saar", name:"alto", version:"2.3.0"
 }
 ```
-If you want to build against the latest version, use `master-SNAPSHOT` or a specific git hash as version.
+
+Replace "2.3.0" with the release you want to use; see the [releases page](https://github.com/coli-saar/alto/releases) for details. 
+If you want to build against the latest version, use `master-SNAPSHOT` or a specific git commit hash as version.
 
 
 See the [Wiki](https://github.com/coli-saar/alto/wiki) for more details on how to use Alto. The [tutorials](https://github.com/coli-saar/alto/wiki/Tutorials) are a good way to get started. For advanced usage, you can check out the JavaDoc (see below).
@@ -72,6 +74,8 @@ Here's the result of parsing "the boy wants to go" with this grammar:
 
 
 ## Version History ##
+
+See the [releases page](https://github.com/coli-saar/alto/releases) for versions after 2.3.0.
 
 **Version 2.3.0, April 2019**
 - Move to GitHub and switch build system to gradle.
