@@ -1,4 +1,5 @@
 from jinja2 import *
+import sys
 
 class _Counter(object):
   def __init__(self, start_value=1):
@@ -15,7 +16,7 @@ class _Counter(object):
 env = Environment(loader=FileSystemLoader("."))
 env.globals['counter'] = _Counter
 
-template = env.get_template("main.irtg")
+template = env.get_template(sys.argv[1])
 print(template.render())
 
 
