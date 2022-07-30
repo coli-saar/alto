@@ -20,7 +20,9 @@ import java.util.List;
  * The algebra evaluates constants into feature trees with a single node (with the constant as node label)
  * and no outgoing edges. It evaluated the expression edgelabel(ft1, ft2) to the feature tree denoted by ft1,
  * but with an additional edge with label "edgelabel" pointing to the feature tree denoted by ft2.
- * The edge is added as the rightmost child of the root of ft1.<p>
+ * The edge is added as the rightmost child of the root of ft1. You can instead add ft2 as the leftmost child
+ * using the expression pre_edgelabel(ft1, ft2). The expression post_edgelabel(ft1, ft2) means the same
+ * as edgelabel(ft1,ft2) by itself.<p>
  *
  * This algebra can be used to represent and construct Google-style meaning representations
  * for COGS, as defined here: https://github.com/google-research/language/blob/master/language/compgen/csl/tasks/cogs/target_cfg.txt<p>
@@ -29,6 +31,10 @@ import java.util.List;
  * However, you can interpret a derivation tree into this algebra.
  */
 public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra.OrderedFeatureTree> {
+    public static final String PREFIX_MARKER = "pre_";
+    public static final String POSTFIX_MARKER = "post_";
+
+
     @Override
     protected OrderedFeatureTree evaluate(String label, List<OrderedFeatureTree> childrenValues) {
         if( childrenValues.isEmpty() ) {
@@ -37,8 +43,27 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
         } else {
             // binary operations: add edge to feature tree
             assert childrenValues.size() == 2;
+
+            // check if label is prefix or postfix
+            boolean prefix = false; // default is postfix
+            if( label.startsWith(PREFIX_MARKER) ) {
+                prefix = true;
+                label = label.substring(PREFIX_MARKER.length());
+            } else if( label.startsWith(POSTFIX_MARKER) ) {
+                prefix = false;
+                label = label.substring(POSTFIX_MARKER.length());
+            }
+
+            // add child in the right place
             OrderedFeatureTree ret = childrenValues.get(0).deepCopy();
-            ret.getChildren().add(new Pair(label, childrenValues.get(1)));
+            Pair<String, OrderedFeatureTree> newChild = new Pair(label, childrenValues.get(1));
+
+            if( prefix ) {
+                ret.getChildren().add(0, newChild); // insert at the start
+            } else {
+                ret.getChildren().add(newChild); // append at the end
+            }
+
             return ret;
         }
     }
