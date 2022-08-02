@@ -879,6 +879,28 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(ti.getTree(), tv.getTree())
         assertAlmostEquals(ti.getWeight(), tv.getWeight())
     }
+
+
+    @Test
+    public void testRandomTree() {
+        String SIMPLE_AUTO = "S! -> r1(T,T)\n T -> r2\n T -> r3";
+        TreeAutomaton auto = pa(SIMPLE_AUTO)
+
+        Tree t = auto.getRandomTree();
+        assert [pt("r1(r2,r2)"), pt("r1(r2,r3)"), pt("r1(r3,r2)"), pt("r1(r3,r3)")].contains(t);
+    }
+
+    @Test
+    public void testRandomRuleTree() {
+        String SIMPLE_AUTO = "S! -> r1(T,T)\n T -> r2\n T -> r3";
+        TreeAutomaton auto = pa(SIMPLE_AUTO)
+
+        Tree t = auto.getRandomRuleTree();
+        assertNotNull(t);
+        assert t.getLabel() instanceof Rule;
+    }
+
+
     /*
     def "testing whether automaton is bottom-up deterministic"() {
     expect:
@@ -942,6 +964,7 @@ S -> r2
 S -> r3
    [i] b
 """;
+
     
     private static final String wideString_IRTG = """
     interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra

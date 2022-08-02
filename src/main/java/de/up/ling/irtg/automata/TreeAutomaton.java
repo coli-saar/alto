@@ -898,14 +898,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Tree<Rule> getRandomRuleTree(Map<Integer, Double> inside) {
-        Random rnd = new Random();
-
-        if (getFinalStates().isEmpty()) {
-            return null;
-        } else {
-            int chosenFinalState = Util.sampleMultinomial(getFinalStates().toIntArray(), inside::get);
-            return getRandomTreeFromInside(chosenFinalState, rnd, inside, rule -> rule);
-        }
+        return getRandomGenericTree(inside, rule -> rule);
     }
 
     /**
@@ -945,21 +938,43 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Tree<String> getRandomTree(Map<Integer, Double> inside) {
+        return getRandomGenericTree(inside, rule -> rule.getLabel(this));
+    }
+
+    /**
+     * Samples a random tree. The "inside" map is used to
+     * determine the probabilities with which each rule for expanding the state is chosen.
+     * The method returns a tree with labels of class E. The function "makeLabel" is used
+     * to map the selected rule into a node label for the constructed tree.
+     *
+     * @param inside
+     * @param makeLabel
+     * @return
+     * @param <E>
+     */
+    private <E> Tree<E> getRandomGenericTree(Map<Integer,Double> inside, Function<Rule,E> makeLabel) {
         Random rnd = new Random();
 
         if (getFinalStates().isEmpty()) {
             return null;
         } else {
             int chosenFinalState = Util.sampleMultinomial(getFinalStates().toIntArray(), inside::get);
-            return getRandomTreeFromInside(chosenFinalState, rnd, inside, rule -> rule.getLabel(this));
+            return getRandomGenericTree(chosenFinalState, rnd, inside, makeLabel);
         }
     }
 
 
-
-
-
-    private <E> Tree<E> getRandomTreeFromInside(int state, Random rnd, Map<Integer, Double> inside, Function<Rule, E> makeLabel) {
+    /**
+     * Recursive case of {@link #getRandomGenericTree(Map, Function)}.
+     *
+     * @param state
+     * @param rnd
+     * @param inside
+     * @param makeLabel
+     * @return
+     * @param <E>
+     */
+    private <E> Tree<E> getRandomGenericTree(int state, Random rnd, Map<Integer, Double> inside, Function<Rule, E> makeLabel) {
         List<Rule> rulesHere = Lists.newArrayList(getRulesTopDown(state));
         double selectWeight = rnd.nextDouble() * inside.get(state);
         double cumulativeWeight = 0;
@@ -969,7 +984,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
             cumulativeWeight += rule.getWeight() * insideChildren;
             if (cumulativeWeight >= selectWeight) {
-                List<Tree<E>> children = Arrays.stream(rule.getChildren()).mapToObj(ch -> getRandomTreeFromInside(ch, rnd, inside, makeLabel)).collect(Collectors.toList());
+                List<Tree<E>> children = Arrays.stream(rule.getChildren()).mapToObj(ch -> getRandomGenericTree(ch, rnd, inside, makeLabel)).collect(Collectors.toList());
                 return Tree.create(makeLabel.apply(rule), children);
             }
         }
