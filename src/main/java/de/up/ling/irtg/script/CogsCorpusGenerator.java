@@ -28,10 +28,9 @@ public class CogsCorpusGenerator {
         Args cmd = new Args();
         JCommander.newBuilder().addObject(cmd).build().parse(args);
 
-        System.err.println("x");
-
         InterpretedTreeAutomaton irtg = new IrtgInputCodec().read(new FileInputStream(cmd.parameters.get(0)));
         Map<Integer, Double> inside = irtg.getAutomaton().inside();
+        System.err.println(inside);
 
         for( int i = 0; i < cmd.count; i++ ) {
             Tree<Rule> ruleTree = irtg.getAutomaton().getRandomRuleTree(inside);

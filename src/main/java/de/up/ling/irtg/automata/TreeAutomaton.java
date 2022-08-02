@@ -916,6 +916,15 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * weights for rules with left-hand side A. If the automaton has multiple
      * final states, one of these is chosen with probability proportional
      * to the inside probability.<p>
+     *
+     * This method requires computing the inside probabilities of all states
+     * in the automaton, which can be time-consuming if the automaton is large.
+     * If you need to sample repeatedly from the same automaton, consider
+     * precomputing the inside probabilities and using {@link #getRandomTree(Map)}.
+     * Note that computing the inside probabilities is only possible if the
+     * automaton has no recursion, i.e. a state is never reachable from itself
+     * through rule applications. This is usually true for automata that represent
+     * parse charts, but not for automata that represent grammars.<p>
      * 
      * Returns null if the automaton doesn't have a final state.
      *
