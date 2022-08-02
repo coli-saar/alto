@@ -8,6 +8,8 @@ package de.up.ling.irtg.automata
 import de.up.ling.irtg.semiring.AdditiveViterbiSemiring
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring
 import de.up.ling.irtg.semiring.LogDoubleArithmeticSemiring
+import de.up.ling.irtg.util.Util
+import org.checkerframework.checker.nullness.qual.Nullable
 import org.junit.*
 import java.util.*
 import java.util.function.Consumer
@@ -898,6 +900,22 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         Tree t = auto.getRandomRuleTree();
         assertNotNull(t);
         assert t.getLabel() instanceof Rule;
+
+        Tree tr = auto.getLabelTree(t);
+        assert [pt("r1(r2,r2)"), pt("r1(r2,r3)"), pt("r1(r3,r2)"), pt("r1(r3,r3)")].contains(tr);
+    }
+
+    @Test
+    public void testRandomRuleTreeFromRuleProbabilities() {
+        String SIMPLE_AUTO = "S! -> r1(T,T) [1] \n T -> r2 [0.6] \n T -> r3 [0.4]";
+        TreeAutomaton auto = pa(SIMPLE_AUTO)
+
+        Tree t = auto.getRandomRuleTreeFromRuleProbabilities();
+        assertNotNull(t);
+        assert t.getLabel() instanceof Rule;
+
+        Tree tr = auto.getLabelTree(t);
+        assert [pt("r1(r2,r2)"), pt("r1(r2,r3)"), pt("r1(r3,r2)"), pt("r1(r3,r3)")].contains(tr);
     }
 
 

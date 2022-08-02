@@ -29,36 +29,44 @@ public class CogsCorpusGenerator {
         JCommander.newBuilder().addObject(cmd).build().parse(args);
 
         InterpretedTreeAutomaton irtg = new IrtgInputCodec().read(new FileInputStream(cmd.parameters.get(0)));
-        Map<Integer, Double> inside = irtg.getAutomaton().inside();
-        System.err.println(inside);
+        int countSamplingErrors = 0;
 
         for( int i = 0; i < cmd.count; i++ ) {
-            Tree<Rule> ruleTree = irtg.getAutomaton().getRandomRuleTree(inside);
+            try {
+                Tree<Rule> ruleTree = irtg.getAutomaton().getRandomRuleTreeFromRuleProbabilities();
+                assert ruleTree != null;
 
-            // this is only up here for debugging purposes, move down when everything works
-            Tree<String> dt = Util.mapTree(ruleTree, rule -> rule.getLabel(irtg.getAutomaton()));
-            List<String> englishValue = (List<String>) irtg.interpret(dt, "english");
-            String english = StringTools.join(englishValue, " ");
-            OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = (OrderedFeatureTreeAlgebra.OrderedFeatureTree) irtg.interpret(dt, "semantics");
+                // this is only up here for debugging purposes, move down when everything works
+                Tree<String> dt = Util.mapTree(ruleTree, rule -> rule.getLabel(irtg.getAutomaton()));
+                List<String> englishValue = (List<String>) irtg.interpret(dt, "english");
+                String english = StringTools.join(englishValue, " ");
+                OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = (OrderedFeatureTreeAlgebra.OrderedFeatureTree) irtg.interpret(dt, "semantics");
 
 
-            // If sentence uses the same noun twice, skip it.
-            List<String> nouns = collectNouns(ruleTree, irtg.getAutomaton(), irtg.getInterpretation("english").getHomomorphism());
-            if( nouns.size() != new HashSet<String>(nouns).size() ) {
+                // If sentence uses the same noun twice, skip it.
+                List<String> nouns = collectNouns(ruleTree, irtg.getAutomaton(), irtg.getInterpretation("english").getHomomorphism());
+                if (nouns.size() != new HashSet<String>(nouns).size()) {
+                    i--;
+                    continue;
+                }
+
+                // TODO Filter the rule trees based on PP/CP embedding depth etc.
+
+                System.out.printf("%s\t%s\n", english, ft.toString(true));
+
+                Tree<String> nonterminalTree = getNonterminalTree(ruleTree, irtg.getAutomaton());
+                System.out.printf("[PP depth: %d / CP depth: %d]\n",
+                        getEmbeddingDepth(nonterminalTree, "PP_"),
+                        getEmbeddingDepth(nonterminalTree, "S") - 1);
+            } catch(RuntimeException e) {
+                countSamplingErrors++;
                 i--;
-                continue;
             }
-
-            Tree<String> nonterminalTree = getNonterminalTree(ruleTree, irtg.getAutomaton());
-            System.out.printf("PP depth: %d\n", getEmbeddingDepth(nonterminalTree, "PP_"));
-            System.out.printf("CP depth: %d\n", getEmbeddingDepth(nonterminalTree, "S")-1);
-
-
-            // TODO Filter the rule trees based on PP/CP embedding depth etc.
-
-            System.out.printf("%s\t%s\n", english, ft.toString(true));
         }
+
+        System.err.printf("Encountered %d sampling errors while sampling %d trees.\n", countSamplingErrors, cmd.count);
     }
+
 
     /**
      * Returns the number of occurrences of a nonterminal in a path of the given tree.

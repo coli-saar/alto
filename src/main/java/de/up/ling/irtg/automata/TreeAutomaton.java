@@ -898,7 +898,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Tree<Rule> getRandomRuleTree(Map<Integer, Double> inside) {
-        return getRandomGenericTree(inside, rule -> rule);
+        return getRandomGenericTree(new InsideRuleProbabilityDeterminer(inside), rule -> rule);
     }
 
     /**
@@ -938,7 +938,25 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      */
     public Tree<String> getRandomTree(Map<Integer, Double> inside) {
-        return getRandomGenericTree(inside, rule -> rule.getLabel(this));
+        return getRandomGenericTree(new InsideRuleProbabilityDeterminer(inside), rule -> rule.getLabel(this));
+    }
+
+    /**
+     * Samples a random tree from a probabilistic tree automaton. Unlike {@link #getRandomRuleTree()},
+     * this method does not compute inside probabilities (i.e. it is faster), and does not assume that
+     * the automaton is nonrecursive. However, it does assume that for every state, the weights of the rules
+     * for expanding it top-down sum to one. This is usually the case for automata that represent grammars,
+     * but not for automata that represent parse charts.<p>
+     *
+     * You can make the rule weights for every state sum to one by calling {@link #normalizeRuleWeights()}.
+     * However, this may change the probability distribution over trees, which may not be what you want.<p>
+     *
+     * If the automaton has multiple final states, the method will choose one uniformly at random.
+     *
+     * @return
+     */
+    public Tree<Rule> getRandomRuleTreeFromRuleProbabilities() {
+        return getRandomGenericTree(new TrivialRuleProbabilityDeterminer(), rule -> rule);
     }
 
     /**
@@ -952,20 +970,87 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      * @param <E>
      */
-    private <E> Tree<E> getRandomGenericTree(Map<Integer,Double> inside, Function<Rule,E> makeLabel) {
+    private <E> Tree<E> getRandomGenericTree(RuleProbabilityDeterminer inside, Function<Rule,E> makeLabel) {
         Random rnd = new Random();
 
         if (getFinalStates().isEmpty()) {
             return null;
         } else {
-            int chosenFinalState = Util.sampleMultinomial(getFinalStates().toIntArray(), inside::get);
+            int chosenFinalState = inside.sampleFinalState(getFinalStates().toIntArray());
             return getRandomGenericTree(chosenFinalState, rnd, inside, makeLabel);
         }
     }
 
+    private static interface RuleProbabilityDeterminer {
+        public double scaleSampledWeight(double sampledWeight, int state);
+        public double determineRuleWeight(Rule rule);
+        public int sampleFinalState(int[] finalStates);
+    }
 
     /**
-     * Recursive case of {@link #getRandomGenericTree(Map, Function)}.
+     * Returns the original weight of the rule. Use this to sample from automata where
+     * the rule weights for the same LHS sum to one.
+     */
+    private static class TrivialRuleProbabilityDeterminer implements RuleProbabilityDeterminer {
+        @Override
+        public double scaleSampledWeight(double sampledWeight, int state) {
+            return sampledWeight;
+        }
+
+        @Override
+        public double determineRuleWeight(Rule rule) {
+            return rule.getWeight();
+        }
+
+        @Override
+        public int sampleFinalState(int[] finalStates) {
+            int index = new Random().nextInt(finalStates.length);
+            return finalStates[index];
+        }
+    }
+
+    /**
+     * Convenience  method for converting a tree of rules (from this automaton)
+     * to a tree with terminal labels.
+     *
+     * @param ruleTree
+     * @return
+     */
+    public Tree<String> getLabelTree(Tree<Rule> ruleTree) {
+        return Util.mapTree(ruleTree, rule -> rule.getLabel(this));
+    }
+
+    /**
+     * Scales the rule weights with the inside probabilities of the children.
+     * Use this to sample from nonrecursive automata where the rule weights do not
+     * sum to one (e.g. parse charts).
+     */
+    private static class InsideRuleProbabilityDeterminer implements RuleProbabilityDeterminer {
+        private Map<Integer,Double> inside;
+
+        public InsideRuleProbabilityDeterminer(Map<Integer, Double> inside) {
+            this.inside = inside;
+        }
+
+        @Override
+        public double scaleSampledWeight(double sampledWeight, int state) {
+            return sampledWeight * inside.get(state);
+        }
+
+        @Override
+        public double determineRuleWeight(Rule rule) {
+            double insideChildren = Util.mult(Arrays.stream(rule.getChildren()).mapToDouble(inside::get));
+            return rule.getWeight() * insideChildren;
+        }
+
+        @Override
+        public int sampleFinalState(int[] finalStates) {
+            return Util.sampleMultinomial(finalStates, inside::get);
+        }
+    }
+
+    /**
+     * Recursive case of {@link #getRandomGenericTree(RuleProbabilityDeterminer, Function)}.
      *
      * @param state
      * @param rnd
@@ -974,15 +1059,14 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @return
      * @param <E>
      */
-    private <E> Tree<E> getRandomGenericTree(int state, Random rnd, Map<Integer, Double> inside, Function<Rule, E> makeLabel) {
+    private <E> Tree<E> getRandomGenericTree(int state, Random rnd, RuleProbabilityDeterminer inside, Function<Rule, E> makeLabel) {
         List<Rule> rulesHere = Lists.newArrayList(getRulesTopDown(state));
-        double selectWeight = rnd.nextDouble() * inside.get(state);
+        double selectWeight = inside.scaleSampledWeight(rnd.nextDouble(), state);
         double cumulativeWeight = 0;
 
         for (Rule rule : rulesHere) {
-            double insideChildren = Util.mult(Arrays.stream(rule.getChildren()).mapToDouble(inside::get));
+            cumulativeWeight += inside.determineRuleWeight(rule);
 
-            cumulativeWeight += rule.getWeight() * insideChildren;
             if (cumulativeWeight >= selectWeight) {
                 List<Tree<E>> children = Arrays.stream(rule.getChildren()).mapToObj(ch -> getRandomGenericTree(ch, rnd, inside, makeLabel)).collect(Collectors.toList());
                 return Tree.create(makeLabel.apply(rule), children);
@@ -990,7 +1074,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
 
         // should be unreachable
-        return null;
+        throw new RuntimeException("Could not sample rule for state " + getStateForId(state) + " (maybe rule probabilities do not sum to one?).");
     }
 
 //
