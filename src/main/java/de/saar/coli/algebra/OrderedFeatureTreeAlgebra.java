@@ -8,6 +8,8 @@ import de.up.ling.irtg.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An algebra of ordered feature trees.<p>
@@ -64,6 +66,7 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
                 ret.getChildren().add(newChild); // append at the end
             }
 
+            ret.propagateControl();
             return ret;
         }
     }
@@ -228,6 +231,105 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
             }
 
             return buf.toString();
+        }
+
+        public OrderedFeatureTree findChild(String edgeLabel) {
+            for( Pair<String, OrderedFeatureTree> child : children ) {
+                if( child.left.equals(edgeLabel)) {
+                    return child.right;
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Inject a feature tree under a specific feature. Then call {@link #propagateControl()}
+         * to check if this made it possible to execute control/raising instructions.
+         *
+         * @param feature
+         * @param ft
+         */
+        public void inject(String feature, OrderedFeatureTree ft) {
+            if( getOutgoingEdgeLabels().contains(feature) ) {
+                throw new UnsupportedOperationException("Trying to inject existing feature " + feature + " into feature tree " + this);
+            }
+
+            // This is a bit unfortunate - we don't know at which position in the sequence
+            // of children we're supposed to inject the child.
+            children.add(new Pair(feature, ft));
+
+            propagateControl();
+        }
+
+        /**
+         * Check if this node has a label that encodes control or raising. If all necessary children
+         * are present, execute the control/raising instruction and replace the node label by the
+         * part before the angle brackets.
+         */
+        public void propagateControl() {
+            // Check if we ourselves have a control/raising label that just became active through the injection.
+            Pair<String,ControlTriple> parsedLabel = ControlTriple.parse(label);
+
+            if( parsedLabel != null ) {
+                OrderedFeatureTree valueToInject = findChild(parsedLabel.right.roleInParent);
+                OrderedFeatureTree controlledChild = findChild(parsedLabel.right.controlledChild);
+
+                if( valueToInject != null && controlledChild != null ) {
+                    // We can perform the control/raising operation we were supposed to, let's do it.
+                    label = parsedLabel.left;
+
+                    if( ! parsedLabel.right.isControl ) {
+                        // raising => delete child after use
+                        children.removeIf(edge -> edge.left.equals(parsedLabel.right.roleInParent));
+                    }
+
+                    controlledChild.inject(parsedLabel.right.roleInChild, valueToInject);
+                }
+            }
+        }
+    }
+
+
+    private static class ControlTriple {
+        private static final Pattern CONTROL_PATTERN = Pattern.compile("(.*)<(\\w+)@(\\w+)/(\\w+)>");
+        private static final Pattern RAISING_PATTERN = Pattern.compile("(.*)<(\\w+)\\$(\\w+)/(\\w+)>");
+
+        private String roleInParent;
+        private String controlledChild;
+        private String roleInChild;
+        private boolean isControl; // false = raising
+
+        public static Pair<String,ControlTriple> parse(String nodeLabel) {
+            Matcher m = CONTROL_PATTERN.matcher(nodeLabel);
+            if( m.matches() ) {
+                ControlTriple ct = new ControlTriple(m.group(2), m.group(3), m.group(4), true);
+                return new Pair(m.group(1), ct);
+            }
+
+            m = RAISING_PATTERN.matcher(nodeLabel);
+            if( m.matches() ) {
+                ControlTriple ct = new ControlTriple(m.group(2), m.group(3), m.group(4), false);
+                return new Pair(m.group(1), ct);
+            }
+
+            return null;
+        }
+
+        public ControlTriple(String roleInParent, String controlledChild, String roleInChild, boolean isControl) {
+            this.roleInParent = roleInParent;
+            this.controlledChild = controlledChild;
+            this.roleInChild = roleInChild;
+            this.isControl = isControl;
+        }
+
+        @Override
+        public String toString() {
+            return "ControlTriple{" +
+                    "roleInParent='" + roleInParent + '\'' +
+                    ", controlledChild='" + controlledChild + '\'' +
+                    ", roleInChild='" + roleInChild + '\'' +
+                    ", isControl=" + isControl +
+                    '}';
         }
     }
 }
