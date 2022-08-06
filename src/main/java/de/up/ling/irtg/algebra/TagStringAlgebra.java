@@ -713,6 +713,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
          * 
          * @deprecated 
          */
+        @Deprecated
         public Pair<Span, Span> parseState(String state) {
             String[] parts = state.split("[-,]");
 

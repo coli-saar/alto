@@ -3,6 +3,7 @@ package de.up.ling.irtg.script;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.primitives.Ints;
+import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.saar.coli.algebra.OrderedFeatureTreeAlgebra;
 import de.up.ling.irtg.Interpretation;
@@ -14,6 +15,9 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import org.apache.xpath.operations.Or;
+
+import static de.saar.coli.algebra.OrderedFeatureTreeAlgebra.OrderedFeatureTree;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,7 +44,8 @@ public class CogsCorpusGenerator {
                 Tree<String> dt = Util.mapTree(ruleTree, rule -> rule.getLabel(irtg.getAutomaton()));
                 List<String> englishValue = (List<String>) irtg.interpret(dt, "english");
                 String english = StringTools.join(englishValue, " ");
-                OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = (OrderedFeatureTreeAlgebra.OrderedFeatureTree) irtg.interpret(dt, "semantics");
+                OrderedFeatureTree ft = (OrderedFeatureTree) irtg.interpret(dt, "semantics");
+                ft = postprocess(ft);
 
 
                 // If sentence uses the same noun twice, skip it.
@@ -125,6 +130,27 @@ public class CogsCorpusGenerator {
         });
 
         return ret;
+    }
+
+    private static OrderedFeatureTree postprocess(OrderedFeatureTree ft) {
+        if( ft.getChildren().isEmpty() ) {
+            return ft;
+        } else if( ! ft.getLabel().equals("nmod") ) {
+            return ft;
+        } else {
+            // Condense "case" feature of "nmod" nodes into the node label.
+            // TODO "nmod" is an edge label, not a node label -> fix it
+            List<Pair<String,OrderedFeatureTree>> children = new ArrayList<>();
+            String label = ft.getLabel();
+            for( Pair<String,OrderedFeatureTree> child : ft.getChildren() ) {
+                if( child.left.equals("case") || child.left.equals("pre_case")) {
+                    label = label + "." + child.right.getLabel();
+                } else {
+                    children.add(child);
+                }
+            }
+            return new OrderedFeatureTree(label, children);
+        }
     }
 
     public static class Args {

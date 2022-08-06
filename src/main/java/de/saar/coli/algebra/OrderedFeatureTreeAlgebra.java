@@ -113,51 +113,59 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
          * @param cogsOptimization
          * @return
          */
-        private static String printChild(Pair<String, OrderedFeatureTree> child, boolean cogsOptimization) {
+        private static void printChild(Pair<String, OrderedFeatureTree> child, boolean cogsOptimization, StringBuilder buf) {
             String inEdgeLabel = child.left;
             OrderedFeatureTree childTree = child.right;
+            List<Pair<String, OrderedFeatureTree>> grandchildren = childTree.getChildren();
 
             if( cogsOptimization ) {
-                // if the child node has an outgoing "det" edge, use special COGS syntax instead of printing the edge
-                List<Pair<String, OrderedFeatureTree>> grandchildren = childTree.getChildren();
-                Pair<String, OrderedFeatureTree> detGrandchild = null;
-                List<Pair<String, OrderedFeatureTree>> nonDetGrandchildren = new ArrayList<>();
+                // if the incoming edge label is "nmod", append outgoing "case" label to it
+                if ("nmod".equals(inEdgeLabel)) {
+                    String caseGrandchild = findInChildren("case", grandchildren);
 
-                // check if one grandchild has edge label "det", and collect the other children into nonDetGrandchildren
-                for( Pair<String, OrderedFeatureTree> grandchild : grandchildren ) {
-                    if( grandchild.left.equals("det") ) {
-                        detGrandchild = grandchild;
-                    } else {
-                        nonDetGrandchildren.add(grandchild);
-                    }
-                }
-
-                if( detGrandchild != null ) {  // child has an outgoing "det" edge
-                    if( nonDetGrandchildren.isEmpty() ) {
-                        // ... and no other outgoing edges => represent as "edgelabel = * nodelabel"
-                        return String.format("%s = %s%s",
-                                inEdgeLabel,
-                                ("the".equals(detGrandchild.right.getLabel()) ? "* " : ""),
-                                childTree.getLabel());
-                    } else {
-                        // ... and also other outgoing edges => represent as "edgelabel = * nodelabel(args)"
-                        String grandchildrenStr = StringTools.join(Util.mapToList(nonDetGrandchildren, grandchild -> printChild(grandchild, cogsOptimization)), ", ");
-                        return String.format("%s = %s%s(%s)",
-                                inEdgeLabel,
-                                ("the".equals(detGrandchild.right.getLabel()) ? "* " : ""),
-                                childTree.getLabel(),
-                                grandchildrenStr);
+                    if (caseGrandchild != null) {
+                        inEdgeLabel = inEdgeLabel + "." + caseGrandchild;
                     }
                 }
             }
 
-            // otherwise, go into recursion
-            return inEdgeLabel + " = " + childTree.toString(cogsOptimization);
+            buf.append(inEdgeLabel);
+            buf.append(" = ");
+            buf.append(childTree.toString(cogsOptimization));
+        }
+
+        /**
+         * Looks for an edge with the given label among the originalChildren. If an edge with the label is found,
+         * the node label at the end of the edge is returned.
+         * Otherwise, the method returns null.
+         *
+         * @param edgeLabel
+         * @param children
+         * @return
+         */
+        private static String findInChildren(String edgeLabel, List<Pair<String, OrderedFeatureTree>> children) {
+            String foundValue = null;
+
+            for( Pair<String, OrderedFeatureTree> child : children ) {
+                if( child.left.equals(edgeLabel) ) {
+                    return child.right.getLabel();
+                }
+            }
+
+            return null;
         }
 
         @Override
         public String toString() {
             return toString(false);
+        }
+
+        public List<String> getOutgoingEdgeLabels() {
+            List<String> ret = new ArrayList<>();
+            for( Pair<String, OrderedFeatureTree> child : getChildren() ) {
+                ret.add(child.left);
+            }
+            return ret;
         }
 
         /**
@@ -174,12 +182,52 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
          * @return
          */
         public String toString(boolean cogsOptimization) {
-            if( !children.isEmpty() ) {
-                String childrenStr = StringTools.join(Util.mapToList(children, child -> printChild(child, cogsOptimization)), ", ");
-                return label + "(" + childrenStr + ")";
-            } else {
-                return label;
+            List<String> outgoingEdgeLabels = getOutgoingEdgeLabels();
+            StringBuilder buf = new StringBuilder();
+            boolean first = true;
+
+            // For COGS, skip "case" and "det" edges; they are treated elsewhere.
+            if( cogsOptimization ) {
+                outgoingEdgeLabels.remove("case");
+                outgoingEdgeLabels.remove("det");
+
+                // Express definiteness with asterisk
+                String detChild = findInChildren("det", getChildren());
+                if( "the".equals(detChild) ) {
+                    buf.append("* ");
+                }
             }
+
+            // append label
+            buf.append(getLabel());
+
+            // print children if there are any (beyond case and det)
+            if( ! outgoingEdgeLabels.isEmpty() ) {
+                buf.append("(");
+
+                for( Pair<String, OrderedFeatureTree> child : getChildren() ) {
+                    if( cogsOptimization ) {
+                        // For COGS, skip "case" and "det" edges; they are treated elsewhere.
+                        if ("case".equals(child.left) || "det".equals(child.left)) {
+                            continue;
+                        }
+                    }
+
+                    // append comma
+                    if( first ) {
+                        first = false;
+                    } else {
+                        buf.append(" , ");
+                    }
+
+                    // append outgoing edge
+                    printChild(child, cogsOptimization, buf);
+                }
+
+                buf.append(")");
+            }
+
+            return buf.toString();
         }
     }
 }
