@@ -44,7 +44,7 @@ class OrderedFeatureTreeAlgebraTest {
     @Test
     public void testControl() {
         OrderedFeatureTreeAlgebra alg = new OrderedFeatureTreeAlgebra();
-        OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("xcomp(agent('hope<agent@xcomp/agent>', det(boy, the)), investigate)"))
+        OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("xcomp(agent('hope[agent = xcomp!agent]', det(boy, the)), investigate)"))
 
         assertEquals("hope(agent = * boy , xcomp = investigate(agent = * boy))", ft.toString(true))
     }
@@ -52,7 +52,7 @@ class OrderedFeatureTreeAlgebraTest {
     @Test
     public void testRaising() {
         OrderedFeatureTreeAlgebra alg = new OrderedFeatureTreeAlgebra();
-        OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("xcomp(agent('seem<agent\$xcomp/agent>', det(boy, the)), sleep)"))
+        OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("xcomp(agent('seem[agent -> xcomp!agent]', det(boy, the)), sleep)"))
 
         assertEquals("seem(xcomp = sleep(agent = * boy))", ft.toString(true))
     }

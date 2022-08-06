@@ -291,8 +291,8 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
 
 
     private static class ControlTriple {
-        private static final Pattern CONTROL_PATTERN = Pattern.compile("(.*)<(\\w+)@(\\w+)/(\\w+)>");
-        private static final Pattern RAISING_PATTERN = Pattern.compile("(.*)<(\\w+)\\$(\\w+)/(\\w+)>");
+        private static final Pattern CONTROL_PATTERN = Pattern.compile("(.*)\\[(\\w+)\\s*=\\s*(\\w+)\\s*!\\s*(\\w+)\\]");
+        private static final Pattern RAISING_PATTERN = Pattern.compile("(.*)\\[(\\w+)\\s*->\\s*(\\w+)\\s*!\\s*(\\w+)\\]");
 
         private String roleInParent;
         private String controlledChild;
