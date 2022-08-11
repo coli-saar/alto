@@ -10,7 +10,9 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.CogsOutputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.Util;
@@ -33,6 +35,7 @@ public class CogsCorpusGenerator {
         JCommander.newBuilder().addObject(cmd).build().parse(args);
 
         InterpretedTreeAutomaton irtg = new IrtgInputCodec().read(new FileInputStream(cmd.parameters.get(0)));
+        OutputCodec<OrderedFeatureTree> oc = new CogsOutputCodec();
         int countSamplingErrors = 0;
 
         for( int i = 0; i < cmd.count; i++ ) {
@@ -42,11 +45,11 @@ public class CogsCorpusGenerator {
 
                 // this is only up here for debugging purposes, move down when everything works
                 Tree<String> dt = Util.mapTree(ruleTree, rule -> rule.getLabel(irtg.getAutomaton()));
+
                 List<String> englishValue = (List<String>) irtg.interpret(dt, "english");
                 String english = StringTools.join(englishValue, " ");
-                OrderedFeatureTree ft = (OrderedFeatureTree) irtg.interpret(dt, "semantics");
-                ft = postprocess(ft);
 
+                OrderedFeatureTree ft = (OrderedFeatureTree) irtg.interpret(dt, "semantics");
 
                 // If sentence uses the same noun twice, skip it.
                 List<String> nouns = collectNouns(ruleTree, irtg.getAutomaton(), irtg.getInterpretation("english").getHomomorphism());
@@ -57,7 +60,9 @@ public class CogsCorpusGenerator {
 
                 // TODO Filter the rule trees based on PP/CP embedding depth etc.
 
-                System.out.printf("%s\t%s\n", english, ft.toString(true));
+                // TODO suppress duplicates
+
+                System.out.printf("%s\t%s\n", english, oc.asString(ft));
 
                 Tree<String> nonterminalTree = getNonterminalTree(ruleTree, irtg.getAutomaton());
                 System.out.printf("[PP depth: %d / CP depth: %d]\n",
@@ -130,27 +135,6 @@ public class CogsCorpusGenerator {
         });
 
         return ret;
-    }
-
-    private static OrderedFeatureTree postprocess(OrderedFeatureTree ft) {
-        if( ft.getChildren().isEmpty() ) {
-            return ft;
-        } else if( ! ft.getLabel().equals("nmod") ) {
-            return ft;
-        } else {
-            // Condense "case" feature of "nmod" nodes into the node label.
-            // TODO "nmod" is an edge label, not a node label -> fix it
-            List<Pair<String,OrderedFeatureTree>> children = new ArrayList<>();
-            String label = ft.getLabel();
-            for( Pair<String,OrderedFeatureTree> child : ft.getChildren() ) {
-                if( child.left.equals("case") || child.left.equals("pre_case")) {
-                    label = label + "." + child.right.getLabel();
-                } else {
-                    children.add(child);
-                }
-            }
-            return new OrderedFeatureTree(label, children);
-        }
     }
 
     public static class Args {

@@ -145,7 +145,9 @@ public class ParsingEvaluator {
                 System.err.print(Util.formatTimeSince(start));
 
                 // write to output corpus
-                out.println(dt);
+                if( ! param.noDerivations ) {
+                    out.println(dt);
+                }
 
                 Map<String, Object> results = null;
                 try {
@@ -162,7 +164,7 @@ public class ParsingEvaluator {
                     System.err.printf(" ** %s", e.getMessage());
                 }
 
-                if (param.blankLinkes) {
+                if (param.blankLines) {
                     out.println();
                 }
 
@@ -252,7 +254,10 @@ public class ParsingEvaluator {
         public Map<String, String> outputCodecs = new HashMap<>();
 
         @Parameter(names = {"--blank-lines", "-b"}, description = "Insert a blank line between any two output instances.")
-        public boolean blankLinkes = false;
+        public boolean blankLines = false;
+
+        @Parameter(names = {"--no-derivations"}, description = "Print only the output interpretation values, not the derivation trees.")
+        public boolean noDerivations = false;
 
         @Parameter(names = "--parseval", description = "Measure precision and recall on this interpretation.")
         public String parseval = null;

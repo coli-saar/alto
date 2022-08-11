@@ -1,6 +1,8 @@
 package de.saar.coli.algebra
 
 import de.saar.coli.algebra.OrderedFeatureTreeAlgebra
+import de.up.ling.irtg.codec.CogsOutputCodec
+import de.up.ling.irtg.codec.OutputCodec
 import org.junit.*
 import static org.junit.Assert.*
 
@@ -55,5 +57,14 @@ class OrderedFeatureTreeAlgebraTest {
         OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("xcomp(agent('seem[agent -> xcomp!agent]', det(boy, the)), sleep)"))
 
         assertEquals("seem(xcomp = sleep(agent = * boy))", ft.toString(true))
+    }
+
+    @Test
+    public void testOutputCodec() {
+        OrderedFeatureTreeAlgebra alg = new OrderedFeatureTreeAlgebra();
+        OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("pre_det(nmod(girl, pre_det(pre_case(table, on), a)), the)"   ));
+        OutputCodec<OrderedFeatureTreeAlgebra.OrderedFeatureTree> oc = new CogsOutputCodec();
+        String repr = oc.asString(ft);
+        assertEquals("* girl(nmod.on = table)", repr);
     }
 }

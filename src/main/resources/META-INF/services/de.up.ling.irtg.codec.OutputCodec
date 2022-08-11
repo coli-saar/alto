@@ -8,3 +8,4 @@ de.up.ling.irtg.codec.SgraphAmrWithSourcesOutputCodec
 de.up.ling.irtg.codec.PtbTreeOutputCodec
 de.up.ling.irtg.codec.TreeYieldOutputCodec
 de.up.ling.irtg.codec.BinaryIrtgOutputCodec
+de.up.ling.irtg.codec.CogsOutputCodec
