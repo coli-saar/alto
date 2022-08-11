@@ -16,29 +16,7 @@ public class CogsOutputCodec extends OutputCodec<OrderedFeatureTreeAlgebra.Order
     @Override
     public void write(OrderedFeatureTreeAlgebra.OrderedFeatureTree ft, OutputStream ostream) throws IOException, UnsupportedOperationException {
         Writer w = new BufferedWriter(new OutputStreamWriter(ostream));
-        ft = postprocess(ft);
         w.write(ft.toString(true));
         w.flush();
-    }
-
-    private static OrderedFeatureTreeAlgebra.OrderedFeatureTree postprocess(OrderedFeatureTreeAlgebra.OrderedFeatureTree ft) {
-        if( ft.getChildren().isEmpty() ) {
-            return ft;
-        } else if( ! ft.getLabel().equals("nmod") ) {
-            return ft;
-        } else {
-            // Condense "case" feature of "nmod" nodes into the node label.
-            // TODO "nmod" is an edge label, not a node label -> fix it
-            List<Pair<String, OrderedFeatureTreeAlgebra.OrderedFeatureTree>> children = new ArrayList<>();
-            String label = ft.getLabel();
-            for( Pair<String, OrderedFeatureTreeAlgebra.OrderedFeatureTree> child : ft.getChildren() ) {
-                if( child.left.equals("case") || child.left.equals("pre_case")) {
-                    label = label + "." + child.right.getLabel();
-                } else {
-                    children.add(child);
-                }
-            }
-            return new OrderedFeatureTreeAlgebra.OrderedFeatureTree(label, children);
-        }
     }
 }
