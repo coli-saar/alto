@@ -17,64 +17,132 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.xpath.operations.Or;
 
 import static de.saar.coli.algebra.OrderedFeatureTreeAlgebra.OrderedFeatureTree;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 public class CogsCorpusGenerator {
     public static void main(String[] args) throws IOException {
         Args cmd = new Args();
         JCommander.newBuilder().addObject(cmd).build().parse(args);
 
-        InterpretedTreeAutomaton irtg = new IrtgInputCodec().read(new FileInputStream(cmd.parameters.get(0)));
-        OutputCodec<OrderedFeatureTree> oc = new CogsOutputCodec();
-        int countSamplingErrors = 0;
+        System.err.printf("Generating corpus with %d instances.\n", cmd.count);
 
-        for( int i = 0; i < cmd.count; i++ ) {
-            try {
-                Tree<Rule> ruleTree = irtg.getAutomaton().getRandomRuleTreeFromRuleProbabilities();
-                assert ruleTree != null;
+        // constrain PP embedding depth
+        String[] ppDepthParts = cmd.ppDepth.strip().split("-");
+        if( ppDepthParts.length != 2 ) {
+            System.err.println("PP depth specification must be of the form <min>-<max>.");
+            System.exit(1);
+        }
 
-                // this is only up here for debugging purposes, move down when everything works
-                Tree<String> dt = Util.mapTree(ruleTree, rule -> rule.getLabel(irtg.getAutomaton()));
+        int ppMinDepth = Integer.parseInt(ppDepthParts[0]);
+        int ppMaxDepth = Integer.parseInt(ppDepthParts[1]);
+        System.err.printf("- with PP embedding depth min=%d, max=%d\n", ppMinDepth, ppMaxDepth);
 
-                List<String> englishValue = (List<String>) irtg.interpret(dt, "english");
-                String english = StringTools.join(englishValue, " ");
+        // constrain CP embedding depth
+        String[] cpDepthParts = cmd.cpDepth.strip().split("-");
+        if( cpDepthParts.length != 2 ) {
+            System.err.println("CP depth specification must be of the form <min>-<max>.");
+            System.exit(1);
+        }
 
-                OrderedFeatureTree ft = (OrderedFeatureTree) irtg.interpret(dt, "semantics");
+        int cpMinDepth = Integer.parseInt(cpDepthParts[0]);
+        int cpMaxDepth = Integer.parseInt(cpDepthParts[1]);
+        System.err.printf("- with CP embedding depth min=%d, max=%d\n", cpMinDepth, cpMaxDepth);
 
-                // If sentence uses the same noun twice, skip it.
-                List<String> nouns = collectNouns(ruleTree, irtg.getAutomaton(), irtg.getInterpretation("english").getHomomorphism());
-                if (nouns.size() != new HashSet<String>(nouns).size()) {
-                    i--;
-                    continue;
-                }
+        // read previous sentences
+        Set<String> previousSentences = new HashSet<>();
 
-                // TODO Filter the rule trees based on PP/CP embedding depth etc.
+        if( cmd.previousInstances != null ) {
+            BufferedReader r = new BufferedReader(new FileReader(cmd.previousInstances));
+            String line = null;
 
-                // TODO suppress duplicates
-
-                System.out.printf("%s\t%s\n", english, oc.asString(ft));
-
-                Tree<String> nonterminalTree = getNonterminalTree(ruleTree, irtg.getAutomaton());
-                System.out.printf("[PP depth: %d / CP depth: %d]\n",
-                        getEmbeddingDepth(nonterminalTree, "PP_"),
-                        getEmbeddingDepth(nonterminalTree, "S") - 1);
-            } catch(RuntimeException e) {
-                countSamplingErrors++;
-                i--;
+            while ( (line = r.readLine()) != null ) {
+                String sentence = line.strip().split("\\t")[0];
+                previousSentences.add(sentence);
             }
         }
 
-        System.err.printf("Encountered %d sampling errors while sampling %d trees.\n", countSamplingErrors, cmd.count);
+        // generate corpus
+        InterpretedTreeAutomaton irtg = new IrtgInputCodec().read(new FileInputStream(cmd.parameters.get(0)));
+        OutputCodec<OrderedFeatureTree> oc = new CogsOutputCodec();
+        int countSamplingErrors = 0, skippedForDepth = 0, skippedAsDuplicate = 0;
+        System.err.println();
+
+        try (ProgressBar pb = new ProgressBar("Generating corpus", cmd.count)) {
+            for (int i = 0; i < cmd.count; i++) {
+                pb.stepTo(i);
+
+                try {
+                    Tree<Rule> ruleTree = irtg.getAutomaton().getRandomRuleTreeFromRuleProbabilities();
+                    assert ruleTree != null;
+
+                    // this is only up here for debugging purposes, move down when everything works
+                    Tree<String> dt = Util.mapTree(ruleTree, rule -> rule.getLabel(irtg.getAutomaton()));
+
+                    List<String> englishValue = (List<String>) irtg.interpret(dt, "english");
+                    String english = StringTools.join(englishValue, " ");
+
+                    OrderedFeatureTree ft = (OrderedFeatureTree) irtg.interpret(dt, "semantics");
+
+                    // skip duplicates
+                    if (cmd.suppressDuplicates) {
+                        if (!previousSentences.add(english)) {
+                            i--;
+                            skippedAsDuplicate++;
+                            continue;
+                        }
+                    }
+
+                    // If sentence uses the same noun twice, skip it.
+                    List<String> nouns = collectNouns(ruleTree, irtg.getAutomaton(), irtg.getInterpretation("english").getHomomorphism());
+                    if (nouns.size() != new HashSet<String>(nouns).size()) {
+                        i--;
+                        continue;
+                    }
+
+                    // filter instances for depths
+                    Tree<String> nonterminalTree = getNonterminalTree(ruleTree, irtg.getAutomaton());
+                    int ppDepth = getEmbeddingDepth(nonterminalTree, "PP_");
+                    if (ppDepth < ppMinDepth || ppDepth > ppMaxDepth) {
+                        i--;
+                        skippedForDepth++;
+                        continue;
+                    }
+
+                    int cpDepth = getEmbeddingDepth(nonterminalTree, "S") - 1;
+                    if (cpDepth < cpMinDepth || cpDepth > cpMaxDepth) {
+                        i--;
+                        skippedForDepth++;
+                        continue;
+                    }
+
+                    System.out.printf("%s\t%s\n", english, oc.asString(ft));
+                } catch (RuntimeException e) {
+                    countSamplingErrors++;
+                    i--;
+                }
+            }
+
+            pb.stepTo(cmd.count);
+        }
+
+        System.err.printf("Generated %d instances.\n", cmd.count);
+        if( countSamplingErrors > 0 ) {
+            System.err.printf("- %d sampling errors\n", countSamplingErrors);
+        }
+        if( skippedAsDuplicate > 0 ) {
+            System.err.printf("- %d duplicates skipped\n", skippedAsDuplicate);
+        }
+        if( skippedForDepth > 0 ) {
+            System.err.printf("- %d skipped for depth\n", skippedForDepth);
+        }
+
+//        System.err.printf("Encountered %d sampling errors while sampling %d trees.\n", countSamplingErrors, cmd.count);
     }
 
 
@@ -143,5 +211,19 @@ public class CogsCorpusGenerator {
 
         @Parameter(names = "--count", description="How many instances to generate")
         private int count = 10;
+
+        @Parameter(names = "--suppress-duplicates", description = "Prevents generating the same sentence twice")
+        private boolean suppressDuplicates = false;
+
+        @Parameter(names = "--previous-instances", description = "Sentences in this previously generated corpus count as 'duplicates'")
+        private String previousInstances = null;
+
+        @Parameter(names = "--pp-depth", description = "Limit PP recursion depth to this range (min-max)")
+        private String ppDepth = "0-100";
+
+        @Parameter(names = "--cp-depth", description = "Limit CP recursion depth to this range (min-max)")
+        private String cpDepth = "0-100";
+
+
     }
 }
