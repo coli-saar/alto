@@ -127,7 +127,7 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
                     String caseGrandchild = findInChildren("case", grandchildren);
 
                     if (caseGrandchild != null) {
-                        inEdgeLabel = inEdgeLabel + "." + caseGrandchild;
+                        inEdgeLabel = inEdgeLabel + " . " + caseGrandchild;
                     }
                 }
             }
@@ -206,7 +206,11 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
 
             // print children if there are any (beyond case and det)
             if( ! outgoingEdgeLabels.isEmpty() ) {
-                buf.append("(");
+                if( cogsOptimization ) {
+                    buf.append(" ( ");
+                } else {
+                    buf.append("(");
+                }
 
                 for( Pair<String, OrderedFeatureTree> child : getChildren() ) {
                     if( cogsOptimization ) {
@@ -227,10 +231,14 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
                     printChild(child, cogsOptimization, buf);
                 }
 
-                buf.append(")");
+                if( cogsOptimization ) {
+                    buf.append(" ) ");
+                } else {
+                    buf.append(")");
+                }
             }
 
-            return buf.toString();
+            return buf.toString().stripTrailing();
         }
 
         public OrderedFeatureTree findChild(String edgeLabel) {

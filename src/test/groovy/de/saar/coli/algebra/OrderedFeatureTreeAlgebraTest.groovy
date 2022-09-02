@@ -15,7 +15,7 @@ class OrderedFeatureTreeAlgebraTest {
         OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("nsubjpass(auxpass(punct(known, '.'), was), det(box,the))"));
 
         assertEquals("known(punct = . , auxpass = was , nsubjpass = box(det = the))", ft.toString());
-        assertEquals("known(punct = . , auxpass = was , nsubjpass = * box)", ft.toString(true));
+        assertEquals("known ( punct = . , auxpass = was , nsubjpass = * box )", ft.toString(true));
     }
 
     @Test
@@ -24,7 +24,7 @@ class OrderedFeatureTreeAlgebraTest {
         OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("nsubjpass(auxpass(punct(known, '.'), was), foo(det(box,the), bar))"));
 
         assertEquals("known(punct = . , auxpass = was , nsubjpass = box(det = the , foo = bar))", ft.toString());
-        assertEquals("known(punct = . , auxpass = was , nsubjpass = * box(foo = bar))", ft.toString(true));
+        assertEquals("known ( punct = . , auxpass = was , nsubjpass = * box ( foo = bar ) )", ft.toString(true));
     }
 
     @Test
@@ -32,7 +32,7 @@ class OrderedFeatureTreeAlgebraTest {
         OrderedFeatureTreeAlgebra alg = new OrderedFeatureTreeAlgebra();
         OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("pre_det(nmod(girl, pre_det(pre_case(table, on), a)), the)"   ));
 
-        assertEquals("* girl(nmod.on = table)", ft.toString(true));
+        assertEquals("* girl ( nmod . on = table )", ft.toString(true));
     }
 
     @Test
@@ -48,7 +48,7 @@ class OrderedFeatureTreeAlgebraTest {
         OrderedFeatureTreeAlgebra alg = new OrderedFeatureTreeAlgebra();
         OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("xcomp(agent('hope[agent = xcomp!agent]', det(boy, the)), investigate)"))
 
-        assertEquals("hope(agent = * boy , xcomp = investigate(agent = * boy))", ft.toString(true))
+        assertEquals("hope ( agent = * boy , xcomp = investigate ( agent = * boy ) )", ft.toString(true))
     }
 
     @Test
@@ -56,7 +56,7 @@ class OrderedFeatureTreeAlgebraTest {
         OrderedFeatureTreeAlgebra alg = new OrderedFeatureTreeAlgebra();
         OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("xcomp(agent('seem[agent -> xcomp!agent]', det(boy, the)), sleep)"))
 
-        assertEquals("seem(xcomp = sleep(agent = * boy))", ft.toString(true))
+        assertEquals("seem ( xcomp = sleep ( agent = * boy ) )", ft.toString(true))
     }
 
     @Test
@@ -65,6 +65,6 @@ class OrderedFeatureTreeAlgebraTest {
         OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("pre_det(nmod(girl, pre_det(pre_case(table, on), a)), the)"   ));
         OutputCodec<OrderedFeatureTreeAlgebra.OrderedFeatureTree> oc = new CogsOutputCodec();
         String repr = oc.asString(ft);
-        assertEquals("* girl(nmod.on = table)", repr);
+        assertEquals("* girl ( nmod . on = table )", repr);
     }
 }
