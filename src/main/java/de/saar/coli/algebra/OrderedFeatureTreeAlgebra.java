@@ -36,6 +36,7 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
     public static final String PREFIX_MARKER = "pre_";
     public static final String POSTFIX_MARKER = "post_";
 
+    private static final Pattern ANGLE_BRACKET_PATTERN = Pattern.compile("(.*)<([^>]+)>");  // matches e.g. nmod<relpro>
 
     @Override
     protected OrderedFeatureTree evaluate(String label, List<OrderedFeatureTree> childrenValues) {
@@ -45,6 +46,14 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
         } else {
             // binary operations: add edge to feature tree
             assert childrenValues.size() == 2;
+
+            // strip off angle-bracket annotation (e.g. relative pronoun replacement)
+            String replace = null;
+            Matcher m = ANGLE_BRACKET_PATTERN.matcher(label);
+            if( m.matches() ) {
+                replace = m.group(2);
+                label = m.group(1);
+            }
 
             // check if label is prefix or postfix
             boolean prefix = false; // default is postfix
@@ -56,9 +65,16 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
                 label = label.substring(POSTFIX_MARKER.length());
             }
 
-            // add child in the right place
             OrderedFeatureTree ret = childrenValues.get(0).deepCopy();
-            Pair<String, OrderedFeatureTree> newChild = new Pair(label, childrenValues.get(1));
+            OrderedFeatureTree right = childrenValues.get(1);
+
+            // execute angle-bracket replacements
+            if( replace != null ) {
+                right = right.replaceAll(replace, ret.deepCopy());
+            }
+
+            // add child in the right place
+            Pair<String, OrderedFeatureTree> newChild = new Pair(label, right);
 
             if( prefix ) {
                 ret.getChildren().add(0, newChild); // insert at the start
@@ -66,7 +82,9 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
                 ret.getChildren().add(newChild); // append at the end
             }
 
+            // resolve control and raising
             ret.propagateControl();
+
             return ret;
         }
     }
@@ -107,6 +125,22 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
         public OrderedFeatureTree deepCopy() {
             List<Pair<String, OrderedFeatureTree>> childrenCopies = Util.mapToList(children, child -> new Pair(child.left, child.right.deepCopy()));
             return new OrderedFeatureTree(label, childrenCopies);
+        }
+
+
+        /**
+         * Replaces all occurrences of the given string by a reference to the given feature tree.
+         *
+         * @param replace
+         * @param replacement
+         */
+        public OrderedFeatureTree replaceAll(String replace, OrderedFeatureTree replacement) {
+            if( label.equals(replace)) {
+                return replacement;
+            } else {
+                List<Pair<String, OrderedFeatureTree>> childrenAfterReplacement = Util.mapToList(children, child -> new Pair(child.left, child.right.replaceAll(replace, replacement)));
+                return new OrderedFeatureTree(label, childrenAfterReplacement);
+            }
         }
 
         /**
@@ -295,6 +329,7 @@ public class OrderedFeatureTreeAlgebra extends Algebra<OrderedFeatureTreeAlgebra
                 }
             }
         }
+
     }
 
 

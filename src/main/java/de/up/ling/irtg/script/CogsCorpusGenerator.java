@@ -2,11 +2,7 @@ package de.up.ling.irtg.script;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.google.common.primitives.Ints;
-import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
-import de.saar.coli.algebra.OrderedFeatureTreeAlgebra;
-import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -18,7 +14,6 @@ import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import me.tongfei.progressbar.ProgressBar;
-import org.apache.xpath.operations.Or;
 
 import static de.saar.coli.algebra.OrderedFeatureTreeAlgebra.OrderedFeatureTree;
 
@@ -121,7 +116,11 @@ public class CogsCorpusGenerator {
                         continue;
                     }
 
-                    System.out.printf("%s\t%s\n", english, oc.asString(ft));
+                    if( cmd.printDerivations) {
+                        System.out.printf("%s\t%s\t%s\n", english, oc.asString(ft), dt);
+                    } else {
+                        System.out.printf("%s\t%s\n", english, oc.asString(ft));
+                    }
                 } catch (RuntimeException e) {
                     countSamplingErrors++;
                     i--;
@@ -214,6 +213,9 @@ public class CogsCorpusGenerator {
 
         @Parameter(names = "--suppress-duplicates", description = "Prevents generating the same sentence twice")
         private boolean suppressDuplicates = false;
+
+        @Parameter(names = "--print-derivations", description = "Print derivation tree for each instance")
+        private boolean printDerivations = false;
 
         @Parameter(names = "--previous-instances", description = "Sentences in this previously generated corpus count as 'duplicates'")
         private String previousInstances = null;

@@ -67,4 +67,12 @@ class OrderedFeatureTreeAlgebraTest {
         String repr = oc.asString(ft);
         assertEquals("* girl ( nmod . on = table )", repr);
     }
+
+    @Test
+    public void testAngleBrackets() {
+        OrderedFeatureTreeAlgebra alg = new OrderedFeatureTreeAlgebra();
+        OrderedFeatureTreeAlgebra.OrderedFeatureTree ft = alg.evaluate(pt("'nmod<relpro>'(det(cat,the), agent(sleep, relpro))"));
+
+        assertEquals("* cat ( nmod = sleep ( agent = * cat ) )", ft.toString(true))
+    }
 }
