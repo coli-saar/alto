@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @CodecMetadata(name = "nltk_pcfg", description = "Probabilistic context-free grammars in NLTK format", extension = "pcfg", type = InterpretedTreeAutomaton.class)
-class NltkPcfgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
+public class NltkPcfgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private static Pattern ARROW_RE = Pattern.compile("\\s*-> \\s*(.*)");
     private static Pattern PROBABILITY_RE = Pattern.compile("\\s*\\[\\s*([0-9\\.]+)\\]\\s*(.*)");
     private static Pattern TERMINAL_RE = Pattern.compile("\\s*('([^']*)'|\"([^\"]*)\")\\s*(.*)"); // group 2 = '..'; group 3 = "..."; group 4 = rest
