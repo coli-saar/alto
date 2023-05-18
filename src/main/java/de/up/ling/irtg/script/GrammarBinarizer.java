@@ -112,7 +112,7 @@ public class GrammarBinarizer {
 
             regularSeeds.put(interp, clRs.getDeclaredConstructor(Algebra.class, Algebra.class).newInstance(inputAlgebra, outputAlgebra));
 
-            System.out.printf("Interpretation '%s' will be binarized from algebra '%s' into algebra '%s'\n", interp, inputAlgebra.getClass().getCanonicalName(), outputAlgebra.getClass().getCanonicalName());
+            System.out.printf("Interpretation '%s' will be binarized\n     from algebra '%s'\n     into algebra '%s'\n", interp, inputAlgebra.getClass().getCanonicalName(), outputAlgebra.getClass().getCanonicalName());
             System.out.printf("     using regular seed '%s'.\n", clRs.getCanonicalName());
         }
 
@@ -135,7 +135,7 @@ public class GrammarBinarizer {
         os.flush();
         os.close();
 
-        System.out.printf("\nWrote binarized grammar to '%s' using output codec '%s.\n", param.outGrammarFilename, param.outputCodecName);
+        System.out.printf("\nWrote binarized grammar to '%s' using output codec '%s'.\n", param.outGrammarFilename, param.outputCodecName);
     }
 
 
@@ -173,7 +173,7 @@ public class GrammarBinarizer {
         @Parameter(names = {"--input-codec", "-ic"}, description = "Use the input codec with the given name.")
         public String inputCodecName = null;
 
-        @Parameter(names = {"--output-codec", "-oc"}, description = "Use the output codec with the given name.")
+        @Parameter(names = {"--output-codec", "-oc"}, description = "Use the output codec with the given name; 'toString' = write in .irtg format.")
         public String outputCodecName = "toString";
 
         @Parameter(names = {"--list-input-codecs", "-li"}, description = "List all input codecs.")
