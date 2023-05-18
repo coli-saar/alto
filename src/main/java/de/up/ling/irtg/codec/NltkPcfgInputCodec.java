@@ -19,6 +19,19 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * An input codec for reading PCFG grammars in NLTK format.
+ * The codec will also read CFGs; each rule will then get weight 1.
+ * The resulting IRTG will look like the output of {@link PcfgIrtgInputCodec}.
+ * <p>
+ *
+ * Known limitations:
+ * <ul>
+ *     <li>Alto does not support rules with empty right-hand sides, and so this input will not read NLTK grammars with empty right-hand sides.</li>
+ *     <li>The "%start" directive in NLTK seems to be undocumented, and we ignore it here. To set a nonterminal as the start symbol, make it the left-hand side of the first production rule.</li>
+ * </ul>
+ *
+ */
 @CodecMetadata(name = "nltk_pcfg", description = "Probabilistic context-free grammars in NLTK format", extension = "pcfg", type = InterpretedTreeAutomaton.class)
 public class NltkPcfgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private static Pattern ARROW_RE = Pattern.compile("\\s*-> \\s*(.*)");
@@ -71,6 +84,8 @@ public class NltkPcfgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private void processRule(String line, int lineNumber, ConcreteTreeAutomaton<String> auto, Homomorphism stringHom, Homomorphism treeHom) {
         // Using the regexes with (.*) for the rest of the line makes the runtime
         // quadratic in the line length. If this ever becomes an issue, let's make it faster.
+        //
+        // Other than that, the implementation follows the NLTK source code quite closely (see https://www.nltk.org/_modules/nltk/grammar.html).
         String lhs;
         List<String> homLeaves = new ArrayList<>();
         List<String> rhsNonterminals = new ArrayList();
