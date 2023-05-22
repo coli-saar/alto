@@ -6,13 +6,20 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.BinaryIrtgInputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.util.ConsoleProgressBar;
+import de.up.ling.irtg.util.Util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Performs EM training on a grammar. The script assumes that the parse charts were already
+ * computed and have been stored to *.irtb files. This can be done e.g. with the ParsingEvaluator script.
+ */
 public class EMTrainer {
     private static JCommander jc;
     public static void main(String[] args) throws IOException {
@@ -37,19 +44,21 @@ public class EMTrainer {
         InterpretedTreeAutomaton irtg = new IrtgInputCodec().read(new FileInputStream(param.grammarName));
         ChartFromFilesIterable charts = new ChartFromFilesIterable(new File(param.chartDirectory), irtg);
 
+        // perform EM training
         ConsoleProgressBar bar = new ConsoleProgressBar(60, System.out);
-        int x = 0;
         irtg.getAutomaton().trainEM(charts, 10, 0.001, false, charts.size(), bar.createListener());
         bar.finish();
+
+        // write IRTG
+        OutputCodec oc = OutputCodec.getOutputCodecByExtension(Util.getFilenameExtension(param.outGrammarName));
+        oc.write(irtg, new FileOutputStream(param.outGrammarName));
     }
 
     private static class ChartFromFilesIterable implements Iterable<TreeAutomaton.LinkedChart> {
-        private File chartDirectory;
-        private File[] chartFiles;
-        private InterpretedTreeAutomaton irtg;
+        private final File[] chartFiles;
+        private final InterpretedTreeAutomaton irtg;
 
         public ChartFromFilesIterable(File chartDirectory, InterpretedTreeAutomaton irtg) {
-            this.chartDirectory = chartDirectory;
             this.chartFiles = chartDirectory.listFiles( (dir, name) -> name.endsWith(".irtb") );
             this.irtg = irtg;
         }
@@ -73,11 +82,7 @@ public class EMTrainer {
                     try {
                         TreeAutomaton<String> chart = new BinaryIrtgInputCodec().read(new FileInputStream(chartFiles[i++])).getAutomaton();
                         TreeAutomaton.LinkedChart ret = new TreeAutomaton.LinkedChart(chart);
-                        irtg.collectRules(ret, pairState -> {
-                            String s = ((String) pairState).split(",")[0];
-//                            System.err.printf("%s -> %s\n", pairState, s);
-                            return s;
-                        });
+                        irtg.collectRules(ret, pairState -> ((String) pairState).split(",")[0]);
                         return ret;
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -93,9 +98,6 @@ public class EMTrainer {
 
         @Parameter(names = {"--out-grammar", "-o"}, description = "Filename in which the trained IRTG will be stored.")
         public String outGrammarName = null;
-
-        @Parameter(names = {"--output-codec", "-oc"}, description = "Encode the output IRTG using the output codec with the given name.")
-        public String outputCodecName = "toString";
 
         @Parameter(names = "--charts", description = "Directory where the chart files are (see save-charts option in ParsingEvaluator).")
         public String chartDirectory = null;
