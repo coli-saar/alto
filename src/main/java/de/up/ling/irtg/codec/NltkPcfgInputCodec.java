@@ -134,8 +134,14 @@ public class NltkPcfgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             // string => add terminal
             m = TERMINAL_RE.matcher(line);
             if( m.matches() ) {
-//                System.err.printf("TERMINAL '%s'\n", line);
                 String terminal = (m.group(2) != null) ? m.group(2) : m.group(3); // depending on '...' vs "..."
+
+                // silently replace "*" by "__*__" for the string algebra; this is undone for the tree algebra
+                // in makeRule
+                if( StringAlgebra.CONCAT.equals(terminal)) {
+                    terminal = StringAlgebra.SPECIAL_STAR;
+                }
+
                 homLeaves.add(terminal);
                 line = m.group(4);
                 continue;
@@ -180,7 +186,31 @@ public class NltkPcfgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         String terminal = gensym("r");
         auto.addRule(auto.createRule(lhs, terminal, rhsNonterminals, probability));
         stringHom.add(terminal, Util.makeBinaryTree("*", homLeaves));
-        treeHom.add(terminal, Util.makeTreeWithArities(Tree.create(lhs, Util.mapToList(homLeaves, Tree::create))));
+
+        Tree<String> treeTerm = Util.makeTreeWithArities(Tree.create(lhs, Util.mapToList(homLeaves, Tree::create)));
+
+        // replace __*__ from the grammar by * on the tree algebra;
+        // note that by this point __*__ has been suffixed with an arity
+        boolean hasSpecialStar = false;
+        for( String x : homLeaves ) {
+            if( x.startsWith(StringAlgebra.SPECIAL_STAR)) {
+                hasSpecialStar = true;
+            }
+        }
+
+        if( hasSpecialStar ) { // this is skipped for efficiency if the homLeaves don't contain the __*__
+            if (homLeaves.contains(StringAlgebra.SPECIAL_STAR)) {
+                treeTerm = Util.mapTree(treeTerm, nodeLabel -> {
+                    if( nodeLabel.startsWith(StringAlgebra.SPECIAL_STAR)) {
+                        return StringAlgebra.CONCAT + nodeLabel.substring(StringAlgebra.SPECIAL_STAR.length());
+                    } else {
+                        return nodeLabel;
+                    }
+                });
+            }
+        }
+
+        treeHom.add(terminal, treeTerm);
     }
 
     private String gensym(String prefix) {
