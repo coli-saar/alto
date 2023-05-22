@@ -229,7 +229,7 @@ public class ParsingEvaluator {
                 if( chartsDirectory != null ) {
                     File chartsFile = new File(chartsDirectory, String.format("chart_%d.irtb", pos));
                     OutputStream os = new FileOutputStream(chartsFile);
-                    new BinaryIrtgOutputCodec().write(chart.asInterpretedTreeAutomaton(), os);
+                    new BinaryIrtgOutputCodec().write(chart.reduceTopDown().asInterpretedTreeAutomaton(), os);
                     os.flush();
                     os.close();
                 }

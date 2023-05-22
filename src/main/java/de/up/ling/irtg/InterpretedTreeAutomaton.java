@@ -503,7 +503,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
         List<TreeAutomaton.LinkedChart> charts = new ArrayList<>();
-        newCollectParsesAndRules(trainingData, charts);
+        collectParsesAndRules(trainingData, charts);
 
         getAutomaton().trainEM(charts, iterations, threshold, debug, charts.size(), listener);
     }
@@ -596,7 +596,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * mapping.
      *
      */
-    private void newCollectParsesAndRules(Corpus trainingData, List<TreeAutomaton.LinkedChart> parses) {
+    private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton.LinkedChart> parses) {
         parses.clear();
 
         for (Instance instance : trainingData) {
@@ -604,11 +604,11 @@ public class InterpretedTreeAutomaton implements Serializable {
             TreeAutomaton.LinkedChart linkedChart = new TreeAutomaton.LinkedChart(chartHere);
             parses.add(linkedChart);
 
-            newCollectRules(linkedChart, pairState -> getFirstEntry(pairState).toString());
+            collectRules(linkedChart, pairState -> getFirstEntry(pairState).toString());
         }
     }
 
-    public void newCollectRules(TreeAutomaton.LinkedChart linkedChart, Function<Object,String> chartStateToGrammarState) {
+    public void collectRules(TreeAutomaton.LinkedChart linkedChart, Function<Object,String> chartStateToGrammarState) {
         Iterable<Rule> rules = linkedChart.chart.getRuleSet();
 
         for (Rule intersectedRule : rules) {

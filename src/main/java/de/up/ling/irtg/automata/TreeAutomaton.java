@@ -3429,7 +3429,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
         while (difference > threshold && iteration < iterations) {
             // get the new log likelihood and substract the old one from it for comparison with the given threshold
-            double logLikelihood = estep(data, globalRuleCount, listener, N, debug);
+            String progressLabel = String.format("[%d/%d] loglik=%f", iteration+1, iterations, oldLogLikelihood);
+            double logLikelihood = estep(data, globalRuleCount, listener, N, progressLabel, debug);
             assert logLikelihood >= oldLogLikelihood - 0.0000001; // don't want rounding errors to interfere
             difference = logLikelihood - oldLogLikelihood;
             oldLogLikelihood = logLikelihood;
@@ -3509,7 +3510,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
 
-    private double estep(Iterable<LinkedChart> data, Map<Rule, Double> globalRuleCount, ProgressListener listener, int N, boolean debug) {
+    private double estep(Iterable<LinkedChart> data, Map<Rule, Double> globalRuleCount, ProgressListener listener, int N, String progressLabel, boolean debug) {
         LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
         double logLikelihood = 0.0;
 
@@ -3534,12 +3535,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 System.out.println("logInside and logOutside probabilities for chart #" + i);
 
                 for (Integer r : logInside.keySet()) {
-                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + logInside.get(r));
+                    System.out.printf("Inside: %d %s = %f\n", r, parse.getStateForId(r), logInside.get(r));
                 }
                 System.out.println("-");
 
                 for (Integer r : logOutside.keySet()) {
-                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + logOutside.get(r));
+                    System.out.printf("Outside: %d %s = %f\n", r, parse.getStateForId(r), logOutside.get(r));
                 }
                 System.out.println();
             }
@@ -3560,6 +3561,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                     thisRuleCount = Double.NEGATIVE_INFINITY;
                     divisionsByZero++;
                 } else {
+                    if( debug ) {
+                        if( logOutside.get(intersectedParent) == null ) {
+                            System.err.printf("null entry: %s\n", intersectedParent);
+                        }
+                    }
+
                     thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), Math.log(intersectedRule.getWeight())) - logLikelihoodHere;
                 }
 
@@ -3575,12 +3582,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             logLikelihood += logLikelihoodHere;
 
             if (listener != null) {
-                listener.accept(i + 1, N, null);
+                listener.accept(i + 1, N, progressLabel);
             }
         }
 
         if (divisionsByZero > 0) {
-            System.err.println("There were "+divisionsByZero+" divisions by 0 during the Estep. This may be due to numerical imprecision, or may indicate an error.");
+            System.err.println("There were "+divisionsByZero+" divisions by 0 during the E-step. This may be due to numerical imprecision, or may indicate an error.");
         }
 
         return logLikelihood;
