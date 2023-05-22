@@ -3405,6 +3405,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * @param listener progress listener if you want to keep track of how things are progressing (may be null)
      * @return returns a pair of number of iterations run (1-based) and difference in inside in the last step
      */
+    // This method has a huge limitation in that it assumes that all charts fit in memory at the same time.
+    // It is tempting to sidestep this limitation by loading each chart from a file as needed, but this won't work
+    // easily. The inside and outside probabilities are computed in the e-step from the rule weights of the charts,
+    // and these weights are updated after the m-step in each individual chart automaton. If we were to re-read
+    // the charts from a file in each iteration, the effect would be that the chart weights never change.
     public Pair<Integer, Double> trainEM(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
                         ListMultimap<Rule, Rule> ruleHereToDataRules, int iterations, double threshold, boolean debug,
                         ProgressListener listener) {
@@ -3500,6 +3505,199 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         return new Pair<>(iteration, difference);
     }
 
+    public Pair<Integer, Double> newTrainEM(Iterable<LinkedChart> data, int iterations, double threshold, boolean debug, int N, ProgressListener listener) {
+        if (iterations < 0 && threshold <= 0) {
+            throw new IllegalArgumentException("EM training needs either a valid threshold or a valid number of iterations.");
+        }
+        LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
+        Map<Rule, Double> globalRuleCount = new HashMap<>();
+        // Threshold parameters
+        if (iterations < 0) {
+            iterations = Integer.MAX_VALUE;
+        }
+        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
+        double difference = Double.POSITIVE_INFINITY;
+        int iteration = 0;
+
+        // normalize rule weights, or else EM won't work right
+        Int2DoubleMap stateRuleSums = new Int2DoubleOpenHashMap();
+        for (Rule grammarRule : getRuleSet()) {
+            stateRuleSums.put(grammarRule.getParent(),
+                    grammarRule.getWeight() + stateRuleSums.getOrDefault(grammarRule.getParent(), 0.0));
+        }
+        for (Rule grammarRule : getRuleSet()) {
+            grammarRule.setWeight(grammarRule.getWeight() / stateRuleSums.get(grammarRule.getParent()));
+        }
+
+//        //need to give data automata the same weights // -> later
+//        for (Rule grammarRule : getRuleSet()) {
+//            for (Rule dataRule : ruleHereToDataRules.get(grammarRule)) {
+//                dataRule.setWeight(grammarRule.getWeight());
+//            }
+//        }
+
+        while (difference > threshold && iteration < iterations) {
+            // get the new log likelihood and substract the old one from it for comparison with the given threshold
+            double logLikelihood = newEstep(data, globalRuleCount, listener, N, debug);
+            assert logLikelihood >= oldLogLikelihood - 0.0000001; // don't want rounding errors to interfere
+            difference = logLikelihood - oldLogLikelihood;
+            oldLogLikelihood = logLikelihood;
+
+            if (debug) {
+                System.err.println("Current LL: " + logLikelihood + "\n");
+            }
+
+            // sum over rules with same parent state to obtain state counts
+            Map<Integer, Double> globalStateCount = new HashMap<>();
+            for (int state : getAllStates()) {
+                globalStateCount.put(state, semiring.zero());
+            }
+
+            for (Rule rule : getRuleSet()) {
+                int state = rule.getParent();
+                globalStateCount.put(state, semiring.add(globalStateCount.get(state), globalRuleCount.get(rule)));
+            }
+
+            // M-step
+            int divisionsByZero = 0;
+            for (Rule rule : getRuleSet()) {
+                // normalize weights per nonterminal (subtraction is division in log space)
+                double normalizer = globalStateCount.get(rule.getParent());
+                double newWeight;
+                if (normalizer == Double.NEGATIVE_INFINITY) {
+                    newWeight = Double.NEGATIVE_INFINITY;
+                    divisionsByZero++;
+                } else {
+                    newWeight = globalRuleCount.get(rule) - normalizer;
+                }
+
+                rule.setWeight(Math.exp(newWeight));
+//                for (Rule intersectedRule : ruleHereToDataRules.get(rule)) {
+//                    intersectedRule.setWeight(Math.exp(newWeight));
+//                }
+            }
+            if (divisionsByZero > 0) {
+                System.err.println("There were "+divisionsByZero+" divisions by 0 during the M step. This may be due to numerical imprecision, or may indicate an error.");
+            }
+
+            if (debug) {
+                System.out.println("\n\n***** After iteration " + (iteration + 1) + " *****\n\n" + this.toString());
+            }
+            ++iteration;
+        }
+        return new Pair<>(iteration, difference);
+    }
+
+
+    public static class LinkedChart {
+        public TreeAutomaton<?> chart;
+        public Map<Rule, Rule> intersectedRuleToOriginalRule;
+        public ListMultimap<Rule, Rule> originalRuleToIntersectedRule;
+
+        public LinkedChart(TreeAutomaton<?> chart, Map<Rule, Rule> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRule) {
+            this.chart = chart;
+            this.intersectedRuleToOriginalRule = intersectedRuleToOriginalRule;
+            this.originalRuleToIntersectedRule = originalRuleToIntersectedRule;
+        }
+
+        public LinkedChart(TreeAutomaton<?> chart) {
+            this.chart = chart;
+            intersectedRuleToOriginalRule = new HashMap<>();
+            originalRuleToIntersectedRule = ArrayListMultimap.create();
+        }
+
+        /**
+         * Transfers rule weights from the main grammar to the chart.
+         *
+         * @param grammar
+         */
+        public void resetRuleWeights(TreeAutomaton<?> grammar) {
+            for (Rule grammarRule : grammar.getRuleSet()) {
+                for( Rule chartRule : originalRuleToIntersectedRule.get(grammarRule)) {
+                    chartRule.setWeight(grammarRule.getWeight());
+                }
+            }
+        }
+    }
+
+
+    private double newEstep(Iterable<LinkedChart> data, Map<Rule, Double> globalRuleCount, ProgressListener listener, int N, boolean debug) {
+        System.err.println("new e step!");
+        LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
+        double logLikelihood = 0.0;
+
+        // initialize global rule counts
+        globalRuleCount.clear();
+        for (Rule rule : getRuleSet()) {
+            globalRuleCount.put(rule, semiring.zero());
+        }
+
+        int divisionsByZero = 0;
+        int i = 0;
+        for( LinkedChart linkedChart : data ) {
+            // copy rule weights from grammar to chart
+            linkedChart.resetRuleWeights(this);
+
+            TreeAutomaton<?> parse = linkedChart.chart;
+            Map<Integer, Double> logInside = parse.logInside();
+            Map<Integer, Double> logOutside = parse.logOutside(logInside);
+            i++;
+
+            if (debug) {
+                System.out.println("logInside and logOutside probabilities for chart #" + i);
+
+                for (Integer r : logInside.keySet()) {
+                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + logInside.get(r));
+                }
+                System.out.println("-");
+
+                for (Integer r : logOutside.keySet()) {
+                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + logOutside.get(r));
+                }
+                System.out.println();
+            }
+
+            double logLikelihoodHere = semiring.zero();
+            for (int finalState : parse.getFinalStates()) {
+                logLikelihoodHere = semiring.add(logLikelihoodHere, logInside.get(finalState));
+            }
+
+            for (Rule intersectedRule : linkedChart.intersectedRuleToOriginalRule.keySet()) {
+                Integer intersectedParent = intersectedRule.getParent();
+                Rule originalRule = linkedChart.intersectedRuleToOriginalRule.get(intersectedRule);
+
+                double oldRuleCount = globalRuleCount.get(originalRule);
+                // subtraction in log space is division
+                double thisRuleCount;
+                if (logLikelihoodHere == Double.NEGATIVE_INFINITY) {
+                    thisRuleCount = Double.NEGATIVE_INFINITY;
+                    divisionsByZero++;
+                } else {
+                    thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), Math.log(intersectedRule.getWeight())) - logLikelihoodHere;
+                }
+
+                for (int j = 0; j < intersectedRule.getArity(); j++) {
+                    thisRuleCount = semiring.multiply(thisRuleCount, logInside.get(intersectedRule.getChildren()[j]));
+                }
+
+                globalRuleCount.put(originalRule, semiring.add(oldRuleCount, thisRuleCount));
+            }
+
+            logLikelihoodHere = Math.max(logLikelihoodHere, -1000000);
+
+            logLikelihood += logLikelihoodHere;
+
+            if (listener != null) {
+                listener.accept(i + 1, N, null);
+            }
+        }
+
+        if (divisionsByZero > 0) {
+            System.err.println("There were "+divisionsByZero+" divisions by 0 during the Estep. This may be due to numerical imprecision, or may indicate an error.");
+        }
+
+        return logLikelihood;
+    }
 
     /**
      * Performs the E-step of the EM algorithm. This means that the expected

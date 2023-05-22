@@ -115,7 +115,7 @@ S -> r2
 
         corpus.attachCharts(new Charts(new ByteArrayInputStreamSupplier(bos.toByteArray())));
 
-        irtg.trainEM(corpus);
+        irtg.newTrainEM(corpus);
         return irtg;
     }
    
