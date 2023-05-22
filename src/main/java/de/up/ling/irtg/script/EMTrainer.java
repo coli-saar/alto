@@ -59,13 +59,15 @@ public class EMTrainer {
             bar.update(x, chartFiles.length, String.format("[%s] Reading chart", chartFile.getName()));
             TreeAutomaton<String> chart = new BinaryIrtgInputCodec().read(new FileInputStream(chartFile)).getAutomaton();
             charts.add(chart);
-            irtg.collectRules(chart, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, pairState -> ((String) pairState).split(",")[0] );
+            // TODO fix me
+//            irtg.collectRules(chart, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, pairState -> ((String) pairState).split(",")[0] );
         }
 
         bar.finish();
 
         bar = new ConsoleProgressBar(60, System.out);
-        irtg.getAutomaton().trainEM(charts, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, 10, 0.001, false, bar.createListener());
+        // TODO fixme
+//        irtg.getAutomaton().trainEM(charts, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, 10, 0.001, false, bar.createListener());
         bar.finish();
     }
 

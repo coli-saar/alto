@@ -115,7 +115,7 @@ S -> r2
 
         corpus.attachCharts(new Charts(new ByteArrayInputStreamSupplier(bos.toByteArray())));
 
-        irtg.newTrainEM(corpus);
+        irtg.trainEM(corpus);
         return irtg;
     }
    
@@ -202,11 +202,11 @@ IN -> r9284_br3356 [2.0610057708161583E-4]
         InterpretedTreeAutomaton irtg = trainEM(AA_IRTG, AA_CORPUS);        
     }
     
-    @Test
-    public void testVB() {
-        InterpretedTreeAutomaton irtg = trainVB(CFG_STR, PCFG_EMTRAIN_STR, 0, 1E-5);
-
-    }
+//    @Test
+//    public void testVB() {
+//        InterpretedTreeAutomaton irtg = trainVB(CFG_STR, PCFG_EMTRAIN_STR, 0, 1E-5);
+//
+//    }
     
 
     private double getRuleWeight(String label, List childStates, TreeAutomaton automaton) {

@@ -4,9 +4,6 @@
  */
 package de.up.ling.irtg;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
@@ -43,7 +40,6 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -55,7 +51,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import org.apache.commons.math3.special.Gamma;
 
 /**
  * An interpreted regular tree grammar (IRTG). An IRTG consists of a finite tree
@@ -507,44 +502,12 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton<?>> parses = new ArrayList<>();
-        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
-        ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
-        collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
-
-        getAutomaton().trainEM(parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, iterations, threshold, debug, listener);
-    }
-
-
-    public void newTrainEM(Corpus trainingData) {
-        newTrainEM(trainingData, null);
-    }
-
-    public void newTrainEM(Corpus trainingData, ProgressListener listener) {
-        newTrainEM(trainingData, -1, 1E-5, listener);
-    }
-
-    public void newTrainEM(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
-        if (!trainingData.hasCharts()) {
-            throw new IllegalArgumentException("EM training can only be performed on a corpus with attached charts.");
-        }
-        if (iterations < 0 && threshold <= 0) {
-            throw new IllegalArgumentException("EM training needs either a valid threshold or a valid number of iterations.");
-        }
-        if (debug) {
-            System.out.println("\n\nInitial model:\n" + automaton);
-        }
-
-        // memorize mapping between
-        // rules of the parse charts and rules of the underlying RTG
         List<TreeAutomaton.LinkedChart> charts = new ArrayList<>();
-//        List<TreeAutomaton<?>> parses = new ArrayList<>();
-//        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
-//        ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         newCollectParsesAndRules(trainingData, charts);
 
-        getAutomaton().newTrainEM(charts, iterations, threshold, debug, charts.size(), listener);
+        getAutomaton().trainEM(charts, iterations, threshold, debug, charts.size(), listener);
     }
+
 
 
     /**
@@ -573,6 +536,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      *
      * @param trainingData a corpus of parse charts
      */
+    @Deprecated
     public void trainVB(Corpus trainingData) {
         trainVB(trainingData, null);
     }
@@ -593,6 +557,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param listener a progress listener that will be given information about
      * the progress of the optimization.
      */
+    @Deprecated
     public void trainVB(Corpus trainingData, ProgressListener listener) {
         trainVB(trainingData, 0, 1E-5, listener);
     }
@@ -604,6 +569,8 @@ public class InterpretedTreeAutomaton implements Serializable {
      * contain a parse chart for each instance (see {@link Corpus} for details)
      * .<p>
      *
+     *  Note that all the VB training methods are now deprecated and won't work any more.
+     *
      * This method implements the algorithm from Jones et al., "Semantic Parsing
      * with Bayesian Tree Transducers", ACL 2012.
      *
@@ -614,24 +581,12 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param listener a progress listener that will be given information about
      * the progress of the optimization.
      */
+    @Deprecated
     public void trainVB(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
-        //TODO does this duplicate code from trainEM that has been moved to treeAutomaton? Could this be moved to tree automaton too?
-        if (!trainingData.hasCharts()) {
-            System.err.println("VB training can only be performed on a corpus with attached charts.");
-            return;
-        }
-        if (iterations <= 0 && threshold < 0) {
-            System.err.println("VB training needs either a valid threshold or a valid number of iterations.");
-        }
-        // memorize mapping between
-        // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton<?>> parses = new ArrayList<>();
-        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
-        collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
-
-        getAutomaton().trainVB(parses, intersectedRuleToOriginalRule, iterations, threshold, listener, debug);
+        throw new UnsupportedOperationException("VB training is no longer supported.");
 
     }
+
 
     /**
      * Extracts the parse charts from the training data. Furthermore, computes
@@ -641,38 +596,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * mapping.
      *
      */
-    private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton<?>> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
-        parses.clear();
-        intersectedRuleToOriginalRule.clear();
-
-        if (originalRuleToIntersectedRules != null) {
-            originalRuleToIntersectedRules.clear();
-        }
-
-        for (Instance instance : trainingData) {
-            TreeAutomaton chartHere = instance.getChart().reduceTopDown(); // ensure that chart is top-down reduced
-            parses.add(chartHere);
-
-            collectRules(chartHere, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, pairState -> getFirstEntry(pairState).toString());
-        }
-    }
-
-    public void collectRules(TreeAutomaton<?> chart, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules, Function<Object,String> chartStateToGrammarState) {
-        Iterable<Rule> rules = chart.getRuleSet();
-        Map<Rule, Rule> irtorHere = new HashMap<>();
-        for (Rule intersectedRule : rules) {
-            Rule originalRule = getRuleInGrammar(intersectedRule, chart, chartStateToGrammarState);
-
-            irtorHere.put(intersectedRule, originalRule);
-
-            if (originalRuleToIntersectedRules != null) {
-                originalRuleToIntersectedRules.put(originalRule, intersectedRule);
-            }
-        }
-
-        intersectedRuleToOriginalRule.add(irtorHere);
-    }
-
     private void newCollectParsesAndRules(Corpus trainingData, List<TreeAutomaton.LinkedChart> parses) {
         parses.clear();
 
@@ -687,7 +610,7 @@ public class InterpretedTreeAutomaton implements Serializable {
 
     public void newCollectRules(TreeAutomaton.LinkedChart linkedChart, Function<Object,String> chartStateToGrammarState) {
         Iterable<Rule> rules = linkedChart.chart.getRuleSet();
-//        Map<Rule, Rule> irtorHere = new HashMap<>();
+
         for (Rule intersectedRule : rules) {
             Rule originalRule = getRuleInGrammar(intersectedRule, linkedChart.chart, chartStateToGrammarState);
             linkedChart.originalRuleToIntersectedRule.put(originalRule, intersectedRule);
