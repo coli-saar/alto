@@ -5,6 +5,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.*;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.*;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.automata.language_iteration.SemiringItemEvaluator;
@@ -1469,6 +1470,26 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         finalStates.stream().forEach(finalState -> ret.addFinalState(ret.getIdForState(getStateForId(finalState))));
         return ret;
         //return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
+    }
+
+    /**
+     * Wraps the tree automaton in an IRTG. This is sometimes useful, e.g. to use the
+     * {@link de.up.ling.irtg.codec.BinaryIrtgInputCodec} and {@link de.up.ling.irtg.codec.BinaryIrtgOutputCodec}.
+     * <p>
+     *
+     * The IRTG has zero interpretations.
+     * It is not intended to do anything interesting with - the point of the generated IRTG
+     * is that you can use {@link InterpretedTreeAutomaton#getAutomaton()} to retrieve
+     * the tree automaton.<p>
+     *
+     * This method copies the tree automaton to ensure that it has string-valued states.
+     * This is memory and time intensive. If it ever becomes an issue, one should optimize
+     * this.
+     * @return
+     */
+    public InterpretedTreeAutomaton asInterpretedTreeAutomaton() {
+        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(asConcreteTreeAutomatonWithStringStates());
+        return ret;
     }
 
     /**

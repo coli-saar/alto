@@ -68,6 +68,16 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     }
 
     @Override
+    public ConcreteTreeAutomaton<State> asConcreteTreeAutomaton() {
+        return this;
+    }
+
+    @Override
+    public ConcreteTreeAutomaton<State> asConcreteTreeAutomatonBottomUp() {
+        return this;
+    }
+
+    @Override
     public int addState(State state) {
         return super.addState(state);
     }

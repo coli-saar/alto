@@ -19,6 +19,7 @@ import de.up.ling.irtg.automata.coarse_to_fine.FineToCoarseMapping;
 import de.up.ling.irtg.automata.coarse_to_fine.GrammarCoarsifier;
 import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
 import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
+import de.up.ling.irtg.codec.BinaryIrtgOutputCodec;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
@@ -31,11 +32,8 @@ import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -154,6 +152,24 @@ public class ParsingEvaluator {
             coarseToFineParser = makeCoarseToFineParserFromFile(irtg, ctfInterpretation, param.ctf, 1e-4);
         }
 
+        // create chartsDirectory if it doesn't exist; make it empty otherwise
+        File chartsDirectory = null;
+
+        if( param.chartsDirectory != null ) {
+            chartsDirectory = new File(param.chartsDirectory);
+
+            if( ! chartsDirectory.exists() ) {
+                chartsDirectory.mkdirs();
+            } else {
+                File[] allContents = chartsDirectory.listFiles();
+                if (allContents != null) {
+                    for (File file : allContents) {
+                        file.delete();
+                    }
+                }
+            }
+        }
+
         long overallStart = System.nanoTime();
 
         for (String filename : param.inputFiles) {
@@ -164,7 +180,7 @@ public class ParsingEvaluator {
             int pos = 1;
 
             for (Instance inst : corpus) {
-                System.err.printf(formatString, pos++, firstAlgebra.representAsString(inst.getInputObjects().get(firstInterp)));
+                System.err.printf(formatString, pos, firstAlgebra.representAsString(inst.getInputObjects().get(firstInterp)));
 
                 long start = System.nanoTime();
 
@@ -207,6 +223,16 @@ public class ParsingEvaluator {
 //                TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
 //                Tree<String> dt = chart.viterbi();
                 System.err.print(Util.formatTimeSince(start));
+
+
+                // write chart into file if requested
+                if( chartsDirectory != null ) {
+                    File chartsFile = new File(chartsDirectory, String.format("chart_%d.irtb", pos));
+                    OutputStream os = new FileOutputStream(chartsFile);
+                    new BinaryIrtgOutputCodec().write(chart.asInterpretedTreeAutomaton(), os);
+                    os.flush();
+                    os.close();
+                }
 
                 // write to output corpus
                 if( ! param.noDerivations ) {
@@ -261,6 +287,7 @@ public class ParsingEvaluator {
 
                 // new line in stderr output
                 System.err.println();
+                pos++;
             }
         }
 
@@ -332,8 +359,8 @@ public class ParsingEvaluator {
         @Parameter(names = "--algorithm", description = "Parsing algorithm to use, options: default/condensed/siblingfinder.")
         public String algorithm = "default";
 
-//        @Parameter(names = "--save-charts", description = "Save charts in this directory.")
-//        public String chartsDirectory = null;
+        @Parameter(names = "--save-charts", description = "Save charts in this directory. Charts will be written as IRTGs with zero interpretations using the binary IRTG codecs.")
+        public String chartsDirectory = null;
 
         @Parameter(names = "--verbose", description = "Print some debugging output.")
         public boolean verbose = false;
