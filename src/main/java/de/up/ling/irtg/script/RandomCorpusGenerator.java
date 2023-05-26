@@ -48,7 +48,7 @@ public class RandomCorpusGenerator {
 
         System.err.printf("Generating corpus with %d instances.\n", cmd.count);
 
-        // generate corpus
+        // read grammar
         InputCodec ic = InputCodec.getInputCodecByExtension(Util.getFilenameExtension(cmd.parameters.get(0)));
         InterpretedTreeAutomaton irtg = (InterpretedTreeAutomaton) ic.read(new FileInputStream(cmd.parameters.get(0)));
 
@@ -60,6 +60,11 @@ public class RandomCorpusGenerator {
         for( Map.Entry<String,String> out : cmd.outputInterpretations.entrySet() ) {
             OutputCodec oc = null;
 
+            if( ! irtg.getInterpretations().containsKey(out.getKey()) ) {
+                System.err.printf("The grammar has no interpretation called '%s'.\n", out.getKey());
+                System.exit(1);
+            }
+
             if( "alg".equals(out.getValue()) ) {
                 oc = new AlgebraStringRepresentationOutputCodec(irtg.getInterpretation(out.getKey()).getAlgebra());
             } else {
@@ -67,7 +72,7 @@ public class RandomCorpusGenerator {
             }
 
             if( oc == null ) {
-                System.err.printf("Could not resolve output codec for interpretation '%s': '%s'\n", out.getKey(), out.getValue());
+                System.err.printf("Could not resolve output codec for interpretation '%s': '%s'.\n", out.getKey(), out.getValue());
                 System.exit(1);
             }
 
@@ -83,14 +88,11 @@ public class RandomCorpusGenerator {
         // create corpus writer
         Writer w = (cmd.outputFile == null) ? new PrintWriter(System.out, false) : new FileWriter(cmd.outputFile);
         CorpusWriter cw = new CorpusWriter(irtg, cmd.comment, cmd.commentPrefix, pp, w);
-
-        if( cmd.skipHeader ) {
-            cw.skipHeader();
-        }
-
         cw.setPrintSeparatorLines(cmd.blankLines);
         cw.setAnnotated(cmd.printDerivations);
+        cw.setSkipHeader(cmd.skipHeader);
 
+        // generate corpus
         try (ProgressBar pb = new ProgressBar("Generating corpus", cmd.count)) {
             for (int i = 0; i < cmd.count; i++) {
                 pb.stepTo(i);
@@ -122,6 +124,8 @@ public class RandomCorpusGenerator {
             pb.stepTo(cmd.count);
         }
 
+        w.flush();
+        w.close();
         System.err.printf("Generated %d instances.\n", cmd.count);
     }
 

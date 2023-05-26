@@ -131,8 +131,12 @@ public class CorpusWriter extends AbstractCorpusWriter {
      * This can be useful in situations where the written corpus should be ingested by some other
      * tool and not by Alto.
      */
-    public void skipHeader() {
-        skipHeader = true;
+    public boolean isSkipHeader() {
+        return skipHeader;
+    }
+
+    public void setSkipHeader(boolean skipHeader) {
+        this.skipHeader = skipHeader;
     }
 
     public String getCommentPrefix() {
