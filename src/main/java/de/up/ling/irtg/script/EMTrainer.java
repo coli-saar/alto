@@ -124,7 +124,7 @@ public class EMTrainer {
                 System.out.println(errorMessage);
             }
 
-            jc.setProgramName("java -cp <alto.jar> de.up.ling.irtg.script.ParsingEvaluator <inputfiles>");
+            jc.setProgramName("java -cp <alto.jar> de.up.ling.irtg.script.EMTrainer [options] <inputfiles>");
             jc.usage();
 
             if (errorMessage != null) {

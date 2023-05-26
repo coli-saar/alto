@@ -35,9 +35,16 @@ import static de.saar.coli.algebra.OrderedFeatureTreeAlgebra.OrderedFeatureTree;
  *
  */
 public class RandomCorpusGenerator {
+    private static JCommander jc;
+
     public static void main(String[] args) throws IOException {
         Args cmd = new Args();
-        JCommander.newBuilder().addObject(cmd).build().parse(args);
+        jc = new JCommander(cmd);
+        jc.parse(args);
+
+        if (cmd.help) {
+            usage(null);
+        }
 
         System.err.printf("Generating corpus with %d instances.\n", cmd.count);
 
@@ -124,16 +131,16 @@ public class RandomCorpusGenerator {
         @Parameter
         private List<String> parameters = new ArrayList<>();
 
-        @Parameter(names = "--count", description="How many instances to generate")
+        @Parameter(names = "--count", description="How many instances to generate.")
         private int count = 10;
 
-        @Parameter(names = "--suppress-duplicates", description = "Prevents generating multiple instances with the same value on this interpretation")
+        @Parameter(names = "--suppress-duplicates", description = "Prevents generating multiple instances with the same value on this interpretation.")
         private String suppressDuplicates = null;
 
-        @Parameter(names = "--print-derivations", description = "Print derivation tree for each instance")
+        @Parameter(names = "--print-derivations", description = "Print derivation tree for each instance.")
         private boolean printDerivations = false;
 
-        @DynamicParameter(names = "-O", description = "Specifies which output interpretations should be printed and with what codec; alg=use algebra's default codec")
+        @DynamicParameter(names = "-O", description = "Specifies which output interpretations should be printed and with what codec. Write '-Ointerpretation=alg' to use the algebra's default codec.")
         private Map<String, String> outputInterpretations = new LinkedHashMap<>();
 
         @Parameter(names = {"--output-file", "-o"}, description = "Write corpus to this file (or console if left blank).")
@@ -150,5 +157,25 @@ public class RandomCorpusGenerator {
 
         @Parameter(names = "--comment", description = "Add this comment to the generated corpus.")
         public String comment = null;
+
+        @Parameter(names = "--help", help = true, description = "Prints usage information.")
+        private boolean help;
+    }
+
+    private static void usage(String errorMessage) {
+        if (jc != null) {
+            if (errorMessage != null) {
+                System.out.println(errorMessage);
+            }
+
+            jc.setProgramName("java -cp <alto.jar> de.up.ling.irtg.script.RandomCorpusGenerator [options] <inputfiles>");
+            jc.usage();
+
+            if (errorMessage != null) {
+                System.exit(1);
+            } else {
+                System.exit(0);
+            }
+        }
     }
 }
