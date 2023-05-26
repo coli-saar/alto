@@ -28,6 +28,7 @@ public class CorpusWriter extends AbstractCorpusWriter {
     public static final String NULL = "_null_";
     private String commentPrefix;
     private InterpretedTreeAutomaton irtg;
+    private boolean skipHeader = false;
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, Writer writer) throws IOException {
         this(irtg, comment, commentPrefix, InterpretationPrintingPolicy.fromIrtg(irtg), writer);
@@ -66,7 +67,7 @@ public class CorpusWriter extends AbstractCorpusWriter {
 
     @Override
     public void writeInstance(Instance inst) throws IOException {
-        if (!isHeaderWritten) {
+        if (!isHeaderWritten && !skipHeader) {
             writer.write(makeHeader(comment, inst));
 
             if (printSeparatorLines) {
@@ -123,5 +124,26 @@ public class CorpusWriter extends AbstractCorpusWriter {
 
     public void setPrintSeparatorLines(boolean printSeparatorLines) {
         this.printSeparatorLines = printSeparatorLines;
+    }
+
+    /**
+     * Instructs this CorpusWriter to skip the "IRTG corpus" header when writing the corpus.
+     * This can be useful in situations where the written corpus should be ingested by some other
+     * tool and not by Alto.
+     */
+    public void skipHeader() {
+        skipHeader = true;
+    }
+
+    public String getCommentPrefix() {
+        return commentPrefix;
+    }
+
+    /**
+     * Set the comment prefix to null to prevent comments from being printed.
+     * @param commentPrefix
+     */
+    public void setCommentPrefix(String commentPrefix) {
+        this.commentPrefix = commentPrefix;
     }
 }
