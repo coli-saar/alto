@@ -941,7 +941,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
-     * Samples a random tree from a probabilistic tree automaton. Unlike {@link #getRandomRuleTree()},
+     * Samples a random tree from a probabilistic tree automaton. Each node is labeled with the
+     * rule that was applied.
+     * Unlike {@link #getRandomRuleTree()},
      * this method does not compute inside probabilities (i.e. it is faster), and does not assume that
      * the automaton is nonrecursive. However, it does assume that for every state, the weights of the rules
      * for expanding it top-down sum to one. This is usually the case for automata that represent grammars,
@@ -963,6 +965,32 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public Tree<Rule> getRandomRuleTreeFromRuleProbabilities() {
         return getRandomGenericTree(new TrivialRuleProbabilityDeterminer(), rule -> rule);
+    }
+
+    /**
+     * Samples a random tree from a probabilistic tree automaton. Each node is labeled with a terminal symbol.
+     * Unlike {@link #getRandomTree()},
+     * this method does not compute inside probabilities (i.e. it is faster), and does not assume that
+     * the automaton is nonrecursive. However, it does assume that for every state, the weights of the rules
+     * for expanding it top-down sum to one. This is usually the case for automata that represent grammars,
+     * but not for automata that represent parse charts.<p>
+     *
+     * If the automaton is not <a href="https://dl.acm.org/doi/pdf/10.3115/1220835.1220879">consistent</a>,
+     * i.e. if the probability of all trees does not sum to one, then with a nonzero probability
+     * this method will attempt to sample a tree of infinite depth. In this case, the algorithm will not
+     * terminate. Automata can be inconsistent even when the rule probabilities for each state sum to one.
+     * However, as shown in the paper linked above, automata whose probabilities were estimated from data
+     * (e.g. with maximum likelihood estimation or EM) are always consistent.<p>
+     *
+     * You can make the rule weights for every state sum to one by calling {@link #normalizeRuleWeights()}.
+     * However, this may change the probability distribution over trees, which may not be what you want.<p>
+     *
+     * If the automaton has multiple final states, the method will choose one uniformly at random.
+     *
+     * @return
+     */
+    public Tree<String> getRandomTreeFromRuleProbabilities() {
+        return getRandomGenericTree(new TrivialRuleProbabilityDeterminer(), rule -> rule.getLabel(this));
     }
 
     /**

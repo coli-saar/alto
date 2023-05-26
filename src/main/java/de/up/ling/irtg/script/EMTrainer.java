@@ -7,6 +7,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.BinaryIrtgInputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
+import de.up.ling.irtg.codec.ToStringOutputCodec;
 import de.up.ling.irtg.util.ConsoleProgressBar;
 import de.up.ling.irtg.util.Util;
 
@@ -46,11 +47,16 @@ public class EMTrainer {
 
         // perform EM training
         ConsoleProgressBar bar = new ConsoleProgressBar(60, System.out);
-        irtg.getAutomaton().trainEM(charts, 10, 0.001, false, charts.size(), bar.createListener());
+        irtg.getAutomaton().trainEM(charts, param.maxIterations, param.threshold, false, charts.size(), bar.createListener());
         bar.finish();
 
         // write IRTG
         OutputCodec oc = OutputCodec.getOutputCodecByExtension(Util.getFilenameExtension(param.outGrammarName));
+        if( oc == null ) {
+            // fallback: if no specific output codec is defined, simply use toString
+            oc = new ToStringOutputCodec();
+        }
+
         oc.write(irtg, new FileOutputStream(param.outGrammarName));
     }
 
@@ -101,6 +107,12 @@ public class EMTrainer {
 
         @Parameter(names = "--charts", description = "Directory where the chart files are (see save-charts option in ParsingEvaluator).")
         public String chartDirectory = null;
+
+        @Parameter(names = "--iterations", description = "Maximum number of EM iterations (default 10).")
+        public int maxIterations = 10;
+
+        @Parameter(names = "--threshold", description = "Finish EM if the log-likelihood improves by less than this (default 0.001).")
+        public double threshold = 0.001;
 
         @Parameter(names = "--help", help = true, description = "Prints usage information.")
         private boolean help;
