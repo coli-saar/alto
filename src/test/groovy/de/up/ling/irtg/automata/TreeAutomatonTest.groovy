@@ -5,6 +5,8 @@
 
 package de.up.ling.irtg.automata
 
+import de.up.ling.irtg.codec.BinaryIrtgInputCodec
+import de.up.ling.irtg.codec.BinaryIrtgOutputCodec
 import de.up.ling.irtg.semiring.AdditiveViterbiSemiring
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring
 import de.up.ling.irtg.semiring.LogDoubleArithmeticSemiring
@@ -40,10 +42,7 @@ class TreeAutomatonTest{
     static TreeAutomaton auto;
     static Signature sig;
     
-    
-    @Test
-    public void testViterbi2() {
-        TreeAutomaton auto = parse("""'DT1^NP2,0-1' -> r108 [1.0]
+    private static final String VITERBI2_AUTO = """'DT1^NP2,0-1' -> r108 [1.0]
 'S3,0-4'! -> r2414('NP2^S3,0-2', 'ART-VP1-.1^S3,2-4') [1.0]
 'ART-.1^S3,3-4' -> r27('.1^S3,3-4') [1.0]
 'NP2^S3,0-2' -> r521('DT1^NP2,0-1', 'NN1^NP2,1-2') [1.0]
@@ -51,10 +50,30 @@ class TreeAutomatonTest{
 'VP1^S3,2-3' -> r347('VBD1^VP1,2-3') [1.0]
 'ART-VP1-.1^S3,2-4' -> r348('VP1^S3,2-3', 'ART-.1^S3,3-4') [1.0]
 'VBD1^VP1,2-3' -> r3544 [1.0]
-'NN1^NP2,1-2' -> r3501 [1.0]""");
+'NN1^NP2,1-2' -> r3501 [1.0]""";
+
+    @Test
+    public void testViterbi2() {
+        TreeAutomaton auto = parse(VITERBI2_AUTO);
         
         Tree best = auto.viterbi();
         assertEquals(pt("r2414(r521(r108,r3501),r348(r347(r3544),r27(r26)))"), best);
+    }
+
+    @Test
+    public void testAsIrtg() {
+        TreeAutomaton auto = parse(VITERBI2_AUTO);
+        InterpretedTreeAutomaton irtg = auto.asInterpretedTreeAutomaton();
+
+        ByteArrayOutputStream o = new ByteArrayOutputStream();
+        new BinaryIrtgOutputCodec().write(irtg, o);
+        o.close();
+
+        InputStream is = new ByteArrayInputStream(o.toByteArray());
+        InterpretedTreeAutomaton irtg2 = new BinaryIrtgInputCodec().read(is);
+
+        assertEquals(auto.viterbi(), irtg2.getAutomaton().viterbi());
+
     }
     
     private static setAutomaton(String s) {

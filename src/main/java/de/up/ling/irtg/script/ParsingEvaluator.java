@@ -17,7 +17,9 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.coarse_to_fine.CoarseToFineParser;
 import de.up.ling.irtg.automata.coarse_to_fine.FineToCoarseMapping;
 import de.up.ling.irtg.automata.coarse_to_fine.GrammarCoarsifier;
+import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
 import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
+import de.up.ling.irtg.codec.BinaryIrtgOutputCodec;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
@@ -30,11 +32,8 @@ import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,6 +41,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * General-purpose script for parsing a corpus with an IRTG.
+ * The primary input is a {@link Corpus} and an {@link InterpretedTreeAutomaton}
+ * with which it is parsed. You can specify the interpretations from which
+ * the input should be taken and the output interpretations into which the parses
+ * should be evaluated.
+ * <p>
+ *
+ * If the corpus contains tree-based interpretations (e.g. into a {@link TreeAlgebra}),
+ * the script can automatically evaluate its output against the gold annotations on
+ * that interpretation using the Parseval measures.<p>
+ *
+ * The script also offers a number of options for controlling the parsing algorithm
+ * that is to be used.
  *
  * @author koller
  */
@@ -103,6 +115,27 @@ public class ParsingEvaluator {
             }
         }
 
+        // validate parsing algorithm
+        // default/condensed/siblingfinder
+        Algorithm algorithm = Algorithm.lookup(param.algorithm);
+
+        if( algorithm == null ) {
+            System.err.printf("Unknown parsing algorithm '%s'. Valid choices are default, condensed, siblingfinder.");
+            System.exit(1);
+        }
+
+        if( param.ctf != null && algorithm != Algorithm.DEFAULT ) {
+            System.err.printf("Coarse-to-fine parsing is only supported in conjunction with the 'default' parsing algorithm.");
+            System.exit(1);
+        }
+
+        if( algorithm == Algorithm.SIBLING_FINDER ) {
+            if (interpretations.size() != 1) {
+                System.err.println("Sibling-finder parsing only supports a single input interpretation.");
+                System.exit(1);
+            }
+        }
+
         // initialize coarse-to-fine parsing if requested
         CoarseToFineParser coarseToFineParser = null;
         String ctfInterpretation = null;
@@ -119,6 +152,24 @@ public class ParsingEvaluator {
             coarseToFineParser = makeCoarseToFineParserFromFile(irtg, ctfInterpretation, param.ctf, 1e-4);
         }
 
+        // create chartsDirectory if it doesn't exist; make it empty otherwise
+        File chartsDirectory = null;
+
+        if( param.chartsDirectory != null ) {
+            chartsDirectory = new File(param.chartsDirectory);
+
+            if( ! chartsDirectory.exists() ) {
+                chartsDirectory.mkdirs();
+            } else {
+                File[] allContents = chartsDirectory.listFiles();
+                if (allContents != null) {
+                    for (File file : allContents) {
+                        file.delete();
+                    }
+                }
+            }
+        }
+
         long overallStart = System.nanoTime();
 
         for (String filename : param.inputFiles) {
@@ -129,20 +180,59 @@ public class ParsingEvaluator {
             int pos = 1;
 
             for (Instance inst : corpus) {
-                Tree<String> dt = null;
-
-                System.err.printf(formatString, pos++, firstAlgebra.representAsString(inst.getInputObjects().get(firstInterp)));
+                System.err.printf(formatString, pos, firstAlgebra.representAsString(inst.getInputObjects().get(firstInterp)));
 
                 long start = System.nanoTime();
 
-                if (param.ctf == null) {
-                    dt = parseViterbi(irtg, inst, interpretations);
-                } else {
-                    dt = parseCtf(coarseToFineParser, inst, ctfInterpretation);
+                TreeAutomaton chart = null;
+
+                // select parsing algorithm
+                switch(algorithm) {
+                    case DEFAULT:
+                        if (param.ctf == null) {
+                            chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
+//                    dt = parseViterbi(irtg, inst, interpretations);
+                        } else {
+                            Object inp = inst.getInputObjects().get(ctfInterpretation);
+                            chart = coarseToFineParser.parseInputObject(inp);
+//                    dt = parseCtf(coarseToFineParser, inst, ctfInterpretation);
+                        }
+                        break;
+
+                    case CONDENSED_BOTTOM_UP:
+                        Map<String,Object> input = inst.getRestrictedInputObjects(interpretations);
+                        chart = irtg.parseCondensedWithPruning(input, new NoPruningPolicy());
+                        break;
+
+                    case SIBLING_FINDER:
+                        String interp = interpretations.get(0); // already checked above that there is only one
+                        Object inp = inst.getInputObjects().get(interp);
+                        chart = irtg.parseWithSiblingFinder(interp, inp);
+
+//                        System.err.printf("Interpr: %s\n", interp);
+//                        System.err.printf("Value: %s\n", inp);
+//                        System.err.printf("Chart:\n%s\n", chart);
+//                        System.exit(0);
+
+                        break;
                 }
+
+                Tree<String> dt = chart.viterbi();
+
+
 //                TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
 //                Tree<String> dt = chart.viterbi();
                 System.err.print(Util.formatTimeSince(start));
+
+
+                // write chart into file if requested
+                if( chartsDirectory != null ) {
+                    File chartsFile = new File(chartsDirectory, String.format("chart_%d.irtb", pos));
+                    OutputStream os = new FileOutputStream(chartsFile);
+                    new BinaryIrtgOutputCodec().write(chart.reduceTopDown().asInterpretedTreeAutomaton(), os);
+                    os.flush();
+                    os.close();
+                }
 
                 // write to output corpus
                 if( ! param.noDerivations ) {
@@ -197,6 +287,7 @@ public class ParsingEvaluator {
 
                 // new line in stderr output
                 System.err.println();
+                pos++;
             }
         }
 
@@ -265,6 +356,12 @@ public class ParsingEvaluator {
         @Parameter(names = "--ctf", description = "Perform coarse-to-fine parsing with the given CTF map file.")
         public String ctf = null;
 
+        @Parameter(names = "--algorithm", description = "Parsing algorithm to use, options: default/condensed/siblingfinder.")
+        public String algorithm = "default";
+
+        @Parameter(names = "--save-charts", description = "Save charts in this directory. Charts will be written as IRTGs with zero interpretations using the binary IRTG codecs.")
+        public String chartsDirectory = null;
+
         @Parameter(names = "--verbose", description = "Print some debugging output.")
         public boolean verbose = false;
 
@@ -288,4 +385,31 @@ public class ParsingEvaluator {
             }
         }
     }
+
+    public static enum Algorithm {
+        DEFAULT("default"),
+        CONDENSED_BOTTOM_UP("condensed"),
+        SIBLING_FINDER("siblingfinder");
+
+        private String label;
+
+        Algorithm(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+
+        public static Algorithm lookup(String label) {
+            for( Algorithm alg : Algorithm.values() ) {
+                if( alg.label.equals(label)) {
+                    return alg;
+                }
+            }
+            return null;
+        }
+    }
+
 }

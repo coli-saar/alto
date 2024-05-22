@@ -5,12 +5,12 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.*;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.*;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.automata.language_iteration.SemiringItemEvaluator;
 import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import de.up.ling.irtg.automata.pruning.PruningPolicy;
-import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.semiring.*;
@@ -24,7 +24,6 @@ import de.up.ling.irtg.util.*;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.*;
-import org.apache.commons.math3.special.Gamma;
 
 import java.io.*;
 import java.lang.reflect.Array;
@@ -942,7 +941,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
     /**
-     * Samples a random tree from a probabilistic tree automaton. Unlike {@link #getRandomRuleTree()},
+     * Samples a random tree from a probabilistic tree automaton. Each node is labeled with the
+     * rule that was applied.
+     * Unlike {@link #getRandomRuleTree()},
      * this method does not compute inside probabilities (i.e. it is faster), and does not assume that
      * the automaton is nonrecursive. However, it does assume that for every state, the weights of the rules
      * for expanding it top-down sum to one. This is usually the case for automata that represent grammars,
@@ -964,6 +965,32 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public Tree<Rule> getRandomRuleTreeFromRuleProbabilities() {
         return getRandomGenericTree(new TrivialRuleProbabilityDeterminer(), rule -> rule);
+    }
+
+    /**
+     * Samples a random tree from a probabilistic tree automaton. Each node is labeled with a terminal symbol.
+     * Unlike {@link #getRandomTree()},
+     * this method does not compute inside probabilities (i.e. it is faster), and does not assume that
+     * the automaton is nonrecursive. However, it does assume that for every state, the weights of the rules
+     * for expanding it top-down sum to one. This is usually the case for automata that represent grammars,
+     * but not for automata that represent parse charts.<p>
+     *
+     * If the automaton is not <a href="https://dl.acm.org/doi/pdf/10.3115/1220835.1220879">consistent</a>,
+     * i.e. if the probability of all trees does not sum to one, then with a nonzero probability
+     * this method will attempt to sample a tree of infinite depth. In this case, the algorithm will not
+     * terminate. Automata can be inconsistent even when the rule probabilities for each state sum to one.
+     * However, as shown in the paper linked above, automata whose probabilities were estimated from data
+     * (e.g. with maximum likelihood estimation or EM) are always consistent.<p>
+     *
+     * You can make the rule weights for every state sum to one by calling {@link #normalizeRuleWeights()}.
+     * However, this may change the probability distribution over trees, which may not be what you want.<p>
+     *
+     * If the automaton has multiple final states, the method will choose one uniformly at random.
+     *
+     * @return
+     */
+    public Tree<String> getRandomTreeFromRuleProbabilities() {
+        return getRandomGenericTree(new TrivialRuleProbabilityDeterminer(), rule -> rule.getLabel(this));
     }
 
     /**
@@ -1469,6 +1496,26 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         finalStates.stream().forEach(finalState -> ret.addFinalState(ret.getIdForState(getStateForId(finalState))));
         return ret;
         //return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
+    }
+
+    /**
+     * Wraps the tree automaton in an IRTG. This is sometimes useful, e.g. to use the
+     * {@link de.up.ling.irtg.codec.BinaryIrtgInputCodec} and {@link de.up.ling.irtg.codec.BinaryIrtgOutputCodec}.
+     * <p>
+     *
+     * The IRTG has zero interpretations.
+     * It is not intended to do anything interesting with - the point of the generated IRTG
+     * is that you can use {@link InterpretedTreeAutomaton#getAutomaton()} to retrieve
+     * the tree automaton.<p>
+     *
+     * This method copies the tree automaton to ensure that it has string-valued states.
+     * This is memory and time intensive. If it ever becomes an issue, one should optimize
+     * this.
+     * @return
+     */
+    public InterpretedTreeAutomaton asInterpretedTreeAutomaton() {
+        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(asConcreteTreeAutomatonWithStringStates());
+        return ret;
     }
 
     /**
@@ -3368,30 +3415,28 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
 
+
     /**
-     * Adjusts the weights of this automaton with the EM algorithm, for a given set of data, represented as tree automata.
-     * @param data The automata in the data. There is a one-to-many map assumption between the rules of this automaton
-     *             and the rules in the data automata, see the maps that are the other arguments.
-     * @param dataRuleToRuleHere for each automaton in the data, this maps each rule from the data automaton to a rule
-     *                           in this automaton.
-     * @param ruleHereToDataRules for each automaton in the data, this maps each rule in this automaton to all corresponding
-     *                            rules in the data automaton.
-     * @param iterations maximum number of steps run. If negative, uses Integer.MAX_VALUE instead, relying on threshold to stop
-     * @param threshold if the change in inside score in one run is less than this, the process will stop early. If non-positive,
-     *                  will rely on the iterations parameter instead. If threshold is non-positive and iterations is negative,
-     *                  an IllegalArgumentException is thrown.
-     * @param debug if true, prints lots of debug information
-     * @param listener progress listener if you want to keep track of how things are progressing (may be null)
-     * @return returns a pair of number of iterations run (1-based) and difference in inside in the last step
+     * Re-estimates the weights of this automaton from the given data using the EM algorithm.
+     * Each element of data is a parse chart (which was generated by intersecting this automaton
+     * with decomposition automata), along with information that links the rules of the chart to
+     * the rules of this automaton. The "data" iterable will be iterated over many times.
+     *
+     * @param data
+     * @param iterations maximum number of EM iterations
+     * @param threshold stop if likelihood changes less than this
+     * @param debug
+     * @param N number of instances in the training data
+     * @param listener to be notified within each E-step about each instance (perhaps this is not ideal)
+     * @return
      */
-    public Pair<Integer, Double> trainEM(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere,
-                        ListMultimap<Rule, Rule> ruleHereToDataRules, int iterations, double threshold, boolean debug,
-                        ProgressListener listener) {
+    public Pair<Integer, Double> trainEM(Iterable<LinkedChart> data, int iterations, double threshold, boolean debug, int N, ProgressListener listener) {
         if (iterations < 0 && threshold <= 0) {
             throw new IllegalArgumentException("EM training needs either a valid threshold or a valid number of iterations.");
         }
         LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
         Map<Rule, Double> globalRuleCount = new HashMap<>();
+
         // Threshold parameters
         if (iterations < 0) {
             iterations = Integer.MAX_VALUE;
@@ -3400,7 +3445,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         double difference = Double.POSITIVE_INFINITY;
         int iteration = 0;
 
-        //normalize rule weights, or else EM won't work right
+        // normalize rule weights, or else EM won't work right
         Int2DoubleMap stateRuleSums = new Int2DoubleOpenHashMap();
         for (Rule grammarRule : getRuleSet()) {
             stateRuleSums.put(grammarRule.getParent(),
@@ -3410,26 +3455,10 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             grammarRule.setWeight(grammarRule.getWeight() / stateRuleSums.get(grammarRule.getParent()));
         }
 
-        //need to give data automata the same weights
-        for (Rule grammarRule : getRuleSet()) {
-            for (Rule dataRule : ruleHereToDataRules.get(grammarRule)) {
-                dataRule.setWeight(grammarRule.getWeight());
-            }
-        }
-
         while (difference > threshold && iteration < iterations) {
-            if (debug) {
-                for (Rule r : ruleHereToDataRules.keySet()) {
-                    System.err.println("Iteration:  " + iteration);
-                    System.err.println("Rule:       " + r.toString(this));
-                    System.err.println("Rule (raw): " + r);
-                    System.err.println("Weight:     " + r.getWeight());
-                    System.err.print("\n");
-                }
-            }
-
             // get the new log likelihood and substract the old one from it for comparison with the given threshold
-            double logLikelihood = estep(data, globalRuleCount, dataRuleToRuleHere, listener, iteration, debug);
+            String progressLabel = String.format("[%d/%d] loglik=%f", iteration+1, iterations, oldLogLikelihood);
+            double logLikelihood = estep(data, globalRuleCount, listener, N, progressLabel, debug);
             assert logLikelihood >= oldLogLikelihood - 0.0000001; // don't want rounding errors to interfere
             difference = logLikelihood - oldLogLikelihood;
             oldLogLikelihood = logLikelihood;
@@ -3463,9 +3492,6 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 }
 
                 rule.setWeight(Math.exp(newWeight));
-                for (Rule intersectedRule : ruleHereToDataRules.get(rule)) {
-                    intersectedRule.setWeight(Math.exp(newWeight));
-                }
             }
             if (divisionsByZero > 0) {
                 System.err.println("There were "+divisionsByZero+" divisions by 0 during the M step. This may be due to numerical imprecision, or may indicate an error.");
@@ -3480,43 +3506,69 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     }
 
 
-    /**
-     * Performs the E-step of the EM algorithm. This means that the expected
-     * counts are computed for all rules that occur in the parsed corpus.<p>
-     *
-     * This method assumes that the automaton is top-down reduced (see {@link TreeAutomaton#reduceTopDown()
-     * }).
-     *
-     */
-    private double estep(List<TreeAutomaton<?>> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule,
-                        ProgressListener listener, int iteration, boolean debug) {
-        LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
+    public static class LinkedChart {
+        public TreeAutomaton<?> chart;
+        public Map<Rule, Rule> intersectedRuleToOriginalRule;
+        public ListMultimap<Rule, Rule> originalRuleToIntersectedRule;
 
+        public LinkedChart(TreeAutomaton<?> chart, Map<Rule, Rule> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRule) {
+            this.chart = chart;
+            this.intersectedRuleToOriginalRule = intersectedRuleToOriginalRule;
+            this.originalRuleToIntersectedRule = originalRuleToIntersectedRule;
+        }
+
+        public LinkedChart(TreeAutomaton<?> chart) {
+            this.chart = chart;
+            intersectedRuleToOriginalRule = new HashMap<>();
+            originalRuleToIntersectedRule = ArrayListMultimap.create();
+        }
+
+        /**
+         * Transfers rule weights from the main grammar to the chart.
+         *
+         * @param grammar
+         */
+        public void resetRuleWeights(TreeAutomaton<?> grammar) {
+            for (Rule grammarRule : grammar.getRuleSet()) {
+                for( Rule chartRule : originalRuleToIntersectedRule.get(grammarRule)) {
+                    chartRule.setWeight(grammarRule.getWeight());
+                }
+            }
+        }
+    }
+
+
+    private double estep(Iterable<LinkedChart> data, Map<Rule, Double> globalRuleCount, ProgressListener listener, int N, String progressLabel, boolean debug) {
+        LogDoubleArithmeticSemiring semiring = LogDoubleArithmeticSemiring.INSTANCE;
         double logLikelihood = 0.0;
 
+        // initialize global rule counts
         globalRuleCount.clear();
-
         for (Rule rule : getRuleSet()) {
             globalRuleCount.put(rule, semiring.zero());
         }
 
         int divisionsByZero = 0;
-        for (int i = 0; i < parses.size(); i++) {
-            TreeAutomaton<?> parse = parses.get(i);
+        int i = 0;
+        for( LinkedChart linkedChart : data ) {
+            // copy rule weights from grammar to chart
+            linkedChart.resetRuleWeights(this);
 
+            TreeAutomaton<?> parse = linkedChart.chart;
             Map<Integer, Double> logInside = parse.logInside();
             Map<Integer, Double> logOutside = parse.logOutside(logInside);
+            i++;
 
             if (debug) {
                 System.out.println("logInside and logOutside probabilities for chart #" + i);
 
                 for (Integer r : logInside.keySet()) {
-                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + logInside.get(r));
+                    System.out.printf("Inside: %d %s = %f\n", r, parse.getStateForId(r), logInside.get(r));
                 }
                 System.out.println("-");
 
                 for (Integer r : logOutside.keySet()) {
-                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + logOutside.get(r));
+                    System.out.printf("Outside: %d %s = %f\n", r, parse.getStateForId(r), logOutside.get(r));
                 }
                 System.out.println();
             }
@@ -3526,9 +3578,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                 logLikelihoodHere = semiring.add(logLikelihoodHere, logInside.get(finalState));
             }
 
-            for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
+            for (Rule intersectedRule : linkedChart.intersectedRuleToOriginalRule.keySet()) {
                 Integer intersectedParent = intersectedRule.getParent();
-                Rule originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
+                Rule originalRule = linkedChart.intersectedRuleToOriginalRule.get(intersectedRule);
 
                 double oldRuleCount = globalRuleCount.get(originalRule);
                 // subtraction in log space is division
@@ -3537,6 +3589,12 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
                     thisRuleCount = Double.NEGATIVE_INFINITY;
                     divisionsByZero++;
                 } else {
+                    if( debug ) {
+                        if( logOutside.get(intersectedParent) == null ) {
+                            System.err.printf("null entry: %s\n", intersectedParent);
+                        }
+                    }
+
                     thisRuleCount = semiring.multiply(logOutside.get(intersectedParent), Math.log(intersectedRule.getWeight())) - logLikelihoodHere;
                 }
 
@@ -3552,148 +3610,18 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
             logLikelihood += logLikelihoodHere;
 
             if (listener != null) {
-                listener.accept(i + 1, parses.size(), null);
-//                listener.update(iteration, i);
+                listener.accept(i + 1, N, progressLabel);
             }
         }
 
         if (divisionsByZero > 0) {
-            System.err.println("There were "+divisionsByZero+" divisions by 0 during the Estep. This may be due to numerical imprecision, or may indicate an error.");
+            System.err.println("There were "+divisionsByZero+" divisions by 0 during the E-step. This may be due to numerical imprecision, or may indicate an error.");
         }
 
         return logLikelihood;
     }
 
-//        TreeAutomaton<String> auto = new TreeAutomatonInputCodec().read("A -> '(i_1<root> / --LEX--  :compound (i_2<S1>))--TYPE--(S1())' [0.07153849505878765]\n" +
-//                "A -> '(i_2<root> / --LEX--  :compound (i_3<S0>))--TYPE--(S0())' [0.0840018278516351]\n" +
-//                "A -> '(ART-ROOT<root> / --LEX--  :art-snt1 (i_3<S1>))--TYPE--(S1())' [0.016443917977383333]\n" +
-//                "A -> '(i_3<root> / --LEX--)--TYPE--()' [0.05676762092225551]\n" +
-//                "A -> '(ART-ROOT<root> / --LEX--  :art-snt1 (i_3<S0>))--TYPE--(S0())' [0.09095797824446981]\n" +
-//                "B -> APP_S1(A, A) [0.030826121140892268]\n" +
-//                "B -> MOD_S0(A, A) [0.0574610009581227]\n" +
-//                "C! -> APP_S0(A, B) [0.026332376273468017]\n" +
-//                "C! -> MOD_S1(B, B) [0.0452509353696449]");
-//
-//        List<TreeAutomaton<?>> concreteDecompositionAutomata = new ArrayList<>();
-//        concreteDecompositionAutomata.add(auto);
-//
-//        ConcreteTreeAutomaton<String> grammarAutomaton = new ConcreteTreeAutomaton<>();
-//        String dummyState = "X";
-//        Random random = new Random();
-//        List<Map<Rule, Rule>> dataRuleToGrammarRule = new ArrayList<>();
-//        ListMultimap<Rule, Rule> grammarRuleToDataRules = ArrayListMultimap.create();
-//
-//        double ruleSum = 0.0;
-//        for (TreeAutomaton<?> dataAutomaton : concreteDecompositionAutomata) {
-//            Map<Rule, Rule> rulesMapForThisAuto = new HashMap<>();
-//            dataRuleToGrammarRule.add(rulesMapForThisAuto);
-//            for (Rule dataRule : dataAutomaton.getRuleSet()) {
-//                List<String> children = new ArrayList<>();
-//                for (int child : dataRule.getChildren()) {
-//                    children.add(dummyState);
-//                }
-//                String grammarLabel = dataRule.getLabel(dataAutomaton);
-//
-//                Rule grammarRule = grammarAutomaton.createRule(dummyState, grammarLabel, children, random.nextDouble());
-//                ruleSum += grammarRule.getWeight();
-//                rulesMapForThisAuto.put(dataRule, grammarRule);
-//                grammarRuleToDataRules.put(grammarRule, dataRule);//can just do it like this, if same grammar rule shows up multiple times, the ListMultimap will keep multiple entries
-//                grammarAutomaton.addRule(grammarRule);
-//            }
-//        }
-//
-//        //normalize rule weights, or else EM won't work right
-//        for (Rule grammarRule : grammarRuleToDataRules.keySet()) {
-//            grammarRule.setWeight(grammarRule.getWeight()/ruleSum);
-//        }
-//
-//        //need to give data automata the same weights
-//        for (Rule grammarRule : grammarRuleToDataRules.keySet()) {
-//            for (Rule dataRule : grammarRuleToDataRules.get(grammarRule)) {
-//                dataRule.setWeight(grammarRule.getWeight());
-//            }
-//        }
-//
-//        System.out.println(grammarAutomaton);
-//
-//        Pair<Integer, Double> iterationAndDiff = grammarAutomaton.trainEM(concreteDecompositionAutomata,
-//                dataRuleToGrammarRule, grammarRuleToDataRules, 100, 0.00000001, true, null);
-//
-//        System.out.println("EM stopped after iteration "+iterationAndDiff.left+" with difference "+iterationAndDiff.right);
-//
-//        System.out.println(grammarAutomaton);
-//    }
 
-
-    /**
-     * Performs Variational Bayes (VB) training of this (weighted) IRTG using
-     * the given corpus. The corpus may be unannotated; if it contains annotated
-     * derivation trees, these are ignored by the algorithm. However, it must
-     * contain a parse chart for each instance (see {@link Corpus} for details)
-     * .<p>
-     *
-     * This method implements the algorithm from Jones et al., "Semantic Parsing
-     * with Bayesian Tree Transducers", ACL 2012.
-     *
-     * @param iterations the maximum number of iterations allowed. If negative, uses Integer.MAX_VALUE instead, relying on threshold to stop
-     * @param threshold the minimum change in the ELBO before iterations are
-     * stopped
-     * @param listener a progress listener that will be given information about
-     * the progress of the optimization.
-     */
-    public void trainVB(List<TreeAutomaton<?>> data, List<Map<Rule, Rule>> dataRuleToRuleHere, int iterations,
-                        double threshold, ProgressListener listener, boolean debug) {
-
-
-        // initialize hyperparameters
-        List<Rule> automatonRules = new ArrayList<>();
-        Iterables.addAll(automatonRules, getRuleSet()); // bring rules in defined order
-
-        int numRules = automatonRules.size();
-        double[] alpha = new double[numRules];
-        Arrays.fill(alpha, 1.0); // might want to initialize them differently
-
-        Map<Rule, Double> ruleCounts = new HashMap<>();
-        // Threshold parameters
-        if (iterations < 0) {
-            iterations = Integer.MAX_VALUE;
-        }
-        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
-        double difference = Double.POSITIVE_INFINITY;
-        int iteration = 0;
-
-        // iterate
-        while (difference > threshold && iteration < iterations) {
-            // for each state, compute sum of alphas for outgoing rules
-            Map<Integer, Double> sumAlphaForSameParent = new HashMap<>();
-            for (int i = 0; i < numRules; i++) {
-                int parent = automatonRules.get(i).getParent();
-                if (sumAlphaForSameParent.containsKey(parent)) {
-                    sumAlphaForSameParent.put(parent, sumAlphaForSameParent.get(parent) + alpha[i]);
-                } else {
-                    sumAlphaForSameParent.put(parent, alpha[i]);
-                }
-            }
-
-            // re-estimate rule weights
-            for (int i = 0; i < numRules; i++) {
-                Rule rule = automatonRules.get(i);
-                rule.setWeight(Math.exp(Gamma.digamma(alpha[i]) - Gamma.digamma(sumAlphaForSameParent.get(rule.getParent()))));
-            }
-
-            // re-estimate hyperparameters
-            double logLikelihood = estep(data, ruleCounts, dataRuleToRuleHere, listener, iteration, debug);
-            assert logLikelihood >= oldLogLikelihood;
-            for (int i = 0; i < numRules; i++) {
-                alpha[i] += ruleCounts.get(automatonRules.get(i));
-            }
-
-            // calculate the difference for comparrison with the given threshold
-            difference = logLikelihood - oldLogLikelihood;
-            oldLogLikelihood = logLikelihood;
-            ++iteration;
-        }
-    }
 
 
 }

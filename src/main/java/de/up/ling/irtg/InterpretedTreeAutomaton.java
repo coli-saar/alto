@@ -4,9 +4,6 @@
  */
 package de.up.ling.irtg;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
@@ -43,7 +40,6 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -52,9 +48,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import org.apache.commons.math3.special.Gamma;
 
 /**
  * An interpreted regular tree grammar (IRTG). An IRTG consists of a finite tree
@@ -506,14 +502,13 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton<?>> parses = new ArrayList<>();
-        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
-        ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
-        collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
+        List<TreeAutomaton.LinkedChart> charts = new ArrayList<>();
+        collectParsesAndRules(trainingData, charts);
 
-        getAutomaton().trainEM(parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules, iterations, threshold, debug, listener);
-
+        getAutomaton().trainEM(charts, iterations, threshold, debug, charts.size(), listener);
     }
+
+
 
     /**
      * Modifies the rule weights of the derivation tree automaton such that the
@@ -541,6 +536,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      *
      * @param trainingData a corpus of parse charts
      */
+    @Deprecated
     public void trainVB(Corpus trainingData) {
         trainVB(trainingData, null);
     }
@@ -561,6 +557,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param listener a progress listener that will be given information about
      * the progress of the optimization.
      */
+    @Deprecated
     public void trainVB(Corpus trainingData, ProgressListener listener) {
         trainVB(trainingData, 0, 1E-5, listener);
     }
@@ -572,6 +569,8 @@ public class InterpretedTreeAutomaton implements Serializable {
      * contain a parse chart for each instance (see {@link Corpus} for details)
      * .<p>
      *
+     *  Note that all the VB training methods are now deprecated and won't work any more.
+     *
      * This method implements the algorithm from Jones et al., "Semantic Parsing
      * with Bayesian Tree Transducers", ACL 2012.
      *
@@ -582,24 +581,12 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param listener a progress listener that will be given information about
      * the progress of the optimization.
      */
+    @Deprecated
     public void trainVB(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
-        //TODO does this duplicate code from trainEM that has been moved to treeAutomaton? Could this be moved to tree automaton too?
-        if (!trainingData.hasCharts()) {
-            System.err.println("VB training can only be performed on a corpus with attached charts.");
-            return;
-        }
-        if (iterations <= 0 && threshold < 0) {
-            System.err.println("VB training needs either a valid threshold or a valid number of iterations.");
-        }
-        // memorize mapping between
-        // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton<?>> parses = new ArrayList<>();
-        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
-        collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
-
-        getAutomaton().trainVB(parses, intersectedRuleToOriginalRule, iterations, threshold, listener, debug);
+        throw new UnsupportedOperationException("VB training is no longer supported.");
 
     }
+
 
     /**
      * Extracts the parse charts from the training data. Furthermore, computes
@@ -609,55 +596,66 @@ public class InterpretedTreeAutomaton implements Serializable {
      * mapping.
      *
      */
-    private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton<?>> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
+    private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton.LinkedChart> parses) {
         parses.clear();
-        intersectedRuleToOriginalRule.clear();
-
-        if (originalRuleToIntersectedRules != null) {
-            originalRuleToIntersectedRules.clear();
-        }
 
         for (Instance instance : trainingData) {
             TreeAutomaton chartHere = instance.getChart().reduceTopDown(); // ensure that chart is top-down reduced
-            parses.add(chartHere);
+            TreeAutomaton.LinkedChart linkedChart = new TreeAutomaton.LinkedChart(chartHere);
+            parses.add(linkedChart);
 
-            Iterable<Rule> rules = chartHere.getRuleSet();
-            Map<Rule, Rule> irtorHere = new HashMap<>();
-            for (Rule intersectedRule : rules) {
-                Rule originalRule = getRuleInGrammar(intersectedRule, chartHere);
-
-                irtorHere.put(intersectedRule, originalRule);
-
-                if (originalRuleToIntersectedRules != null) {
-                    originalRuleToIntersectedRules.put(originalRule, intersectedRule);
-                }
-            }
-
-            intersectedRuleToOriginalRule.add(irtorHere);
+            collectRules(linkedChart, pairState -> getFirstEntry(pairState).toString());
         }
     }
 
+    public void collectRules(TreeAutomaton.LinkedChart linkedChart, Function<Object,String> chartStateToGrammarState) {
+        Iterable<Rule> rules = linkedChart.chart.getRuleSet();
+
+        for (Rule intersectedRule : rules) {
+            Rule originalRule = getRuleInGrammar(intersectedRule, linkedChart.chart, chartStateToGrammarState);
+            linkedChart.originalRuleToIntersectedRule.put(originalRule, intersectedRule);
+            linkedChart.intersectedRuleToOriginalRule.put(intersectedRule, originalRule);
+        }
+    }
+
+
+    /**
+     * Maps a rule in an intersection of this IRTG (e.g. a parse chart) to the original
+     * rule in this IRTG from which it was created.
+     *
+     * By default, the method assumes that the states of the chart are pairs whose first element
+     * is a state of the IRTG. You can instead specify your own chartStateToGrammarState function
+     * that will extract the IRTG state in some other way (e.g. through string manipulations).
+     *
+     * @param intersectedRule
+     * @param chart
+     * @param chartStateToGrammarState
+     * @return
+     */
     // safe but inefficient
     // relationship between rules of chart and deriv-tree automaton,
     // or at least mapping between states, should be precomputed only once.
-    Rule getRuleInGrammar(Rule intersectedRule, TreeAutomaton chart) {
-        int firstParentState = getAutomaton().getIdForState(getFirstEntry(chart.getStateForId(intersectedRule.getParent())).toString());
+    public Rule getRuleInGrammar(Rule intersectedRule, TreeAutomaton chart, Function<Object,String> chartStateToGrammarState) {
+        String firstParentState = chartStateToGrammarState.apply(chart.getStateForId(intersectedRule.getParent()));
+        int firstParentStateId = getAutomaton().getIdForState(firstParentState);
 
         int[] firstChildStates = new int[intersectedRule.getArity()];
         for (int i = 0; i < intersectedRule.getArity(); i++) {
-            int pairState = intersectedRule.getChildren()[i];
-            int firstState = getAutomaton().getIdForState(getFirstEntry(chart.getStateForId(pairState)).toString());
-            firstChildStates[i] = firstState;
+            int pairStateId = intersectedRule.getChildren()[i];
+            String firstState = chartStateToGrammarState.apply(chart.getStateForId(pairStateId));
+            int firstStateId = getAutomaton().getIdForState(firstState);
+            firstChildStates[i] = firstStateId;
         }
 
         for (Rule candidate : automaton.getRulesBottomUp(intersectedRule.getLabel(), firstChildStates)) {
-            if (firstParentState == candidate.getParent()) {
+            if (firstParentStateId == candidate.getParent()) {
                 return candidate;
             }
         }
 
         return null;
     }
+
 
     private Object getFirstEntry(Object pairState) {
         if (pairState instanceof Pair) {
